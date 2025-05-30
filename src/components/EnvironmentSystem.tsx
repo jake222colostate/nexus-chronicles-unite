@@ -10,8 +10,55 @@ interface EnvironmentSystemProps {
   onEnvironmentChange?: (tier: number) => void;
 }
 
-// Simplified environment system with procedural generation instead of GLB models
-// This ensures the environment always works regardless of external model availability
+// Environment model URLs based on tier
+const environmentModels = {
+  ground: [
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_models/ground_basic.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_models/ground_crystal.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_models/ground_gold.glb'
+  ],
+  mountains: [
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_models/mountains_dark.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_models/mountains_magical.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_models/mountains_luminous.glb'
+  ],
+  sky: [
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_models/sky_stars.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_models/sky_aurora.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_models/sky_celestial.glb'
+  ]
+};
+
+// GLB Model component with error handling
+const GLBEnvironmentModel: React.FC<{
+  url: string;
+  position: [number, number, number];
+  scale?: number;
+  onError?: () => void;
+}> = ({ url, position, scale = 1, onError }) => {
+  const { scene, error } = useGLTF(url, true);
+  
+  useEffect(() => {
+    if (error && onError) {
+      console.error(`Failed to load GLB model: ${url}`, error);
+      onError();
+    }
+  }, [error, onError, url]);
+
+  if (error || !scene) {
+    return null;
+  }
+
+  return (
+    <primitive 
+      object={scene.clone()} 
+      position={position} 
+      scale={[scale, scale, scale]} 
+    />
+  );
+};
+
+// Enhanced environment system with GLB model integration
 const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   upgradeCount,
   onEnvironmentChange
@@ -19,6 +66,7 @@ const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   const [currentTier, setCurrentTier] = useState(0);
   const [transitionOpacity, setTransitionOpacity] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [modelLoadErrors, setModelLoadErrors] = useState<Set<string>>(new Set());
 
   // Calculate environment tier based on upgrade count
   const environmentTier = useMemo(() => {
@@ -75,19 +123,112 @@ const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
 
   const config = tierConfig[currentTier as keyof typeof tierConfig];
 
+  const handleModelError = (modelUrl: string) => {
+    setModelLoadErrors(prev => new Set([...prev, modelUrl]));
+  };
+
   return (
     <>
-      {/* Enhanced Ground Plane */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, -50]} receiveShadow>
-        <planeGeometry args={[40, 120]} />
-        <meshLambertMaterial 
-          color={config.groundColor} 
-          transparent 
-          opacity={transitionOpacity} 
+      {/* GLB Ground Model */}
+      {!modelLoadErrors.has(environmentModels.ground[currentTier]) ? (
+        <GLBEnvironmentModel
+          url={environmentModels.ground[currentTier]}
+          position={[0, -1, -50]}
+          scale={2}
+          onError={() => handleModelError(environmentModels.ground[currentTier])}
         />
-      </mesh>
+      ) : (
+        // Fallback procedural ground
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, -50]} receiveShadow>
+          <planeGeometry args={[40, 120]} />
+          <meshLambertMaterial 
+            color={config.groundColor} 
+            transparent 
+            opacity={transitionOpacity} 
+          />
+        </mesh>
+      )}
 
-      {/* Procedural Crystal Formations (replacing GLB ground models) */}
+      {/* GLB Mountain Models */}
+      {!modelLoadErrors.has(environmentModels.mountains[currentTier]) ? (
+        <>
+          <GLBEnvironmentModel
+            url={environmentModels.mountains[currentTier]}
+            position={[-15, 0, -40]}
+            scale={1.5}
+            onError={() => handleModelError(environmentModels.mountains[currentTier])}
+          />
+          <GLBEnvironmentModel
+            url={environmentModels.mountains[currentTier]}
+            position={[15, 0, -40]}
+            scale={1.5}
+            onError={() => handleModelError(environmentModels.mountains[currentTier])}
+          />
+        </>
+      ) : (
+        // Fallback procedural mountains
+        <>
+          <group position={[-15, 0, -30]} rotation={[0, 0.2, 0]}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <mesh key={`left-mountain-${i}`} position={[i * 2, 0, -i * 2]}>
+                <coneGeometry args={[2 + i * 0.5, 8 + i * 2, 6]} />
+                <meshLambertMaterial 
+                  color={config.mountainColor} 
+                  transparent 
+                  opacity={transitionOpacity} 
+                />
+              </mesh>
+            ))}
+          </group>
+          <group position={[15, 0, -30]} rotation={[0, -0.2, 0]}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <mesh key={`right-mountain-${i}`} position={[-i * 2, 0, -i * 2]}>
+                <coneGeometry args={[2 + i * 0.5, 8 + i * 2, 6]} />
+                <meshLambertMaterial 
+                  color={config.mountainColor} 
+                  transparent 
+                  opacity={transitionOpacity} 
+                />
+              </mesh>
+            ))}
+          </group>
+        </>
+      )}
+
+      {/* GLB Sky Model */}
+      {!modelLoadErrors.has(environmentModels.sky[currentTier]) ? (
+        <GLBEnvironmentModel
+          url={environmentModels.sky[currentTier]}
+          position={[0, 25, -60]}
+          scale={3}
+          onError={() => handleModelError(environmentModels.sky[currentTier])}
+        />
+      ) : (
+        // Fallback procedural sky elements
+        <group position={[0, 20, -40]}>
+          {Array.from({ length: 6 }, (_, i) => {
+            const angle = (i / 6) * Math.PI * 2;
+            const radius = 25;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            
+            return (
+              <mesh key={`sky-element-${i}`} position={[x, Math.sin(angle) * 5, z]}>
+                <sphereGeometry args={[1 + currentTier * 0.5]} />
+                <meshLambertMaterial 
+                  color={config.skyColor} 
+                  transparent 
+                  opacity={transitionOpacity * 0.3} 
+                  emissive={config.particleColor}
+                  emissiveIntensity={0.1}
+                />
+              </mesh>
+            );
+          })}
+        </group>
+      )}
+
+      {/* Procedural Crystal Formations */}
       {Array.from({ length: 8 }, (_, i) => {
         const x = (Math.random() - 0.5) * 30;
         const z = -20 - (Math.random() * 60);
@@ -107,58 +248,6 @@ const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
         );
       })}
 
-      {/* Procedural Mountains */}
-      {/* Left Mountains */}
-      <group position={[-15, 0, -30]} rotation={[0, 0.2, 0]}>
-        {Array.from({ length: 5 }, (_, i) => (
-          <mesh key={`left-mountain-${i}`} position={[i * 2, 0, -i * 2]}>
-            <coneGeometry args={[2 + i * 0.5, 8 + i * 2, 6]} />
-            <meshLambertMaterial 
-              color={config.mountainColor} 
-              transparent 
-              opacity={transitionOpacity} 
-            />
-          </mesh>
-        ))}
-      </group>
-
-      {/* Right Mountains */}
-      <group position={[15, 0, -30]} rotation={[0, -0.2, 0]}>
-        {Array.from({ length: 5 }, (_, i) => (
-          <mesh key={`right-mountain-${i}`} position={[-i * 2, 0, -i * 2]}>
-            <coneGeometry args={[2 + i * 0.5, 8 + i * 2, 6]} />
-            <meshLambertMaterial 
-              color={config.mountainColor} 
-              transparent 
-              opacity={transitionOpacity} 
-            />
-          </mesh>
-        ))}
-      </group>
-
-      {/* Procedural Sky Elements */}
-      <group position={[0, 20, -40]}>
-        {Array.from({ length: 6 }, (_, i) => {
-          const angle = (i / 6) * Math.PI * 2;
-          const radius = 25;
-          const x = Math.cos(angle) * radius;
-          const z = Math.sin(angle) * radius;
-          
-          return (
-            <mesh key={`sky-element-${i}`} position={[x, Math.sin(angle) * 5, z]}>
-              <sphereGeometry args={[1 + currentTier * 0.5]} />
-              <meshBasicMaterial 
-                color={config.skyColor} 
-                transparent 
-                opacity={transitionOpacity * 0.3} 
-                emissive={config.particleColor}
-                emissiveIntensity={0.1}
-              />
-            </mesh>
-          );
-        })}
-      </group>
-
       {/* Atmospheric fog for depth */}
       <fog attach="fog" args={[config.fogColor, 20, 120]} />
       
@@ -171,7 +260,7 @@ const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
         return (
           <mesh key={`particle-${i}`} position={[x, y, z]}>
             <sphereGeometry args={[0.02]} />
-            <meshBasicMaterial 
+            <meshLambertMaterial 
               color={config.particleColor} 
               transparent 
               opacity={transitionOpacity * (Math.random() * 0.5 + 0.3)} 
@@ -191,7 +280,7 @@ const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
         return (
           <mesh key={`orb-${i}`} position={[x, y, z]}>
             <sphereGeometry args={[0.15 + currentTier * 0.05]} />
-            <meshBasicMaterial 
+            <meshLambertMaterial 
               color={config.particleColor} 
               transparent 
               opacity={transitionOpacity * 0.8} 
