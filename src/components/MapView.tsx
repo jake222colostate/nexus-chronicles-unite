@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { EnhancedStructure } from './EnhancedStructure';
 import { EnhancedNexusCore } from './EnhancedNexusCore';
@@ -12,6 +13,7 @@ interface MapViewProps {
   onBuyBuilding: (buildingId: string) => void;
   buildingData: any[];
   currency: number;
+  isTransitioning?: boolean;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -21,27 +23,35 @@ export const MapView: React.FC<MapViewProps> = ({
   energyPerSecond,
   onBuyBuilding,
   buildingData,
-  currency
+  currency,
+  isTransitioning = false
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 1 });
+  const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.85 }); // Default 85% zoom for better overview
   const [isDragging, setIsDragging] = useState(false);
   const [lastTouch, setLastTouch] = useState({ x: 0, y: 0 });
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
+  const [showInstructions, setShowInstructions] = useState(true);
 
-  // Enhanced structure positioning for better visual hierarchy
+  // Hide instructions after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowInstructions(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Enhanced structure positioning for both realms
   const structurePositions = {
     fantasy: [
       { id: 'altar', x: 25, y: 75, size: 'small' },
-      { id: 'tower', x: 50, y: 45, size: 'medium' },
+      { id: 'tower', x: 55, y: 45, size: 'medium' },
       { id: 'grove', x: 75, y: 65, size: 'large' },
-      { id: 'temple', x: 30, y: 25, size: 'massive' },
+      { id: 'temple', x: 35, y: 25, size: 'massive' },
     ],
     scifi: [
       { id: 'generator', x: 20, y: 80, size: 'small' },
-      { id: 'reactor', x: 55, y: 55, size: 'medium' },
+      { id: 'reactor', x: 60, y: 55, size: 'medium' },
       { id: 'station', x: 80, y: 35, size: 'large' },
-      { id: 'megastructure', x: 35, y: 20, size: 'massive' },
+      { id: 'megastructure', x: 30, y: 20, size: 'massive' },
     ]
   };
 
@@ -164,7 +174,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* Enhanced Animated Background */}
+      {/* Enhanced Animated Background with realm-specific parallax */}
       <AnimatedBackground realm={realm} />
 
       {/* Enhanced Nexus Core */}
@@ -177,17 +187,19 @@ export const MapView: React.FC<MapViewProps> = ({
       {/* Map Container */}
       <div 
         ref={mapRef}
-        className="absolute inset-0 transition-transform duration-100 cursor-grab active:cursor-grabbing"
+        className={`absolute inset-0 transition-all duration-500 cursor-grab active:cursor-grabbing ${
+          isTransitioning ? 'opacity-30 scale-95' : 'opacity-100 scale-100'
+        }`}
         style={{ 
           transform: `scale(${camera.zoom}) translate(${camera.x}px, ${camera.y}px)`,
           touchAction: 'none'
         }}
       >
-        {/* Ground/Base Layer */}
-        <div className={`absolute inset-0 ${
+        {/* Ground/Base Layer with realm-specific styling */}
+        <div className={`absolute inset-0 transition-all duration-500 ${
           realm === 'fantasy' 
-            ? 'bg-gradient-to-t from-green-900/20 to-transparent' 
-            : 'bg-gradient-to-t from-gray-800/20 to-transparent'
+            ? 'bg-gradient-to-t from-green-900/30 via-purple-900/20 to-transparent' 
+            : 'bg-gradient-to-t from-gray-800/30 via-cyan-900/20 to-transparent'
         }`} />
 
         {/* Enhanced Structures */}
@@ -214,24 +226,39 @@ export const MapView: React.FC<MapViewProps> = ({
         <ParticleSystem realm={realm} productionRate={realm === 'fantasy' ? manaPerSecond : energyPerSecond} />
       </div>
 
-      {/* Enhanced iPhone UI Overlay */}
-      <div className="absolute bottom-2 left-2 right-2 text-white text-xs bg-black/30 backdrop-blur-md p-3 rounded-xl border border-white/20 iphone-safe-bottom">
-        <div className="flex justify-between items-center">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-              <span>Pinch to zoom • Drag to pan</span>
+      {/* iPhone UI Overlay with collapsible instructions */}
+      {showInstructions && (
+        <div className="absolute bottom-4 left-4 right-4 text-white text-xs bg-black/40 backdrop-blur-md p-3 rounded-xl border border-white/20 iphone-safe-bottom animate-fade-in">
+          <div className="flex justify-between items-center">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                <span>Pinch to zoom • Drag to pan</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                <span>Tap structures to upgrade</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              <span>Tap structures to upgrade</span>
+            <div className="text-right opacity-80">
+              <div className="bg-white/10 px-2 py-1 rounded text-xs">
+                {(camera.zoom * 100).toFixed(0)}%
+              </div>
             </div>
           </div>
-          <div className="text-right opacity-80">
-            <div className="bg-white/10 px-2 py-1 rounded">
-              Zoom: {(camera.zoom * 100).toFixed(0)}%
-            </div>
-          </div>
+        </div>
+      )}
+
+      {/* Realm indicator */}
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20">
+        <div className={`px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-500 ${
+          realm === 'fantasy'
+            ? 'bg-purple-800/60 border-purple-400 text-purple-100'
+            : 'bg-cyan-800/60 border-cyan-400 text-cyan-100'
+        }`}>
+          <span className="text-sm font-medium">
+            {realm === 'fantasy' ? '🏰 Fantasy Realm' : '🚀 Sci-Fi Realm'}
+          </span>
         </div>
       </div>
     </div>
