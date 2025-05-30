@@ -282,7 +282,7 @@ const GameEngine: React.FC = () => {
 
   return (
     <div className="h-[667px] w-full relative overflow-hidden bg-black">
-      {/* Enhanced Resource Sidebar - Now with 120px width for glassmorphism */}
+      {/* Enhanced Resource Sidebar - Now with 110px width for improved glassmorphism */}
       <EnhancedResourceSidebar
         realm={currentRealm}
         mana={gameState.mana}
@@ -302,7 +302,7 @@ const GameEngine: React.FC = () => {
       </div>
 
       {/* Main Game Area - Starts right after sidebar with proper spacing */}
-      <div className="absolute left-[120px] top-0 right-0 bottom-0">
+      <div className="absolute left-[110px] top-0 right-0 bottom-0">
         {/* Map Stats HUD */}
         <MapStatsHUD
           realm={currentRealm}
@@ -344,7 +344,7 @@ const GameEngine: React.FC = () => {
 
         {/* Convergence Ready Button - Enhanced positioning */}
         {canConverge && (
-          <div className="absolute bottom-28 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-28 left-0 right-0 z-30 flex justify-center px-4">
             <Button 
               onClick={() => setShowConvergence(true)}
               className="h-12 px-8 rounded-2xl bg-gradient-to-r from-yellow-500/90 to-orange-500/90 hover:from-yellow-600/90 hover:to-orange-600/90 backdrop-blur-xl border-2 border-yellow-400/60 animate-pulse transition-all duration-300 font-bold shadow-2xl shadow-yellow-500/40"
@@ -363,24 +363,27 @@ const GameEngine: React.FC = () => {
         onClose={() => setShowQuickHelp(false)}
       />
 
-      {/* Hybrid Upgrades Modal - Enhanced styling */}
+      {/* Hybrid Upgrades Modal - Enhanced styling with proper containment */}
       {showHybridUpgrades && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowHybridUpgrades(false);
             }
           }}
         >
-          <Card className="w-[90%] max-w-md h-[70%] max-h-[400px] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400 relative flex flex-col backdrop-blur-xl shadow-2xl">
+          <Card className="w-full max-w-[90%] max-h-[70%] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400/50 relative flex flex-col backdrop-blur-xl shadow-2xl rounded-2xl">
+            {/* Enhanced glassmorphism */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-2xl" />
+            
             <div className="flex justify-between items-center p-4 border-b border-purple-400 flex-shrink-0">
               <h2 className="text-lg font-bold text-white">Hybrid Nexus</h2>
               <Button
                 onClick={() => setShowHybridUpgrades(false)}
                 variant="ghost"
                 size="sm"
-                className="text-white hover:bg-white/10 p-1 h-8 w-8"
+                className="text-white hover:bg-white/10 p-1 h-8 w-8 rounded-full"
               >
                 <X size={16} />
               </Button>
@@ -395,17 +398,17 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Convergence Modal - Enhanced styling */}
+      {/* Convergence Modal - Enhanced styling with proper containment */}
       {showConvergence && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowConvergence(false);
             }
           }}
         >
-          <div className="max-w-xs w-full">
+          <div className="max-w-[90%] w-full max-w-xs">
             <ConvergenceSystem
               gameState={gameState}
               onPerformConvergence={performConvergence}

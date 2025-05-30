@@ -237,8 +237,8 @@ export const MapView: React.FC<MapViewProps> = ({
         isTransitioning ? 'opacity-50 scale-105' : 'opacity-100 scale-100'
       }`}>
         <AnimatedBackground realm={realm} />
-        {/* Subtle top-to-bottom gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/20 pointer-events-none" />
+        {/* Enhanced top-to-bottom gradient overlay for visual hierarchy */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30 pointer-events-none" />
       </div>
 
       {/* Enhanced Nexus Core - Perfectly centered */}
@@ -312,23 +312,33 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       )}
 
-      {/* Enhanced Tap to Generate Button - Properly spaced above bottom bar */}
-      <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-30">
+      {/* Enhanced Tap to Generate Button - Positioned above bottom bar with consistent styling and glow */}
+      <div className="absolute bottom-20 left-0 right-0 z-30 flex justify-center px-4">
         <Button 
           onClick={onTapResource}
-          className={`h-14 px-8 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 font-bold text-base backdrop-blur-xl shadow-2xl ${
+          className={`h-12 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 font-bold text-sm backdrop-blur-xl shadow-2xl border-2 relative overflow-hidden ${
             realm === 'fantasy'
-              ? 'bg-gradient-to-r from-purple-600/80 to-violet-700/80 hover:from-purple-500/80 hover:to-violet-600/80 border-2 border-purple-400/60 text-purple-100 shadow-purple-500/40'
-              : 'bg-gradient-to-r from-cyan-600/80 to-blue-700/80 hover:from-cyan-500/80 hover:to-blue-600/80 border-2 border-cyan-400/60 text-cyan-100 shadow-cyan-500/40'
+              ? 'bg-gradient-to-r from-purple-600/80 to-violet-700/80 hover:from-purple-500/80 hover:to-violet-600/80 border-purple-400/60 text-purple-100 shadow-purple-500/40'
+              : 'bg-gradient-to-r from-cyan-600/80 to-blue-700/80 hover:from-cyan-500/80 hover:to-blue-600/80 border-cyan-400/60 text-cyan-100 shadow-cyan-500/40'
           }`}
+          style={{
+            boxShadow: `0 0 20px ${realm === 'fantasy' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(34, 211, 238, 0.4)'}, 0 8px 32px rgba(0,0,0,0.3)`
+          }}
         >
-          {/* Glassmorphism inner glow */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-2xl" />
+          {/* Enhanced glassmorphism inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-xl" />
           
           <span className="flex items-center gap-2 relative z-10">
             {realm === 'fantasy' ? '✨' : '⚡'}
             Tap to Generate {realm === 'fantasy' ? 'Mana' : 'Energy'}
           </span>
+          
+          {/* Animated glow ring */}
+          <div className={`absolute inset-0 rounded-xl animate-pulse ${
+            realm === 'fantasy' 
+              ? 'bg-purple-400/10' 
+              : 'bg-cyan-400/10'
+          }`} />
         </Button>
       </div>
 
