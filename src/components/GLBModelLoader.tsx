@@ -51,7 +51,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
     event.stopPropagation();
     console.log(`Clicked on ${name}. Within range: ${isWithinRange}, Can afford: ${canAfford}`);
     
-    // Always allow clicks, let the parent component handle the logic
+    // Always trigger the click, let parent handle the logic
     onClick();
   };
   
@@ -110,9 +110,9 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        {/* Large invisible interaction sphere for better click detection */}
+        {/* Much larger invisible interaction sphere for better click detection */}
         <mesh>
-          <sphereGeometry args={[scale * 3]} />
+          <sphereGeometry args={[scale * 6]} />
           <meshBasicMaterial transparent opacity={0} />
         </mesh>
 
@@ -155,9 +155,9 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
-      {/* Large invisible interaction sphere for better click detection */}
+      {/* Much larger invisible interaction sphere for better click detection */}
       <mesh>
-        <sphereGeometry args={[scale * 3]} />
+        <sphereGeometry args={[scale * 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
@@ -285,7 +285,7 @@ const workingModelUrls = [
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb',
-  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb'
+  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb'
 ];
 
 // Preload only confirmed working models
