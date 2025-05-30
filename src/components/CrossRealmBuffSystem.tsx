@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CrossRealmBuff, BuffIndicator } from '../types/GameTypes';
 import { crossRealmBuffs } from '../data/CrossRealmBuffs';
 
@@ -76,7 +76,10 @@ export const createBuffSystem = (
 };
 
 export const useBuffSystem = (fantasyBuildings: { [key: string]: number }, scifiBuildings: { [key: string]: number }) => {
-  return createBuffSystem(fantasyBuildings, scifiBuildings);
+  // Properly memoize the buff system to prevent re-renders
+  return useMemo(() => {
+    return createBuffSystem(fantasyBuildings, scifiBuildings);
+  }, [fantasyBuildings, scifiBuildings]);
 };
 
 // Legacy component export for compatibility

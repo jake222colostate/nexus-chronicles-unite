@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -82,14 +81,17 @@ const GameEngine: React.FC = () => {
   const [showQuickHelp, setShowQuickHelp] = useState(() => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize buff system with proper memoization
-  const buffSystem = useBuffSystem(gameState.fantasyBuildings, gameState.scifiBuildings);
+  // Memoize building objects to prevent unnecessary re-renders
+  const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings, [gameState.fantasyBuildings]);
+  const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings, [gameState.scifiBuildings]);
+
+  // Initialize buff system with memoized buildings
+  const buffSystem = useBuffSystem(memoizedFantasyBuildings, memoizedScifiBuildings);
 
   // Calculate convergence state early (before callbacks that use it)
-  const canConverge = gameState.mana + gameState.energyCredits >= 1000;
-  const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
+  const canConverge = useMemo(() => gameState.mana + gameState.energyCredits >= 1000, [gameState.mana, gameState.energyCredits]);
+  const convergenceProgress = useMemo(() => Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100), [gameState.mana, gameState.energyCredits]);
 
   // Calculate offline progress on mount
   useEffect(() => {
@@ -136,13 +138,13 @@ const GameEngine: React.FC = () => {
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
-      const count = gameState.fantasyBuildings[building.id] || 0;
+      const count = memoizedFantasyBuildings[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'fantasy');
       manaRate += (count * building.production * multiplier) + flatBonus;
     });
 
     scifiBuildings.forEach(building => {
-      const count = gameState.scifiBuildings[building.id] || 0;
+      const count = memoizedScifiBuildings[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'scifi');
       energyRate += (count * building.production * multiplier) + flatBonus;
     });
@@ -174,11 +176,11 @@ const GameEngine: React.FC = () => {
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
   }, [
-    gameState.fantasyBuildings, 
-    gameState.scifiBuildings, 
+    memoizedFantasyBuildings, 
+    memoizedScifiBuildings, 
     gameState.purchasedUpgrades, 
     buffSystem
-  ]); // Added proper dependencies
+  ]); // Proper dependencies with memoized buildings
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -283,8 +285,19 @@ const GameEngine: React.FC = () => {
     return Math.floor(num).toString();
   };
 
-  // Memoize gameState to prevent unnecessary re-renders
-  const stableGameState = useMemo(() => gameState, [
+  // Memoize gameState to prevent unnecessary re-renders with only essential properties
+  const stableGameState = useMemo(() => ({
+    mana: gameState.mana,
+    energyCredits: gameState.energyCredits,
+    nexusShards: gameState.nexusShards,
+    convergenceCount: gameState.convergenceCount,
+    purchasedUpgrades: gameState.purchasedUpgrades,
+    manaPerSecond: gameState.manaPerSecond,
+    energyPerSecond: gameState.energyPerSecond,
+    fantasyBuildings: memoizedFantasyBuildings,
+    scifiBuildings: memoizedScifiBuildings,
+    lastSaveTime: gameState.lastSaveTime
+  }), [
     gameState.mana,
     gameState.energyCredits,
     gameState.nexusShards,
@@ -292,8 +305,9 @@ const GameEngine: React.FC = () => {
     gameState.purchasedUpgrades,
     gameState.manaPerSecond,
     gameState.energyPerSecond,
-    gameState.fantasyBuildings,
-    gameState.scifiBuildings
+    memoizedFantasyBuildings,
+    memoizedScifiBuildings,
+    gameState.lastSaveTime
   ]);
 
   return (
@@ -319,7 +333,7 @@ const GameEngine: React.FC = () => {
         {/* Integrated Map and Skill Tree View */}
         <MapSkillTreeView
           realm={currentRealm}
-          buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
+          buildings={currentRealm === 'fantasy' ? memoizedFantasyBuildings : memoizedScifiBuildings}
           manaPerSecond={gameState.manaPerSecond}
           energyPerSecond={gameState.energyPerSecond}
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
