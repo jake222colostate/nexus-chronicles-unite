@@ -29,34 +29,6 @@ const environmentAssets = {
   ]
 };
 
-// Preload all environment models
-environmentAssets.ground.forEach(url => {
-  try {
-    useGLTF.preload(url);
-    console.log(`Preloading ground model: ${url}`);
-  } catch (error) {
-    console.warn(`Failed to preload ground model: ${url}`, error);
-  }
-});
-
-environmentAssets.mountains.forEach(url => {
-  try {
-    useGLTF.preload(url);
-    console.log(`Preloading mountain model: ${url}`);
-  } catch (error) {
-    console.warn(`Failed to preload mountain model: ${url}`, error);
-  }
-});
-
-environmentAssets.sky.forEach(url => {
-  try {
-    useGLTF.preload(url);
-    console.log(`Preloading sky model: ${url}`);
-  } catch (error) {
-    console.warn(`Failed to preload sky model: ${url}`, error);
-  }
-});
-
 // Individual environment component with error handling
 const EnvironmentModel: React.FC<{
   modelUrl: string;
@@ -75,7 +47,9 @@ const EnvironmentModel: React.FC<{
     gltfScene = gltf.scene;
   } catch (error) {
     console.log(`Failed to load ${type} model:`, error);
-    setLoadError(true);
+    if (!loadError) {
+      setLoadError(true);
+    }
   }
 
   useFrame((state) => {
@@ -128,6 +102,33 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   const [transitionOpacity, setTransitionOpacity] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Preload models on mount
+  useEffect(() => {
+    const preloadModels = async () => {
+      try {
+        // Preload all environment models
+        const allUrls = [
+          ...environmentAssets.ground,
+          ...environmentAssets.mountains,
+          ...environmentAssets.sky
+        ];
+
+        allUrls.forEach(url => {
+          try {
+            useGLTF.preload(url);
+            console.log(`Preloading model: ${url}`);
+          } catch (error) {
+            console.warn(`Failed to preload model: ${url}`, error);
+          }
+        });
+      } catch (error) {
+        console.warn('Error during model preloading:', error);
+      }
+    };
+
+    preloadModels();
+  }, []); // Empty dependency array - only run once on mount
+
   // Calculate environment tier based on upgrade count
   const environmentTier = useMemo(() => {
     if (upgradeCount < 5) return 0;
@@ -135,38 +136,24 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
     return 2;
   }, [upgradeCount]);
 
-  // Handle environment transitions
+  // Handle environment transitions with simplified logic
   useEffect(() => {
-    if (environmentTier !== currentTier) {
+    if (environmentTier !== currentTier && !isTransitioning) {
       setIsTransitioning(true);
       
-      // Fade out current environment
-      const fadeOut = setInterval(() => {
-        setTransitionOpacity(prev => {
-          if (prev <= 0.1) {
-            clearInterval(fadeOut);
-            setCurrentTier(environmentTier);
-            
-            // Fade in new environment
-            const fadeIn = setInterval(() => {
-              setTransitionOpacity(prev => {
-                if (prev >= 1) {
-                  clearInterval(fadeIn);
-                  setIsTransitioning(false);
-                  onEnvironmentChange?.(environmentTier);
-                  return 1;
-                }
-                return prev + 0.05;
-              });
-            }, 50);
-            
-            return 0.1;
-          }
-          return prev - 0.05;
-        });
-      }, 50);
+      // Simple transition: fade out, change tier, fade in
+      setTransitionOpacity(0.1);
+      setCurrentTier(environmentTier);
+      
+      const transitionTimeout = setTimeout(() => {
+        setTransitionOpacity(1);
+        setIsTransitioning(false);
+        onEnvironmentChange?.(environmentTier);
+      }, 500);
+
+      return () => clearTimeout(transitionTimeout);
     }
-  }, [environmentTier, currentTier, onEnvironmentChange]);
+  }, [environmentTier, currentTier, isTransitioning, onEnvironmentChange]);
 
   // Memoized environment components for performance
   const groundComponent = useMemo(() => (
