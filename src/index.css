@@ -83,6 +83,23 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Prevent overscroll bounce on iOS */
+    overscroll-behavior: none;
+    /* Improve touch responsiveness */
+    touch-action: manipulation;
+    /* Prevent text selection during touch interactions */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Improve touch targets for mobile */
+  @media (max-width: 640px) {
+    button, [role="button"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
   }
 }
 
@@ -120,5 +137,20 @@
 
   .bg-gradient-radial {
     background: radial-gradient(circle, var(--tw-gradient-stops));
+  }
+
+  /* Mobile-specific optimizations */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS specific styles */
+    body {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  /* Prevent zoom on double tap for iOS */
+  @media (max-width: 640px) {
+    * {
+      touch-action: manipulation;
+    }
   }
 }
