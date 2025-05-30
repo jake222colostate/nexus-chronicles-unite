@@ -235,18 +235,19 @@ const GameEngine: React.FC = () => {
   const canConverge = gameState.mana + gameState.energyCredits >= 1000;
   const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
 
-  // Modified realm switching with transition
+  // Enhanced realm switching with proper visual feedback
   const switchRealm = (newRealm: 'fantasy' | 'scifi') => {
-    if (newRealm === currentRealm) return;
+    if (newRealm === currentRealm || isTransitioning) return;
     
     setIsTransitioning(true);
     setShowMobileMenu(false);
+    
     setTimeout(() => {
       setCurrentRealm(newRealm);
       setTimeout(() => {
         setIsTransitioning(false);
-      }, 500);
-    }, 600);
+      }, 300);
+    }, 200);
   };
 
   const handleNexusClick = () => {
@@ -256,9 +257,9 @@ const GameEngine: React.FC = () => {
   };
 
   return (
-    <div className="h-[667px] w-full relative overflow-hidden iphone-safe-top iphone-safe-bottom">
-      {/* iPhone-optimized Header UI with safe area support */}
-      <div className="absolute top-0 left-0 right-0 z-30 p-2 backdrop-blur-sm bg-black/20 iphone-safe-top">
+    <div className="h-[667px] w-full relative overflow-hidden">
+      {/* Translucent Header UI with backdrop blur - starts below notch */}
+      <div className="absolute top-6 left-0 right-0 z-30 p-3 backdrop-blur-md bg-black/40">
         {/* Compact Mobile Header */}
         <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
@@ -266,7 +267,7 @@ const GameEngine: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="text-white p-1"
+              className="text-white p-1 hover:bg-white/10"
             >
               <Menu size={16} />
             </Button>
@@ -282,7 +283,7 @@ const GameEngine: React.FC = () => {
             <Button 
               onClick={() => setShowHybridUpgrades(true)}
               size="sm"
-              className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-xs px-2 py-1 h-6"
+              className="bg-gradient-to-r from-purple-500/80 to-cyan-500/80 hover:from-purple-600/80 hover:to-cyan-600/80 text-xs px-2 py-1 h-6 backdrop-blur-sm"
             >
               <Sparkles className="mr-1" size={10} />
               Hybrid
@@ -291,7 +292,7 @@ const GameEngine: React.FC = () => {
               <Button 
                 onClick={() => setShowConvergence(true)}
                 size="sm"
-                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-xs px-2 py-1 h-6 animate-pulse"
+                className="bg-gradient-to-r from-purple-500/80 to-cyan-500/80 hover:from-purple-600/80 hover:to-cyan-600/80 text-xs px-2 py-1 h-6 animate-pulse backdrop-blur-sm"
               >
                 <Sparkles className="mr-1" size={10} />
                 Conv
@@ -302,7 +303,7 @@ const GameEngine: React.FC = () => {
 
         {/* Mobile Menu Overlay */}
         {showMobileMenu && (
-          <div className="absolute top-full left-0 right-0 bg-black/90 backdrop-blur-sm p-3 space-y-3">
+          <div className="absolute top-full left-0 right-0 bg-black/90 backdrop-blur-md p-3 space-y-3 border-t border-white/10">
             {/* Realm Toggle */}
             <div className="flex gap-2">
               <Button
@@ -310,9 +311,9 @@ const GameEngine: React.FC = () => {
                 variant={currentRealm === 'fantasy' ? 'default' : 'outline'}
                 disabled={isTransitioning}
                 size="sm"
-                className={`flex-1 text-xs h-8 ${currentRealm === 'fantasy' 
-                  ? 'bg-purple-600 hover:bg-purple-700' 
-                  : 'border-purple-400 text-purple-300 hover:bg-purple-900/50'
+                className={`flex-1 text-xs h-8 transition-all duration-300 ${currentRealm === 'fantasy' 
+                  ? 'bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/30' 
+                  : 'border-purple-400/60 text-purple-300 hover:bg-purple-900/50 backdrop-blur-sm'
                 }`}
               >
                 <Sparkles className="mr-1" size={12} />
@@ -323,9 +324,9 @@ const GameEngine: React.FC = () => {
                 variant={currentRealm === 'scifi' ? 'default' : 'outline'}
                 disabled={isTransitioning}
                 size="sm"
-                className={`flex-1 text-xs h-8 ${currentRealm === 'scifi' 
-                  ? 'bg-cyan-600 hover:bg-cyan-700' 
-                  : 'border-cyan-400 text-cyan-300 hover:bg-cyan-900/50'
+                className={`flex-1 text-xs h-8 transition-all duration-300 ${currentRealm === 'scifi' 
+                  ? 'bg-cyan-600 hover:bg-cyan-700 shadow-lg shadow-cyan-500/30' 
+                  : 'border-cyan-400/60 text-cyan-300 hover:bg-cyan-900/50 backdrop-blur-sm'
                 }`}
               >
                 <Zap className="mr-1" size={12} />
@@ -333,12 +334,12 @@ const GameEngine: React.FC = () => {
               </Button>
             </div>
 
-            {/* Compact Resources */}
+            {/* Translucent Resource Cards */}
             <div className="grid grid-cols-2 gap-2">
-              <Card className={`p-2 backdrop-blur-sm ${
+              <Card className={`p-2 backdrop-blur-md border transition-all duration-500 ${
                 currentRealm === 'fantasy' 
-                  ? 'bg-purple-800/40 border-purple-400' 
-                  : 'bg-purple-800/20 border-purple-400/50'
+                  ? 'bg-purple-800/50 border-purple-400/60' 
+                  : 'bg-purple-800/30 border-purple-400/40'
               }`}>
                 <div className="flex items-center justify-between text-white">
                   <div className="flex items-center gap-1">
@@ -354,10 +355,10 @@ const GameEngine: React.FC = () => {
                 </div>
               </Card>
 
-              <Card className={`p-2 backdrop-blur-sm ${
+              <Card className={`p-2 backdrop-blur-md border transition-all duration-500 ${
                 currentRealm === 'scifi' 
-                  ? 'bg-cyan-800/40 border-cyan-400' 
-                  : 'bg-cyan-800/20 border-cyan-400/50'
+                  ? 'bg-cyan-800/50 border-cyan-400/60' 
+                  : 'bg-cyan-800/30 border-cyan-400/40'
               }`}>
                 <div className="flex items-center justify-between text-white">
                   <div className="flex items-center gap-1">
@@ -377,7 +378,7 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Map View - now with realm switching functionality */}
+      {/* Map View - Enhanced with proper event handling */}
       <MapView
         realm={currentRealm}
         buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}

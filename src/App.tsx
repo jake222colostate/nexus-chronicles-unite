@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
-import { iPhoneFrame as IPhoneFrame } from '@/components/iPhoneFrame';
+import { iPhoneFrameMinimal as IPhoneFrameMinimal } from '@/components/iPhoneFrameMinimal';
 
 const queryClient = new QueryClient();
 
@@ -13,12 +13,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <IPhoneFrame>
+        <IPhoneFrameMinimal>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </IPhoneFrame>
+        </IPhoneFrameMinimal>
         <Toaster />
       </Router>
     </QueryClientProvider>

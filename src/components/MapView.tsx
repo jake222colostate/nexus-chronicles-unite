@@ -37,7 +37,7 @@ export const MapView: React.FC<MapViewProps> = ({
   onRealmChange
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.85 }); // Default 85% zoom for better overview
+  const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.85 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastTouch, setLastTouch] = useState({ x: 0, y: 0 });
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
@@ -156,6 +156,12 @@ export const MapView: React.FC<MapViewProps> = ({
     setLastPinchDistance(0);
   }, []);
 
+  // Prevent map dragging when interacting with buildings
+  const handleBuildingInteraction = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
   useEffect(() => {
     const mapElement = mapRef.current;
     if (!mapElement) return;
@@ -184,10 +190,14 @@ export const MapView: React.FC<MapViewProps> = ({
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* Enhanced Animated Background with realm-specific parallax */}
-      <AnimatedBackground realm={realm} />
+      {/* Enhanced Animated Background with smooth realm transitions */}
+      <div className={`absolute inset-0 transition-all duration-700 ${
+        isTransitioning ? 'opacity-50 scale-105' : 'opacity-100 scale-100'
+      }`}>
+        <AnimatedBackground realm={realm} />
+      </div>
 
-      {/* Enhanced Nexus Core with new functionality */}
+      {/* Enhanced Nexus Core */}
       <EnhancedNexusCore 
         manaFlow={manaPerSecond}
         energyFlow={energyPerSecond}
@@ -197,25 +207,25 @@ export const MapView: React.FC<MapViewProps> = ({
         onNexusClick={onNexusClick}
       />
 
-      {/* Map Container */}
+      {/* Map Container with enhanced interaction */}
       <div 
         ref={mapRef}
         className={`absolute inset-0 transition-all duration-500 cursor-grab active:cursor-grabbing ${
-          isTransitioning ? 'opacity-30 scale-95' : 'opacity-100 scale-100'
+          isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100 blur-0'
         }`}
         style={{ 
           transform: `scale(${camera.zoom}) translate(${camera.x}px, ${camera.y}px)`,
           touchAction: 'none'
         }}
       >
-        {/* Ground/Base Layer with realm-specific styling */}
-        <div className={`absolute inset-0 transition-all duration-500 ${
+        {/* Ground/Base Layer with enhanced realm-specific styling */}
+        <div className={`absolute inset-0 transition-all duration-700 ${
           realm === 'fantasy' 
-            ? 'bg-gradient-to-t from-green-900/30 via-purple-900/20 to-transparent' 
-            : 'bg-gradient-to-t from-gray-800/30 via-cyan-900/20 to-transparent'
+            ? 'bg-gradient-to-t from-purple-900/40 via-violet-800/20 to-transparent' 
+            : 'bg-gradient-to-t from-cyan-900/40 via-blue-800/20 to-transparent'
         }`} />
 
-        {/* Enhanced Structures with buff indicators */}
+        {/* Enhanced Structures with improved interaction */}
         {structurePositions[realm].map((position) => {
           const building = buildingData.find(b => b.id === position.id);
           const count = buildings[position.id] || 0;
@@ -223,25 +233,39 @@ export const MapView: React.FC<MapViewProps> = ({
           if (!building) return null;
 
           return (
-            <EnhancedStructure
-              key={position.id}
-              building={building}
-              position={position}
-              count={count}
-              realm={realm}
-              onBuy={() => onBuyBuilding(position.id)}
-              canAfford={currency >= Math.floor(building.cost * Math.pow(building.costMultiplier, count))}
-            />
+            <div
+              key={`${realm}-${position.id}`}
+              onTouchStart={handleBuildingInteraction}
+              onMouseDown={handleBuildingInteraction}
+              className="relative z-20"
+            >
+              <EnhancedStructure
+                building={building}
+                position={position}
+                count={count}
+                realm={realm}
+                onBuy={() => {
+                  console.log(`Buying building: ${position.id} in ${realm} realm`);
+                  onBuyBuilding(position.id);
+                }}
+                canAfford={currency >= Math.floor(building.cost * Math.pow(building.costMultiplier, count))}
+              />
+            </div>
           );
         })}
 
-        {/* Enhanced Particle Systems */}
-        <ParticleSystem realm={realm} productionRate={realm === 'fantasy' ? manaPerSecond : energyPerSecond} />
+        {/* Enhanced Particle Systems with realm-specific effects */}
+        <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-30' : 'opacity-100'}`}>
+          <ParticleSystem 
+            realm={realm} 
+            productionRate={realm === 'fantasy' ? manaPerSecond : energyPerSecond} 
+          />
+        </div>
       </div>
 
-      {/* iPhone UI Overlay with collapsible instructions */}
+      {/* Enhanced Instructions with better visibility */}
       {showInstructions && (
-        <div className="absolute bottom-20 left-4 right-4 text-white text-xs bg-black/40 backdrop-blur-md p-3 rounded-xl border border-white/20 iphone-safe-bottom animate-fade-in">
+        <div className="absolute bottom-20 left-4 right-4 text-white text-xs bg-black/60 backdrop-blur-md p-3 rounded-xl border border-white/30 animate-fade-in">
           <div className="flex justify-between items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -250,12 +274,12 @@ export const MapView: React.FC<MapViewProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span>Tap structures to upgrade • Tap realm buttons to switch</span>
+                <span>Tap structures to upgrade • Switch realms below</span>
               </div>
               {nexusShards > 0 && (
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-                  <span>🔁 = Cross-realm buffs active</span>
+                  <span>🔁 Cross-realm buffs active</span>
                 </div>
               )}
             </div>
@@ -268,12 +292,12 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       )}
 
-      {/* Realm indicator */}
-      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20">
-        <div className={`px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-500 ${
+      {/* Enhanced Realm indicator with smooth transitions */}
+      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-20">
+        <div className={`px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-700 ${
           realm === 'fantasy'
-            ? 'bg-purple-800/60 border-purple-400 text-purple-100'
-            : 'bg-cyan-800/60 border-cyan-400 text-cyan-100'
+            ? 'bg-purple-800/70 border-purple-400/60 text-purple-100 shadow-lg shadow-purple-500/30'
+            : 'bg-cyan-800/70 border-cyan-400/60 text-cyan-100 shadow-lg shadow-cyan-500/30'
         }`}>
           <span className="text-sm font-medium">
             {realm === 'fantasy' ? '🏰 Fantasy Realm' : '🚀 Sci-Fi Realm'}
@@ -281,7 +305,7 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       </div>
 
-      {/* Realm Toggle Buttons - positioned at bottom center */}
+      {/* Enhanced Realm Toggle Buttons */}
       {onRealmChange && (
         <RealmToggleButtons
           currentRealm={realm}

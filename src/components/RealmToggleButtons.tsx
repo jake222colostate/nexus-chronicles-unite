@@ -14,22 +14,31 @@ export const RealmToggleButtons: React.FC<RealmToggleButtonsProps> = ({
   onRealmChange,
   isTransitioning = false
 }) => {
+  const handleRealmSwitch = (realm: 'fantasy' | 'scifi') => {
+    if (realm !== currentRealm && !isTransitioning) {
+      console.log(`Switching to ${realm} realm`);
+      onRealmChange(realm);
+    }
+  };
+
   return (
-    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 iphone-safe-bottom">
-      <div className="flex gap-3 bg-black/40 backdrop-blur-md p-2 rounded-full border border-white/20">
+    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30">
+      <div className="flex gap-3 bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/30">
         {/* Fantasy Realm Button */}
         <Button
-          onClick={() => onRealmChange('fantasy')}
+          onClick={() => handleRealmSwitch('fantasy')}
           disabled={isTransitioning}
-          className={`relative h-12 px-4 rounded-full transition-all duration-300 ${
+          className={`relative h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 ${
             currentRealm === 'fantasy'
-              ? 'bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/50 scale-105'
-              : 'bg-transparent border-2 border-purple-400/50 text-purple-300 hover:bg-purple-900/30 hover:border-purple-400'
-          }`}
+              ? 'bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/50 scale-105 border-2 border-purple-400'
+              : 'bg-transparent border-2 border-purple-400/60 text-purple-300 hover:bg-purple-900/40 hover:border-purple-400'
+          } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
         >
           <Sparkles 
             size={18} 
-            className={`mr-2 ${currentRealm === 'fantasy' ? 'text-white' : 'text-purple-300'}`} 
+            className={`mr-2 transition-colors duration-300 ${
+              currentRealm === 'fantasy' ? 'text-white' : 'text-purple-300'
+            }`} 
           />
           <span className="text-sm font-medium">Fantasy</span>
           {currentRealm === 'fantasy' && (
@@ -39,17 +48,19 @@ export const RealmToggleButtons: React.FC<RealmToggleButtonsProps> = ({
 
         {/* Sci-Fi Realm Button */}
         <Button
-          onClick={() => onRealmChange('scifi')}
+          onClick={() => handleRealmSwitch('scifi')}
           disabled={isTransitioning}
-          className={`relative h-12 px-4 rounded-full transition-all duration-300 ${
+          className={`relative h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 ${
             currentRealm === 'scifi'
-              ? 'bg-cyan-600 hover:bg-cyan-700 shadow-lg shadow-cyan-500/50 scale-105'
-              : 'bg-transparent border-2 border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 hover:border-cyan-400'
-          }`}
+              ? 'bg-cyan-600 hover:bg-cyan-700 shadow-lg shadow-cyan-500/50 scale-105 border-2 border-cyan-400'
+              : 'bg-transparent border-2 border-cyan-400/60 text-cyan-300 hover:bg-cyan-900/40 hover:border-cyan-400'
+          } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
         >
           <Zap 
             size={18} 
-            className={`mr-2 ${currentRealm === 'scifi' ? 'text-white' : 'text-cyan-300'}`} 
+            className={`mr-2 transition-colors duration-300 ${
+              currentRealm === 'scifi' ? 'text-white' : 'text-cyan-300'
+            }`} 
           />
           <span className="text-sm font-medium">Sci-Fi</span>
           {currentRealm === 'scifi' && (
