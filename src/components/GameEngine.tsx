@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Zap, Crown, Menu } from 'lucide-react';
+import { Sparkles, Zap, Crown, Menu, X } from 'lucide-react';
 import { MapView } from './MapView';
 import { RealmTransition } from './RealmTransition';
 import { HybridUpgradesPanel } from './HybridUpgradesPanel';
@@ -226,6 +227,15 @@ const GameEngine: React.FC = () => {
     }));
   };
 
+  // Handle tap resource generation
+  const handleTapResource = () => {
+    setGameState(prev => ({
+      ...prev,
+      mana: currentRealm === 'fantasy' ? prev.mana + 1 : prev.mana,
+      energyCredits: currentRealm === 'scifi' ? prev.energyCredits + 1 : prev.energyCredits,
+    }));
+  };
+
   const formatNumber = (num: number): string => {
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
     if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
@@ -378,7 +388,7 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Map View - Enhanced with proper event handling */}
+      {/* Map View - Enhanced with tap mechanic */}
       <MapView
         realm={currentRealm}
         buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
@@ -393,24 +403,25 @@ const GameEngine: React.FC = () => {
         buffSystem={buffSystem}
         onRealmChange={switchRealm}
         isTransitioning={isTransitioning}
+        onTapResource={handleTapResource}
       />
 
       {/* Realm Transition Effect */}
       <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-      {/* Hybrid Upgrades Modal */}
+      {/* Fixed Hybrid Upgrades Modal with proper positioning */}
       {showHybridUpgrades && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <Card className="max-w-md w-full max-h-[80vh] overflow-hidden bg-gradient-to-br from-purple-900/90 to-cyan-900/90 border-2 border-purple-400">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <Card className="max-w-sm w-full max-h-[500px] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400 relative mt-12">
             <div className="flex justify-between items-center p-4 border-b border-purple-400">
               <h2 className="text-lg font-bold text-white">Hybrid Nexus</h2>
               <Button
                 onClick={() => setShowHybridUpgrades(false)}
                 variant="ghost"
                 size="sm"
-                className="text-white"
+                className="text-white hover:bg-white/10 p-1 h-8 w-8"
               >
-                ✕
+                <X size={16} />
               </Button>
             </div>
             <div className="overflow-y-auto max-h-96">
@@ -423,10 +434,10 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Convergence Modal - iPhone optimized */}
+      {/* Fixed Convergence Modal with proper positioning */}
       {showConvergence && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="max-w-xs w-full">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="max-w-xs w-full mt-12">
             <ConvergenceSystem
               gameState={gameState}
               onPerformConvergence={performConvergence}
@@ -436,7 +447,7 @@ const GameEngine: React.FC = () => {
                 onClick={() => setShowConvergence(false)}
                 variant="outline"
                 size="sm"
-                className="border-gray-400 text-gray-300"
+                className="border-gray-400 text-gray-300 hover:bg-white/10"
               >
                 Cancel
               </Button>

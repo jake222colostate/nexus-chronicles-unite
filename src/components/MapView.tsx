@@ -1,9 +1,12 @@
+
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { EnhancedStructure } from './EnhancedStructure';
 import { EnhancedNexusCore } from './EnhancedNexusCore';
 import { AnimatedBackground } from './AnimatedBackground';
 import { ParticleSystem } from './ParticleSystem';
 import { RealmToggleButtons } from './RealmToggleButtons';
+import { TapEffect } from './TapEffect';
+import { TapIndicator } from './TapIndicator';
 
 interface MapViewProps {
   realm: 'fantasy' | 'scifi';
@@ -19,6 +22,7 @@ interface MapViewProps {
   onNexusClick?: () => void;
   buffSystem?: any;
   onRealmChange?: (realm: 'fantasy' | 'scifi') => void;
+  onTapResource?: () => void;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -34,7 +38,8 @@ export const MapView: React.FC<MapViewProps> = ({
   convergenceProgress = 0,
   onNexusClick,
   buffSystem,
-  onRealmChange
+  onRealmChange,
+  onTapResource
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.85 });
@@ -42,12 +47,17 @@ export const MapView: React.FC<MapViewProps> = ({
   const [lastTouch, setLastTouch] = useState({ x: 0, y: 0 });
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
   const [showInstructions, setShowInstructions] = useState(true);
+  const [tapEffects, setTapEffects] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const [lastTapTime, setLastTapTime] = useState(0);
 
   // Hide instructions after 5 seconds
   useEffect(() => {
     const timer = setTimeout(() => setShowInstructions(false), 5000);
     return () => clearTimeout(timer);
   }, []);
+
+  // Check if player has any buildings
+  const hasBuildings = Object.values(buildings).some(count => count > 0);
 
   // Enhanced structure positioning for both realms
   const structurePositions = {
@@ -74,6 +84,39 @@ export const MapView: React.FC<MapViewProps> = ({
   useEffect(() => {
     updateTransform();
   }, [updateTransform]);
+
+  // Handle tap for resource generation
+  const handleTapResource = useCallback((e: TouchEvent | MouseEvent) => {
+    const now = Date.now();
+    if (now - lastTapTime < 200) return; // 200ms cooldown
+    
+    setLastTapTime(now);
+    
+    let clientX: number, clientY: number;
+    if ('touches' in e && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if ('clientX' in e) {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    } else {
+      return;
+    }
+
+    // Create tap effect
+    const newEffect = {
+      id: Date.now(),
+      x: clientX,
+      y: clientY
+    };
+    
+    setTapEffects(prev => [...prev, newEffect]);
+    
+    // Call the tap resource callback
+    if (onTapResource) {
+      onTapResource();
+    }
+  }, [lastTapTime, onTapResource]);
 
   // Mouse wheel zoom (desktop)
   const handleWheel = useCallback((e: WheelEvent) => {
@@ -151,15 +194,24 @@ export const MapView: React.FC<MapViewProps> = ({
     }
   }, [isDragging, lastTouch, lastPinchDistance]);
 
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-    setLastPinchDistance(0);
-  }, []);
+  const handleTouchEnd = useCallback((e: TouchEvent | MouseEvent) => {
+    if (isDragging) {
+      setIsDragging(false);
+      setLastPinchDistance(0);
+    } else {
+      // Handle tap for resource generation
+      handleTapResource(e);
+    }
+  }, [isDragging, handleTapResource]);
 
   // Prevent map dragging when interacting with buildings
   const handleBuildingInteraction = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     e.stopPropagation();
     setIsDragging(false);
+  }, []);
+
+  const removeTapEffect = useCallback((id: number) => {
+    setTapEffects(prev => prev.filter(effect => effect.id !== id));
   }, []);
 
   useEffect(() => {
@@ -206,6 +258,9 @@ export const MapView: React.FC<MapViewProps> = ({
         convergenceProgress={convergenceProgress}
         onNexusClick={onNexusClick}
       />
+
+      {/* Tap Indicator for new players */}
+      <TapIndicator realm={realm} hasBuildings={hasBuildings} />
 
       {/* Map Container with enhanced interaction */}
       <div 
@@ -263,6 +318,17 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       </div>
 
+      {/* Tap Effects */}
+      {tapEffects.map((effect) => (
+        <TapEffect
+          key={effect.id}
+          x={effect.x}
+          y={effect.y}
+          realm={realm}
+          onComplete={() => removeTapEffect(effect.id)}
+        />
+      ))}
+
       {/* Enhanced Instructions with better visibility */}
       {showInstructions && (
         <div className="absolute bottom-20 left-4 right-4 text-white text-xs bg-black/60 backdrop-blur-md p-3 rounded-xl border border-white/30 animate-fade-in">
@@ -270,7 +336,7 @@ export const MapView: React.FC<MapViewProps> = ({
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                <span>Pinch to zoom • Drag to pan</span>
+                <span>Pinch to zoom • Drag to pan • Tap to gather</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
