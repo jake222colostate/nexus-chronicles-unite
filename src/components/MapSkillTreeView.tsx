@@ -230,6 +230,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   }, []);
 
   const handleModalBackdropClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     if (e.target === e.currentTarget) {
       setSelectedBuilding(null);
       setSelectedUpgrade(null);
@@ -384,7 +385,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
           className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in"
           onClick={handleModalBackdropClick}
         >
-          <div className="w-full max-w-[90%] max-h-[70vh] animate-scale-in">
+          <div className="w-full max-w-[90%] max-h-[70vh] animate-scale-in" onClick={(e) => e.stopPropagation()}>
             <BuildingUpgradeModal
               building={selectedBuilding.building}
               count={selectedBuilding.count}
@@ -399,18 +400,13 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
 
       {/* Hybrid Upgrade Modal */}
       {selectedUpgrade && (
-        <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in"
-          onClick={handleModalBackdropClick}
-        >
-          <div className="w-full max-w-[90%] max-h-[70vh] animate-scale-in">
-            <HybridUpgradeModal
-              upgrade={enhancedHybridUpgrades.find(u => u.id === selectedUpgrade)!}
-              gameState={gameState}
-              onPurchase={handleUpgradePurchase}
-              onClose={() => setSelectedUpgrade(null)}
-            />
-          </div>
+        <div onClick={handleModalBackdropClick}>
+          <HybridUpgradeModal
+            upgrade={enhancedHybridUpgrades.find(u => u.id === selectedUpgrade)!}
+            gameState={gameState}
+            onPurchase={handleUpgradePurchase}
+            onClose={() => setSelectedUpgrade(null)}
+          />
         </div>
       )}
     </div>

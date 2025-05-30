@@ -21,7 +21,10 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
 
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
-      <div className="flex items-center gap-3 bg-black/60 backdrop-blur-xl p-2.5 rounded-full border border-white/40 shadow-xl">
+      <div className="flex items-center gap-3 bg-black/60 backdrop-blur-xl p-2.5 rounded-full border border-white/40 shadow-xl"
+        style={{
+          filter: 'drop-shadow(0 6px 24px rgba(0,0,0,0.3))'
+        }}>
         {/* Enhanced glassmorphism */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/15 pointer-events-none rounded-full" />
         
@@ -36,7 +39,7 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
           } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
           style={{
             filter: currentRealm === 'fantasy' 
-              ? 'drop-shadow(0 4px 12px rgba(168, 85, 247, 0.3))' 
+              ? 'drop-shadow(0 4px 16px rgba(168, 85, 247, 0.4))' 
               : 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))'
           }}
         >
@@ -59,7 +62,7 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
           } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
           style={{
             filter: currentRealm === 'scifi' 
-              ? 'drop-shadow(0 4px 12px rgba(34, 211, 238, 0.3))' 
+              ? 'drop-shadow(0 4px 16px rgba(34, 211, 238, 0.4))' 
               : 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))'
           }}
         >
