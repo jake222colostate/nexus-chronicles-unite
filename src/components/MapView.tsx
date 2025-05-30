@@ -163,7 +163,7 @@ export const MapView: React.FC<MapViewProps> = ({
   }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
-    <div className={`relative w-full h-screen overflow-hidden transition-all duration-1000 ${
+    <div className={`relative w-full h-full overflow-hidden transition-all duration-1000 ${
       realm === 'fantasy' 
         ? 'bg-gradient-to-br from-purple-900 via-indigo-800 to-violet-900' 
         : 'bg-gradient-to-br from-slate-900 via-cyan-900 to-blue-900'
@@ -224,12 +224,11 @@ export const MapView: React.FC<MapViewProps> = ({
         <ParticleSystem realm={realm} productionRate={realm === 'fantasy' ? manaPerSecond : energyPerSecond} />
       </div>
 
-      {/* Mobile UI Overlay */}
-      <div className="absolute bottom-4 left-4 right-4 text-white text-xs bg-black/20 p-2 rounded backdrop-blur-sm">
+      {/* iPhone UI Overlay */}
+      <div className="absolute bottom-2 left-2 right-2 text-white text-xs bg-black/20 p-2 rounded backdrop-blur-sm iphone-safe-bottom">
         <div className="flex justify-between items-center">
           <div>
-            <div className="sm:hidden">Pinch to zoom • Drag to pan</div>
-            <div className="hidden sm:block">Mouse wheel: Zoom • Drag to pan</div>
+            <div>Pinch to zoom • Drag to pan</div>
             <div>Tap structures to upgrade</div>
           </div>
           <div className="text-right opacity-70">

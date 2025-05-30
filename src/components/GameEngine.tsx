@@ -208,38 +208,37 @@ const GameEngine: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Mobile-optimized Header UI */}
-      <div className="absolute top-0 left-0 right-0 z-30 p-2 sm:p-4 backdrop-blur-sm bg-black/20">
-        {/* Mobile Header with Hamburger */}
-        <div className="flex justify-between items-center mb-2 sm:mb-4">
+    <div className="h-[667px] w-full relative overflow-hidden iphone-safe-top iphone-safe-bottom">
+      {/* iPhone-optimized Header UI with safe area support */}
+      <div className="absolute top-0 left-0 right-0 z-30 p-2 backdrop-blur-sm bg-black/20 iphone-safe-top">
+        {/* Compact Mobile Header */}
+        <div className="flex justify-between items-center mb-2">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="sm:hidden text-white p-1"
+              className="text-white p-1"
             >
-              <Menu size={20} />
+              <Menu size={16} />
             </Button>
-            <h1 className="text-lg sm:text-3xl font-bold text-white drop-shadow-lg truncate">
-              Chronicles of the Celestial Nexus
+            <h1 className="text-sm font-bold text-white drop-shadow-lg truncate">
+              Celestial Nexus
             </h1>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="flex items-center gap-1 sm:gap-2 text-yellow-300">
-              <Crown size={16} className="sm:w-5 sm:h-5" />
-              <span className="font-bold text-sm sm:text-base">{gameState.nexusShards}</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 text-yellow-300">
+              <Crown size={12} />
+              <span className="font-bold text-xs">{gameState.nexusShards}</span>
             </div>
             {canConverge && (
               <Button 
                 onClick={() => setShowConvergence(true)}
                 size="sm"
-                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-xs sm:text-sm px-2 sm:px-4"
+                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-xs px-2 py-1 h-6"
               >
-                <Sparkles className="mr-1 sm:mr-2" size={14} />
-                <span className="hidden sm:inline">Convergence</span>
-                <span className="sm:hidden">Conv</span>
+                <Sparkles className="mr-1" size={10} />
+                Conv
               </Button>
             )}
           </div>
@@ -247,7 +246,7 @@ const GameEngine: React.FC = () => {
 
         {/* Mobile Menu Overlay */}
         {showMobileMenu && (
-          <div className="sm:hidden absolute top-full left-0 right-0 bg-black/90 backdrop-blur-sm p-4 space-y-4">
+          <div className="absolute top-full left-0 right-0 bg-black/90 backdrop-blur-sm p-3 space-y-3">
             {/* Realm Toggle */}
             <div className="flex gap-2">
               <Button
@@ -255,12 +254,12 @@ const GameEngine: React.FC = () => {
                 variant={currentRealm === 'fantasy' ? 'default' : 'outline'}
                 disabled={isTransitioning}
                 size="sm"
-                className={`flex-1 ${currentRealm === 'fantasy' 
+                className={`flex-1 text-xs h-8 ${currentRealm === 'fantasy' 
                   ? 'bg-purple-600 hover:bg-purple-700' 
                   : 'border-purple-400 text-purple-300 hover:bg-purple-900/50'
                 }`}
               >
-                <Sparkles className="mr-2" size={14} />
+                <Sparkles className="mr-1" size={12} />
                 Fantasy
               </Button>
               <Button
@@ -268,137 +267,61 @@ const GameEngine: React.FC = () => {
                 variant={currentRealm === 'scifi' ? 'default' : 'outline'}
                 disabled={isTransitioning}
                 size="sm"
-                className={`flex-1 ${currentRealm === 'scifi' 
+                className={`flex-1 text-xs h-8 ${currentRealm === 'scifi' 
                   ? 'bg-cyan-600 hover:bg-cyan-700' 
                   : 'border-cyan-400 text-cyan-300 hover:bg-cyan-900/50'
                 }`}
               >
-                <Zap className="mr-2" size={14} />
+                <Zap className="mr-1" size={12} />
                 Sci-Fi
               </Button>
             </div>
 
-            {/* Resources */}
-            <div className="grid grid-cols-1 gap-2">
-              <Card className={`p-3 backdrop-blur-sm ${
+            {/* Compact Resources */}
+            <div className="grid grid-cols-2 gap-2">
+              <Card className={`p-2 backdrop-blur-sm ${
                 currentRealm === 'fantasy' 
                   ? 'bg-purple-800/40 border-purple-400' 
                   : 'bg-purple-800/20 border-purple-400/50'
               }`}>
                 <div className="flex items-center justify-between text-white">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="text-purple-300" size={20} />
+                  <div className="flex items-center gap-1">
+                    <Sparkles className="text-purple-300" size={14} />
                     <div>
                       <div className="text-xs opacity-70">Mana</div>
-                      <div className="text-lg font-bold">{formatNumber(gameState.mana)}</div>
+                      <div className="text-sm font-bold">{formatNumber(gameState.mana)}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs opacity-70">Per second</div>
-                    <div className="text-sm text-purple-300">+{formatNumber(gameState.manaPerSecond)}</div>
+                    <div className="text-xs opacity-70">+{formatNumber(gameState.manaPerSecond)}/s</div>
                   </div>
                 </div>
               </Card>
 
-              <Card className={`p-3 backdrop-blur-sm ${
+              <Card className={`p-2 backdrop-blur-sm ${
                 currentRealm === 'scifi' 
                   ? 'bg-cyan-800/40 border-cyan-400' 
                   : 'bg-cyan-800/20 border-cyan-400/50'
               }`}>
                 <div className="flex items-center justify-between text-white">
-                  <div className="flex items-center gap-2">
-                    <Zap className="text-cyan-300" size={20} />
+                  <div className="flex items-center gap-1">
+                    <Zap className="text-cyan-300" size={14} />
                     <div>
-                      <div className="text-xs opacity-70">Energy Credits</div>
-                      <div className="text-lg font-bold">{formatNumber(gameState.energyCredits)}</div>
+                      <div className="text-xs opacity-70">Energy</div>
+                      <div className="text-sm font-bold">{formatNumber(gameState.energyCredits)}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs opacity-70">Per second</div>
-                    <div className="text-sm text-cyan-300">+{formatNumber(gameState.energyPerSecond)}</div>
+                    <div className="text-xs opacity-70">+{formatNumber(gameState.energyPerSecond)}/s</div>
                   </div>
                 </div>
               </Card>
             </div>
           </div>
         )}
-
-        {/* Desktop Menu */}
-        <div className="hidden sm:block">
-          {/* Realm Toggle */}
-          <div className="flex gap-2 mb-4">
-            <Button
-              onClick={() => switchRealm('fantasy')}
-              variant={currentRealm === 'fantasy' ? 'default' : 'outline'}
-              disabled={isTransitioning}
-              className={currentRealm === 'fantasy' 
-                ? 'bg-purple-600 hover:bg-purple-700' 
-                : 'border-purple-400 text-purple-300 hover:bg-purple-900/50'
-              }
-            >
-              <Sparkles className="mr-2" size={16} />
-              Fantasy Realm
-            </Button>
-            <Button
-              onClick={() => switchRealm('scifi')}
-              variant={currentRealm === 'scifi' ? 'default' : 'outline'}
-              disabled={isTransitioning}
-              className={currentRealm === 'scifi' 
-                ? 'bg-cyan-600 hover:bg-cyan-700' 
-                : 'border-cyan-400 text-cyan-300 hover:bg-cyan-900/50'
-              }
-            >
-              <Zap className="mr-2" size={16} />
-              Sci-Fi Realm
-            </Button>
-          </div>
-
-          {/* Resources */}
-          <div className="grid grid-cols-2 gap-4 max-w-lg">
-            <Card className={`p-4 backdrop-blur-sm ${
-              currentRealm === 'fantasy' 
-                ? 'bg-purple-800/40 border-purple-400' 
-                : 'bg-purple-800/20 border-purple-400/50'
-            }`}>
-              <div className="flex items-center justify-between text-white">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="text-purple-300" size={24} />
-                  <div>
-                    <div className="text-sm opacity-70">Mana</div>
-                    <div className="text-xl font-bold">{formatNumber(gameState.mana)}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm opacity-70">Per second</div>
-                  <div className="text-lg text-purple-300">+{formatNumber(gameState.manaPerSecond)}</div>
-                </div>
-              </div>
-            </Card>
-
-            <Card className={`p-4 backdrop-blur-sm ${
-              currentRealm === 'scifi' 
-                ? 'bg-cyan-800/40 border-cyan-400' 
-                : 'bg-cyan-800/20 border-cyan-400/50'
-            }`}>
-              <div className="flex items-center justify-between text-white">
-                <div className="flex items-center gap-2">
-                  <Zap className="text-cyan-300" size={24} />
-                  <div>
-                    <div className="text-sm opacity-70">Energy Credits</div>
-                    <div className="text-xl font-bold">{formatNumber(gameState.energyCredits)}</div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm opacity-70">Per second</div>
-                  <div className="text-lg text-cyan-300">+{formatNumber(gameState.energyPerSecond)}</div>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
       </div>
 
-      {/* Map View */}
+      {/* Map View - adjusted for iPhone constraints */}
       <MapView
         realm={currentRealm}
         buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
@@ -412,16 +335,16 @@ const GameEngine: React.FC = () => {
       {/* Realm Transition Effect */}
       <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-      {/* Convergence Modal */}
+      {/* Convergence Modal - iPhone optimized */}
       {showConvergence && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <Card className="p-4 sm:p-6 bg-gradient-to-br from-purple-900 to-cyan-900 border-2 border-yellow-400 max-w-md w-full">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 text-center">Convergence Portal</h2>
-            <p className="text-white/80 mb-4 text-center text-sm sm:text-base">
-              Unite the realms and transcend to a higher timeline. You will gain Nexus Shards but restart your progress.
+          <Card className="p-4 bg-gradient-to-br from-purple-900 to-cyan-900 border-2 border-yellow-400 max-w-xs w-full">
+            <h2 className="text-lg font-bold text-white mb-3 text-center">Convergence Portal</h2>
+            <p className="text-white/80 mb-3 text-center text-sm">
+              Unite the realms and transcend to a higher timeline.
             </p>
-            <div className="text-center mb-6">
-              <div className="text-yellow-300 text-lg sm:text-xl font-bold">
+            <div className="text-center mb-4">
+              <div className="text-yellow-300 text-lg font-bold">
                 +{Math.floor(Math.sqrt((gameState.mana + gameState.energyCredits) / 1000))} Nexus Shards
               </div>
             </div>
@@ -429,14 +352,14 @@ const GameEngine: React.FC = () => {
               <Button 
                 onClick={() => setShowConvergence(false)}
                 variant="outline"
-                className="flex-1 border-gray-400 text-gray-300 text-sm"
+                className="flex-1 border-gray-400 text-gray-300 text-sm h-8"
                 size="sm"
               >
                 Cancel
               </Button>
               <Button 
                 onClick={performConvergence}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-cyan-500 text-sm"
+                className="flex-1 bg-gradient-to-r from-purple-500 to-cyan-500 text-sm h-8"
                 size="sm"
               >
                 Converge

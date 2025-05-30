@@ -92,6 +92,19 @@
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    /* iPhone-specific optimizations */
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* iPhone Safe Area Support */
+  @supports (padding: max(0px)) {
+    .ios-safe-area-top {
+      padding-top: max(12px, env(safe-area-inset-top));
+    }
+    .ios-safe-area-bottom {
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
   }
 
   /* Improve touch targets for mobile */
@@ -139,7 +152,7 @@
     background: radial-gradient(circle, var(--tw-gradient-stops));
   }
 
-  /* Mobile-specific optimizations */
+  /* iPhone-specific optimizations */
   @supports (-webkit-touch-callout: none) {
     /* iOS specific styles */
     body {
@@ -152,5 +165,14 @@
     * {
       touch-action: manipulation;
     }
+  }
+
+  /* iPhone notch and home indicator support */
+  .iphone-safe-top {
+    padding-top: max(12px, env(safe-area-inset-top));
+  }
+  
+  .iphone-safe-bottom {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
 }
