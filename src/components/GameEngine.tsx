@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Zap, Crown, Menu, X } from 'lucide-react';
+import { Crown, Menu, X } from 'lucide-react';
 import { MapView } from './MapView';
 import { RealmTransition } from './RealmTransition';
 import { HybridUpgradesPanel } from './HybridUpgradesPanel';
@@ -268,10 +267,9 @@ const GameEngine: React.FC = () => {
 
   return (
     <div className="h-[667px] w-full relative overflow-hidden">
-      {/* Translucent Header UI with backdrop blur - starts below notch */}
-      <div className="absolute top-6 left-0 right-0 z-30 p-3 backdrop-blur-md bg-black/40">
-        {/* Compact Mobile Header */}
-        <div className="flex justify-between items-center mb-2">
+      {/* Simplified Header - Only title and menu */}
+      <div className="absolute top-6 left-0 right-0 z-30 p-3 backdrop-blur-md bg-black/30">
+        <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -285,110 +283,73 @@ const GameEngine: React.FC = () => {
               Celestial Nexus
             </h1>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 text-yellow-300">
-              <Crown size={12} />
-              <span className="font-bold text-xs">{gameState.nexusShards}</span>
-            </div>
-            <Button 
-              onClick={() => setShowHybridUpgrades(true)}
-              size="sm"
-              className="bg-gradient-to-r from-purple-500/80 to-cyan-500/80 hover:from-purple-600/80 hover:to-cyan-600/80 text-xs px-2 py-1 h-6 backdrop-blur-sm"
-            >
-              <Sparkles className="mr-1" size={10} />
-              Hybrid
-            </Button>
-            {canConverge && (
-              <Button 
-                onClick={() => setShowConvergence(true)}
-                size="sm"
-                className="bg-gradient-to-r from-purple-500/80 to-cyan-500/80 hover:from-purple-600/80 hover:to-cyan-600/80 text-xs px-2 py-1 h-6 animate-pulse backdrop-blur-sm"
-              >
-                <Sparkles className="mr-1" size={10} />
-                Conv
-              </Button>
-            )}
+          {/* Crown icon for convergence status */}
+          <div className="flex items-center gap-1 text-yellow-300">
+            <Crown size={12} />
+            <span className="font-bold text-xs">{gameState.nexusShards}</span>
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile Menu Overlay - Only resource info */}
         {showMobileMenu && (
-          <div className="absolute top-full left-0 right-0 bg-black/90 backdrop-blur-md p-3 space-y-3 border-t border-white/10">
-            {/* Realm Toggle */}
-            <div className="flex gap-2">
-              <Button
-                onClick={() => switchRealm('fantasy')}
-                variant={currentRealm === 'fantasy' ? 'default' : 'outline'}
-                disabled={isTransitioning}
-                size="sm"
-                className={`flex-1 text-xs h-8 transition-all duration-300 ${currentRealm === 'fantasy' 
-                  ? 'bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/30' 
-                  : 'border-purple-400/60 text-purple-300 hover:bg-purple-900/50 backdrop-blur-sm'
-                }`}
-              >
-                <Sparkles className="mr-1" size={12} />
-                Fantasy
-              </Button>
-              <Button
-                onClick={() => switchRealm('scifi')}
-                variant={currentRealm === 'scifi' ? 'default' : 'outline'}
-                disabled={isTransitioning}
-                size="sm"
-                className={`flex-1 text-xs h-8 transition-all duration-300 ${currentRealm === 'scifi' 
-                  ? 'bg-cyan-600 hover:bg-cyan-700 shadow-lg shadow-cyan-500/30' 
-                  : 'border-cyan-400/60 text-cyan-300 hover:bg-cyan-900/50 backdrop-blur-sm'
-                }`}
-              >
-                <Zap className="mr-1" size={12} />
-                Sci-Fi
-              </Button>
-            </div>
-
-            {/* Translucent Resource Cards */}
-            <div className="grid grid-cols-2 gap-2">
-              <Card className={`p-2 backdrop-blur-md border transition-all duration-500 ${
-                currentRealm === 'fantasy' 
-                  ? 'bg-purple-800/50 border-purple-400/60' 
-                  : 'bg-purple-800/30 border-purple-400/40'
-              }`}>
-                <div className="flex items-center justify-between text-white">
-                  <div className="flex items-center gap-1">
-                    <Sparkles className="text-purple-300" size={14} />
-                    <div>
-                      <div className="text-xs opacity-70">Mana</div>
-                      <div className="text-sm font-bold">{formatNumber(gameState.mana)}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs opacity-70">+{formatNumber(gameState.manaPerSecond)}/s</div>
+          <div className="absolute top-full left-0 right-0 bg-black/90 backdrop-blur-md p-3 border-t border-white/10">
+            {/* Combined Resource Card */}
+            <Card className="p-3 backdrop-blur-md bg-gradient-to-r from-purple-800/40 to-cyan-800/40 border-purple-400/40">
+              <div className="grid grid-cols-2 gap-3 text-white text-xs">
+                <div className="text-center">
+                  <div className="text-purple-300 font-medium">Mana</div>
+                  <div className="text-lg font-bold">{formatNumber(gameState.mana)}</div>
+                  <div className="text-xs opacity-70">+{formatNumber(gameState.manaPerSecond)}/s</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-cyan-300 font-medium">Energy</div>
+                  <div className="text-lg font-bold">{formatNumber(gameState.energyCredits)}</div>
+                  <div className="text-xs opacity-70">+{formatNumber(gameState.energyPerSecond)}/s</div>
+                </div>
+              </div>
+              {canConverge && (
+                <div className="mt-2 pt-2 border-t border-white/20 text-center">
+                  <div className="text-yellow-300 text-xs font-medium">
+                    Convergence Ready: {convergenceProgress.toFixed(1)}%
                   </div>
                 </div>
-              </Card>
-
-              <Card className={`p-2 backdrop-blur-md border transition-all duration-500 ${
-                currentRealm === 'scifi' 
-                  ? 'bg-cyan-800/50 border-cyan-400/60' 
-                  : 'bg-cyan-800/30 border-cyan-400/40'
-              }`}>
-                <div className="flex items-center justify-between text-white">
-                  <div className="flex items-center gap-1">
-                    <Zap className="text-cyan-300" size={14} />
-                    <div>
-                      <div className="text-xs opacity-70">Energy</div>
-                      <div className="text-sm font-bold">{formatNumber(gameState.energyCredits)}</div>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs opacity-70">+{formatNumber(gameState.energyPerSecond)}/s</div>
-                  </div>
-                </div>
-              </Card>
-            </div>
+              )}
+            </Card>
           </div>
         )}
       </div>
 
-      {/* Map View - Enhanced with tap mechanic */}
+      {/* Floating Resource HUD - Positioned under crown */}
+      {!showMobileMenu && (
+        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-20">
+          <Card className="px-4 py-2 backdrop-blur-md bg-gradient-to-r from-purple-800/50 to-cyan-800/50 border-purple-400/50">
+            <div className="flex items-center gap-4 text-white text-xs">
+              <div className="text-center">
+                <div className="text-purple-300">Mana</div>
+                <div className="font-bold">{formatNumber(gameState.mana)}</div>
+                <div className="text-xs opacity-70">+{formatNumber(gameState.manaPerSecond)}/s</div>
+              </div>
+              <div className="w-px h-8 bg-white/30"></div>
+              <div className="text-center">
+                <div className="text-cyan-300">Energy</div>
+                <div className="font-bold">{formatNumber(gameState.energyCredits)}</div>
+                <div className="text-xs opacity-70">+{formatNumber(gameState.energyPerSecond)}/s</div>
+              </div>
+              {canConverge && (
+                <>
+                  <div className="w-px h-8 bg-white/30"></div>
+                  <div className="text-center">
+                    <div className="text-yellow-300">Conv</div>
+                    <div className="font-bold">{convergenceProgress.toFixed(0)}%</div>
+                  </div>
+                </>
+              )}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Map View */}
       <MapView
         realm={currentRealm}
         buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
@@ -409,10 +370,64 @@ const GameEngine: React.FC = () => {
       {/* Realm Transition Effect */}
       <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-      {/* Fixed Hybrid Upgrades Modal with proper positioning */}
+      {/* Enhanced Bottom Button Cluster */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30">
+        <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/30">
+          {/* Realm Toggle Buttons */}
+          <div className="flex gap-2">
+            <Button
+              onClick={() => switchRealm('fantasy')}
+              disabled={isTransitioning}
+              className={`h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 ${
+                currentRealm === 'fantasy'
+                  ? 'bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/50 scale-105 border-2 border-purple-400'
+                  : 'bg-transparent border-2 border-purple-400/60 text-purple-300 hover:bg-purple-900/40 hover:border-purple-400'
+              } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
+            >
+              <span className="text-xs font-medium">🏰 Fantasy</span>
+            </Button>
+
+            <Button
+              onClick={() => switchRealm('scifi')}
+              disabled={isTransitioning}
+              className={`h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 ${
+                currentRealm === 'scifi'
+                  ? 'bg-cyan-600 hover:bg-cyan-700 shadow-lg shadow-cyan-500/50 scale-105 border-2 border-cyan-400'
+                  : 'bg-transparent border-2 border-cyan-400/60 text-cyan-300 hover:bg-cyan-900/40 hover:border-cyan-400'
+              } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
+            >
+              <span className="text-xs font-medium">🚀 Sci-Fi</span>
+            </Button>
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-8 bg-white/30"></div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => setShowHybridUpgrades(true)}
+              className="h-12 px-4 rounded-full bg-gradient-to-r from-purple-500/80 to-cyan-500/80 hover:from-purple-600/80 hover:to-cyan-600/80 backdrop-blur-sm border-2 border-transparent hover:border-white/30 transition-all duration-300"
+            >
+              <span className="text-xs font-medium">✨ Hybrid</span>
+            </Button>
+
+            {canConverge && (
+              <Button 
+                onClick={() => setShowConvergence(true)}
+                className="h-12 px-4 rounded-full bg-gradient-to-r from-yellow-500/80 to-orange-500/80 hover:from-yellow-600/80 hover:to-orange-600/80 backdrop-blur-sm border-2 border-yellow-400/60 animate-pulse transition-all duration-300"
+              >
+                <span className="text-xs font-medium">🔁 Conv</span>
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Hybrid Upgrades Modal */}
       {showHybridUpgrades && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <Card className="max-w-sm w-full max-h-[500px] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400 relative mt-12">
+          <Card className="max-w-sm w-full max-h-[400px] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400 relative">
             <div className="flex justify-between items-center p-4 border-b border-purple-400">
               <h2 className="text-lg font-bold text-white">Hybrid Nexus</h2>
               <Button
@@ -424,7 +439,7 @@ const GameEngine: React.FC = () => {
                 <X size={16} />
               </Button>
             </div>
-            <div className="overflow-y-auto max-h-96">
+            <div className="overflow-y-auto max-h-80">
               <HybridUpgradesPanel
                 gameState={gameState}
                 onPurchaseUpgrade={purchaseUpgrade}
@@ -434,10 +449,10 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Fixed Convergence Modal with proper positioning */}
+      {/* Convergence Modal */}
       {showConvergence && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="max-w-xs w-full mt-12">
+          <div className="max-w-xs w-full">
             <ConvergenceSystem
               gameState={gameState}
               onPerformConvergence={performConvergence}

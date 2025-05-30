@@ -1,10 +1,8 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { EnhancedStructure } from './EnhancedStructure';
 import { EnhancedNexusCore } from './EnhancedNexusCore';
 import { AnimatedBackground } from './AnimatedBackground';
 import { ParticleSystem } from './ParticleSystem';
-import { RealmToggleButtons } from './RealmToggleButtons';
 import { TapEffect } from './TapEffect';
 import { TapIndicator } from './TapIndicator';
 
@@ -329,9 +327,9 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       ))}
 
-      {/* Enhanced Instructions with better visibility */}
+      {/* Simplified Instructions */}
       {showInstructions && (
-        <div className="absolute bottom-20 left-4 right-4 text-white text-xs bg-black/60 backdrop-blur-md p-3 rounded-xl border border-white/30 animate-fade-in">
+        <div className="absolute bottom-24 left-4 right-4 text-white text-xs bg-black/60 backdrop-blur-md p-3 rounded-xl border border-white/30 animate-fade-in">
           <div className="flex justify-between items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -340,14 +338,8 @@ export const MapView: React.FC<MapViewProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span>Tap structures to upgrade • Switch realms below</span>
+                <span>Tap structures to upgrade • Use bottom controls</span>
               </div>
-              {nexusShards > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-                  <span>🔁 Cross-realm buffs active</span>
-                </div>
-              )}
             </div>
             <div className="text-right opacity-80">
               <div className="bg-white/10 px-2 py-1 rounded text-xs">
@@ -358,27 +350,18 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       )}
 
-      {/* Enhanced Realm indicator with smooth transitions */}
-      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-20">
-        <div className={`px-4 py-2 rounded-full backdrop-blur-md border transition-all duration-700 ${
+      {/* Simple Realm indicator */}
+      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
+        <div className={`px-3 py-1 rounded-full backdrop-blur-md border transition-all duration-700 ${
           realm === 'fantasy'
-            ? 'bg-purple-800/70 border-purple-400/60 text-purple-100 shadow-lg shadow-purple-500/30'
-            : 'bg-cyan-800/70 border-cyan-400/60 text-cyan-100 shadow-lg shadow-cyan-500/30'
+            ? 'bg-purple-800/50 border-purple-400/40 text-purple-100'
+            : 'bg-cyan-800/50 border-cyan-400/40 text-cyan-100'
         }`}>
-          <span className="text-sm font-medium">
+          <span className="text-xs font-medium">
             {realm === 'fantasy' ? '🏰 Fantasy Realm' : '🚀 Sci-Fi Realm'}
           </span>
         </div>
       </div>
-
-      {/* Enhanced Realm Toggle Buttons */}
-      {onRealmChange && (
-        <RealmToggleButtons
-          currentRealm={realm}
-          onRealmChange={onRealmChange}
-          isTransitioning={isTransitioning}
-        />
-      )}
     </div>
   );
 };
