@@ -10,21 +10,24 @@ interface EnvironmentSystemProps {
   onEnvironmentChange?: (tier: number) => void;
 }
 
-// Environment model URLs from GitHub - Updated with correct paths
+// Environment model URLs from GitHub - Updated with new crystal ground
 const environmentAssets = {
   ground: [
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_basic.glb',
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_crystal.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_gold.glb'
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_gold.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/crystal_ground.glb'
   ],
   mountains: [
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_dark.glb',
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_magical.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_luminous.glb',
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_luminous.glb'
   ],
   sky: [
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_stars.glb',
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_aurora.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_celestial.glb',
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_celestial.glb'
   ]
 };
@@ -106,7 +109,7 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   useEffect(() => {
     const preloadModels = async () => {
       try {
-        // Preload all environment models
+        // Preload all environment models including the new crystal ground
         const allUrls = [
           ...environmentAssets.ground,
           ...environmentAssets.mountains,
@@ -129,11 +132,12 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
     preloadModels();
   }, []); // Empty dependency array - only run once on mount
 
-  // Calculate environment tier based on upgrade count
+  // Calculate environment tier based on upgrade count - now with 4 tiers
   const environmentTier = useMemo(() => {
-    if (upgradeCount < 5) return 0;
-    if (upgradeCount < 10) return 1;
-    return 2;
+    if (upgradeCount < 4) return 0;
+    if (upgradeCount < 8) return 1;
+    if (upgradeCount < 12) return 2;
+    return 3; // New tier 3 for crystal ground
   }, [upgradeCount]);
 
   // Handle environment transitions with simplified logic
@@ -210,24 +214,26 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
       {/* Sky dome */}
       {skyComponent}
       
-      {/* Atmospheric fog for depth */}
+      {/* Atmospheric fog for depth - enhanced colors for new tier */}
       <fog 
         attach="fog" 
         args={[
           currentTier === 0 ? '#0f0f23' : 
-          currentTier === 1 ? '#1a1a3a' : '#2a2a4a', 
+          currentTier === 1 ? '#1a1a3a' : 
+          currentTier === 2 ? '#2a2a4a' : '#3a1a5a', // New tier 3 color
           20, 
           120
         ]} 
       />
       
-      {/* Additional ambient particles based on tier */}
-      {Array.from({ length: currentTier === 0 ? 20 : currentTier === 1 ? 30 : 40 }, (_, i) => {
+      {/* Additional ambient particles based on tier - enhanced for new tier */}
+      {Array.from({ length: currentTier === 0 ? 20 : currentTier === 1 ? 30 : currentTier === 2 ? 40 : 50 }, (_, i) => {
         const x = (Math.random() - 0.5) * 40;
         const y = Math.random() * 20 + 5;
         const z = Math.random() * -80 - 10;
         const particleColor = currentTier === 0 ? '#8b5cf6' : 
-                            currentTier === 1 ? '#c084fc' : '#e879f9';
+                            currentTier === 1 ? '#c084fc' : 
+                            currentTier === 2 ? '#e879f9' : '#f0abfc'; // New tier 3 color
         
         return (
           <mesh key={i} position={[x, y, z]}>

@@ -206,14 +206,14 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             shadow-camera-bottom={-30}
           />
           
-          {/* Progressive lighting along the path - intensity based on environment tier */}
+          {/* Progressive lighting along the path - intensity based on environment tier with new tier 3 */}
           {Array.from({ length: 8 }, (_, i) => {
-            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9'];
+            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9', '#f0abfc']; // Added tier 3 color
             return (
               <pointLight 
                 key={i}
                 position={[(i % 2 === 0 ? -6 : 6), 8, -12 - (i * 12)]} 
-                intensity={0.6 + (currentEnvironmentTier * 0.2)} 
+                intensity={0.6 + (currentEnvironmentTier * 0.15)} // Slightly reduced increment for 4 tiers
                 color={tierColors[currentEnvironmentTier]} 
                 distance={25} 
               />
@@ -228,9 +228,9 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             <meshLambertMaterial color="#1a1a2e" />
           </mesh>
 
-          {/* Mystical path markers - style based on environment tier */}
+          {/* Mystical path markers - style based on environment tier with new tier 3 */}
           {Array.from({ length: 20 }, (_, i) => {
-            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9'];
+            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9', '#f0abfc']; // Added tier 3 color
             return (
               <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
                 <circleGeometry args={[0.4]} />
@@ -303,7 +303,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       </div>
 
-      {/* Progress indicator with environment transition markers */}
+      {/* Progress indicator with environment transition markers - updated for 4 tiers */}
       <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
         <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
           <div 
@@ -312,9 +312,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 100) * 100)))}%` 
             }}
           />
-          {/* Environment tier markers */}
-          <div className="absolute top-0 left-1/3 w-0.5 h-full bg-yellow-400 opacity-60" />
-          <div className="absolute top-0 left-2/3 w-0.5 h-full bg-yellow-400 opacity-60" />
+          {/* Environment tier markers - updated for 4 tiers */}
+          <div className="absolute top-0 left-1/4 w-0.5 h-full bg-yellow-400 opacity-60" />
+          <div className="absolute top-0 left-1/2 w-0.5 h-full bg-yellow-400 opacity-60" />
+          <div className="absolute top-0 left-3/4 w-0.5 h-full bg-yellow-400 opacity-60" />
         </div>
         <p className="text-white/50 text-xs text-center mt-1">
           Journey Progress: {unlockedUpgradeCount}/{upgrades.length} Upgrades | Environment: Tier {currentEnvironmentTier + 1}
