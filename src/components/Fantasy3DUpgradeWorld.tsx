@@ -2,7 +2,6 @@
 import React, { Suspense, useRef, useState, useCallback } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows } from '@react-three/drei';
-import { GLBModel } from './GLBModelLoader';
 import { Vector3 } from 'three';
 
 interface Fantasy3DUpgradeWorldProps {
@@ -11,16 +10,91 @@ interface Fantasy3DUpgradeWorldProps {
   onTapEffectComplete?: () => void;
 }
 
-// GLB models from your GitHub repository
-const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/';
-
+// Placeholder upgrade models with geometric shapes
 const upgradeModels = [
-  { name: 'Mana Altar', filename: 'mana_altar.glb', description: 'Ancient stones that channel mystical energy' },
-  { name: 'Magic Tree', filename: 'magic_tree.glb', description: 'Enchanted tree pulsing with natural magic' },
-  { name: 'Arcane Lab', filename: 'arcane_lab.glb', description: 'Laboratory for magical research and experiments' },
-  { name: 'Crystal Tower', filename: 'crystal_tower.glb', description: 'Towering spire of crystallized magic' },
-  { name: 'Dream Gate', filename: 'dream_gate.glb', description: 'Portal to mystical realms beyond' },
+  { name: 'Mana Altar', description: 'Ancient stones that channel mystical energy' },
+  { name: 'Magic Tree', description: 'Enchanted tree pulsing with natural magic' },
+  { name: 'Arcane Lab', description: 'Laboratory for magical research and experiments' },
+  { name: 'Crystal Tower', description: 'Towering spire of crystallized magic' },
+  { name: 'Dream Gate', description: 'Portal to mystical realms beyond' },
 ];
+
+// Simple 3D Upgrade Component using basic geometries
+const PlaceholderUpgrade: React.FC<{
+  name: string;
+  position: [number, number, number];
+  onClick: () => void;
+  upgradeIndex: number;
+}> = ({ name, position, onClick, upgradeIndex }) => {
+  const meshRef = useRef<any>(null);
+  const [hovered, setHovered] = useState(false);
+
+  useFrame((state) => {
+    if (meshRef.current) {
+      // Floating animation
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2 + position[0]) * 0.1;
+      // Gentle rotation when hovered
+      if (hovered) {
+        meshRef.current.rotation.y += 0.01;
+      }
+    }
+  });
+
+  // Different shapes for different upgrades
+  const getGeometry = () => {
+    switch (upgradeIndex) {
+      case 0: return <octahedronGeometry args={[0.8]} />; // Mana Altar
+      case 1: return <coneGeometry args={[0.6, 1.5, 8]} />; // Magic Tree
+      case 2: return <boxGeometry args={[1, 0.8, 1]} />; // Arcane Lab
+      case 3: return <cylinderGeometry args={[0.3, 0.5, 2, 6]} />; // Crystal Tower
+      case 4: return <torusGeometry args={[0.8, 0.3, 8, 16]} />; // Dream Gate
+      default: return <sphereGeometry args={[0.8]} />;
+    }
+  };
+
+  const getColor = () => {
+    const colors = ['#8b5cf6', '#10b981', '#f59e0b', '#06b6d4', '#ec4899'];
+    return colors[upgradeIndex] || '#8b5cf6';
+  };
+
+  return (
+    <group position={position}>
+      {/* Main upgrade shape */}
+      <mesh
+        ref={meshRef}
+        onClick={onClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        scale={hovered ? 1.1 : 1}
+      >
+        {getGeometry()}
+        <meshLambertMaterial
+          color={getColor()}
+          transparent
+          opacity={0.8}
+        />
+      </mesh>
+
+      {/* Glow effect */}
+      {hovered && (
+        <mesh scale={1.3}>
+          <sphereGeometry args={[0.9]} />
+          <meshBasicMaterial
+            color={getColor()}
+            transparent
+            opacity={0.2}
+          />
+        </mesh>
+      )}
+
+      {/* Name label */}
+      <mesh position={[0, 1.5, 0]}>
+        <planeGeometry args={[3, 0.5]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
+      </mesh>
+    </group>
+  );
+};
 
 // Camera controller for smooth scrolling
 const CameraController: React.FC<{ targetY: number }> = ({ targetY }) => {
@@ -155,14 +229,14 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             far={4} 
           />
 
-          {/* Load and display GLB models */}
+          {/* Display placeholder upgrade models */}
           {upgradeModels.map((upgrade, index) => (
-            <GLBModel
+            <PlaceholderUpgrade
               key={upgrade.name}
-              modelUrl={`${GITHUB_BASE_URL}${upgrade.filename}`}
+              name={upgrade.name}
               position={[0, -index * 3, 0]}
               onClick={() => onUpgradeClick(upgrade.name)}
-              name={upgrade.name}
+              upgradeIndex={index}
             />
           ))}
 
