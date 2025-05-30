@@ -15,8 +15,9 @@ const GLBEnvironmentModel: React.FC<{
   url: string;
   position: [number, number, number];
   scale?: number;
+  rotation?: [number, number, number];
   onError?: () => void;
-}> = ({ url, position, scale = 1, onError }) => {
+}> = ({ url, position, scale = 1, rotation = [0, 0, 0], onError }) => {
   const [hasError, setHasError] = useState(false);
   
   let scene = null;
@@ -40,12 +41,13 @@ const GLBEnvironmentModel: React.FC<{
     <primitive 
       object={scene.clone()} 
       position={position} 
-      scale={[scale, scale, scale]} 
+      scale={[scale, scale, scale]}
+      rotation={rotation}
     />
   );
 };
 
-// Enhanced environment system with fallback to procedural generation
+// Enhanced environment system with actual 3D models
 const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   upgradeCount,
   onEnvironmentChange
@@ -53,6 +55,7 @@ const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   const [currentTier, setCurrentTier] = useState(0);
   const [transitionOpacity, setTransitionOpacity] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [modelErrors, setModelErrors] = useState<Set<string>>(new Set());
 
   // Calculate environment tier based on upgrade count
   const environmentTier = useMemo(() => {
@@ -79,7 +82,26 @@ const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
     }
   }, [environmentTier, currentTier, isTransitioning, onEnvironmentChange]);
 
-  // Tier-based colors and properties
+  // Model URLs from the GitHub repository
+  const modelUrls = {
+    ground: {
+      0: 'https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/ground_model_1.glb',
+      1: 'https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/ground_model_2.glb',
+      2: 'https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/ground_model_3.glb'
+    },
+    mountain: {
+      0: 'https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/mountain_model_1.glb',
+      1: 'https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/mountain_model_2.glb',
+      2: 'https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/mountain_model_3.glb'
+    },
+    sky: {
+      0: 'https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/sky_model_1.glb',
+      1: 'https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/sky_model_2.glb',
+      2: 'https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/sky_model_3.glb'
+    }
+  };
+
+  // Tier-based colors and properties for fallback
   const tierConfig = {
     0: {
       groundColor: '#2a1810',
@@ -109,66 +131,116 @@ const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
 
   const config = tierConfig[currentTier as keyof typeof tierConfig];
 
+  const handleModelError = (modelType: string) => {
+    console.warn(`Failed to load ${modelType} model for tier ${currentTier}, using fallback`);
+    setModelErrors(prev => new Set(prev).add(`${modelType}_${currentTier}`));
+  };
+
+  const shouldUseFallback = (modelType: string) => {
+    return modelErrors.has(`${modelType}_${currentTier}`);
+  };
+
   return (
     <>
-      {/* Procedural Ground */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, -50]} receiveShadow>
-        <planeGeometry args={[40, 120]} />
-        <meshLambertMaterial 
-          color={config.groundColor} 
-          transparent 
-          opacity={transitionOpacity} 
+      {/* Ground Models */}
+      {!shouldUseFallback('ground') ? (
+        <GLBEnvironmentModel
+          url={modelUrls.ground[currentTier as keyof typeof modelUrls.ground]}
+          position={[0, -1, -50]}
+          scale={20}
+          onError={() => handleModelError('ground')}
         />
-      </mesh>
+      ) : (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, -50]} receiveShadow>
+          <planeGeometry args={[40, 120]} />
+          <meshLambertMaterial 
+            color={config.groundColor} 
+            transparent 
+            opacity={transitionOpacity} 
+          />
+        </mesh>
+      )}
 
-      {/* Procedural Mountains */}
-      <group position={[-15, 0, -30]} rotation={[0, 0.2, 0]}>
-        {Array.from({ length: 5 }, (_, i) => (
-          <mesh key={`left-mountain-${i}`} position={[i * 2, 0, -i * 2]}>
-            <coneGeometry args={[2 + i * 0.5, 8 + i * 2, 6]} />
-            <meshLambertMaterial 
-              color={config.mountainColor} 
-              transparent 
-              opacity={transitionOpacity} 
-            />
-          </mesh>
-        ))}
-      </group>
-      <group position={[15, 0, -30]} rotation={[0, -0.2, 0]}>
-        {Array.from({ length: 5 }, (_, i) => (
-          <mesh key={`right-mountain-${i}`} position={[-i * 2, 0, -i * 2]}>
-            <coneGeometry args={[2 + i * 0.5, 8 + i * 2, 6]} />
-            <meshLambertMaterial 
-              color={config.mountainColor} 
-              transparent 
-              opacity={transitionOpacity} 
-            />
-          </mesh>
-        ))}
-      </group>
+      {/* Mountain Models - Left Side */}
+      {!shouldUseFallback('mountain') ? (
+        <>
+          <GLBEnvironmentModel
+            url={modelUrls.mountain[currentTier as keyof typeof modelUrls.mountain]}
+            position={[-15, 0, -30]}
+            scale={8}
+            rotation={[0, 0.2, 0]}
+            onError={() => handleModelError('mountain')}
+          />
+          <GLBEnvironmentModel
+            url={modelUrls.mountain[currentTier as keyof typeof modelUrls.mountain]}
+            position={[15, 0, -30]}
+            scale={8}
+            rotation={[0, -0.2, 0]}
+            onError={() => handleModelError('mountain')}
+          />
+        </>
+      ) : (
+        <>
+          {/* Fallback Procedural Mountains */}
+          <group position={[-15, 0, -30]} rotation={[0, 0.2, 0]}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <mesh key={`left-mountain-${i}`} position={[i * 2, 0, -i * 2]}>
+                <coneGeometry args={[2 + i * 0.5, 8 + i * 2, 6]} />
+                <meshLambertMaterial 
+                  color={config.mountainColor} 
+                  transparent 
+                  opacity={transitionOpacity} 
+                />
+              </mesh>
+            ))}
+          </group>
+          <group position={[15, 0, -30]} rotation={[0, -0.2, 0]}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <mesh key={`right-mountain-${i}`} position={[-i * 2, 0, -i * 2]}>
+                <coneGeometry args={[2 + i * 0.5, 8 + i * 2, 6]} />
+                <meshLambertMaterial 
+                  color={config.mountainColor} 
+                  transparent 
+                  opacity={transitionOpacity} 
+                />
+              </mesh>
+            ))}
+          </group>
+        </>
+      )}
 
-      {/* Procedural Sky Elements */}
-      <group position={[0, 20, -40]}>
-        {Array.from({ length: 6 }, (_, i) => {
-          const angle = (i / 6) * Math.PI * 2;
-          const radius = 25;
-          const x = Math.cos(angle) * radius;
-          const z = Math.sin(angle) * radius;
-          
-          return (
-            <mesh key={`sky-element-${i}`} position={[x, Math.sin(angle) * 5, z]}>
-              <sphereGeometry args={[1 + currentTier * 0.5]} />
-              <meshLambertMaterial 
-                color={config.skyColor} 
-                transparent 
-                opacity={transitionOpacity * 0.3} 
-                emissive={config.particleColor}
-                emissiveIntensity={0.1}
-              />
-            </mesh>
-          );
-        })}
-      </group>
+      {/* Sky Models */}
+      {!shouldUseFallback('sky') ? (
+        <GLBEnvironmentModel
+          url={modelUrls.sky[currentTier as keyof typeof modelUrls.sky]}
+          position={[0, 20, -40]}
+          scale={15}
+          onError={() => handleModelError('sky')}
+        />
+      ) : (
+        /* Fallback Procedural Sky Elements */
+        <group position={[0, 20, -40]}>
+          {Array.from({ length: 6 }, (_, i) => {
+            const angle = (i / 6) * Math.PI * 2;
+            const radius = 25;
+            const x = Math.cos(angle) * radius;
+            const z = Math.sin(angle) * radius;
+            
+            return (
+              <mesh key={`sky-element-${i}`} position={[x, Math.sin(angle) * 5, z]}>
+                <sphereGeometry args={[1 + currentTier * 0.5]} />
+                <meshLambertMaterial 
+                  color={config.skyColor} 
+                  transparent 
+                  opacity={transitionOpacity * 0.3} 
+                  emissive={config.particleColor}
+                  emissiveIntensity={0.1}
+                />
+              </mesh>
+            );
+          })}
+        </group>
+      )}
 
       {/* Procedural Crystal Formations */}
       {Array.from({ length: 8 }, (_, i) => {
