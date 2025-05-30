@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { EnhancedStructure } from './EnhancedStructure';
 import { AnimatedBackground } from './AnimatedBackground';
@@ -55,39 +56,32 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Enhanced structure positioning - moved buildings higher to avoid skill tree collision
+  // Enhanced structure positioning with vertical skill tree layout
   const structurePositions = {
     fantasy: [
-      { id: 'altar', x: 20, y: 15, size: 'small', tier: 1 },
-      { id: 'tower', x: 80, y: 20, size: 'medium', tier: 2 },
-      { id: 'grove', x: 15, y: 35, size: 'large', tier: 3 },
-      { id: 'temple', x: 85, y: 40, size: 'massive', tier: 4 },
+      { id: 'altar', x: 25, y: 25, size: 'small', tier: 1 },
+      { id: 'tower', x: 75, y: 35, size: 'medium', tier: 2 },
+      { id: 'grove', x: 25, y: 55, size: 'large', tier: 3 },
+      { id: 'temple', x: 75, y: 75, size: 'massive', tier: 4 },
     ],
     scifi: [
-      { id: 'generator', x: 20, y: 15, size: 'small', tier: 1 },
-      { id: 'reactor', x: 80, y: 20, size: 'medium', tier: 2 },
-      { id: 'station', x: 15, y: 35, size: 'large', tier: 3 },
-      { id: 'megastructure', x: 85, y: 40, size: 'massive', tier: 4 },
+      { id: 'generator', x: 25, y: 25, size: 'small', tier: 1 },
+      { id: 'reactor', x: 75, y: 35, size: 'medium', tier: 2 },
+      { id: 'station', x: 25, y: 55, size: 'large', tier: 3 },
+      { id: 'megastructure', x: 75, y: 75, size: 'massive', tier: 4 },
     ]
   };
 
-  // Enhanced vertical skill tree with better spacing and additional nodes
+  // Vertical skill tree positions for hybrid upgrades
   const skillTreePositions = [
-    // Tier 1
-    { id: 'arcane_ai', x: 50, y: 55, tier: 1 },
-    
-    // Tier 2 - wider spread
-    { id: 'mana_fountain', x: 35, y: 65, tier: 2 },
-    { id: 'quantum_drive', x: 65, y: 65, tier: 2 },
-    
-    // Tier 3 - more nodes with better spacing
-    { id: 'arcane_beacon', x: 25, y: 75, tier: 3 },
-    { id: 'cyber_dragon', x: 50, y: 75, tier: 3 },
-    { id: 'nano_reactor', x: 75, y: 75, tier: 3 },
-    { id: 'rift_core', x: 37.5, y: 85, tier: 3 },
-    
-    // Tier 4 - final tier
-    { id: 'reality_engine', x: 50, y: 95, tier: 4 }
+    { id: 'arcane_ai', x: 50, y: 15, tier: 1 },
+    { id: 'mana_fountain', x: 35, y: 30, tier: 2 },
+    { id: 'quantum_drive', x: 65, y: 30, tier: 2 },
+    { id: 'arcane_beacon', x: 25, y: 45, tier: 3 },
+    { id: 'cyber_dragon', x: 50, y: 45, tier: 3 },
+    { id: 'nano_reactor', x: 75, y: 45, tier: 3 },
+    { id: 'rift_core', x: 40, y: 60, tier: 3 },
+    { id: 'reality_engine', x: 50, y: 85, tier: 4 }
   ];
 
   const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
@@ -111,6 +105,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     updateTransform();
   }, [updateTransform]);
 
+  // Touch/mouse handling for map navigation
   const handleWheel = useCallback((e: WheelEvent) => {
     e.preventDefault();
     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
@@ -268,10 +263,10 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
         isTransitioning ? 'opacity-50 scale-105' : 'opacity-100 scale-100'
       }`}>
         <AnimatedBackground realm={realm} />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/60 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/50 pointer-events-none" />
       </div>
 
-      {/* Scrollable Map Container with enhanced height */}
+      {/* Scrollable Map Container */}
       <div 
         ref={mapRef}
         className={`absolute inset-0 transition-all duration-500 cursor-grab active:cursor-grabbing ${
@@ -280,34 +275,24 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
         style={{ 
           transform: `scale(${camera.zoom}) translate(${camera.x}px, ${camera.y}px)`,
           touchAction: 'none',
-          minHeight: '250%'
+          minHeight: '200%'
         }}
       >
-        {/* Tier dividers for visual separation */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Tier 1-2 divider */}
-          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" style={{ top: '60%' }} />
-          {/* Tier 2-3 divider */}
-          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" style={{ top: '70%' }} />
-          {/* Tier 3-4 divider */}
-          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" style={{ top: '90%' }} />
-        </div>
-
-        {/* Enhanced Skill Tree Connections */}
+        {/* Skill Tree Connections */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
           {/* Tier 1 to Tier 2 */}
-          <line x1="50%" y1="55%" x2="35%" y2="65%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="50%" y1="55%" x2="65%" y2="65%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="50%" y1="15%" x2="35%" y2="30%" stroke="rgba(168, 85, 247, 0.4)" strokeWidth="3" />
+          <line x1="50%" y1="15%" x2="65%" y2="30%" stroke="rgba(168, 85, 247, 0.4)" strokeWidth="3" />
           
           {/* Tier 2 to Tier 3 */}
-          <line x1="35%" y1="65%" x2="25%" y2="75%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="35%" y1="65%" x2="50%" y2="75%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="65%" y1="65%" x2="50%" y2="75%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="65%" y1="65%" x2="75%" y2="75%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="50%" y1="75%" x2="37.5%" y2="85%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="35%" y1="30%" x2="25%" y2="45%" stroke="rgba(168, 85, 247, 0.4)" strokeWidth="3" />
+          <line x1="35%" y1="30%" x2="50%" y2="45%" stroke="rgba(168, 85, 247, 0.4)" strokeWidth="3" />
+          <line x1="65%" y1="30%" x2="50%" y2="45%" stroke="rgba(168, 85, 247, 0.4)" strokeWidth="3" />
+          <line x1="65%" y1="30%" x2="75%" y2="45%" stroke="rgba(168, 85, 247, 0.4)" strokeWidth="3" />
+          <line x1="50%" y1="45%" x2="40%" y2="60%" stroke="rgba(168, 85, 247, 0.4)" strokeWidth="3" />
           
           {/* Tier 3 to Tier 4 */}
-          <line x1="37.5%" y1="85%" x2="50%" y2="95%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="40%" y1="60%" x2="50%" y2="85%" stroke="rgba(168, 85, 247, 0.4)" strokeWidth="3" />
         </svg>
 
         {/* Skill Tree Nodes */}
@@ -381,10 +366,10 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
       {/* Building Upgrade Modal */}
       {selectedBuilding && (
         <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={handleModalBackdropClick}
         >
-          <div className="w-full max-w-[90%] max-h-[70vh] animate-scale-in">
+          <div className="w-full max-w-[90%] max-h-[70vh]">
             <BuildingUpgradeModal
               building={selectedBuilding.building}
               count={selectedBuilding.count}
@@ -400,10 +385,10 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
       {/* Hybrid Upgrade Modal */}
       {selectedUpgrade && (
         <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={handleModalBackdropClick}
         >
-          <div className="w-full max-w-[90%] max-h-[70vh] animate-scale-in">
+          <div className="w-full max-w-[90%] max-h-[70vh]">
             <HybridUpgradeModal
               upgrade={enhancedHybridUpgrades.find(u => u.id === selectedUpgrade)!}
               gameState={gameState}

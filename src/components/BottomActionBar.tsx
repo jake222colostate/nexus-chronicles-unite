@@ -20,27 +20,22 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   };
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-30">
-      <div className="flex items-center gap-3 bg-black/60 backdrop-blur-xl p-2.5 rounded-full border border-white/40 shadow-xl">
+    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-30">
+      <div className="flex items-center gap-3 bg-black/50 backdrop-blur-xl p-2 rounded-full border border-white/30 shadow-lg">
         {/* Enhanced glassmorphism */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/15 pointer-events-none rounded-full" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-full" />
         
         {/* Fantasy Realm Button */}
         <Button
           onClick={() => handleRealmSwitch('fantasy')}
           disabled={isTransitioning}
-          className={`h-11 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm shadow-lg ${
+          className={`h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
             currentRealm === 'fantasy'
-              ? 'bg-purple-600/90 hover:bg-purple-700/90 shadow-purple-500/40 scale-105 border border-purple-400/80 text-purple-100'
-              : 'bg-transparent border border-purple-400/60 text-purple-300 hover:bg-purple-900/40 hover:border-purple-400 shadow-purple-500/20'
+              ? 'bg-purple-600/90 hover:bg-purple-700/90 shadow-lg shadow-purple-500/30 scale-105 border border-purple-400/80'
+              : 'bg-transparent border border-purple-400/60 text-purple-300 hover:bg-purple-900/40 hover:border-purple-400'
           } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
-          style={{
-            filter: currentRealm === 'fantasy' 
-              ? 'drop-shadow(0 4px 12px rgba(168, 85, 247, 0.3))' 
-              : 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))'
-          }}
         >
-          <span className="relative z-10 flex items-center gap-1.5 drop-shadow-sm">
+          <span className="relative z-10 flex items-center gap-1.5">
             🏰 Fantasy
           </span>
           {currentRealm === 'fantasy' && (
@@ -52,18 +47,13 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
         <Button
           onClick={() => handleRealmSwitch('scifi')}
           disabled={isTransitioning}
-          className={`h-11 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm shadow-lg ${
+          className={`h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
             currentRealm === 'scifi'
-              ? 'bg-cyan-600/90 hover:bg-cyan-700/90 shadow-cyan-500/40 scale-105 border border-cyan-400/80 text-cyan-100'
-              : 'bg-transparent border border-cyan-400/60 text-cyan-300 hover:bg-cyan-900/40 hover:border-cyan-400 shadow-cyan-500/20'
+              ? 'bg-cyan-600/90 hover:bg-cyan-700/90 shadow-lg shadow-cyan-500/30 scale-105 border border-cyan-400/80'
+              : 'bg-transparent border border-cyan-400/60 text-cyan-300 hover:bg-cyan-900/40 hover:border-cyan-400'
           } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
-          style={{
-            filter: currentRealm === 'scifi' 
-              ? 'drop-shadow(0 4px 12px rgba(34, 211, 238, 0.3))' 
-              : 'drop-shadow(0 2px 8px rgba(0,0,0,0.2))'
-          }}
         >
-          <span className="relative z-10 flex items-center gap-1.5 drop-shadow-sm">
+          <span className="relative z-10 flex items-center gap-1.5">
             🚀 Sci-Fi
           </span>
           {currentRealm === 'scifi' && (

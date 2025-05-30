@@ -6,7 +6,7 @@ export const enhancedHybridUpgrades: HybridUpgrade[] = [
   {
     id: 'arcane_ai',
     name: 'Arcane AI',
-    description: 'Fusion of magic and technology boosts all production by 10%',
+    description: 'Fusion of magic and technology boosts all production',
     cost: 5,
     costType: 'nexusShards',
     requirements: {
@@ -26,7 +26,7 @@ export const enhancedHybridUpgrades: HybridUpgrade[] = [
   {
     id: 'mana_fountain',
     name: 'Mana Fountain',
-    description: 'Eternal wellspring that amplifies magical energy generation',
+    description: 'Eternal wellspring that amplifies magical energy',
     cost: 8,
     costType: 'nexusShards',
     requirements: {
@@ -124,7 +124,7 @@ export const enhancedHybridUpgrades: HybridUpgrade[] = [
   {
     id: 'rift_core',
     name: 'Rift Core',
-    description: 'Interdimensional core that bridges fantasy and sci-fi realms',
+    description: 'Interdimensional core that bridges fantasy and sci-fi',
     cost: 20,
     costType: 'nexusShards',
     requirements: {
@@ -145,7 +145,7 @@ export const enhancedHybridUpgrades: HybridUpgrade[] = [
   {
     id: 'reality_engine',
     name: 'Reality Engine',
-    description: 'Rewrite the laws of physics for ultimate power generation',
+    description: 'Rewrite the laws of physics for ultimate power',
     cost: 50,
     costType: 'nexusShards',
     requirements: {
