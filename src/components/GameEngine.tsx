@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -55,7 +56,7 @@ const GameEngine: React.FC = () => {
       const parsedState = JSON.parse(saved);
       return {
         ...parsedState,
-        purchasedUpgrades: parsedState.purchasedUpgrades || [],
+        purchasedUpgrades: Array.isArray(parsedState.purchasedUpgrades) ? parsedState.purchasedUpgrades : [],
         lastSaveTime: parsedState.lastSaveTime || Date.now(),
       };
     }
@@ -152,10 +153,9 @@ const GameEngine: React.FC = () => {
       energyRate += count * building.production;
     });
 
-    // Apply hybrid upgrade bonuses - ensure purchasedUpgrades is always an array
+    // Apply hybrid upgrade bonuses - purchasedUpgrades is guaranteed to be an array
     let globalMultiplier = 1;
-    const upgrades = gameState.purchasedUpgrades || [];
-    upgrades.forEach(upgradeId => {
+    gameState.purchasedUpgrades.forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
@@ -187,8 +187,8 @@ const GameEngine: React.FC = () => {
   }, [
     memoizedFantasyBuildings,
     memoizedScifiBuildings,
-    gameState.purchasedUpgrades?.length ?? 0 // Use length to trigger updates but avoid undefined
-  ]); // Use length property to safely track array changes
+    gameState.purchasedUpgrades.length // Safe to use length since purchasedUpgrades is guaranteed to be an array
+  ]);
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
