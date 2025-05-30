@@ -84,16 +84,23 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
 
-  // Stabilize building objects with proper memoization - ensure they're never undefined
-  const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
-  const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
+  // Create stable references to prevent useEffect dependency issues
+  const fantasyBuildingsRef = useRef(gameState.fantasyBuildings || {});
+  const scifiBuildingsRef = useRef(gameState.scifiBuildings || {});
+  const purchasedUpgradesRef = useRef(gameState.purchasedUpgrades || []);
 
-  // Stabilize purchased upgrades count to prevent undefined access
-  const purchasedUpgradesCount = useMemo(() => {
-    return (gameState.purchasedUpgrades || []).length;
-  }, [gameState.purchasedUpgrades]);
+  // Update refs when gameState changes
+  useEffect(() => {
+    fantasyBuildingsRef.current = gameState.fantasyBuildings || {};
+    scifiBuildingsRef.current = gameState.scifiBuildings || {};
+    purchasedUpgradesRef.current = gameState.purchasedUpgrades || [];
+  }, [gameState.fantasyBuildings, gameState.scifiBuildings, gameState.purchasedUpgrades]);
 
-  // Initialize buff system with stabilized buildings - COMPLETELY STABLE
+  // Memoize building objects with stable default values
+  const memoizedFantasyBuildings = useMemo(() => fantasyBuildingsRef.current, [fantasyBuildingsRef.current]);
+  const memoizedScifiBuildings = useMemo(() => scifiBuildingsRef.current, [scifiBuildingsRef.current]);
+
+  // Initialize buff system with stabilized buildings
   const stableBuffSystem = useMemo(() => {
     return useBuffSystem(memoizedFantasyBuildings, memoizedScifiBuildings);
   }, [memoizedFantasyBuildings, memoizedScifiBuildings]);
@@ -140,28 +147,33 @@ const GameEngine: React.FC = () => {
     return () => clearInterval(interval);
   }, []); // Empty dependency array - only run on mount
 
-  // Enhanced production calculation - FIXED TO PREVENT INFINITE LOOPS
+  // Enhanced production calculation with stable dependencies
   useEffect(() => {
     console.log('Production calculation useEffect triggered');
     
-    // Calculate production rates without using the buff system to prevent circular dependencies
+    // Use current refs to get the latest values
+    const currentFantasyBuildings = fantasyBuildingsRef.current;
+    const currentScifiBuildings = scifiBuildingsRef.current;
+    const currentPurchasedUpgrades = purchasedUpgradesRef.current;
+    
+    // Calculate production rates
     let manaRate = 0;
     let energyRate = 0;
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
-      const count = memoizedFantasyBuildings[building.id] || 0;
+      const count = currentFantasyBuildings[building.id] || 0;
       manaRate += count * building.production;
     });
 
     scifiBuildings.forEach(building => {
-      const count = memoizedScifiBuildings[building.id] || 0;
+      const count = currentScifiBuildings[building.id] || 0;
       energyRate += count * building.production;
     });
 
-    // Apply hybrid upgrade bonuses - purchasedUpgrades is guaranteed to be an array
+    // Apply hybrid upgrade bonuses
     let globalMultiplier = 1;
-    (gameState.purchasedUpgrades || []).forEach(upgradeId => {
+    currentPurchasedUpgrades.forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
@@ -191,9 +203,14 @@ const GameEngine: React.FC = () => {
       energyPerSecond: finalEnergyRate,
     }));
   }, [
-    memoizedFantasyBuildings,
-    memoizedScifiBuildings,
-    purchasedUpgradesCount // Use the memoized count instead of direct array access
+    // Use simple values that are guaranteed to be defined
+    Object.keys(gameState.fantasyBuildings || {}).length,
+    Object.keys(gameState.scifiBuildings || {}).length,
+    (gameState.purchasedUpgrades || []).length,
+    // Include the actual values as a JSON string to detect changes
+    JSON.stringify(gameState.fantasyBuildings || {}),
+    JSON.stringify(gameState.scifiBuildings || {}),
+    JSON.stringify(gameState.purchasedUpgrades || [])
   ]);
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
