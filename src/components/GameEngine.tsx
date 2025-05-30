@@ -9,6 +9,9 @@ import { ConvergenceSystem } from './ConvergenceSystem';
 import { BottomActionBar } from './BottomActionBar';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { hybridUpgrades } from '../data/HybridUpgrades';
+import { EnhancedResourceSidebar } from './EnhancedResourceSidebar';
+import { MapStatsHUD } from './MapStatsHUD';
+import { QuickHelpModal } from './QuickHelpModal';
 
 interface GameState {
   mana: number;
@@ -77,6 +80,9 @@ const GameEngine: React.FC = () => {
   const [showHybridUpgrades, setShowHybridUpgrades] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showTapEffect, setShowTapEffect] = useState(false);
+  const [showQuickHelp, setShowQuickHelp] = useState(() => {
+    return !localStorage.getItem('celestialNexusHelpDismissed');
+  });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize buff system
@@ -270,58 +276,23 @@ const GameEngine: React.FC = () => {
     }
   };
 
+  const handleShowHelp = () => {
+    setShowQuickHelp(true);
+  };
+
   return (
     <div className="h-[667px] w-full relative overflow-hidden bg-black">
-      {/* Resource Sidebar - Inside app frame, flush left */}
-      <div className="absolute left-0 top-0 bottom-0 w-[100px] z-30 p-2">
-        <div className="h-full flex flex-col justify-start pt-4">
-          <Card className="backdrop-blur-md bg-black/60 border-white/30">
-            <div className="p-3 space-y-3">
-              {/* Title */}
-              <div className="flex items-center justify-center gap-1 mb-3">
-                <Crown size={12} className="text-yellow-400" />
-                <span className="text-xs font-bold text-white">Nexus</span>
-              </div>
-              
-              {/* Mana */}
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-purple-300 text-xs mb-1">
-                  <span>💠</span>
-                  <span>Mana</span>
-                </div>
-                <div className="text-white font-bold text-sm">{formatNumber(gameState.mana)}</div>
-                <div className="text-purple-200 text-xs">+{formatNumber(gameState.manaPerSecond)}/s</div>
-              </div>
-
-              {/* Energy */}
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-cyan-300 text-xs mb-1">
-                  <span>⚡</span>
-                  <span>Energy</span>
-                </div>
-                <div className="text-white font-bold text-sm">{formatNumber(gameState.energyCredits)}</div>
-                <div className="text-cyan-200 text-xs">+{formatNumber(gameState.energyPerSecond)}/s</div>
-              </div>
-
-              {/* Convergence Progress - Only show when approaching convergence */}
-              {convergenceProgress > 10 && (
-                <div className="text-center pt-2 border-t border-white/20">
-                  <div className="flex items-center justify-center gap-1 text-yellow-300 text-xs mb-1">
-                    <span>🌌</span>
-                    <span>Conv</span>
-                  </div>
-                  <div className="text-yellow-300 font-bold text-sm">{convergenceProgress.toFixed(0)}%</div>
-                </div>
-              )}
-
-              {/* Nexus Shards */}
-              <div className="text-center pt-2 border-t border-white/20">
-                <div className="text-yellow-400 font-bold text-xs">{gameState.nexusShards} Shards</div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      </div>
+      {/* Enhanced Resource Sidebar */}
+      <EnhancedResourceSidebar
+        realm={currentRealm}
+        mana={gameState.mana}
+        energyCredits={gameState.energyCredits}
+        manaPerSecond={gameState.manaPerSecond}
+        energyPerSecond={gameState.energyPerSecond}
+        nexusShards={gameState.nexusShards}
+        convergenceProgress={convergenceProgress}
+        onHelpClick={handleShowHelp}
+      />
 
       {/* Simplified Header - Only title, positioned to avoid sidebar */}
       <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-30">
@@ -332,6 +303,14 @@ const GameEngine: React.FC = () => {
 
       {/* Main Game Area - Starts right after sidebar */}
       <div className="absolute left-[100px] top-0 right-0 bottom-0">
+        {/* Map Stats HUD */}
+        <MapStatsHUD
+          realm={currentRealm}
+          manaPerSecond={gameState.manaPerSecond}
+          energyPerSecond={gameState.energyPerSecond}
+          convergenceProgress={convergenceProgress}
+        />
+
         {/* Map View - Takes remaining space */}
         <MapView
           realm={currentRealm}
@@ -375,6 +354,12 @@ const GameEngine: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Quick Help Modal */}
+      <QuickHelpModal
+        isOpen={showQuickHelp}
+        onClose={() => setShowQuickHelp(false)}
+      />
 
       {/* Hybrid Upgrades Modal - Improved responsiveness */}
       {showHybridUpgrades && (
