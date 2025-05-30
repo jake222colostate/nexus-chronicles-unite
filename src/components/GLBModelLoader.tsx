@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -33,9 +34,17 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [glowIntensity, setGlowIntensity] = useState(1);
+  const [loadError, setLoadError] = useState(false);
   
   // Load GLB model with proper error handling
-  const { scene: gltfScene, error } = useGLTF(modelUrl);
+  let gltfScene = null;
+  try {
+    const gltf = useGLTF(modelUrl);
+    gltfScene = gltf.scene;
+  } catch (error) {
+    console.log(`Failed to load model for ${name}:`, error);
+    setLoadError(true);
+  }
   
   // Enhanced click handler with better debugging
   const handleClick = (event: any) => {
@@ -91,8 +100,8 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   });
 
   // Enhanced fallback geometry for failed loads or loading state
-  if (error || !gltfScene) {
-    console.log(`Using fallback for ${name}`, error ? `, error: ${error.message}` : '');
+  if (loadError || !gltfScene) {
+    console.log(`Using fallback for ${name}`, loadError ? ', load error occurred' : ', model not loaded yet');
     return (
       <group
         ref={groupRef}
@@ -101,15 +110,15 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        {/* Invisible interaction sphere for better click detection */}
+        {/* Large invisible interaction sphere for better click detection */}
         <mesh>
-          <sphereGeometry args={[scale * 2]} />
+          <sphereGeometry args={[scale * 3]} />
           <meshBasicMaterial transparent opacity={0} />
         </mesh>
 
         {/* Enhanced fallback crystal with state-based coloring */}
         <mesh>
-          <octahedronGeometry args={[scale * 0.8]} />
+          <octahedronGeometry args={[scale * 1.2]} />
           <meshLambertMaterial 
             color={
               isPurchased ? "#10b981" : 
@@ -123,7 +132,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         
         {/* Fallback glow with state-based intensity */}
         <mesh ref={glowRef} position={[0, -0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[scale * 1.5]} />
+          <circleGeometry args={[scale * 2]} />
           <meshBasicMaterial
             color={
               isPurchased ? "#10b981" : 
@@ -146,15 +155,15 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
-      {/* Invisible interaction sphere for better click detection */}
+      {/* Large invisible interaction sphere for better click detection */}
       <mesh>
-        <sphereGeometry args={[scale * 2]} />
+        <sphereGeometry args={[scale * 3]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
       {/* Enhanced magical glow beneath model with state-based coloring */}
       <mesh ref={glowRef} position={[0, -0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[scale * 1.8]} />
+        <circleGeometry args={[scale * 2.5]} />
         <meshBasicMaterial
           color={
             isPurchased ? "#10b981" : 
