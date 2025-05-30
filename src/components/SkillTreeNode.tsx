@@ -27,12 +27,12 @@ export const SkillTreeNode: React.FC<SkillTreeNodeProps> = ({
     >
       <div className={`w-16 h-16 rounded-full border-2 flex items-center justify-center text-2xl transition-all duration-300 hover:scale-110 relative ${
         isPurchased
-          ? 'bg-green-600/90 border-green-400 shadow-lg shadow-green-400/40'
+          ? 'bg-green-600/90 border-green-400 shadow-md shadow-green-400/30'
           : isUnlocked && canAfford
-          ? 'bg-gradient-to-br from-purple-600/90 to-cyan-600/90 border-purple-400 shadow-lg shadow-purple-400/40 hover:shadow-purple-400/60'
+          ? 'bg-gradient-to-br from-purple-600/90 to-cyan-600/90 border-purple-400 shadow-md shadow-purple-400/30 hover:shadow-purple-400/40'
           : isUnlocked
-          ? 'bg-gradient-to-br from-purple-800/70 to-cyan-800/70 border-purple-500/60 shadow-md shadow-purple-500/30'
-          : 'bg-gray-700/80 border-gray-500 opacity-60 shadow-md'
+          ? 'bg-gradient-to-br from-purple-800/70 to-cyan-800/70 border-purple-500/60 shadow-sm shadow-purple-500/20'
+          : 'bg-gray-700/80 border-gray-500 opacity-60 shadow-sm'
       } backdrop-blur-sm`}>
         
         {/* Icon */}
@@ -56,18 +56,18 @@ export const SkillTreeNode: React.FC<SkillTreeNodeProps> = ({
           <span className="text-xs text-white font-bold">{position.tier}</span>
         </div>
 
-        {/* Glow effect for unlocked nodes */}
+        {/* Reduced glow effect for unlocked nodes */}
         {isUnlocked && !isPurchased && (
           <div className={`absolute inset-0 rounded-full animate-pulse ${
             canAfford 
-              ? 'bg-gradient-to-br from-purple-400/30 to-cyan-400/30' 
-              : 'bg-gradient-to-br from-purple-600/20 to-cyan-600/20'
+              ? 'bg-gradient-to-br from-purple-400/20 to-cyan-400/20' 
+              : 'bg-gradient-to-br from-purple-600/15 to-cyan-600/15'
           }`} />
         )}
       </div>
 
       {/* Node name tooltip on hover */}
-      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap backdrop-blur-sm border border-white/20">
+      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap backdrop-blur-sm border border-white/20 z-50">
         {upgrade.name}
       </div>
     </div>
