@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Sparkles, Zap, Crown, Settings } from 'lucide-react';
+import { Sparkles, Zap, Crown } from 'lucide-react';
+import { MapView } from './MapView';
+import { RealmTransition } from './RealmTransition';
 
 interface GameState {
   mana: number;
@@ -66,6 +66,7 @@ const GameEngine: React.FC = () => {
 
   const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi'>('fantasy');
   const [showConvergence, setShowConvergence] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate offline progress on mount
@@ -191,14 +192,23 @@ const GameEngine: React.FC = () => {
 
   const canConverge = gameState.mana + gameState.energyCredits >= 1000;
 
+  // Modified realm switching with transition
+  const switchRealm = (newRealm: 'fantasy' | 'scifi') => {
+    if (newRealm === currentRealm) return;
+    
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentRealm(newRealm);
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 500);
+    }, 600);
+  };
+
   return (
-    <div className={`min-h-screen transition-all duration-1000 ${
-      currentRealm === 'fantasy' 
-        ? 'bg-gradient-to-br from-purple-900 via-indigo-800 to-violet-900' 
-        : 'bg-gradient-to-br from-slate-900 via-cyan-900 to-blue-900'
-    }`}>
-      {/* Header */}
-      <div className="p-4 backdrop-blur-sm bg-black/20">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Header UI */}
+      <div className="absolute top-0 left-0 right-0 z-30 p-4 backdrop-blur-sm bg-black/20">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-3xl font-bold text-white drop-shadow-lg">
             Chronicles of the Celestial Nexus
@@ -223,8 +233,9 @@ const GameEngine: React.FC = () => {
         {/* Realm Toggle */}
         <div className="flex gap-2 mb-4">
           <Button
-            onClick={() => setCurrentRealm('fantasy')}
+            onClick={() => switchRealm('fantasy')}
             variant={currentRealm === 'fantasy' ? 'default' : 'outline'}
+            disabled={isTransitioning}
             className={currentRealm === 'fantasy' 
               ? 'bg-purple-600 hover:bg-purple-700' 
               : 'border-purple-400 text-purple-300 hover:bg-purple-900/50'
@@ -234,8 +245,9 @@ const GameEngine: React.FC = () => {
             Fantasy Realm
           </Button>
           <Button
-            onClick={() => setCurrentRealm('scifi')}
+            onClick={() => switchRealm('scifi')}
             variant={currentRealm === 'scifi' ? 'default' : 'outline'}
+            disabled={isTransitioning}
             className={currentRealm === 'scifi' 
               ? 'bg-cyan-600 hover:bg-cyan-700' 
               : 'border-cyan-400 text-cyan-300 hover:bg-cyan-900/50'
@@ -247,7 +259,7 @@ const GameEngine: React.FC = () => {
         </div>
 
         {/* Resources */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 max-w-lg">
           <Card className={`p-4 backdrop-blur-sm ${
             currentRealm === 'fantasy' 
               ? 'bg-purple-800/40 border-purple-400' 
@@ -290,54 +302,19 @@ const GameEngine: React.FC = () => {
         </div>
       </div>
 
-      {/* Buildings */}
-      <div className="p-4">
-        <div className="grid gap-4">
-          {(currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings).map(building => {
-            const count = currentRealm === 'fantasy' 
-              ? gameState.fantasyBuildings[building.id] || 0
-              : gameState.scifiBuildings[building.id] || 0;
-            const cost = Math.floor(building.cost * Math.pow(building.costMultiplier, count));
-            const currency = currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits;
-            const canAfford = currency >= cost;
+      {/* Map View */}
+      <MapView
+        realm={currentRealm}
+        buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
+        manaPerSecond={gameState.manaPerSecond}
+        energyPerSecond={gameState.energyPerSecond}
+        onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
+        buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
+        currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
+      />
 
-            return (
-              <Card key={building.id} className={`p-4 backdrop-blur-sm transition-all duration-300 ${
-                currentRealm === 'fantasy'
-                  ? 'bg-purple-800/30 border-purple-400/50 hover:bg-purple-800/50'
-                  : 'bg-cyan-800/30 border-cyan-400/50 hover:bg-cyan-800/50'
-              } ${canAfford ? 'hover:scale-105' : 'opacity-60'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="text-4xl">{building.icon}</div>
-                    <div className="text-white">
-                      <div className="text-lg font-bold">{building.name}</div>
-                      <div className="text-sm opacity-70">{building.description}</div>
-                      <div className="text-sm">
-                        Owned: {count} | Production: +{formatNumber(building.production * count)}/sec
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => buyBuilding(building.id, currentRealm === 'fantasy')}
-                    disabled={!canAfford}
-                    className={`${
-                      currentRealm === 'fantasy'
-                        ? 'bg-purple-600 hover:bg-purple-700'
-                        : 'bg-cyan-600 hover:bg-cyan-700'
-                    } disabled:opacity-50`}
-                  >
-                    <div className="text-center">
-                      <div className="text-sm">Buy</div>
-                      <div className="font-bold">{formatNumber(cost)}</div>
-                    </div>
-                  </Button>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+      {/* Realm Transition Effect */}
+      <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
       {/* Convergence Modal */}
       {showConvergence && (
