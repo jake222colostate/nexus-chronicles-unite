@@ -84,21 +84,9 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
 
-  // Create stable references to prevent useEffect dependency issues
-  const fantasyBuildingsRef = useRef(gameState.fantasyBuildings || {});
-  const scifiBuildingsRef = useRef(gameState.scifiBuildings || {});
-  const purchasedUpgradesRef = useRef(gameState.purchasedUpgrades || []);
-
-  // Update refs when gameState changes
-  useEffect(() => {
-    fantasyBuildingsRef.current = gameState.fantasyBuildings || {};
-    scifiBuildingsRef.current = gameState.scifiBuildings || {};
-    purchasedUpgradesRef.current = gameState.purchasedUpgrades || [];
-  }, [gameState.fantasyBuildings, gameState.scifiBuildings, gameState.purchasedUpgrades]);
-
-  // Memoize building objects with stable default values
-  const memoizedFantasyBuildings = useMemo(() => fantasyBuildingsRef.current, [fantasyBuildingsRef.current]);
-  const memoizedScifiBuildings = useMemo(() => scifiBuildingsRef.current, [scifiBuildingsRef.current]);
+  // Simple memoized building objects that are always defined
+  const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
+  const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
 
   // Initialize buff system with stabilized buildings
   const stableBuffSystem = useMemo(() => {
@@ -147,33 +135,28 @@ const GameEngine: React.FC = () => {
     return () => clearInterval(interval);
   }, []); // Empty dependency array - only run on mount
 
-  // Enhanced production calculation with stable dependencies
+  // Enhanced production calculation with completely stable dependencies
   useEffect(() => {
     console.log('Production calculation useEffect triggered');
     
-    // Use current refs to get the latest values
-    const currentFantasyBuildings = fantasyBuildingsRef.current;
-    const currentScifiBuildings = scifiBuildingsRef.current;
-    const currentPurchasedUpgrades = purchasedUpgradesRef.current;
-    
-    // Calculate production rates
+    // Calculate production rates using current gameState
     let manaRate = 0;
     let energyRate = 0;
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
-      const count = currentFantasyBuildings[building.id] || 0;
+      const count = (gameState.fantasyBuildings || {})[building.id] || 0;
       manaRate += count * building.production;
     });
 
     scifiBuildings.forEach(building => {
-      const count = currentScifiBuildings[building.id] || 0;
+      const count = (gameState.scifiBuildings || {})[building.id] || 0;
       energyRate += count * building.production;
     });
 
     // Apply hybrid upgrade bonuses
     let globalMultiplier = 1;
-    currentPurchasedUpgrades.forEach(upgradeId => {
+    (gameState.purchasedUpgrades || []).forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
@@ -203,14 +186,10 @@ const GameEngine: React.FC = () => {
       energyPerSecond: finalEnergyRate,
     }));
   }, [
-    // Use simple values that are guaranteed to be defined
-    Object.keys(gameState.fantasyBuildings || {}).length,
-    Object.keys(gameState.scifiBuildings || {}).length,
-    (gameState.purchasedUpgrades || []).length,
-    // Include the actual values as a JSON string to detect changes
-    JSON.stringify(gameState.fantasyBuildings || {}),
-    JSON.stringify(gameState.scifiBuildings || {}),
-    JSON.stringify(gameState.purchasedUpgrades || [])
+    // Use only primitive values and guaranteed defined properties
+    gameState.fantasyBuildings,
+    gameState.scifiBuildings,
+    gameState.purchasedUpgrades
   ]);
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
