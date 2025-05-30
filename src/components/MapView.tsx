@@ -61,19 +61,19 @@ export const MapView: React.FC<MapViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Adjusted structure positioning for the remaining map area (after sidebar)
+  // Optimized structure positioning for the remaining map area (centered in right 2/3)
   const structurePositions = {
     fantasy: [
-      { id: 'altar', x: 20, y: 75, size: 'small' },
-      { id: 'tower', x: 50, y: 45, size: 'medium' },
+      { id: 'altar', x: 25, y: 75, size: 'small' },
+      { id: 'tower', x: 55, y: 45, size: 'medium' },
       { id: 'grove', x: 75, y: 65, size: 'large' },
-      { id: 'temple', x: 35, y: 25, size: 'massive' },
+      { id: 'temple', x: 40, y: 25, size: 'massive' },
     ],
     scifi: [
-      { id: 'generator', x: 15, y: 80, size: 'small' },
-      { id: 'reactor', x: 55, y: 55, size: 'medium' },
+      { id: 'generator', x: 20, y: 80, size: 'small' },
+      { id: 'reactor', x: 60, y: 55, size: 'medium' },
       { id: 'station', x: 80, y: 35, size: 'large' },
-      { id: 'megastructure', x: 25, y: 20, size: 'massive' },
+      { id: 'megastructure', x: 30, y: 20, size: 'massive' },
     ]
   };
 
@@ -168,29 +168,31 @@ export const MapView: React.FC<MapViewProps> = ({
     setLastPinchDistance(0);
   }, []);
 
-  // Handle building selection
+  // Handle building selection - Clear all tooltips when selecting a new building
   const handleBuildingClick = useCallback((buildingId: string) => {
     const building = buildingData.find(b => b.id === buildingId);
     const count = buildings[buildingId] || 0;
+    
+    // Clear all existing tooltips first
+    setUpgradeTooltips([]);
     
     if (building) {
       setSelectedBuilding({ building, count });
     }
   }, [buildingData, buildings]);
 
-  // Handle building purchase
+  // Handle building purchase with scale animation
   const handleBuildingPurchase = useCallback(() => {
     if (selectedBuilding) {
       const position = structurePositions[realm].find(p => p.id === selectedBuilding.building.id);
       if (position) {
-        // Show upgrade tooltip
-        const newTooltip = {
+        // Clear existing tooltips and add new one
+        setUpgradeTooltips([{
           id: Date.now(),
           buildingName: selectedBuilding.building.name,
           level: selectedBuilding.count + 1,
           position: { x: position.x, y: position.y }
-        };
-        setUpgradeTooltips(prev => [...prev, newTooltip]);
+        }]);
       }
       
       onBuyBuilding(selectedBuilding.building.id);
@@ -230,14 +232,16 @@ export const MapView: React.FC<MapViewProps> = ({
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* Enhanced Animated Background with smooth realm transitions */}
+      {/* Enhanced Background with subtle gradient */}
       <div className={`absolute inset-0 transition-all duration-700 ${
         isTransitioning ? 'opacity-50 scale-105' : 'opacity-100 scale-100'
       }`}>
         <AnimatedBackground realm={realm} />
+        {/* Subtle top-to-bottom gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/20 pointer-events-none" />
       </div>
 
-      {/* Enhanced Nexus Core - Centered in remaining space */}
+      {/* Enhanced Nexus Core - Perfectly centered */}
       <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <EnhancedNexusCore 
           manaFlow={manaPerSecond}
@@ -249,7 +253,7 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       </div>
 
-      {/* Map Container with enhanced interaction */}
+      {/* Map Container with enhanced interaction and proper spacing */}
       <div 
         ref={mapRef}
         className={`absolute inset-0 transition-all duration-500 cursor-grab active:cursor-grabbing ${
@@ -263,11 +267,11 @@ export const MapView: React.FC<MapViewProps> = ({
         {/* Ground/Base Layer with enhanced realm-specific styling */}
         <div className={`absolute inset-0 transition-all duration-700 ${
           realm === 'fantasy' 
-            ? 'bg-gradient-to-t from-purple-900/40 via-violet-800/20 to-transparent' 
-            : 'bg-gradient-to-t from-cyan-900/40 via-blue-800/20 to-transparent'
+            ? 'bg-gradient-to-t from-purple-900/30 via-violet-800/15 to-transparent' 
+            : 'bg-gradient-to-t from-cyan-900/30 via-blue-800/15 to-transparent'
         }`} />
 
-        {/* Enhanced Structures with improved interaction */}
+        {/* Enhanced Structures with proper spacing */}
         {structurePositions[realm].map((position) => {
           const building = buildingData.find(b => b.id === position.id);
           const count = buildings[position.id] || 0;
@@ -291,7 +295,7 @@ export const MapView: React.FC<MapViewProps> = ({
           );
         })}
 
-        {/* Enhanced Particle Systems with realm-specific effects */}
+        {/* Enhanced Particle Systems */}
         <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-30' : 'opacity-100'}`}>
           <ParticleSystem 
             realm={realm} 
@@ -308,7 +312,27 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       )}
 
-      {/* Upgrade Floating Tooltips - Constrained to map area */}
+      {/* Enhanced Tap to Generate Button - Properly spaced above bottom bar */}
+      <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-30">
+        <Button 
+          onClick={onTapResource}
+          className={`h-14 px-8 rounded-2xl transition-all duration-300 hover:scale-105 active:scale-95 font-bold text-base backdrop-blur-xl shadow-2xl ${
+            realm === 'fantasy'
+              ? 'bg-gradient-to-r from-purple-600/80 to-violet-700/80 hover:from-purple-500/80 hover:to-violet-600/80 border-2 border-purple-400/60 text-purple-100 shadow-purple-500/40'
+              : 'bg-gradient-to-r from-cyan-600/80 to-blue-700/80 hover:from-cyan-500/80 hover:to-blue-600/80 border-2 border-cyan-400/60 text-cyan-100 shadow-cyan-500/40'
+          }`}
+        >
+          {/* Glassmorphism inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-2xl" />
+          
+          <span className="flex items-center gap-2 relative z-10">
+            {realm === 'fantasy' ? '✨' : '⚡'}
+            Tap to Generate {realm === 'fantasy' ? 'Mana' : 'Energy'}
+          </span>
+        </Button>
+      </div>
+
+      {/* Enhanced Upgrade Tooltips - Only one at a time, smart positioning */}
       {upgradeTooltips.map((tooltip) => (
         <UpgradeFloatingTooltip
           key={tooltip.id}
@@ -331,38 +355,6 @@ export const MapView: React.FC<MapViewProps> = ({
           onClose={() => setSelectedBuilding(null)}
         />
       )}
-
-      {/* Anchored Tap to Generate Button - Above bottom action bar */}
-      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
-        <Button 
-          onClick={onTapResource}
-          className={`h-14 px-8 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 font-bold text-base ${
-            realm === 'fantasy'
-              ? 'bg-gradient-to-r from-purple-600/90 to-violet-700/90 hover:from-purple-500/90 hover:to-violet-600/90 border-2 border-purple-400/60 text-purple-100'
-              : 'bg-gradient-to-r from-cyan-600/90 to-blue-700/90 hover:from-cyan-500/90 hover:to-blue-600/90 border-2 border-cyan-400/60 text-cyan-100'
-          } backdrop-blur-sm shadow-lg ${
-            realm === 'fantasy' ? 'shadow-purple-500/30' : 'shadow-cyan-500/30'
-          }`}
-        >
-          <span className="flex items-center gap-2">
-            {realm === 'fantasy' ? '✨' : '⚡'}
-            Tap to Generate {realm === 'fantasy' ? 'Mana' : 'Energy'}
-          </span>
-        </Button>
-      </div>
-
-      {/* Simple Realm indicator - Positioned in top right of map area */}
-      <div className="absolute top-4 right-4 z-10">
-        <div className={`px-3 py-1 rounded-full backdrop-blur-md border transition-all duration-700 ${
-          realm === 'fantasy'
-            ? 'bg-purple-800/50 border-purple-400/40 text-purple-100'
-            : 'bg-cyan-800/50 border-cyan-400/40 text-cyan-100'
-        }`}>
-          <span className="text-xs font-medium">
-            {realm === 'fantasy' ? '🏰 Fantasy' : '🚀 Sci-Fi'}
-          </span>
-        </div>
-      </div>
     </div>
   );
 };

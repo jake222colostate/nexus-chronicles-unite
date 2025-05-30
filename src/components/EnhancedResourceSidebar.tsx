@@ -38,39 +38,50 @@ export const EnhancedResourceSidebar: React.FC<EnhancedResourceSidebarProps> = (
   };
 
   return (
-    <div className="absolute left-0 top-0 bottom-0 w-[100px] z-30 p-2">
-      <div className="h-full flex flex-col justify-start pt-4">
-        <Card className="backdrop-blur-md bg-black/60 border-white/30 relative">
-          <div className="p-3 space-y-3">
-            {/* Enhanced Header with Realm Info */}
-            <div className="text-center mb-3">
-              <div className="flex items-center justify-center gap-1 mb-2">
-                <Crown size={12} className="text-yellow-400" />
-                <span className="text-xs font-bold text-white">Nexus</span>
+    <div className="absolute left-0 top-0 bottom-0 w-[120px] z-30 p-3">
+      <div className="h-full flex flex-col justify-start pt-6">
+        <Card className="backdrop-blur-xl bg-black/20 border border-white/30 rounded-2xl shadow-2xl relative overflow-hidden">
+          {/* Glassmorphism inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-2xl" />
+          <div className="absolute inset-0 shadow-inner rounded-2xl pointer-events-none" style={{
+            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.1), inset 0 -1px 2px rgba(0,0,0,0.2)'
+          }} />
+          
+          <div className="relative p-4 space-y-4">
+            {/* Nexus Header with Realm Info */}
+            <div className="text-center space-y-3">
+              <div className="flex items-center justify-center gap-1">
+                <Crown size={14} className="text-yellow-400" />
+                <span className="text-sm font-bold text-white">Nexus</span>
               </div>
               
-              {/* Realm Header */}
-              <div className={`text-xs px-2 py-1 rounded-full ${
+              {/* Active Realm Display */}
+              <div className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-300 ${
                 realm === 'fantasy'
-                  ? 'bg-purple-600/30 text-purple-200 border border-purple-400/40'
-                  : 'bg-cyan-600/30 text-cyan-200 border border-cyan-400/40'
+                  ? 'bg-purple-600/40 text-purple-100 border-purple-400/60 shadow-lg shadow-purple-500/20'
+                  : 'bg-cyan-600/40 text-cyan-100 border-cyan-400/60 shadow-lg shadow-cyan-500/20'
               }`}>
-                {realm === 'fantasy' ? '✨ Fantasy' : '⚡ Sci-Fi'}
+                <span className="font-medium">
+                  Realm: {realm === 'fantasy' ? '✨ Fantasy' : '⚡ Sci-Fi'}
+                </span>
               </div>
             </div>
             
-            {/* Enhanced Mana Display */}
-            <div className="text-center">
+            {/* Section Divider */}
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+            
+            {/* Mana Section */}
+            <div className="text-center space-y-1.5" style={{ marginLeft: '16px', textAlign: 'left' }}>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="cursor-help">
-                      <div className="flex items-center justify-center gap-1 text-purple-300 text-xs mb-1">
+                      <div className="flex items-center gap-2 text-purple-300 text-xs mb-1">
                         <span>💠</span>
-                        <span className="font-medium">Mana</span>
+                        <span className="font-bold">Mana</span>
                       </div>
-                      <div className="text-white font-bold text-sm">{formatNumber(mana)}</div>
-                      <div className="text-purple-200 text-xs">({formatRate(manaPerSecond)}/s)</div>
+                      <div className="text-white font-bold text-sm ml-6">{formatNumber(mana)}</div>
+                      <div className="text-purple-200 text-xs ml-6">({formatRate(manaPerSecond)}/s)</div>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="bg-purple-900/90 border-purple-400/50">
@@ -80,21 +91,18 @@ export const EnhancedResourceSidebar: React.FC<EnhancedResourceSidebarProps> = (
               </TooltipProvider>
             </div>
 
-            {/* Section Divider */}
-            <div className="w-full h-px bg-white/20"></div>
-
-            {/* Enhanced Energy Display */}
-            <div className="text-center">
+            {/* Energy Section */}
+            <div className="text-center space-y-1.5" style={{ marginLeft: '16px', textAlign: 'left' }}>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="cursor-help">
-                      <div className="flex items-center justify-center gap-1 text-cyan-300 text-xs mb-1">
+                      <div className="flex items-center gap-2 text-cyan-300 text-xs mb-1">
                         <span>⚡</span>
-                        <span className="font-medium">Energy</span>
+                        <span className="font-bold">Energy</span>
                       </div>
-                      <div className="text-white font-bold text-sm">{formatNumber(energyCredits)}</div>
-                      <div className="text-cyan-200 text-xs">({formatRate(energyPerSecond)}/s)</div>
+                      <div className="text-white font-bold text-sm ml-6">{formatNumber(energyCredits)}</div>
+                      <div className="text-cyan-200 text-xs ml-6">({formatRate(energyPerSecond)}/s)</div>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="bg-cyan-900/90 border-cyan-400/50">
@@ -104,19 +112,19 @@ export const EnhancedResourceSidebar: React.FC<EnhancedResourceSidebarProps> = (
               </TooltipProvider>
             </div>
 
-            {/* Convergence Progress - Enhanced */}
+            {/* Convergence Progress */}
             {convergenceProgress > 10 && (
               <>
-                <div className="w-full h-px bg-white/20"></div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-1 text-yellow-300 text-xs mb-1">
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+                <div className="text-center space-y-1.5" style={{ marginLeft: '16px', textAlign: 'left' }}>
+                  <div className="flex items-center gap-2 text-yellow-300 text-xs mb-1">
                     <span>🌌</span>
-                    <span className="font-medium">Conv</span>
+                    <span className="font-bold">Conv</span>
                   </div>
-                  <div className="text-yellow-300 font-bold text-sm">{convergenceProgress.toFixed(0)}%</div>
-                  <div className="w-full bg-white/20 rounded-full h-1 mt-1">
+                  <div className="text-yellow-300 font-bold text-sm ml-6">{convergenceProgress.toFixed(0)}%</div>
+                  <div className="w-full bg-white/20 rounded-full h-1.5 mt-1 ml-6 mr-2">
                     <div 
-                      className="bg-gradient-to-r from-yellow-400 to-orange-400 h-1 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-yellow-400 to-orange-400 h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${Math.min(convergenceProgress, 100)}%` }}
                     />
                   </div>
@@ -124,14 +132,23 @@ export const EnhancedResourceSidebar: React.FC<EnhancedResourceSidebarProps> = (
               </>
             )}
 
-            {/* Enhanced Nexus Shards */}
-            <div className="w-full h-px bg-white/20"></div>
-            <div className="text-center">
-              <div className={`text-yellow-400 font-bold text-xs ${
-                nexusShards === 0 ? 'animate-pulse' : ''
+            {/* Section Divider */}
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+            
+            {/* Nexus Shards - Enhanced Styling */}
+            <div className="text-center space-y-2" style={{ marginLeft: '16px', textAlign: 'left' }}>
+              <div className="flex items-center gap-2 text-yellow-400 text-xs mb-1">
+                <span>👑</span>
+                <span className="font-bold">Shards</span>
+              </div>
+              <div className={`inline-block px-3 py-1.5 rounded-lg border-2 transition-all duration-300 ml-6 ${
+                nexusShards === 0 
+                  ? 'border-yellow-400/60 bg-yellow-900/20 animate-pulse' 
+                  : 'border-yellow-400/80 bg-yellow-900/40 shadow-lg shadow-yellow-500/20'
               }`}>
-                <span className="block">🔮 {nexusShards}</span>
-                <span className="text-[10px] text-yellow-200">Shards</span>
+                <span className="text-yellow-400 font-bold text-sm">
+                  🔮 {nexusShards}
+                </span>
               </div>
             </div>
           </div>
@@ -143,7 +160,7 @@ export const EnhancedResourceSidebar: React.FC<EnhancedResourceSidebarProps> = (
                 onClick={onHelpClick}
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 rounded-full bg-white/10 hover:bg-white/20 border border-white/30"
+                className="h-7 w-7 p-0 rounded-full bg-white/10 hover:bg-white/20 border border-white/30 backdrop-blur-sm shadow-lg"
               >
                 <HelpCircle size={12} className="text-white/80" />
               </Button>

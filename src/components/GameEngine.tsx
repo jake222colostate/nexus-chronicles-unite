@@ -282,7 +282,7 @@ const GameEngine: React.FC = () => {
 
   return (
     <div className="h-[667px] w-full relative overflow-hidden bg-black">
-      {/* Enhanced Resource Sidebar */}
+      {/* Enhanced Resource Sidebar - Now with 120px width for glassmorphism */}
       <EnhancedResourceSidebar
         realm={currentRealm}
         mana={gameState.mana}
@@ -294,15 +294,15 @@ const GameEngine: React.FC = () => {
         onHelpClick={handleShowHelp}
       />
 
-      {/* Simplified Header - Only title, positioned to avoid sidebar */}
+      {/* Simplified Header - Positioned to avoid sidebar */}
       <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-30">
         <h1 className="text-sm font-bold text-white drop-shadow-lg">
           Celestial Nexus
         </h1>
       </div>
 
-      {/* Main Game Area - Starts right after sidebar */}
-      <div className="absolute left-[100px] top-0 right-0 bottom-0">
+      {/* Main Game Area - Starts right after sidebar with proper spacing */}
+      <div className="absolute left-[120px] top-0 right-0 bottom-0">
         {/* Map Stats HUD */}
         <MapStatsHUD
           realm={currentRealm}
@@ -334,7 +334,7 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Bottom Action Bar - Removed tap button */}
+        {/* Enhanced Bottom Action Bar */}
         <BottomActionBar
           currentRealm={currentRealm}
           onRealmChange={switchRealm}
@@ -342,14 +342,16 @@ const GameEngine: React.FC = () => {
           isTransitioning={isTransitioning}
         />
 
-        {/* Convergence Ready Button - Show above action bar when ready */}
+        {/* Convergence Ready Button - Enhanced positioning */}
         {canConverge && (
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-28 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
-              className="h-10 px-6 rounded-full bg-gradient-to-r from-yellow-500/90 to-orange-500/90 hover:from-yellow-600/90 hover:to-orange-600/90 backdrop-blur-sm border-2 border-yellow-400/60 animate-pulse transition-all duration-300 font-bold"
+              className="h-12 px-8 rounded-2xl bg-gradient-to-r from-yellow-500/90 to-orange-500/90 hover:from-yellow-600/90 hover:to-orange-600/90 backdrop-blur-xl border-2 border-yellow-400/60 animate-pulse transition-all duration-300 font-bold shadow-2xl shadow-yellow-500/40"
             >
-              <span className="text-sm">🔁 Convergence Ready!</span>
+              <span className="text-sm flex items-center gap-2">
+                🔁 Convergence Ready!
+              </span>
             </Button>
           </div>
         )}
@@ -361,7 +363,7 @@ const GameEngine: React.FC = () => {
         onClose={() => setShowQuickHelp(false)}
       />
 
-      {/* Hybrid Upgrades Modal - Improved responsiveness */}
+      {/* Hybrid Upgrades Modal - Enhanced styling */}
       {showHybridUpgrades && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
@@ -371,7 +373,7 @@ const GameEngine: React.FC = () => {
             }
           }}
         >
-          <Card className="w-[90%] max-w-md h-[70%] max-h-[400px] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400 relative flex flex-col">
+          <Card className="w-[90%] max-w-md h-[70%] max-h-[400px] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400 relative flex flex-col backdrop-blur-xl shadow-2xl">
             <div className="flex justify-between items-center p-4 border-b border-purple-400 flex-shrink-0">
               <h2 className="text-lg font-bold text-white">Hybrid Nexus</h2>
               <Button
@@ -393,7 +395,7 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Convergence Modal */}
+      {/* Convergence Modal - Enhanced styling */}
       {showConvergence && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"

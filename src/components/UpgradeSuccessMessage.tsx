@@ -22,28 +22,36 @@ export const UpgradeSuccessMessage: React.FC<UpgradeSuccessMessageProps> = ({
     setMounted(true);
     const timer = setTimeout(() => {
       onComplete();
-    }, 2000);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
 
+  // Calculate smart positioning - always appear above buildings with adequate spacing
+  const tooltipStyle = {
+    left: `${Math.max(10, Math.min(position.x, 85))}%`, // Keep within bounds
+    top: `${Math.max(15, position.y - 20)}%`, // Always above, with minimum spacing from top
+    transform: 'translate(-50%, -100%)', // Center horizontally, position above
+    zIndex: 50 // Ensure it appears above other elements
+  };
+
   return (
     <div 
-      className={`absolute pointer-events-none z-30 transition-all duration-2000 ${
-        mounted ? 'opacity-0 -translate-y-12 scale-110' : 'opacity-100 translate-y-0 scale-100'
+      className={`absolute pointer-events-none transition-all duration-2500 ease-out ${
+        mounted ? 'opacity-0 -translate-y-16 scale-110' : 'opacity-100 translate-y-0 scale-100'
       }`}
-      style={{ 
-        left: `${position.x}%`, 
-        top: `${position.y}%`,
-        transform: 'translate(-50%, -50%)'
-      }}
+      style={tooltipStyle}
     >
-      <div className={`px-3 py-2 rounded-full backdrop-blur-md border-2 ${
+      <div className={`px-4 py-3 rounded-xl backdrop-blur-xl border-2 shadow-2xl ${
         realm === 'fantasy'
-          ? 'bg-purple-600/90 border-purple-400/80 text-purple-100'
-          : 'bg-cyan-600/90 border-cyan-400/80 text-cyan-100'
-      } shadow-lg`}>
-        <span className="text-sm font-bold">
+          ? 'bg-purple-600/90 border-purple-400/80 text-purple-100 shadow-purple-500/40'
+          : 'bg-cyan-600/90 border-cyan-400/80 text-cyan-100 shadow-cyan-500/40'
+      }`}>
+        {/* Glassmorphism inner glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10 pointer-events-none rounded-xl" />
+        
+        <span className="text-sm font-bold relative z-10 flex items-center gap-2">
+          <span className="animate-bounce">⬆️</span>
           {buildingName} → Level {level}
         </span>
       </div>
