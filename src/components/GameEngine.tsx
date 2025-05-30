@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -63,7 +64,7 @@ const GameEngine: React.FC = () => {
   });
 
   // Use stable buff system
-  const { buffSystem, buildingsKey } = useStableBuffSystem(gameState.fantasyBuildings, gameState.scifiBuildings);
+  const { buffSystem } = useStableBuffSystem(gameState.fantasyBuildings, gameState.scifiBuildings);
 
   // Use refs to prevent unnecessary recalculations
   const productionTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -240,33 +241,6 @@ const GameEngine: React.FC = () => {
     return Math.floor(num).toString();
   };
 
-  // Create a stable game state object for child components - COMPLETELY REWRITTEN
-  const stableGameState = useMemo(() => {
-    console.log('Creating stable game state');
-    return {
-      mana: gameState.mana,
-      energyCredits: gameState.energyCredits,
-      nexusShards: gameState.nexusShards,
-      convergenceCount: gameState.convergenceCount,
-      purchasedUpgrades: gameState.purchasedUpgrades,
-      manaPerSecond: gameState.manaPerSecond,
-      energyPerSecond: gameState.energyPerSecond,
-      fantasyBuildings: gameState.fantasyBuildings,
-      scifiBuildings: gameState.scifiBuildings,
-      lastSaveTime: gameState.lastSaveTime
-    };
-  }, [
-    // Only include essential values that actually matter for child components
-    gameState.nexusShards,
-    gameState.convergenceCount,
-    gameState.manaPerSecond,
-    gameState.energyPerSecond,
-    // Use stringified versions for object comparison
-    JSON.stringify(gameState.purchasedUpgrades),
-    JSON.stringify(gameState.fantasyBuildings),
-    JSON.stringify(gameState.scifiBuildings)
-  ]);
-
   return (
     <GameErrorBoundary>
       <div className="h-[667px] w-full relative overflow-hidden bg-black">
@@ -302,7 +276,7 @@ const GameEngine: React.FC = () => {
             onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
             buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
             currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
-            gameState={stableGameState}
+            gameState={gameState}
             onPurchaseUpgrade={purchaseUpgrade}
             isTransitioning={isTransitioning}
             showTapEffect={showTapEffect}
