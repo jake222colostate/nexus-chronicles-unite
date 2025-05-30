@@ -12,16 +12,16 @@ export const EnhancedTapButton: React.FC<EnhancedTapButtonProps> = ({
   onTap
 }) => {
   return (
-    <div className="absolute bottom-[80px] left-1/2 transform -translate-x-1/2 z-30">
+    <div className="absolute bottom-[72px] left-1/2 transform -translate-x-1/2 z-30">
       <Button 
         onClick={onTap}
-        className={`h-11 px-6 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm backdrop-blur-xl border relative overflow-hidden shadow-xl ${
+        className={`h-12 px-6 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 font-bold text-sm backdrop-blur-xl border relative overflow-hidden shadow-xl ${
           realm === 'fantasy'
             ? 'bg-gradient-to-r from-purple-600/90 to-violet-700/90 hover:from-purple-500/90 hover:to-violet-600/90 border-purple-400/70 text-purple-100 shadow-purple-500/40'
             : 'bg-gradient-to-r from-cyan-600/90 to-blue-700/90 hover:from-cyan-500/90 hover:to-blue-600/90 border-cyan-400/70 text-cyan-100 shadow-cyan-500/40'
         }`}
         style={{
-          filter: `drop-shadow(0 6px 20px ${realm === 'fantasy' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(34, 211, 238, 0.4)'})`
+          filter: `drop-shadow(0 6px 20px ${realm === 'fantasy' ? 'rgba(168, 85, 247, 0.5)' : 'rgba(34, 211, 238, 0.5)'})`
         }}
       >
         {/* Enhanced glassmorphism inner glow */}

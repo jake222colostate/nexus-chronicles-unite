@@ -39,7 +39,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   onTapEffectComplete
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.9 });
+  const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.85 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastTouch, setLastTouch] = useState({ x: 0, y: 0 });
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
@@ -55,39 +55,44 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Enhanced structure positioning - moved buildings higher to avoid skill tree collision
+  // Enhanced structure positioning - moved higher to avoid skill tree collision
   const structurePositions = {
     fantasy: [
-      { id: 'altar', x: 20, y: 15, size: 'small', tier: 1 },
-      { id: 'tower', x: 80, y: 20, size: 'medium', tier: 2 },
-      { id: 'grove', x: 15, y: 35, size: 'large', tier: 3 },
-      { id: 'temple', x: 85, y: 40, size: 'massive', tier: 4 },
+      { id: 'altar', x: 20, y: 10, size: 'small', tier: 1 },
+      { id: 'tower', x: 80, y: 15, size: 'medium', tier: 2 },
+      { id: 'grove', x: 15, y: 30, size: 'large', tier: 3 },
+      { id: 'temple', x: 85, y: 35, size: 'massive', tier: 4 },
     ],
     scifi: [
-      { id: 'generator', x: 20, y: 15, size: 'small', tier: 1 },
-      { id: 'reactor', x: 80, y: 20, size: 'medium', tier: 2 },
-      { id: 'station', x: 15, y: 35, size: 'large', tier: 3 },
-      { id: 'megastructure', x: 85, y: 40, size: 'massive', tier: 4 },
+      { id: 'generator', x: 20, y: 10, size: 'small', tier: 1 },
+      { id: 'reactor', x: 80, y: 15, size: 'medium', tier: 2 },
+      { id: 'station', x: 15, y: 30, size: 'large', tier: 3 },
+      { id: 'megastructure', x: 85, y: 35, size: 'massive', tier: 4 },
     ]
   };
 
-  // Enhanced vertical skill tree with better spacing and additional nodes
+  // Enhanced vertical skill tree with proper spacing and no overlaps
   const skillTreePositions = [
-    // Tier 1
-    { id: 'arcane_ai', x: 50, y: 55, tier: 1 },
+    // Tier 1 - Starting node
+    { id: 'arcane_ai', x: 50, y: 50, tier: 1 },
     
-    // Tier 2 - wider spread
-    { id: 'mana_fountain', x: 35, y: 65, tier: 2 },
-    { id: 'quantum_drive', x: 65, y: 65, tier: 2 },
+    // Tier 2 - Two branches
+    { id: 'mana_fountain', x: 35, y: 60, tier: 2 },
+    { id: 'quantum_drive', x: 65, y: 60, tier: 2 },
     
-    // Tier 3 - more nodes with better spacing
-    { id: 'arcane_beacon', x: 25, y: 75, tier: 3 },
-    { id: 'cyber_dragon', x: 50, y: 75, tier: 3 },
-    { id: 'nano_reactor', x: 75, y: 75, tier: 3 },
-    { id: 'rift_core', x: 37.5, y: 85, tier: 3 },
+    // Tier 3 - Expanded with proper spacing
+    { id: 'arcane_beacon', x: 20, y: 70, tier: 3 },
+    { id: 'cyber_dragon', x: 40, y: 70, tier: 3 },
+    { id: 'nano_reactor', x: 60, y: 70, tier: 3 },
+    { id: 'crystal_matrix', x: 80, y: 70, tier: 3 },
+    { id: 'void_engine', x: 30, y: 80, tier: 3 },
     
-    // Tier 4 - final tier
-    { id: 'reality_engine', x: 50, y: 95, tier: 4 }
+    // Tier 4 - Elite upgrades
+    { id: 'rift_core', x: 40, y: 90, tier: 4 },
+    { id: 'time_nexus', x: 60, y: 90, tier: 4 },
+    
+    // Tier 5 - Ultimate upgrade
+    { id: 'reality_engine', x: 50, y: 100, tier: 5 }
   ];
 
   const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
@@ -116,7 +121,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
     setCamera(prev => ({
       ...prev,
-      zoom: Math.max(0.5, Math.min(3, prev.zoom * zoomFactor))
+      zoom: Math.max(0.5, Math.min(2, prev.zoom * zoomFactor))
     }));
   }, []);
 
@@ -161,7 +166,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
           const zoomFactor = distance / lastPinchDistance;
           setCamera(prev => ({
             ...prev,
-            zoom: Math.max(0.5, Math.min(3, prev.zoom * zoomFactor))
+            zoom: Math.max(0.5, Math.min(2, prev.zoom * zoomFactor))
           }));
         }
         
@@ -269,10 +274,10 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
         isTransitioning ? 'opacity-50 scale-105' : 'opacity-100 scale-100'
       }`}>
         <AnimatedBackground realm={realm} />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/60 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60 pointer-events-none" />
       </div>
 
-      {/* Scrollable Map Container with enhanced height */}
+      {/* Scrollable Map Container with proper height for skill tree */}
       <div 
         ref={mapRef}
         className={`absolute inset-0 transition-all duration-500 cursor-grab active:cursor-grabbing ${
@@ -281,34 +286,34 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
         style={{ 
           transform: `scale(${camera.zoom}) translate(${camera.x}px, ${camera.y}px)`,
           touchAction: 'none',
-          minHeight: '250%'
+          minHeight: '300%'
         }}
       >
         {/* Tier dividers for visual separation */}
         <div className="absolute inset-0 pointer-events-none">
-          {/* Tier 1-2 divider */}
-          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" style={{ top: '60%' }} />
-          {/* Tier 2-3 divider */}
-          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" style={{ top: '70%' }} />
-          {/* Tier 3-4 divider */}
-          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" style={{ top: '90%' }} />
+          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" style={{ top: '55%' }} />
+          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" style={{ top: '65%' }} />
+          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" style={{ top: '85%' }} />
+          <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" style={{ top: '95%' }} />
         </div>
 
         {/* Enhanced Skill Tree Connections */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
-          {/* Tier 1 to Tier 2 */}
-          <line x1="50%" y1="55%" x2="35%" y2="65%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="50%" y1="55%" x2="65%" y2="65%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
+          {/* Tier connections with proper coordinates */}
+          <line x1="50%" y1="50%" x2="35%" y2="60%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="50%" y1="50%" x2="65%" y2="60%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
           
-          {/* Tier 2 to Tier 3 */}
-          <line x1="35%" y1="65%" x2="25%" y2="75%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="35%" y1="65%" x2="50%" y2="75%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="65%" y1="65%" x2="50%" y2="75%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="65%" y1="65%" x2="75%" y2="75%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
-          <line x1="50%" y1="75%" x2="37.5%" y2="85%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="35%" y1="60%" x2="20%" y2="70%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="35%" y1="60%" x2="40%" y2="70%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="65%" y1="60%" x2="60%" y2="70%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="65%" y1="60%" x2="80%" y2="70%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="40%" y1="70%" x2="30%" y2="80%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
           
-          {/* Tier 3 to Tier 4 */}
-          <line x1="37.5%" y1="85%" x2="50%" y2="95%" stroke="rgba(168, 85, 247, 0.6)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="40%" y1="70%" x2="40%" y2="90%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="60%" y1="70%" x2="60%" y2="90%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
+          
+          <line x1="40%" y1="90%" x2="50%" y2="100%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
+          <line x1="60%" y1="90%" x2="50%" y2="100%" stroke="rgba(168, 85, 247, 0.5)" strokeWidth="2" className="drop-shadow-sm" />
         </svg>
 
         {/* Skill Tree Nodes */}
@@ -351,7 +356,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
         })}
 
         {/* Particle Systems */}
-        <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-20' : 'opacity-60'}`}>
+        <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-20' : 'opacity-50'}`}>
           <ParticleSystem 
             realm={realm} 
             productionRate={realm === 'fantasy' ? manaPerSecond : energyPerSecond} 
@@ -400,14 +405,12 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
 
       {/* Hybrid Upgrade Modal */}
       {selectedUpgrade && (
-        <div onClick={handleModalBackdropClick}>
-          <HybridUpgradeModal
-            upgrade={enhancedHybridUpgrades.find(u => u.id === selectedUpgrade)!}
-            gameState={gameState}
-            onPurchase={handleUpgradePurchase}
-            onClose={() => setSelectedUpgrade(null)}
-          />
-        </div>
+        <HybridUpgradeModal
+          upgrade={enhancedHybridUpgrades.find(u => u.id === selectedUpgrade)!}
+          gameState={gameState}
+          onPurchase={handleUpgradePurchase}
+          onClose={() => setSelectedUpgrade(null)}
+        />
       )}
     </div>
   );
