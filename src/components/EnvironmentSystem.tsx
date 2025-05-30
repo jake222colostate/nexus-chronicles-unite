@@ -10,22 +10,22 @@ interface EnvironmentSystemProps {
   onEnvironmentChange?: (tier: number) => void;
 }
 
-// Environment model URLs from GitHub
+// Environment model URLs from GitHub - Updated with correct paths
 const environmentAssets = {
   ground: [
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground_1.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground_2.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground_3.glb'
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_basic.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_crystal.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_gold.glb'
   ],
   mountains: [
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains_1.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains_2.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains_3.glb'
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_dark.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_magical.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_luminous.glb'
   ],
   sky: [
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky_1.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky_2.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky_3.glb'
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_stars.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_aurora.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_celestial.glb'
   ]
 };
 
