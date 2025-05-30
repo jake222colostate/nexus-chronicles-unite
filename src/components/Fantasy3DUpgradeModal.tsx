@@ -52,9 +52,18 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
 
   if (!upgrade) return null;
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-[85%] max-h-[65vh] backdrop-blur-md border-2 overflow-hidden flex flex-col bg-gradient-to-br from-purple-900/95 to-violet-800/95 border-purple-400"
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      onClick={handleBackdropClick}
+    >
+      <Card className="w-full max-w-[90%] max-w-sm max-h-[70vh] backdrop-blur-md border-2 overflow-hidden flex flex-col bg-gradient-to-br from-purple-900/95 to-violet-800/95 border-purple-400"
         style={{
           boxShadow: '0 8px 32px rgba(168, 85, 247, 0.3)'
         }}>
