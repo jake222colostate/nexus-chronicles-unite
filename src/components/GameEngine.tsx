@@ -152,9 +152,10 @@ const GameEngine: React.FC = () => {
       energyRate += count * building.production;
     });
 
-    // Apply hybrid upgrade bonuses
+    // Apply hybrid upgrade bonuses - ensure purchasedUpgrades is always an array
     let globalMultiplier = 1;
-    gameState.purchasedUpgrades.forEach(upgradeId => {
+    const upgrades = gameState.purchasedUpgrades || [];
+    upgrades.forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
@@ -186,8 +187,8 @@ const GameEngine: React.FC = () => {
   }, [
     memoizedFantasyBuildings,
     memoizedScifiBuildings,
-    gameState.purchasedUpgrades
-  ]); // Removed buffSystem completely to prevent circular dependencies
+    gameState.purchasedUpgrades || [] // Ensure this is always an array for React's dependency comparison
+  ]); // Fixed dependency array to prevent undefined values
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
