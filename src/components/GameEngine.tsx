@@ -8,6 +8,9 @@ import { HybridUpgradesPanel } from './HybridUpgradesPanel';
 import { ConvergenceSystem } from './ConvergenceSystem';
 import { BottomActionBar } from './BottomActionBar';
 import { TopHUD } from './TopHUD';
+import { ResourceTooltip } from './ResourceTooltip';
+import { EnhancedTapButton } from './EnhancedTapButton';
+import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { hybridUpgrades } from '../data/HybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
@@ -281,10 +284,13 @@ const GameEngine: React.FC = () => {
 
   return (
     <div className="h-[667px] w-full relative overflow-hidden bg-black">
-      {/* Enhanced background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
+      {/* Enhanced background gradient with depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/30 via-transparent to-cyan-900/30 pointer-events-none" />
+      
+      {/* Enhanced particle background for visual depth */}
+      <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Top HUD - Replaces sidebar */}
+      {/* Top HUD - Enhanced spacing and alignment */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -294,8 +300,18 @@ const GameEngine: React.FC = () => {
         onHelpClick={handleShowHelp}
       />
 
-      {/* Main Game Area - Full width */}
-      <div className="absolute inset-0 pt-16">
+      {/* Resource Tooltip - Positioned above nexus */}
+      <ResourceTooltip
+        mana={gameState.mana}
+        energyCredits={gameState.energyCredits}
+        manaPerSecond={gameState.manaPerSecond}
+        energyPerSecond={gameState.energyPerSecond}
+        convergenceProgress={convergenceProgress}
+        realm={currentRealm}
+      />
+
+      {/* Main Game Area - Full width with proper spacing */}
+      <div className="absolute inset-0 pt-14">
         {/* Map View - Takes full available space */}
         <MapView
           realm={currentRealm}
@@ -319,37 +335,13 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Enhanced Tap to Generate Button - Above bottom bar */}
-        <div className="absolute bottom-24 left-0 right-0 z-30 flex justify-center px-4">
-          <Button 
-            onClick={handleTapResource}
-            className={`h-12 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 font-bold text-sm backdrop-blur-xl shadow-2xl border-2 relative overflow-hidden ${
-              currentRealm === 'fantasy'
-                ? 'bg-gradient-to-r from-purple-600/80 to-violet-700/80 hover:from-purple-500/80 hover:to-violet-600/80 border-purple-400/60 text-purple-100 shadow-purple-500/40'
-                : 'bg-gradient-to-r from-cyan-600/80 to-blue-700/80 hover:from-cyan-500/80 hover:to-blue-600/80 border-cyan-400/60 text-cyan-100 shadow-cyan-500/40'
-            }`}
-            style={{
-              boxShadow: `0 0 20px ${currentRealm === 'fantasy' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(34, 211, 238, 0.4)'}, 0 8px 32px rgba(0,0,0,0.3)`
-            }}
-          >
-            {/* Enhanced glassmorphism inner glow */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-xl" />
-            
-            <span className="flex items-center gap-2 relative z-10">
-              {currentRealm === 'fantasy' ? '✨' : '⚡'}
-              Tap to Generate {currentRealm === 'fantasy' ? 'Mana' : 'Energy'}
-            </span>
-            
-            {/* Animated glow ring */}
-            <div className={`absolute inset-0 rounded-xl animate-pulse ${
-              currentRealm === 'fantasy' 
-                ? 'bg-purple-400/10' 
-                : 'bg-cyan-400/10'
-            }`} />
-          </Button>
-        </div>
+        {/* Enhanced Tap Button - Properly positioned and styled */}
+        <EnhancedTapButton
+          realm={currentRealm}
+          onTap={handleTapResource}
+        />
 
-        {/* Enhanced Bottom Action Bar */}
+        {/* Enhanced Bottom Action Bar - Consistent styling */}
         <BottomActionBar
           currentRealm={currentRealm}
           onRealmChange={switchRealm}
@@ -357,12 +349,12 @@ const GameEngine: React.FC = () => {
           isTransitioning={isTransitioning}
         />
 
-        {/* Convergence Ready Button - Enhanced positioning */}
+        {/* Convergence Ready Button - Enhanced positioning and styling */}
         {canConverge && (
-          <div className="absolute bottom-36 left-0 right-0 z-30 flex justify-center px-4">
+          <div className="absolute bottom-40 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
-              className="h-12 px-8 rounded-2xl bg-gradient-to-r from-yellow-500/90 to-orange-500/90 hover:from-yellow-600/90 hover:to-orange-600/90 backdrop-blur-xl border-2 border-yellow-400/60 animate-pulse transition-all duration-300 font-bold shadow-2xl shadow-yellow-500/40"
+              className="h-12 px-8 rounded-2xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border-2 border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-2xl shadow-yellow-500/50"
             >
               <span className="text-sm flex items-center gap-2">
                 🔁 Convergence Ready!
@@ -372,13 +364,13 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Help Modal */}
+      {/* Quick Help Modal - Enhanced containment */}
       <QuickHelpModal
         isOpen={showQuickHelp}
         onClose={() => setShowQuickHelp(false)}
       />
 
-      {/* Hybrid Upgrades Modal - Enhanced with proper containment */}
+      {/* Hybrid Upgrades Modal - Enhanced with proper containment and scrolling */}
       {showHybridUpgrades && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
@@ -388,22 +380,22 @@ const GameEngine: React.FC = () => {
             }
           }}
         >
-          <Card className="w-full max-w-[90%] max-h-[70%] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400/50 relative flex flex-col backdrop-blur-xl shadow-2xl rounded-2xl">
+          <Card className="w-full max-w-[90%] max-h-[70vh] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400/50 relative flex flex-col backdrop-blur-xl shadow-2xl rounded-2xl">
             {/* Enhanced glassmorphism */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-2xl" />
             
             <div className="flex justify-between items-center p-4 border-b border-purple-400/30 flex-shrink-0">
-              <h2 className="text-lg font-bold text-white">Hybrid Nexus</h2>
+              <h2 className="text-lg font-bold text-white">✨ Hybrid Nexus</h2>
               <Button
                 onClick={() => setShowHybridUpgrades(false)}
                 variant="ghost"
                 size="sm"
-                className="text-white hover:bg-white/10 p-1 h-8 w-8 rounded-full"
+                className="text-white hover:bg-white/15 p-1 h-8 w-8 rounded-full transition-all duration-200"
               >
                 <X size={16} />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto p-4">
               <HybridUpgradesPanel
                 gameState={gameState}
                 onPurchaseUpgrade={purchaseUpgrade}
@@ -423,7 +415,7 @@ const GameEngine: React.FC = () => {
             }
           }}
         >
-          <div className="max-w-[90%] w-full max-w-xs">
+          <div className="max-w-[90%] w-full max-w-sm">
             <ConvergenceSystem
               gameState={gameState}
               onPerformConvergence={performConvergence}
@@ -433,7 +425,7 @@ const GameEngine: React.FC = () => {
                 onClick={() => setShowConvergence(false)}
                 variant="outline"
                 size="sm"
-                className="border-gray-400 text-gray-300 hover:bg-white/10"
+                className="border-gray-400 text-gray-300 hover:bg-white/10 transition-all duration-200"
               >
                 Cancel
               </Button>
