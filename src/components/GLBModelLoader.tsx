@@ -50,26 +50,22 @@ export const GLBModel: React.FC<GLBModelProps> = ({
       }
     };
 
-    if (isUnlocked || isPurchased) {
-      loadModel();
-    }
-  }, [modelUrl, name, isUnlocked, isPurchased]);
+    loadModel();
+  }, [modelUrl, name]);
   
   useFrame((state) => {
     if (groupRef.current) {
       // Enhanced floating animation based on unlock state
-      if (isUnlocked && !isPurchased) {
-        groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 1.5 + position[0]) * 0.2;
-        // Subtle rotation to draw attention
-        groupRef.current.rotation.y += 0.005;
-      } else if (isPurchased) {
+      if (isPurchased) {
         groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.8 + position[0]) * 0.1;
-        // Slower, more majestic rotation for purchased items
         groupRef.current.rotation.y += 0.002;
+      } else {
+        groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 1.5 + position[0]) * 0.2;
+        groupRef.current.rotation.y += 0.005;
       }
       
       // Enhanced hover effects
-      if (hovered && isUnlocked && isWithinRange) {
+      if (hovered && isWithinRange) {
         const hoverScale = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.05;
         groupRef.current.scale.setScalar(scale * hoverScale);
       } else {
@@ -80,17 +76,14 @@ export const GLBModel: React.FC<GLBModelProps> = ({
     // Enhanced pulsing glow effect
     if (glowRef.current) {
       if (isPurchased) {
-        // Gentle, stable glow for purchased items
         const purchasedGlow = Math.sin(state.clock.elapsedTime * 2) * 0.2 + 0.8;
         glowRef.current.scale.setScalar(purchasedGlow * 1.2);
         setGlowIntensity(0.4);
-      } else if (isUnlocked && canAfford) {
-        // Active, enticing glow for affordable upgrades
+      } else if (canAfford) {
         const activeGlow = Math.sin(state.clock.elapsedTime * 3) * 0.4 + 1;
         glowRef.current.scale.setScalar(activeGlow);
         setGlowIntensity(0.6);
-      } else if (isUnlocked) {
-        // Subdued glow for unaffordable upgrades
+      } else {
         const subdued = Math.sin(state.clock.elapsedTime * 2) * 0.2 + 0.6;
         glowRef.current.scale.setScalar(subdued);
         setGlowIntensity(0.3);
@@ -99,12 +92,12 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   });
 
   // Enhanced fallback geometry for failed loads
-  if (loadError || (!gltfData && isUnlocked)) {
+  if (loadError || !gltfData) {
     return (
       <group
         ref={groupRef}
         position={position}
-        onClick={isUnlocked && isWithinRange ? onClick : undefined}
+        onClick={isWithinRange ? onClick : undefined}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
@@ -112,64 +105,42 @@ export const GLBModel: React.FC<GLBModelProps> = ({
         <mesh>
           <octahedronGeometry args={[scale * 0.8]} />
           <meshLambertMaterial 
-            color={isPurchased ? "#10b981" : isUnlocked ? "#8b5cf6" : "#4a5568"} 
+            color={isPurchased ? "#10b981" : "#8b5cf6"} 
             transparent 
-            opacity={isUnlocked ? 0.9 : 0.4} 
+            opacity={0.9} 
           />
         </mesh>
         
         {/* Fallback glow */}
-        {isUnlocked && (
-          <mesh ref={glowRef} position={[0, -0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <circleGeometry args={[scale * 1.5]} />
-            <meshBasicMaterial
-              color={isPurchased ? "#10b981" : "#8b5cf6"}
-              transparent
-              opacity={glowIntensity * 0.3}
-            />
-          </mesh>
-        )}
-        
-        {/* Lock indicator */}
-        {!isUnlocked && (
-          <mesh position={[0, scale * 1.5, 0]}>
-            <sphereGeometry args={[0.3]} />
-            <meshBasicMaterial color="#ef4444" />
-          </mesh>
-        )}
+        <mesh ref={glowRef} position={[0, -0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[scale * 1.5]} />
+          <meshBasicMaterial
+            color={isPurchased ? "#10b981" : "#8b5cf6"}
+            transparent
+            opacity={glowIntensity * 0.3}
+          />
+        </mesh>
       </group>
     );
-  }
-
-  // Don't render anything if not unlocked and no model loaded
-  if (!isUnlocked && !isPurchased) {
-    return null;
-  }
-
-  // Don't render if model hasn't loaded yet
-  if (!gltfData) {
-    return null;
   }
 
   return (
     <group
       ref={groupRef}
       position={position}
-      onClick={isUnlocked && isWithinRange ? onClick : undefined}
+      onClick={isWithinRange ? onClick : undefined}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
       {/* Enhanced magical glow beneath model */}
-      {isUnlocked && (
-        <mesh ref={glowRef} position={[0, -0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-          <circleGeometry args={[scale * 1.8]} />
-          <meshBasicMaterial
-            color={isPurchased ? "#10b981" : canAfford ? "#c084fc" : "#8b5cf6"}
-            transparent
-            opacity={glowIntensity * 0.4}
-          />
-        </mesh>
-      )}
+      <mesh ref={glowRef} position={[0, -0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <circleGeometry args={[scale * 1.8]} />
+        <meshBasicMaterial
+          color={isPurchased ? "#10b981" : canAfford ? "#c084fc" : "#8b5cf6"}
+          transparent
+          opacity={glowIntensity * 0.4}
+        />
+      </mesh>
 
       {/* Main 3D model */}
       <primitive 
@@ -186,15 +157,15 @@ export const GLBModel: React.FC<GLBModelProps> = ({
       )}
       
       {/* Interaction range indicator */}
-      {isWithinRange && isUnlocked && !isPurchased && (
+      {isWithinRange && !isPurchased && (
         <mesh position={[0, scale * 2.2, 0]}>
           <ringGeometry args={[0.3, 0.4]} />
           <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
         </mesh>
       )}
 
-      {/* Upgrade unlocked effect */}
-      {isUnlocked && !isPurchased && (
+      {/* Available for unlock indicator */}
+      {!isPurchased && (
         <mesh position={[0, scale * 3, 0]}>
           <sphereGeometry args={[0.08]} />
           <meshBasicMaterial color="#ffffff" />
@@ -204,13 +175,13 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   );
 };
 
-// Preload the new models for better performance
+// Preload the models for better performance
 const modelUrls = [
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb',
-  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb',
+  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb'
 ];
