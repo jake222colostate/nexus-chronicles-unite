@@ -187,8 +187,8 @@ const GameEngine: React.FC = () => {
   }, [
     memoizedFantasyBuildings,
     memoizedScifiBuildings,
-    gameState.purchasedUpgrades || [] // Ensure this is always an array for React's dependency comparison
-  ]); // Fixed dependency array to prevent undefined values
+    gameState.purchasedUpgrades?.length ?? 0 // Use length to trigger updates but avoid undefined
+  ]); // Use length property to safely track array changes
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
