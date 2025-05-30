@@ -34,15 +34,8 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   const [hovered, setHovered] = useState(false);
   const [glowIntensity, setGlowIntensity] = useState(1);
   
-  // Load GLB model - let Suspense handle loading states
-  let gltfScene;
-  try {
-    const gltf = useGLTF(modelUrl);
-    gltfScene = gltf.scene;
-  } catch (error) {
-    console.warn(`Failed to load ${name}, using fallback:`, error);
-    gltfScene = null;
-  }
+  // Load GLB model with proper error handling
+  const { scene: gltfScene, error } = useGLTF(modelUrl);
   
   // Enhanced click handler with better debugging
   const handleClick = (event: any) => {
@@ -98,8 +91,8 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   });
 
   // Enhanced fallback geometry for failed loads or loading state
-  if (!gltfScene) {
-    console.log(`Using fallback for ${name}`);
+  if (error || !gltfScene) {
+    console.log(`Using fallback for ${name}`, error ? `, error: ${error.message}` : '');
     return (
       <group
         ref={groupRef}
@@ -278,20 +271,19 @@ export const GLBModel: React.FC<GLBModelProps> = (props) => {
   );
 };
 
-// Preload the models for better performance with error handling
-const modelUrls = [
+// Updated model URLs using the correct GitHub path
+const workingModelUrls = [
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb',
-  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb',
-  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb',
-  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb'
+  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb'
 ];
 
-// Preload only working models, skip the corrupted upgrade_04.glb
-modelUrls.forEach(url => {
+// Preload only confirmed working models
+workingModelUrls.forEach(url => {
   try {
     useGLTF.preload(url);
+    console.log(`Preloading model: ${url}`);
   } catch (error) {
     console.warn(`Failed to preload model: ${url}`, error);
   }

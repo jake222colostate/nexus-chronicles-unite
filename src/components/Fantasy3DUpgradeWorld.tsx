@@ -1,4 +1,3 @@
-
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -27,34 +26,25 @@ interface UpgradeData {
   scale: number;
 }
 
-// 25 upgrades with exponential scaling
+// Updated upgrades with only working model URLs
 const createUpgradeData = (): UpgradeData[] => {
   const baseUpgrades = [
     { name: 'Mystic Fountain', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-3, 0, -6] as [number, number, number], scale: 1.0 },
     { name: 'Crystal Grove', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [3, 0, -12] as [number, number, number], scale: 1.1 },
     { name: 'Arcane Sanctum', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [-4, 0, -18] as [number, number, number], scale: 1.2 },
-    { name: 'Celestial Spire', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [4, 0, -24] as [number, number, number], scale: 1.3 },
-    { name: 'Nexus Gateway', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [-4.5, 0, -30] as [number, number, number], scale: 1.4 },
-    { name: 'Dragon\'s Heart', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb', position: [4.5, 0, -36] as [number, number, number], scale: 1.5 },
-    { name: 'Void Obelisk', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb', position: [-5, 0, -42] as [number, number, number], scale: 1.6 },
-    { name: 'Temporal Altar', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [5, 0, -48] as [number, number, number], scale: 1.7 },
-    { name: 'Phoenix Roost', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [-5.5, 0, -54] as [number, number, number], scale: 1.8 },
-    { name: 'Ethereal Nexus', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [5.5, 0, -60] as [number, number, number], scale: 1.9 },
-    { name: 'Starfall Chamber', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [-6, 0, -66] as [number, number, number], scale: 2.0 },
-    { name: 'Infinity Well', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [6, 0, -72] as [number, number, number], scale: 2.1 },
-    { name: 'Cosmic Forge', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb', position: [-6.5, 0, -78] as [number, number, number], scale: 2.2 },
-    { name: 'Dimensional Anchor', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb', position: [6.5, 0, -84] as [number, number, number], scale: 2.3 },
-    { name: 'Reality Prism', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-7, 0, -90] as [number, number, number], scale: 2.4 },
-    { name: 'Astral Crown', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [7, 0, -96] as [number, number, number], scale: 2.5 },
-    { name: 'Omni Core', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [-7.5, 0, -102] as [number, number, number], scale: 2.6 },
-    { name: 'Genesis Matrix', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [7.5, 0, -108] as [number, number, number], scale: 2.7 },
-    { name: 'Eternal Beacon', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [-8, 0, -114] as [number, number, number], scale: 2.8 },
-    { name: 'Infinite Spiral', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb', position: [8, 0, -120] as [number, number, number], scale: 2.9 },
-    { name: 'Transcendent Gate', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb', position: [-8.5, 0, -126] as [number, number, number], scale: 3.0 },
-    { name: 'Primordial Engine', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [8.5, 0, -132] as [number, number, number], scale: 3.1 },
-    { name: 'Universal Codex', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [-9, 0, -138] as [number, number, number], scale: 3.2 },
-    { name: 'Apex Throne', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [9, 0, -144] as [number, number, number], scale: 3.3 },
-    { name: 'Omega Singularity', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [0, 0, -150] as [number, number, number], scale: 3.5 }
+    { name: 'Nexus Gateway', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [4, 0, -24] as [number, number, number], scale: 1.3 },
+    { name: 'Temporal Altar', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-4.5, 0, -30] as [number, number, number], scale: 1.4 },
+    { name: 'Phoenix Roost', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [4.5, 0, -36] as [number, number, number], scale: 1.5 },
+    { name: 'Ethereal Nexus', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [-5, 0, -42] as [number, number, number], scale: 1.6 },
+    { name: 'Infinity Well', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [5, 0, -48] as [number, number, number], scale: 1.7 },
+    { name: 'Reality Prism', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-5.5, 0, -54] as [number, number, number], scale: 1.8 },
+    { name: 'Astral Crown', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [5.5, 0, -60] as [number, number, number], scale: 1.9 },
+    { name: 'Omni Core', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [-6, 0, -66] as [number, number, number], scale: 2.0 },
+    { name: 'Eternal Beacon', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [6, 0, -72] as [number, number, number], scale: 2.1 },
+    { name: 'Transcendent Gate', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-6.5, 0, -78] as [number, number, number], scale: 2.2 },
+    { name: 'Primordial Engine', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [6.5, 0, -84] as [number, number, number], scale: 2.3 },
+    { name: 'Universal Codex', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [-7, 0, -90] as [number, number, number], scale: 2.4 },
+    { name: 'Omega Singularity', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [0, 0, -96] as [number, number, number], scale: 2.5 }
   ];
 
   // Apply exponential scaling: cost = 50 * 2^n, manaPerSecond = 10 * 2^n
@@ -140,7 +130,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   };
 
   // Player can move forward unless they've reached the very end
-  const canMoveForward = cameraPosition.z > -160;
+  const canMoveForward = cameraPosition.z > -110;
 
   // Passive mana generation
   useEffect(() => {
@@ -171,7 +161,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         shadows
         gl={{ antialias: true, alpha: true }}
         onCreated={({ scene }) => {
-          scene.fog = new Fog('#0f0f23', 15, 180);
+          scene.fog = new Fog('#0f0f23', 15, 120);
         }}
       >
         <Suspense fallback={null}>
@@ -198,10 +188,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           />
           
           {/* Progressive lighting along the path */}
-          {Array.from({ length: 10 }, (_, i) => (
+          {Array.from({ length: 8 }, (_, i) => (
             <pointLight 
               key={i}
-              position={[(i % 2 === 0 ? -6 : 6), 8, -15 - (i * 15)]} 
+              position={[(i % 2 === 0 ? -6 : 6), 8, -12 - (i * 12)]} 
               intensity={0.6} 
               color="#8b5cf6" 
               distance={25} 
@@ -211,13 +201,13 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           <Environment preset="dawn" />
 
           {/* Extended mystical ground plane */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -75]} receiveShadow>
-            <planeGeometry args={[40, 200]} />
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -50]} receiveShadow>
+            <planeGeometry args={[40, 120]} />
             <meshLambertMaterial color="#1a1a2e" />
           </mesh>
 
           {/* Mystical path markers */}
-          {Array.from({ length: 30 }, (_, i) => (
+          {Array.from({ length: 20 }, (_, i) => (
             <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
               <circleGeometry args={[0.4]} />
               <meshBasicMaterial color="#8b5cf6" transparent opacity={0.5} />
@@ -225,17 +215,19 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           ))}
 
           <ContactShadows 
-            position={[0, -0.4, -75]} 
+            position={[0, -0.4, -50]} 
             opacity={0.6} 
             scale={40} 
             blur={2.5} 
             far={10} 
           />
 
-          {/* Load all 25 GLB upgrade models with performance optimization */}
+          {/* Load GLB upgrade models with working URLs only */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
             if (distance > 25) return null; // Performance optimization
+            
+            console.log(`Rendering upgrade: ${upgrade.name} at position:`, upgrade.position);
             
             return (
               <GLBModel
@@ -255,10 +247,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           })}
 
           {/* Enhanced atmospheric particles */}
-          {Array.from({ length: 60 }, (_, i) => {
+          {Array.from({ length: 40 }, (_, i) => {
             const x = (Math.random() - 0.5) * 35;
             const y = Math.random() * 15 + 2;
-            const z = Math.random() * -160 - 5;
+            const z = Math.random() * -100 - 5;
             return (
               <mesh key={i} position={[x, y, z]}>
                 <sphereGeometry args={[0.03]} />
@@ -287,7 +279,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           <div 
             className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
             style={{ 
-              width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 160) * 100)))}%` 
+              width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 100) * 100)))}%` 
             }}
           />
         </div>
