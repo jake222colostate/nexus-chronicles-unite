@@ -271,21 +271,21 @@ const GameEngine: React.FC = () => {
   };
 
   return (
-    <div className="h-[667px] w-full relative overflow-hidden flex">
-      {/* Left Resource Sidebar */}
-      <div className="fixed left-0 top-0 bottom-0 w-1/3 max-w-[120px] z-30 pointer-events-none">
-        <div className="h-full flex flex-col justify-center p-2">
-          <Card className="backdrop-blur-md bg-black/40 border-white/20 pointer-events-auto">
+    <div className="h-[667px] w-full relative overflow-hidden bg-black">
+      {/* Resource Sidebar - Inside app frame, flush left */}
+      <div className="absolute left-0 top-0 bottom-0 w-[100px] z-30 p-2">
+        <div className="h-full flex flex-col justify-start pt-4">
+          <Card className="backdrop-blur-md bg-black/60 border-white/30">
             <div className="p-3 space-y-3">
               {/* Title */}
-              <div className="flex items-center justify-center gap-1 mb-2">
-                <Crown size={14} className="text-yellow-400" />
+              <div className="flex items-center justify-center gap-1 mb-3">
+                <Crown size={12} className="text-yellow-400" />
                 <span className="text-xs font-bold text-white">Nexus</span>
               </div>
               
               {/* Mana */}
               <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-purple-300 text-xs">
+                <div className="flex items-center justify-center gap-1 text-purple-300 text-xs mb-1">
                   <span>💠</span>
                   <span>Mana</span>
                 </div>
@@ -295,7 +295,7 @@ const GameEngine: React.FC = () => {
 
               {/* Energy */}
               <div className="text-center">
-                <div className="flex items-center justify-center gap-1 text-cyan-300 text-xs">
+                <div className="flex items-center justify-center gap-1 text-cyan-300 text-xs mb-1">
                   <span>⚡</span>
                   <span>Energy</span>
                 </div>
@@ -303,10 +303,10 @@ const GameEngine: React.FC = () => {
                 <div className="text-cyan-200 text-xs">+{formatNumber(gameState.energyPerSecond)}/s</div>
               </div>
 
-              {/* Convergence */}
-              {canConverge && (
+              {/* Convergence Progress - Only show when approaching convergence */}
+              {convergenceProgress > 10 && (
                 <div className="text-center pt-2 border-t border-white/20">
-                  <div className="flex items-center justify-center gap-1 text-yellow-300 text-xs">
+                  <div className="flex items-center justify-center gap-1 text-yellow-300 text-xs mb-1">
                     <span>🌌</span>
                     <span>Conv</span>
                   </div>
@@ -323,16 +323,16 @@ const GameEngine: React.FC = () => {
         </div>
       </div>
 
-      {/* Simplified Header - Only title */}
+      {/* Simplified Header - Only title, positioned to avoid sidebar */}
       <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-30">
         <h1 className="text-sm font-bold text-white drop-shadow-lg">
           Celestial Nexus
         </h1>
       </div>
 
-      {/* Main Game Area - Right 2/3 of screen */}
-      <div className="flex-1 ml-[120px] relative">
-        {/* Map View */}
+      {/* Main Game Area - Starts right after sidebar */}
+      <div className="absolute left-[100px] top-0 right-0 bottom-0">
+        {/* Map View - Takes remaining space */}
         <MapView
           realm={currentRealm}
           buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}

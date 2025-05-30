@@ -58,19 +58,19 @@ export const MapView: React.FC<MapViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Adjusted structure positioning for the narrower map area
+  // Adjusted structure positioning for the remaining map area (after sidebar)
   const structurePositions = {
     fantasy: [
-      { id: 'altar', x: 30, y: 75, size: 'small' },
-      { id: 'tower', x: 60, y: 45, size: 'medium' },
-      { id: 'grove', x: 80, y: 65, size: 'large' },
-      { id: 'temple', x: 40, y: 25, size: 'massive' },
+      { id: 'altar', x: 20, y: 75, size: 'small' },
+      { id: 'tower', x: 50, y: 45, size: 'medium' },
+      { id: 'grove', x: 75, y: 65, size: 'large' },
+      { id: 'temple', x: 35, y: 25, size: 'massive' },
     ],
     scifi: [
-      { id: 'generator', x: 25, y: 80, size: 'small' },
-      { id: 'reactor', x: 65, y: 55, size: 'medium' },
-      { id: 'station', x: 85, y: 35, size: 'large' },
-      { id: 'megastructure', x: 35, y: 20, size: 'massive' },
+      { id: 'generator', x: 15, y: 80, size: 'small' },
+      { id: 'reactor', x: 55, y: 55, size: 'medium' },
+      { id: 'station', x: 80, y: 35, size: 'large' },
+      { id: 'megastructure', x: 25, y: 20, size: 'massive' },
     ]
   };
 
@@ -234,7 +234,7 @@ export const MapView: React.FC<MapViewProps> = ({
         <AnimatedBackground realm={realm} />
       </div>
 
-      {/* Enhanced Nexus Core - Positioned to avoid sidebar */}
+      {/* Enhanced Nexus Core - Centered in remaining space */}
       <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
         <EnhancedNexusCore 
           manaFlow={manaPerSecond}
@@ -329,8 +329,8 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       )}
 
-      {/* Simple Realm indicator - Positioned to avoid sidebar */}
-      <div className="absolute top-20 right-4 z-10">
+      {/* Simple Realm indicator - Positioned in top right of map area */}
+      <div className="absolute top-4 right-4 z-10">
         <div className={`px-3 py-1 rounded-full backdrop-blur-md border transition-all duration-700 ${
           realm === 'fantasy'
             ? 'bg-purple-800/50 border-purple-400/40 text-purple-100'
