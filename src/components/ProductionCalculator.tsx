@@ -24,85 +24,101 @@ export const ProductionCalculator: React.FC<ProductionCalculatorProps> = ({
   scifiBuildingData,
   onProductionUpdate
 }) => {
-  // Use refs to prevent unnecessary recalculations and track stable state
+  // Use refs to prevent recalculation loops
   const lastCalculationRef = useRef<{
-    buildingsKey: string;
-    upgradesKey: string;
+    fantasyCount: number;
+    scifiCount: number;
+    upgradesCount: number;
     result: { manaRate: number; energyRate: number };
   } | null>(null);
 
+  const calculationTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    // SAFE: Create stable keys to prevent infinite recalculation
-    const buildingsKey = JSON.stringify({
-      fantasy: fantasyBuildings || {},
-      scifi: scifiBuildings || {}
-    });
-    const upgradesKey = JSON.stringify(purchasedUpgrades || []);
+    // Clear any existing timer
+    if (calculationTimerRef.current) {
+      clearTimeout(calculationTimerRef.current);
+    }
+
+    // Calculate current counts to check if recalculation is needed
+    const fantasyCount = Object.keys(fantasyBuildings || {}).length;
+    const scifiCount = Object.keys(scifiBuildings || {}).length;
+    const upgradesCount = (purchasedUpgrades || []).length;
     
-    // CRITICAL: Only recalculate if buildings or upgrades actually changed
+    // Only recalculate if counts actually changed
     if (lastCalculationRef.current && 
-        buildingsKey === lastCalculationRef.current.buildingsKey && 
-        upgradesKey === lastCalculationRef.current.upgradesKey) {
+        fantasyCount === lastCalculationRef.current.fantasyCount && 
+        scifiCount === lastCalculationRef.current.scifiCount &&
+        upgradesCount === lastCalculationRef.current.upgradesCount) {
       return;
     }
     
-    console.log('ProductionCalculator: Recalculating production rates');
-    
-    let manaRate = 0;
-    let energyRate = 0;
+    // Debounce the calculation to prevent rapid recalculations
+    calculationTimerRef.current = setTimeout(() => {
+      console.log('ProductionCalculator: Performing calculation');
+      
+      let manaRate = 0;
+      let energyRate = 0;
 
-    // SAFE: Calculate base production from buildings with null checks
-    (fantasyBuildingData || []).forEach(building => {
-      const count = (fantasyBuildings || {})[building.id] || 0;
-      manaRate += count * (building.production || 0);
-    });
+      // Calculate base production from buildings
+      (fantasyBuildingData || []).forEach(building => {
+        const count = (fantasyBuildings || {})[building.id] || 0;
+        manaRate += count * (building.production || 0);
+      });
 
-    (scifiBuildingData || []).forEach(building => {
-      const count = (scifiBuildings || {})[building.id] || 0;
-      energyRate += count * (building.production || 0);
-    });
+      (scifiBuildingData || []).forEach(building => {
+        const count = (scifiBuildings || {})[building.id] || 0;
+        energyRate += count * (building.production || 0);
+      });
 
-    // SAFE: Apply upgrade bonuses with null checks
-    let globalMultiplier = 1;
-    (purchasedUpgrades || []).forEach(upgradeId => {
-      const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
-      if (upgrade?.effects) {
-        if (upgrade.effects.globalProductionBonus) {
-          globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
+      // Apply upgrade bonuses
+      let globalMultiplier = 1;
+      (purchasedUpgrades || []).forEach(upgradeId => {
+        const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
+        if (upgrade?.effects) {
+          if (upgrade.effects.globalProductionBonus) {
+            globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
+          }
+          if (upgrade.effects.manaProductionBonus) {
+            manaRate += upgrade.effects.manaProductionBonus;
+          }
+          if (upgrade.effects.energyProductionBonus) {
+            energyRate += upgrade.effects.energyProductionBonus;
+          }
         }
-        if (upgrade.effects.manaProductionBonus) {
-          manaRate += upgrade.effects.manaProductionBonus;
-        }
-        if (upgrade.effects.energyProductionBonus) {
-          energyRate += upgrade.effects.energyProductionBonus;
-        }
+      });
+
+      // Cross-realm bonuses
+      const fantasyBonus = 1 + (energyRate * 0.01);
+      const scifiBonus = 1 + (manaRate * 0.01);
+
+      const finalManaRate = manaRate * fantasyBonus * globalMultiplier;
+      const finalEnergyRate = energyRate * scifiBonus * globalMultiplier;
+
+      // Cache the calculation result
+      lastCalculationRef.current = {
+        fantasyCount,
+        scifiCount,
+        upgradesCount,
+        result: { manaRate: finalManaRate, energyRate: finalEnergyRate }
+      };
+
+      onProductionUpdate(finalManaRate, finalEnergyRate);
+    }, 50); // Small debounce delay
+
+    return () => {
+      if (calculationTimerRef.current) {
+        clearTimeout(calculationTimerRef.current);
       }
-    });
-
-    // SAFE: Cross-realm bonuses with null checks
-    const fantasyBonus = 1 + (energyRate * 0.01);
-    const scifiBonus = 1 + (manaRate * 0.01);
-
-    const finalManaRate = manaRate * fantasyBonus * globalMultiplier;
-    const finalEnergyRate = energyRate * scifiBonus * globalMultiplier;
-
-    // Cache the calculation result
-    lastCalculationRef.current = {
-      buildingsKey,
-      upgradesKey,
-      result: { manaRate: finalManaRate, energyRate: finalEnergyRate }
     };
-
-    // SAFE: This callback is stable and won't cause re-renders
-    onProductionUpdate(finalManaRate, finalEnergyRate);
   }, [
-    JSON.stringify(fantasyBuildings || {}),
-    JSON.stringify(scifiBuildings || {}),
-    JSON.stringify(purchasedUpgrades || []),
+    Object.keys(fantasyBuildings || {}).length,
+    Object.keys(scifiBuildings || {}).length,
+    (purchasedUpgrades || []).length,
     fantasyBuildingData,
     scifiBuildingData,
     onProductionUpdate
   ]);
 
-  return null; // This is a logic-only component
+  return null;
 };

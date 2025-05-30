@@ -1,34 +1,42 @@
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { createBuffSystem } from '../components/CrossRealmBuffSystem';
 
 export const useStableBuffSystem = (
   fantasyBuildings: { [key: string]: number },
   scifiBuildings: { [key: string]: number }
 ) => {
-  // Create a stable key for buildings to prevent unnecessary recalculations
-  const buildingsKey = useMemo(() => {
-    // Safely handle undefined buildings with fallbacks
-    const safeFantasy = fantasyBuildings || {};
-    const safeScifi = scifiBuildings || {};
-    
-    return JSON.stringify({
-      fantasy: safeFantasy,
-      scifi: safeScifi
-    });
-  }, [
-    JSON.stringify(fantasyBuildings || {}),
-    JSON.stringify(scifiBuildings || {})
-  ]);
+  // Use refs to track previous building counts
+  const previousBuildingsRef = useRef<{
+    fantasyCount: number;
+    scifiCount: number;
+  }>({ fantasyCount: 0, scifiCount: 0 });
+  
+  const buffSystemRef = useRef<any>(null);
 
-  // Memoize the buff system with stable dependencies
-  const buffSystem = useMemo(() => {
-    console.log('useStableBuffSystem: Creating new buff system');
-    return createBuffSystem(
+  // Calculate current building counts
+  const currentFantasyCount = Object.keys(fantasyBuildings || {}).length;
+  const currentScifiCount = Object.keys(scifiBuildings || {}).length;
+
+  // Only recreate buff system if building counts actually changed
+  if (!buffSystemRef.current || 
+      currentFantasyCount !== previousBuildingsRef.current.fantasyCount ||
+      currentScifiCount !== previousBuildingsRef.current.scifiCount) {
+    
+    console.log('useStableBuffSystem: Building counts changed, creating new buff system');
+    buffSystemRef.current = createBuffSystem(
       fantasyBuildings || {},
       scifiBuildings || {}
     );
-  }, [buildingsKey]); // Use stable string key instead of objects
+    
+    previousBuildingsRef.current = {
+      fantasyCount: currentFantasyCount,
+      scifiCount: currentScifiCount
+    };
+  }
 
-  return { buffSystem, buildingsKey };
+  return { 
+    buffSystem: buffSystemRef.current,
+    buildingsKey: `${currentFantasyCount}-${currentScifiCount}`
+  };
 };

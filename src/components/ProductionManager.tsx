@@ -15,34 +15,12 @@ export const ProductionManager: React.FC<ProductionManagerProps> = ({
   fantasyBuildingData,
   scifiBuildingData
 }) => {
-  const productionTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Stable production update handler
-  const handleProductionUpdate = useCallback((manaRate: number, energyRate: number) => {
+  // Stable callback that won't change
+  const stableOnProductionUpdate = useCallback((manaRate: number, energyRate: number) => {
     onProductionUpdate(manaRate, energyRate);
   }, [onProductionUpdate]);
 
-  // Stable game loop with cleanup - runs only once
-  useEffect(() => {
-    console.log('ProductionManager: Starting production timer');
-    
-    if (productionTimerRef.current) {
-      clearInterval(productionTimerRef.current);
-    }
-    
-    productionTimerRef.current = setInterval(() => {
-      // This will trigger the parent's setState which is safe
-      // because it's inside a timer, not a render cycle
-    }, 100);
-
-    return () => {
-      console.log('ProductionManager: Cleaning up production timer');
-      if (productionTimerRef.current) {
-        clearInterval(productionTimerRef.current);
-      }
-    };
-  }, []); // Empty dependency array - only run once
-
+  // Only render the ProductionCalculator - no timers here
   return (
     <ProductionCalculator
       fantasyBuildings={gameState.fantasyBuildings || {}}
@@ -50,7 +28,7 @@ export const ProductionManager: React.FC<ProductionManagerProps> = ({
       purchasedUpgrades={gameState.purchasedUpgrades || []}
       fantasyBuildingData={fantasyBuildingData}
       scifiBuildingData={scifiBuildingData}
-      onProductionUpdate={handleProductionUpdate}
+      onProductionUpdate={stableOnProductionUpdate}
     />
   );
 };

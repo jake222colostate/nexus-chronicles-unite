@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -15,7 +14,6 @@ import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
 import { initializeGameState, saveGameState } from '../utils/gameStateUtils';
 import { useStableGameState } from '../hooks/useStableGameState';
-import { useStableBuffSystem } from '../hooks/useStableBuffSystem';
 
 interface GameState {
   mana: number;
@@ -55,7 +53,7 @@ const scifiBuildings: Building[] = [
 ];
 
 const GameEngine: React.FC = () => {
-  // Initialize state with safe defaults - only run once
+  // Initialize state only once
   const [gameState, setGameState] = useState<GameState>(() => {
     console.log('GameEngine: Initializing game state');
     return initializeGameState();
@@ -69,21 +67,18 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
 
-  // Use stable game state hook to prevent re-renders
+  // Use stable game state to prevent re-renders
   const stableState = useStableGameState(gameState);
 
-  // Use stable buff system with safe building references
-  const { buffSystem } = useStableBuffSystem(
-    stableState.fantasyBuildings,
-    stableState.scifiBuildings
-  );
-
-  // Use refs to prevent unnecessary recalculations
+  // Timer refs
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const productionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const offlineCalculatedRef = useRef(false);
 
-  // Calculate offline progress on mount only - SAFE
+  // Calculate offline progress only once
   useEffect(() => {
+    if (offlineCalculatedRef.current) return;
+    
     console.log('GameEngine: Calculating offline progress');
     const now = Date.now();
     const offlineTime = Math.min((now - (stableState.lastSaveTime || now)) / 1000, 3600);
@@ -92,7 +87,6 @@ const GameEngine: React.FC = () => {
       const offlineMana = (stableState.manaPerSecond || 0) * offlineTime;
       const offlineEnergy = (stableState.energyPerSecond || 0) * offlineTime;
       
-      // SAFE: This setState is in useEffect with empty deps, only runs once
       setGameState(prev => ({
         ...prev,
         mana: (prev.mana || 0) + offlineMana,
@@ -100,12 +94,13 @@ const GameEngine: React.FC = () => {
         lastSaveTime: now,
       }));
     }
-  }, []); // CRITICAL: Empty dependency array - only run once on mount
+    
+    offlineCalculatedRef.current = true;
+  }, []); // Only run once
 
-  // Stable production update handler - SAFE
+  // Stable production update handler
   const handleProductionUpdate = useCallback((manaRate: number, energyRate: number) => {
     console.log('GameEngine: Updating production rates', { manaRate, energyRate });
-    // SAFE: This setState is inside a callback, not in render cycle
     setGameState(prev => ({
       ...prev,
       manaPerSecond: manaRate || 0,
@@ -113,7 +108,7 @@ const GameEngine: React.FC = () => {
     }));
   }, []);
 
-  // Production timer - SAFE, runs once
+  // Production timer - runs only once
   useEffect(() => {
     console.log('GameEngine: Starting production timer');
     
@@ -121,7 +116,6 @@ const GameEngine: React.FC = () => {
       clearInterval(productionTimerRef.current);
     }
     
-    // SAFE: Timer-based setState, not in render cycle
     productionTimerRef.current = setInterval(() => {
       setGameState(prev => ({
         ...prev,
@@ -137,15 +131,14 @@ const GameEngine: React.FC = () => {
         clearInterval(productionTimerRef.current);
       }
     };
-  }, []); // CRITICAL: Empty dependency array - only run once
+  }, []); // Only run once
 
-  // Auto-save effect - SAFE
+  // Auto-save with debouncing
   useEffect(() => {
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
     }
     
-    // SAFE: Debounced save operation
     saveTimerRef.current = setTimeout(() => {
       console.log('GameEngine: Auto-saving game state');
       saveGameState(gameState);
@@ -156,7 +149,7 @@ const GameEngine: React.FC = () => {
         clearTimeout(saveTimerRef.current);
       }
     };
-  }, [gameState]); // This is safe because it's debounced
+  }, [gameState.mana, gameState.energyCredits, gameState.nexusShards]); // Only save on important changes
 
   // Stable callback functions with safe fallbacks
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
@@ -173,7 +166,6 @@ const GameEngine: React.FC = () => {
     const currency = isFantasy ? (stableState.mana || 0) : (stableState.energyCredits || 0);
 
     if (currency >= cost) {
-      // SAFE: Event handler setState
       setGameState(prev => ({
         ...prev,
         mana: isFantasy ? (prev.mana || 0) - cost : (prev.mana || 0),
@@ -194,7 +186,6 @@ const GameEngine: React.FC = () => {
     const shardsGained = Math.floor(Math.sqrt(totalValue / 1000)) + (stableState.convergenceCount || 0);
     
     if (shardsGained > 0) {
-      // SAFE: Event handler setState
       setGameState({
         mana: 10,
         energyCredits: 10,
@@ -216,7 +207,6 @@ const GameEngine: React.FC = () => {
     const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
     if (!upgrade || (stableState.nexusShards || 0) < upgrade.cost) return;
 
-    // SAFE: Event handler setState
     setGameState(prev => ({
       ...prev,
       nexusShards: (prev.nexusShards || 0) - upgrade.cost,
@@ -240,7 +230,6 @@ const GameEngine: React.FC = () => {
 
   const handleTapResource = useCallback(() => {
     setShowTapEffect(true);
-    // SAFE: Event handler setState
     setGameState(prev => ({
       ...prev,
       mana: currentRealm === 'fantasy' ? (prev.mana || 0) + 1 : (prev.mana || 0),
@@ -259,7 +248,6 @@ const GameEngine: React.FC = () => {
   return (
     <GameErrorBoundary>
       <div className="h-[667px] w-full relative overflow-hidden bg-black">
-        {/* Production Manager - extracted logic */}
         <ProductionManager
           gameState={stableState}
           onProductionUpdate={handleProductionUpdate}
