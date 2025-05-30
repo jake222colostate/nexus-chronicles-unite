@@ -1,11 +1,12 @@
 
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
 import { ResourceParticles } from './ResourceParticles';
 import { TapEffect3D } from './TapEffect3D';
+import EnvironmentLoader from './EnvironmentLoader';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 
 interface Scene3DProps {
@@ -38,6 +39,16 @@ export const Scene3D: React.FC<Scene3DProps> = ({
   onTapEffectComplete
 }) => {
   const cameraRef = useRef();
+
+  // Calculate environment tier based on purchased upgrades
+  const environmentTier = useMemo(() => {
+    const upgradeCount = gameState.purchasedUpgrades?.length || 0;
+    if (upgradeCount < 2) return 1;
+    if (upgradeCount < 4) return 2;
+    if (upgradeCount < 6) return 3;
+    if (upgradeCount < 8) return 4;
+    return 5;
+  }, [gameState.purchasedUpgrades?.length]);
 
   const checkUpgradeUnlocked = (upgrade: any): boolean => {
     const { requirements } = upgrade;
@@ -81,16 +92,8 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             maxPolarAngle={3 * Math.PI / 4}
           />
 
-          {/* Lighting */}
-          <ambientLight intensity={0.4} />
-          <directionalLight
-            position={[5, 5, 5]}
-            intensity={0.8}
-            castShadow
-            shadow-mapSize-width={1024}
-            shadow-mapSize-height={1024}
-          />
-          <pointLight position={[0, 10, 0]} intensity={0.3} color={realm === 'fantasy' ? '#8b5cf6' : '#06b6d4'} />
+          {/* Environment Loader with tier-based models */}
+          <EnvironmentLoader tier={environmentTier} />
 
           {/* Animated starfield background */}
           <Stars
@@ -142,7 +145,7 @@ export const Scene3D: React.FC<Scene3DProps> = ({
       {/* Loading fallback */}
       <Suspense fallback={
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-white text-sm">Loading 3D Scene...</div>
+          <div className="text-white text-sm">Loading 3D Environment...</div>
         </div>
       }>
         <div />

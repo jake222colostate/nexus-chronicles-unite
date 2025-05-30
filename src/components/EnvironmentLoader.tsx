@@ -1,11 +1,9 @@
 
 import React, { Suspense } from 'react';
-import { useThree } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { useLoader } from '@react-three/fiber';
 
-interface EnvironmentProps {
+interface EnvironmentLoaderProps {
   tier: number; // 1 through 5
 }
 
@@ -15,22 +13,41 @@ const getModelUrls = (tier: number) => ({
   sky: `https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/sky_tier${tier}.glb`,
 });
 
-const Model = ({ url }: { url: string }) => {
+const Model = ({ url, position = [0, 0, 0], scale = 1 }: { 
+  url: string; 
+  position?: [number, number, number]; 
+  scale?: number;
+}) => {
   const gltf = useLoader(GLTFLoader, url);
-  return <primitive object={gltf.scene} dispose={null} />;
+  return (
+    <primitive 
+      object={gltf.scene.clone()} 
+      position={position} 
+      scale={[scale, scale, scale]}
+      dispose={null} 
+    />
+  );
 };
 
-const EnvironmentLoader: React.FC<EnvironmentProps> = ({ tier }) => {
+const EnvironmentLoader: React.FC<EnvironmentLoaderProps> = ({ tier }) => {
   const { ground, mountain, sky } = getModelUrls(tier);
 
   return (
     <Suspense fallback={null}>
-      <ambientLight intensity={0.5} />
-      <directionalLight position={[5, 10, 7]} intensity={1.2} />
-      <Model url={ground} />
-      <Model url={mountain} />
-      <Model url={sky} />
-      <OrbitControls enableZoom={false} />
+      {/* Ground model positioned below */}
+      <Model url={ground} position={[0, -2, 0]} scale={5} />
+      
+      {/* Mountain models positioned in background */}
+      <Model url={mountain} position={[-15, 0, -30]} scale={3} />
+      <Model url={mountain} position={[15, 0, -30]} scale={3} />
+      
+      {/* Sky model positioned above */}
+      <Model url={sky} position={[0, 20, -20]} scale={8} />
+      
+      {/* Enhanced lighting for the environment */}
+      <ambientLight intensity={0.4} />
+      <directionalLight position={[10, 10, 5]} intensity={0.8} castShadow />
+      <pointLight position={[0, 15, 0]} intensity={0.3} color="#8b5cf6" />
     </Suspense>
   );
 };
