@@ -83,7 +83,7 @@ const GameEngine: React.FC = () => {
   });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize buff system
+  // Initialize buff system with proper memoization
   const buffSystem = useBuffSystem(gameState.fantasyBuildings, gameState.scifiBuildings);
 
   // Calculate offline progress on mount
@@ -102,7 +102,7 @@ const GameEngine: React.FC = () => {
         lastSaveTime: now,
       }));
     }
-  }, []);
+  }, []); // Empty dependency array - only run on mount
 
   // Game loop
   useEffect(() => {
@@ -124,7 +124,7 @@ const GameEngine: React.FC = () => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, []); // Empty dependency array - only run on mount
 
   // Enhanced production calculation with buffs and upgrades
   useEffect(() => {
@@ -170,7 +170,12 @@ const GameEngine: React.FC = () => {
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [gameState.fantasyBuildings, gameState.scifiBuildings, gameState.purchasedUpgrades, buffSystem]);
+  }, [
+    gameState.fantasyBuildings, 
+    gameState.scifiBuildings, 
+    gameState.purchasedUpgrades, 
+    buffSystem
+  ]); // Added proper dependencies
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
