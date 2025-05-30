@@ -1,11 +1,12 @@
-import React, { Suspense, useState, useCallback, useEffect } from 'react';
+
+import React, { Suspense, useState, useCallback, useEffect, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
-import { Vector3, Fog } from 'three';
+import { Vector3 } from 'three';
 import { GLBModel } from './GLBModelLoader';
 import { FirstPersonController } from './FirstPersonController';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
-import { EnvironmentSystem } from './EnvironmentSystem';
+import EnvironmentLoader from './EnvironmentLoader';
 
 interface Fantasy3DUpgradeWorldProps {
   onUpgradeClick: (upgradeName: string) => void;
@@ -79,18 +80,20 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   const [totalManaPerSecond, setTotalManaPerSecond] = useState(0);
   const [selectedUpgrade, setSelectedUpgrade] = useState<UpgradeData | null>(null);
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
-  const [currentEnvironmentTier, setCurrentEnvironmentTier] = useState(0);
 
-  // Calculate total unlocked upgrades for environment progression
-  const unlockedUpgradeCount = upgrades.filter(upgrade => upgrade.unlocked).length;
+  // Calculate environment tier based on unlocked upgrades - memoized to prevent re-renders
+  const environmentTier = useMemo(() => {
+    const unlockedCount = upgrades.filter(upgrade => upgrade.unlocked).length;
+    
+    if (unlockedCount >= 12) return 5;
+    if (unlockedCount >= 9) return 4;
+    if (unlockedCount >= 6) return 3;
+    if (unlockedCount >= 3) return 2;
+    return 1;
+  }, [upgrades]);
 
   const handlePositionChange = useCallback((position: Vector3) => {
     setCameraPosition(position);
-  }, []);
-
-  const handleEnvironmentChange = useCallback((tier: number) => {
-    setCurrentEnvironmentTier(tier);
-    console.log(`Environment transitioned to tier ${tier + 1}`);
   }, []);
 
   const handleUpgradeClick = useCallback((upgrade: UpgradeData) => {
@@ -140,10 +143,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   }, [currentMana]);
 
   // Check if player is within interaction range of upgrade (much more generous)
-  const isWithinRange = (upgradePosition: [number, number, number]): boolean => {
+  const isWithinRange = useCallback((upgradePosition: [number, number, number]): boolean => {
     const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
     return distance <= 15; // Much more generous range
-  };
+  }, [cameraPosition]);
 
   // Player can move forward unless they've reached the very end
   const canMoveForward = cameraPosition.z > -110;
@@ -163,6 +166,16 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
     return Math.floor(num).toString();
   };
+
+  // Memoize visible upgrades to prevent unnecessary re-renders
+  const visibleUpgrades = useMemo(() => {
+    return upgrades.filter(upgrade => {
+      const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
+      return distance <= 40;
+    });
+  }, [upgrades, cameraPosition]);
+
+  console.log(`Fantasy3DUpgradeWorld: Environment tier ${environmentTier}`);
 
   return (
     <div className="absolute inset-0 w-full h-full">
@@ -184,41 +197,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             canMoveForward={canMoveForward}
           />
 
-          {/* Dynamic Environment System - now with procedural generation */}
-          <EnvironmentSystem 
-            upgradeCount={unlockedUpgradeCount}
-            onEnvironmentChange={handleEnvironmentChange}
-          />
-
-          {/* Enhanced fantasy lighting setup unified with environment */}
-          <ambientLight intensity={0.4 + (currentEnvironmentTier * 0.1)} color="#1a1a2e" />
-          <directionalLight
-            position={[8, 15, 8]}
-            intensity={0.8 + (currentEnvironmentTier * 0.1)}
-            color="#e6e6fa"
-            castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
-            shadow-camera-far={200}
-            shadow-camera-left={-30}
-            shadow-camera-right={30}
-            shadow-camera-top={30}
-            shadow-camera-bottom={-30}
-          />
-          
-          {/* Progressive lighting along the path - intensity based on environment tier */}
-          {Array.from({ length: 8 }, (_, i) => {
-            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9'];
-            return (
-              <pointLight 
-                key={i}
-                position={[(i % 2 === 0 ? -6 : 6), 8, -12 - (i * 12)]} 
-                intensity={0.8 + (currentEnvironmentTier * 0.2)} 
-                color={tierColors[currentEnvironmentTier]} 
-                distance={25} 
-              />
-            );
-          })}
+          {/* Integrated Environment Loader - tier-based environment */}
+          <EnvironmentLoader tier={environmentTier} />
 
           <Environment preset="dawn" />
 
@@ -230,14 +210,14 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
           {/* Mystical path markers - style based on environment tier */}
           {Array.from({ length: 20 }, (_, i) => {
-            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9'];
+            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9', '#fbbf24', '#f59e0b'];
             return (
               <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
                 <circleGeometry args={[0.4]} />
                 <meshBasicMaterial 
-                  color={tierColors[currentEnvironmentTier]} 
+                  color={tierColors[environmentTier - 1]} 
                   transparent 
-                  opacity={0.5 + (currentEnvironmentTier * 0.1)} 
+                  opacity={0.5 + (environmentTier * 0.1)} 
                 />
               </mesh>
             );
@@ -245,33 +225,28 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
           <ContactShadows 
             position={[0, -0.4, -50]} 
-            opacity={0.5 + (currentEnvironmentTier * 0.1)} 
+            opacity={0.5 + (environmentTier * 0.1)} 
             scale={40} 
             blur={2.5} 
             far={10} 
           />
 
-          {/* Load GLB upgrade models with working URLs only */}
-          {upgrades.map((upgrade) => {
-            const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-            if (distance > 40) return null;
-            
-            return (
-              <GLBModel
-                key={upgrade.id}
-                modelUrl={upgrade.modelUrl}
-                name={upgrade.name}
-                position={upgrade.position}
-                scale={upgrade.scale}
-                onClick={() => handleUpgradeClick(upgrade)}
-                isUnlocked={upgrade.unlocked}
-                isPurchased={upgrade.unlocked}
-                isWithinRange={isWithinRange(upgrade.position)}
-                cost={upgrade.cost}
-                canAfford={currentMana >= upgrade.cost}
-              />
-            );
-          })}
+          {/* Load GLB upgrade models with working URLs only - Memoized */}
+          {visibleUpgrades.map((upgrade) => (
+            <GLBModel
+              key={upgrade.id}
+              modelUrl={upgrade.modelUrl}
+              name={upgrade.name}
+              position={upgrade.position}
+              scale={upgrade.scale}
+              onClick={() => handleUpgradeClick(upgrade)}
+              isUnlocked={upgrade.unlocked}
+              isPurchased={upgrade.unlocked}
+              isWithinRange={isWithinRange(upgrade.position)}
+              cost={upgrade.cost}
+              canAfford={currentMana >= upgrade.cost}
+            />
+          ))}
 
           {/* Enhanced atmospheric particles */}
           {Array.from({ length: 40 }, (_, i) => {
@@ -298,7 +273,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           <div className="text-yellow-400 text-lg font-bold">{formatNumber(currentMana)} Mana</div>
           <div className="text-purple-300 text-sm">{formatNumber(totalManaPerSecond)}/sec</div>
           <div className="text-purple-200 text-xs mt-1">
-            Environment Tier {currentEnvironmentTier + 1}
+            Environment Tier {environmentTier}
           </div>
         </div>
       </div>
@@ -313,11 +288,12 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             }}
           />
           {/* Environment tier markers */}
-          <div className="absolute top-0 left-1/3 w-0.5 h-full bg-yellow-400 opacity-60" />
-          <div className="absolute top-0 left-2/3 w-0.5 h-full bg-yellow-400 opacity-60" />
+          <div className="absolute top-0 left-1/4 w-0.5 h-full bg-yellow-400 opacity-60" />
+          <div className="absolute top-0 left-2/4 w-0.5 h-full bg-yellow-400 opacity-60" />
+          <div className="absolute top-0 left-3/4 w-0.5 h-full bg-yellow-400 opacity-60" />
         </div>
         <p className="text-white/50 text-xs text-center mt-1">
-          Journey Progress: {unlockedUpgradeCount}/{upgrades.length} Upgrades | Environment: Tier {currentEnvironmentTier + 1}
+          Journey Progress: {upgrades.filter(u => u.unlocked).length}/{upgrades.length} Upgrades | Environment: Tier {environmentTier}
         </p>
       </div>
 

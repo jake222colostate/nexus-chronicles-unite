@@ -1,5 +1,5 @@
 
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -20,10 +20,21 @@ const EnhancedModel = ({ url, position = [0, 0, 0], scale = 1, enableGlow = fals
   scale?: number;
   enableGlow?: boolean;
 }) => {
-  const gltf = useLoader(GLTFLoader, url);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  
+  let gltf;
+  try {
+    gltf = useLoader(GLTFLoader, url);
+    console.log(`Successfully loaded model from: ${url}`);
+  } catch (error) {
+    console.error(`Failed to load model from ${url}:`, error);
+    setLoadError(`Failed to load: ${url}`);
+    return null;
+  }
 
   useEffect(() => {
-    if (enableGlow && gltf.scene) {
+    if (enableGlow && gltf?.scene) {
+      console.log(`Applying glow effects to model from: ${url}`);
       // Add glowing materials to crystals and fantasy elements
       gltf.scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
@@ -44,7 +55,17 @@ const EnhancedModel = ({ url, position = [0, 0, 0], scale = 1, enableGlow = fals
         }
       });
     }
-  }, [gltf.scene, enableGlow]);
+  }, [gltf?.scene, enableGlow, url]);
+
+  if (loadError) {
+    console.warn(`Model load error: ${loadError}`);
+    return null;
+  }
+
+  if (!gltf?.scene) {
+    console.warn(`No scene found in model: ${url}`);
+    return null;
+  }
 
   return (
     <primitive 
@@ -59,8 +80,25 @@ const EnhancedModel = ({ url, position = [0, 0, 0], scale = 1, enableGlow = fals
 const EnvironmentLoader: React.FC<EnvironmentLoaderProps> = ({ tier }) => {
   const { ground, mountain, sky } = getModelUrls(tier);
 
+  console.log(`EnvironmentLoader: Loading tier ${tier} environment models:`);
+  console.log(`Ground: ${ground}`);
+  console.log(`Mountain: ${mountain}`);
+  console.log(`Sky: ${sky}`);
+
+  useEffect(() => {
+    console.log(`Environment tier changed to: ${tier}`);
+  }, [tier]);
+
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={
+      <group>
+        {/* Fallback geometry while loading */}
+        <mesh position={[0, -2, 0]}>
+          <boxGeometry args={[20, 0.1, 20]} />
+          <meshBasicMaterial color="#1a1a2e" />
+        </mesh>
+      </group>
+    }>
       {/* Ground model positioned below with glowing effects */}
       <EnhancedModel url={ground} position={[0, -2, 0]} scale={5} enableGlow={true} />
       
@@ -72,14 +110,14 @@ const EnvironmentLoader: React.FC<EnvironmentLoaderProps> = ({ tier }) => {
       {/* Sky model positioned above */}
       <EnhancedModel url={sky} position={[0, 20, -20]} scale={8} enableGlow={false} />
       
-      {/* Enhanced fantasy lighting setup */}
-      <ambientLight intensity={0.3} color="#4c1d95" />
+      {/* Enhanced fantasy lighting setup based on tier */}
+      <ambientLight intensity={0.3 + (tier * 0.05)} color="#4c1d95" />
       
-      {/* Main directional light with purple tint */}
+      {/* Main directional light with color progression by tier */}
       <directionalLight 
         position={[10, 10, 5]} 
-        intensity={0.6} 
-        color="#e879f9"
+        intensity={0.6 + (tier * 0.1)} 
+        color={tier >= 4 ? "#fbbf24" : tier >= 3 ? "#f59e0b" : "#e879f9"}
         castShadow 
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -96,7 +134,7 @@ const EnvironmentLoader: React.FC<EnvironmentLoaderProps> = ({ tier }) => {
         position={[0, 25, 0]} 
         angle={Math.PI / 3} 
         penumbra={0.5} 
-        intensity={0.5} 
+        intensity={0.5 + (tier * 0.1)} 
         color="#ddd6fe"
         castShadow
       />

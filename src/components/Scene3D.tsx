@@ -1,5 +1,5 @@
 
-import React, { Suspense, useRef, useState, useEffect } from 'react';
+import React, { Suspense, useRef, useState, useEffect, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
@@ -39,22 +39,19 @@ export const Scene3D: React.FC<Scene3DProps> = ({
   onTapEffectComplete
 }) => {
   const cameraRef = useRef();
-  const [environmentTier, setEnvironmentTier] = useState(1);
 
-  // Calculate environment tier based on purchased upgrades - fix re-render issue
-  useEffect(() => {
+  // Memoize environment tier calculation to prevent re-renders
+  const environmentTier = useMemo(() => {
     const upgradeCount = gameState.purchasedUpgrades?.length || 0;
-    let newTier = 1;
     
-    if (upgradeCount >= 8) newTier = 5;
-    else if (upgradeCount >= 6) newTier = 4;
-    else if (upgradeCount >= 4) newTier = 3;
-    else if (upgradeCount >= 2) newTier = 2;
-    
-    setEnvironmentTier(newTier);
+    if (upgradeCount >= 8) return 5;
+    if (upgradeCount >= 6) return 4;
+    if (upgradeCount >= 4) return 3;
+    if (upgradeCount >= 2) return 2;
+    return 1;
   }, [gameState.purchasedUpgrades?.length]);
 
-  const checkUpgradeUnlocked = (upgrade: any): boolean => {
+  const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
     const { requirements } = upgrade;
     
     if (requirements.mana && gameState.mana < requirements.mana) return false;
@@ -63,7 +60,30 @@ export const Scene3D: React.FC<Scene3DProps> = ({
     if (requirements.convergenceCount && gameState.convergenceCount < requirements.convergenceCount) return false;
     
     return true;
-  };
+  }, [gameState.mana, gameState.energyCredits, gameState.nexusShards, gameState.convergenceCount]);
+
+  // Memoize upgrade nodes to prevent unnecessary re-renders
+  const upgradeNodes = useMemo(() => {
+    return upgradePositions.map((position) => {
+      const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
+      if (!upgrade) return null;
+
+      return (
+        <UpgradeNode3D
+          key={upgrade.id}
+          upgrade={upgrade}
+          position={[position.x, position.y, position.z]}
+          isUnlocked={checkUpgradeUnlocked(upgrade)}
+          isPurchased={gameState.purchasedUpgrades?.includes(upgrade.id) || false}
+          canAfford={gameState.nexusShards >= upgrade.cost}
+          onClick={() => onUpgradeClick(upgrade.id)}
+          realm={realm}
+        />
+      );
+    }).filter(Boolean);
+  }, [checkUpgradeUnlocked, gameState.purchasedUpgrades, gameState.nexusShards, onUpgradeClick, realm]);
+
+  console.log(`Scene3D: Rendering with environment tier ${environmentTier}, realm: ${realm}`);
 
   return (
     <div className="w-full h-full relative">
@@ -121,24 +141,8 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             energyPerSecond={gameState.energyPerSecond}
           />
 
-          {/* 3D Upgrade Nodes */}
-          {upgradePositions.map((position) => {
-            const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
-            if (!upgrade) return null;
-
-            return (
-              <UpgradeNode3D
-                key={upgrade.id}
-                upgrade={upgrade}
-                position={[position.x, position.y, position.z]}
-                isUnlocked={checkUpgradeUnlocked(upgrade)}
-                isPurchased={gameState.purchasedUpgrades?.includes(upgrade.id) || false}
-                canAfford={gameState.nexusShards >= upgrade.cost}
-                onClick={() => onUpgradeClick(upgrade.id)}
-                realm={realm}
-              />
-            );
-          })}
+          {/* 3D Upgrade Nodes - Memoized */}
+          {upgradeNodes}
 
           {/* Tap Effect */}
           {showTapEffect && onTapEffectComplete && (
