@@ -88,6 +88,11 @@ const GameEngine: React.FC = () => {
   const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
   const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
 
+  // Stabilize purchased upgrades count to prevent undefined access
+  const purchasedUpgradesCount = useMemo(() => {
+    return (gameState.purchasedUpgrades || []).length;
+  }, [gameState.purchasedUpgrades]);
+
   // Initialize buff system with stabilized buildings - COMPLETELY STABLE
   const stableBuffSystem = useMemo(() => {
     return useBuffSystem(memoizedFantasyBuildings, memoizedScifiBuildings);
@@ -156,7 +161,7 @@ const GameEngine: React.FC = () => {
 
     // Apply hybrid upgrade bonuses - purchasedUpgrades is guaranteed to be an array
     let globalMultiplier = 1;
-    gameState.purchasedUpgrades.forEach(upgradeId => {
+    (gameState.purchasedUpgrades || []).forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
@@ -188,7 +193,7 @@ const GameEngine: React.FC = () => {
   }, [
     memoizedFantasyBuildings,
     memoizedScifiBuildings,
-    gameState.purchasedUpgrades.length // Safe to use length since purchasedUpgrades is guaranteed to be an array
+    purchasedUpgradesCount // Use the memoized count instead of direct array access
   ]);
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
