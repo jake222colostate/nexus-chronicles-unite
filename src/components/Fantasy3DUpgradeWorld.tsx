@@ -94,9 +94,13 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   }, []);
 
   const handleUpgradeClick = useCallback((upgrade: UpgradeData) => {
-    // Check if player is within interaction range
+    console.log(`Clicked upgrade: ${upgrade.name}`);
+    
+    // Check if player is within interaction range (increased range for better UX)
     const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-    if (distance > 4) {
+    console.log(`Distance to ${upgrade.name}: ${distance.toFixed(2)}`);
+    
+    if (distance > 6) { // Increased from 4 to 6
       console.log("Move closer to interact with this upgrade!");
       return;
     }
@@ -129,10 +133,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     }
   }, [currentMana]);
 
-  // Check if player is within interaction range of upgrade
+  // Check if player is within interaction range of upgrade (increased range)
   const isWithinRange = (upgradePosition: [number, number, number]): boolean => {
     const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
-    return distance <= 4;
+    return distance <= 6; // Increased from 4 to 6
   };
 
   // Player can move forward unless they've reached the very end
@@ -295,7 +299,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
       {/* Movement instructions */}
       <div className="absolute top-20 left-4 right-4 text-center pointer-events-none">
         <p className="text-white/70 text-sm font-medium">
-          Swipe forward to explore • Tap upgrades to unlock
+          Move closer and tap upgrades to unlock them
         </p>
       </div>
 
@@ -323,6 +327,11 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               upgradeName={selectedUpgrade.name}
               onClose={() => setSelectedUpgrade(null)}
               onPurchase={() => handleUpgradePurchase(selectedUpgrade)}
+              upgradeData={{
+                cost: selectedUpgrade.cost,
+                manaPerSecond: selectedUpgrade.manaPerSecond,
+                unlocked: selectedUpgrade.unlocked
+              }}
             />
           </div>
         </div>

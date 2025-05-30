@@ -52,6 +52,15 @@ export const GLBModel: React.FC<GLBModelProps> = ({
 
     loadModel();
   }, [modelUrl, name]);
+
+  // Enhanced click handler with better debugging
+  const handleClick = (event: any) => {
+    event.stopPropagation();
+    console.log(`Clicked on ${name}. Within range: ${isWithinRange}, Can afford: ${canAfford}`);
+    
+    // Always allow clicks, let the parent component handle the logic
+    onClick();
+  };
   
   useFrame((state) => {
     if (groupRef.current) {
@@ -102,10 +111,16 @@ export const GLBModel: React.FC<GLBModelProps> = ({
       <group
         ref={groupRef}
         position={position}
-        onClick={isWithinRange ? onClick : undefined}
+        onClick={handleClick}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
+        {/* Invisible interaction sphere for better click detection */}
+        <mesh>
+          <sphereGeometry args={[scale * 2]} />
+          <meshBasicMaterial transparent opacity={0} />
+        </mesh>
+
         {/* Enhanced fallback crystal with state-based coloring */}
         <mesh>
           <octahedronGeometry args={[scale * 0.8]} />
@@ -141,10 +156,16 @@ export const GLBModel: React.FC<GLBModelProps> = ({
     <group
       ref={groupRef}
       position={position}
-      onClick={isWithinRange ? onClick : undefined}
+      onClick={handleClick}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
+      {/* Invisible interaction sphere for better click detection */}
+      <mesh>
+        <sphereGeometry args={[scale * 2]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
       {/* Enhanced magical glow beneath model with state-based coloring */}
       <mesh ref={glowRef} position={[0, -0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[scale * 1.8]} />
