@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -8,8 +7,12 @@ import { BottomActionBar } from './BottomActionBar';
 import { TopHUD } from './TopHUD';
 import { EnhancedTapButton } from './EnhancedTapButton';
 import { EnhancedParticleBackground } from './EnhancedParticleBackground';
+import { ProductionCalculator } from './ProductionCalculator';
+import { GameErrorBoundary } from './GameErrorBoundary';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
+import { initializeGameState, saveGameState } from '../utils/gameStateUtils';
+import { useStableBuffSystem } from '../hooks/useStableBuffSystem';
 
 interface GameState {
   mana: number;
@@ -49,37 +52,8 @@ const scifiBuildings: Building[] = [
 ];
 
 const GameEngine: React.FC = () => {
-  const [gameState, setGameState] = useState<GameState>(() => {
-    const saved = localStorage.getItem('celestialNexusGame');
-    if (saved) {
-      const parsedState = JSON.parse(saved);
-      return {
-        mana: parsedState.mana || 10,
-        energyCredits: parsedState.energyCredits || 10,
-        manaPerSecond: parsedState.manaPerSecond || 0,
-        energyPerSecond: parsedState.energyPerSecond || 0,
-        nexusShards: parsedState.nexusShards || 0,
-        convergenceCount: parsedState.convergenceCount || 0,
-        fantasyBuildings: parsedState.fantasyBuildings || {},
-        scifiBuildings: parsedState.scifiBuildings || {},
-        purchasedUpgrades: Array.isArray(parsedState.purchasedUpgrades) ? parsedState.purchasedUpgrades : [],
-        lastSaveTime: parsedState.lastSaveTime || Date.now(),
-      };
-    }
-    return {
-      mana: 10,
-      energyCredits: 10,
-      manaPerSecond: 0,
-      energyPerSecond: 0,
-      nexusShards: 0,
-      convergenceCount: 0,
-      fantasyBuildings: {},
-      scifiBuildings: {},
-      purchasedUpgrades: [],
-      lastSaveTime: Date.now(),
-    };
-  });
-
+  // Initialize state with safe defaults
+  const [gameState, setGameState] = useState<GameState>(initializeGameState);
   const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi'>('fantasy');
   const [showConvergence, setShowConvergence] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -88,15 +62,21 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
 
+  // Use stable buff system
+  const { buffSystem, buildingsKey } = useStableBuffSystem(gameState.fantasyBuildings, gameState.scifiBuildings);
+
   // Use refs to prevent unnecessary recalculations
-  const lastBuildingsRef = useRef<string>('');
-  const lastUpgradesRef = useRef<string>('');
   const productionTimerRef = useRef<NodeJS.Timeout | null>(null);
   const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate convergence state with stable dependencies
-  const canConverge = gameState.mana + gameState.energyCredits >= 1000;
-  const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
+  const canConverge = useMemo(() => {
+    return gameState.mana + gameState.energyCredits >= 1000;
+  }, [gameState.mana, gameState.energyCredits]);
+
+  const convergenceProgress = useMemo(() => {
+    return Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
+  }, [gameState.mana, gameState.energyCredits]);
 
   // Calculate offline progress on mount only
   useEffect(() => {
@@ -116,68 +96,14 @@ const GameEngine: React.FC = () => {
     }
   }, []); // Only run once on mount
 
-  // Stable production calculation - only run when buildings or upgrades actually change
-  useEffect(() => {
-    const buildingsKey = JSON.stringify({
-      fantasy: gameState.fantasyBuildings,
-      scifi: gameState.scifiBuildings
-    });
-    const upgradesKey = JSON.stringify(gameState.purchasedUpgrades);
-    
-    // Only recalculate if buildings or upgrades actually changed
-    if (buildingsKey === lastBuildingsRef.current && upgradesKey === lastUpgradesRef.current) {
-      return;
-    }
-    
-    lastBuildingsRef.current = buildingsKey;
-    lastUpgradesRef.current = upgradesKey;
-    
-    console.log('Recalculating production rates');
-    
-    let manaRate = 0;
-    let energyRate = 0;
-
-    // Calculate base production from buildings
-    fantasyBuildings.forEach(building => {
-      const count = gameState.fantasyBuildings[building.id] || 0;
-      manaRate += count * building.production;
-    });
-
-    scifiBuildings.forEach(building => {
-      const count = gameState.scifiBuildings[building.id] || 0;
-      energyRate += count * building.production;
-    });
-
-    // Apply upgrade bonuses
-    let globalMultiplier = 1;
-    gameState.purchasedUpgrades.forEach(upgradeId => {
-      const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
-      if (upgrade?.effects) {
-        if (upgrade.effects.globalProductionBonus) {
-          globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
-        }
-        if (upgrade.effects.manaProductionBonus) {
-          manaRate += upgrade.effects.manaProductionBonus;
-        }
-        if (upgrade.effects.energyProductionBonus) {
-          energyRate += upgrade.effects.energyProductionBonus;
-        }
-      }
-    });
-
-    // Cross-realm bonuses
-    const fantasyBonus = 1 + (energyRate * 0.01);
-    const scifiBonus = 1 + (manaRate * 0.01);
-
-    const finalManaRate = manaRate * fantasyBonus * globalMultiplier;
-    const finalEnergyRate = energyRate * scifiBonus * globalMultiplier;
-
+  // Stable production update handler
+  const handleProductionUpdate = useCallback((manaRate: number, energyRate: number) => {
     setGameState(prev => ({
       ...prev,
-      manaPerSecond: finalManaRate,
-      energyPerSecond: finalEnergyRate,
+      manaPerSecond: manaRate,
+      energyPerSecond: energyRate,
     }));
-  }, [gameState.fantasyBuildings, gameState.scifiBuildings, gameState.purchasedUpgrades]);
+  }, []);
 
   // Stable game loop with cleanup
   useEffect(() => {
@@ -208,7 +134,7 @@ const GameEngine: React.FC = () => {
     }
     
     saveTimerRef.current = setTimeout(() => {
-      localStorage.setItem('celestialNexusGame', JSON.stringify(gameState));
+      saveGameState(gameState);
     }, 1000);
 
     return () => {
@@ -314,7 +240,7 @@ const GameEngine: React.FC = () => {
     return Math.floor(num).toString();
   };
 
-  // Create a truly stable game state object for child components - COMPLETELY REWRITTEN
+  // Create a stable game state object for child components - COMPLETELY REWRITTEN
   const stableGameState = useMemo(() => {
     console.log('Creating stable game state');
     return {
@@ -342,96 +268,108 @@ const GameEngine: React.FC = () => {
   ]);
 
   return (
-    <div className="h-[667px] w-full relative overflow-hidden bg-black">
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
-      
-      <EnhancedParticleBackground realm={currentRealm} />
+    <GameErrorBoundary>
+      <div className="h-[667px] w-full relative overflow-hidden bg-black">
+        {/* Production Calculator - extracted logic */}
+        <ProductionCalculator
+          fantasyBuildings={gameState.fantasyBuildings}
+          scifiBuildings={gameState.scifiBuildings}
+          purchasedUpgrades={gameState.purchasedUpgrades}
+          fantasyBuildingData={fantasyBuildings}
+          scifiBuildingData={scifiBuildings}
+          onProductionUpdate={handleProductionUpdate}
+        />
 
-      <TopHUD
-        realm={currentRealm}
-        mana={gameState.mana}
-        energyCredits={gameState.energyCredits}
-        nexusShards={gameState.nexusShards}
-        convergenceProgress={convergenceProgress}
-        onHelpClick={handleShowHelp}
-      />
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
+        
+        <EnhancedParticleBackground realm={currentRealm} />
 
-      <div className="absolute inset-0 pt-16">
-        <MapSkillTreeView
+        <TopHUD
           realm={currentRealm}
-          buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
-          manaPerSecond={gameState.manaPerSecond}
-          energyPerSecond={gameState.energyPerSecond}
-          onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
-          buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
-          currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
-          gameState={stableGameState}
-          onPurchaseUpgrade={purchaseUpgrade}
-          isTransitioning={isTransitioning}
-          showTapEffect={showTapEffect}
-          onTapEffectComplete={handleTapEffectComplete}
+          mana={gameState.mana}
+          energyCredits={gameState.energyCredits}
+          nexusShards={gameState.nexusShards}
+          convergenceProgress={convergenceProgress}
+          onHelpClick={handleShowHelp}
         />
 
-        <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
+        <div className="absolute inset-0 pt-16">
+          <MapSkillTreeView
+            realm={currentRealm}
+            buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
+            manaPerSecond={gameState.manaPerSecond}
+            energyPerSecond={gameState.energyPerSecond}
+            onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
+            buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
+            currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
+            gameState={stableGameState}
+            onPurchaseUpgrade={purchaseUpgrade}
+            isTransitioning={isTransitioning}
+            showTapEffect={showTapEffect}
+            onTapEffectComplete={handleTapEffectComplete}
+          />
 
-        <EnhancedTapButton
-          realm={currentRealm}
-          onTap={handleTapResource}
+          <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
+
+          <EnhancedTapButton
+            realm={currentRealm}
+            onTap={handleTapResource}
+          />
+
+          <BottomActionBar
+            currentRealm={currentRealm}
+            onRealmChange={switchRealm}
+            isTransitioning={isTransitioning}
+          />
+
+          {canConverge && (
+            <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
+              <Button 
+                onClick={() => setShowConvergence(true)}
+                className="h-11 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
+              >
+                <span className="text-sm flex items-center gap-2">
+                  🔁 Convergence Ready!
+                </span>
+              </Button>
+            </div>
+          )}
+        </div>
+
+        <QuickHelpModal
+          isOpen={showQuickHelp}
+          onClose={() => setShowQuickHelp(false)}
         />
 
-        <BottomActionBar
-          currentRealm={currentRealm}
-          onRealmChange={switchRealm}
-          isTransitioning={isTransitioning}
-        />
-
-        {canConverge && (
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
-            <Button 
-              onClick={() => setShowConvergence(true)}
-              className="h-11 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
-            >
-              <span className="text-sm flex items-center gap-2">
-                🔁 Convergence Ready!
-              </span>
-            </Button>
+        {showConvergence && (
+          <div 
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowConvergence(false);
+              }
+            }}
+          >
+            <div className="max-w-[90%] w-full max-w-sm">
+              <ConvergenceSystem
+                gameState={gameState}
+                onPerformConvergence={performConvergence}
+              />
+              <div className="mt-3 text-center">
+                <Button 
+                  onClick={() => setShowConvergence(false)}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-400 text-gray-300 hover:bg-white/10 transition-all duration-200"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      <QuickHelpModal
-        isOpen={showQuickHelp}
-        onClose={() => setShowQuickHelp(false)}
-      />
-
-      {showConvergence && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowConvergence(false);
-            }
-          }}
-        >
-          <div className="max-w-[90%] w-full max-w-sm">
-            <ConvergenceSystem
-              gameState={gameState}
-              onPerformConvergence={performConvergence}
-            />
-            <div className="mt-3 text-center">
-              <Button 
-                onClick={() => setShowConvergence(false)}
-                variant="outline"
-                size="sm"
-                className="border-gray-400 text-gray-300 hover:bg-white/10 transition-all duration-200"
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </GameErrorBoundary>
   );
 };
 
