@@ -8,7 +8,6 @@ import { BottomActionBar } from './BottomActionBar';
 import { TopHUD } from './TopHUD';
 import { EnhancedTapButton } from './EnhancedTapButton';
 import { EnhancedParticleBackground } from './EnhancedParticleBackground';
-import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
 
@@ -90,16 +89,6 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
 
-  // Create stable memoized dependencies that are guaranteed to never be undefined
-  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
-  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
-  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
-
-  // Initialize buff system with stabilized buildings
-  const stableBuffSystem = useMemo(() => {
-    return useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
-  }, [stableFantasyBuildings, stableScifiBuildings]);
-
   // Calculate convergence state early (before callbacks that use it)
   const canConverge = useMemo(() => gameState.mana + gameState.energyCredits >= 1000, [gameState.mana, gameState.energyCredits]);
   const convergenceProgress = useMemo(() => Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100), [gameState.mana, gameState.energyCredits]);
@@ -142,28 +131,33 @@ const GameEngine: React.FC = () => {
     return () => clearInterval(interval);
   }, []); // Empty dependency array - only run on mount
 
-  // Enhanced production calculation with guaranteed stable dependencies
+  // Enhanced production calculation with safe dependencies
   useEffect(() => {
     console.log('Production calculation useEffect triggered');
     
-    // Calculate production rates using stable building objects
+    // Ensure we have safe building objects
+    const safeFantasyBuildings = gameState.fantasyBuildings || {};
+    const safeScifiBuildings = gameState.scifiBuildings || {};
+    const safePurchasedUpgrades = gameState.purchasedUpgrades || [];
+    
+    // Calculate production rates using safe building objects
     let manaRate = 0;
     let energyRate = 0;
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
-      const count = stableFantasyBuildings[building.id] || 0;
+      const count = safeFantasyBuildings[building.id] || 0;
       manaRate += count * building.production;
     });
 
     scifiBuildings.forEach(building => {
-      const count = stableScifiBuildings[building.id] || 0;
+      const count = safeScifiBuildings[building.id] || 0;
       energyRate += count * building.production;
     });
 
     // Apply hybrid upgrade bonuses
     let globalMultiplier = 1;
-    stablePurchasedUpgrades.forEach(upgradeId => {
+    safePurchasedUpgrades.forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
@@ -192,7 +186,12 @@ const GameEngine: React.FC = () => {
       manaPerSecond: finalManaRate,
       energyPerSecond: finalEnergyRate,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, stablePurchasedUpgrades]);
+  }, [
+    // Use safe string representations to avoid undefined length issues
+    JSON.stringify(gameState.fantasyBuildings || {}),
+    JSON.stringify(gameState.scifiBuildings || {}),
+    JSON.stringify(gameState.purchasedUpgrades || [])
+  ]);
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -303,22 +302,22 @@ const GameEngine: React.FC = () => {
     energyCredits: gameState.energyCredits,
     nexusShards: gameState.nexusShards,
     convergenceCount: gameState.convergenceCount,
-    purchasedUpgrades: stablePurchasedUpgrades,
+    purchasedUpgrades: gameState.purchasedUpgrades || [],
     manaPerSecond: gameState.manaPerSecond,
     energyPerSecond: gameState.energyPerSecond,
-    fantasyBuildings: stableFantasyBuildings,
-    scifiBuildings: stableScifiBuildings,
+    fantasyBuildings: gameState.fantasyBuildings || {},
+    scifiBuildings: gameState.scifiBuildings || {},
     lastSaveTime: gameState.lastSaveTime
   }), [
     gameState.mana,
     gameState.energyCredits,
     gameState.nexusShards,
     gameState.convergenceCount,
-    stablePurchasedUpgrades,
+    gameState.purchasedUpgrades,
     gameState.manaPerSecond,
     gameState.energyPerSecond,
-    stableFantasyBuildings,
-    stableScifiBuildings,
+    gameState.fantasyBuildings,
+    gameState.scifiBuildings,
     gameState.lastSaveTime
   ]);
 
@@ -345,7 +344,7 @@ const GameEngine: React.FC = () => {
         {/* Integrated Map and Skill Tree View */}
         <MapSkillTreeView
           realm={currentRealm}
-          buildings={currentRealm === 'fantasy' ? stableFantasyBuildings : stableScifiBuildings}
+          buildings={currentRealm === 'fantasy' ? (gameState.fantasyBuildings || {}) : (gameState.scifiBuildings || {})}
           manaPerSecond={gameState.manaPerSecond}
           energyPerSecond={gameState.energyPerSecond}
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
