@@ -1,5 +1,5 @@
 
-import React, { Suspense, useRef, useMemo } from 'react';
+import React, { Suspense, useRef, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
@@ -39,15 +39,19 @@ export const Scene3D: React.FC<Scene3DProps> = ({
   onTapEffectComplete
 }) => {
   const cameraRef = useRef();
+  const [environmentTier, setEnvironmentTier] = useState(1);
 
-  // Calculate environment tier based on purchased upgrades
-  const environmentTier = useMemo(() => {
+  // Calculate environment tier based on purchased upgrades - fix re-render issue
+  useEffect(() => {
     const upgradeCount = gameState.purchasedUpgrades?.length || 0;
-    if (upgradeCount < 2) return 1;
-    if (upgradeCount < 4) return 2;
-    if (upgradeCount < 6) return 3;
-    if (upgradeCount < 8) return 4;
-    return 5;
+    let newTier = 1;
+    
+    if (upgradeCount >= 8) newTier = 5;
+    else if (upgradeCount >= 6) newTier = 4;
+    else if (upgradeCount >= 4) newTier = 3;
+    else if (upgradeCount >= 2) newTier = 2;
+    
+    setEnvironmentTier(newTier);
   }, [gameState.purchasedUpgrades?.length]);
 
   const checkUpgradeUnlocked = (upgrade: any): boolean => {
@@ -67,16 +71,17 @@ export const Scene3D: React.FC<Scene3DProps> = ({
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
         dpr={[1, 2]}
         performance={{ min: 0.5 }}
+        shadows
       >
         <Suspense fallback={null}>
-          {/* Camera */}
+          {/* Camera positioned for first-person-like view */}
           <PerspectiveCamera
             ref={cameraRef}
             makeDefault
-            position={[0, 0, 8]}
-            fov={60}
+            position={[0, 2, 8]}
+            fov={65}
             near={0.1}
-            far={100}
+            far={200}
           />
 
           {/* Controls - limited to vertical movement */}
@@ -95,15 +100,15 @@ export const Scene3D: React.FC<Scene3DProps> = ({
           {/* Environment Loader with tier-based models */}
           <EnvironmentLoader tier={environmentTier} />
 
-          {/* Animated starfield background */}
+          {/* Enhanced animated starfield background */}
           <Stars
-            radius={50}
-            depth={50}
-            count={2000}
-            factor={4}
-            saturation={0}
+            radius={80}
+            depth={60}
+            count={3000}
+            factor={6}
+            saturation={0.2}
             fade
-            speed={0.5}
+            speed={0.3}
           />
 
           {/* Floating Island Base */}
@@ -139,6 +144,9 @@ export const Scene3D: React.FC<Scene3DProps> = ({
           {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
           )}
+
+          {/* Additional atmospheric fog for depth */}
+          <fog attach="fog" args={['#1a0b2e', 30, 100]} />
         </Suspense>
       </Canvas>
 
