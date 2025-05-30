@@ -11,6 +11,7 @@ interface GLBModelProps {
   name: string;
   isUnlocked: boolean;
   isWithinRange: boolean;
+  isPurchased?: boolean;
 }
 
 export const GLBModel: React.FC<GLBModelProps> = ({ 
@@ -19,9 +20,11 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   onClick, 
   name, 
   isUnlocked, 
-  isWithinRange 
+  isWithinRange,
+  isPurchased = false
 }) => {
   const groupRef = useRef<Group>(null);
+  const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [gltfData, setGltfData] = useState<any>(null);
@@ -45,15 +48,23 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   
   useFrame((state) => {
     if (groupRef.current) {
-      // Subtle floating animation for unlocked models
+      // Floating animation for unlocked models
       if (isUnlocked) {
-        groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2 + position[0]) * 0.1;
+        groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2 + position[0]) * 0.15;
       }
       
-      // Gentle rotation when hovered and unlocked
-      if (hovered && isUnlocked) {
+      // Idle rotation for purchased models
+      if (isPurchased) {
         groupRef.current.rotation.y += 0.01;
+      } else if (hovered && isUnlocked) {
+        groupRef.current.rotation.y += 0.02;
       }
+    }
+
+    // Pulsing glow effect for unlocked models
+    if (glowRef.current && isUnlocked && !isPurchased) {
+      const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.3 + 0.7;
+      glowRef.current.scale.setScalar(pulse);
     }
   });
 
@@ -73,20 +84,26 @@ export const GLBModel: React.FC<GLBModelProps> = ({
       >
         {/* Fallback crystal shape */}
         <mesh>
-          <octahedronGeometry args={[0.8]} />
+          <octahedronGeometry args={[1.2]} />
           <meshLambertMaterial 
-            color={isUnlocked ? "#8b5cf6" : "#666666"} 
+            color={isPurchased ? "#10b981" : isUnlocked ? "#8b5cf6" : "#666666"} 
             transparent 
-            opacity={isUnlocked ? 0.8 : 0.4} 
+            opacity={isUnlocked ? 0.8 : 0.3} 
           />
         </mesh>
         
-        {/* Visual indicator for locked state */}
+        {/* Status indicators */}
         {!isUnlocked && (
-          <mesh position={[0, 1.2, 0]}>
-            <sphereGeometry args={[0.3]} />
-            <meshBasicMaterial color="#ff4444" />
-          </mesh>
+          <>
+            <mesh position={[0, 2, 0]}>
+              <sphereGeometry args={[0.3]} />
+              <meshBasicMaterial color="#ff4444" />
+            </mesh>
+            <mesh position={[0, 3, 0]}>
+              <planeGeometry args={[3, 0.8]} />
+              <meshBasicMaterial color="#000000" transparent opacity={0.8} />
+            </mesh>
+          </>
         )}
       </group>
     );
@@ -101,45 +118,68 @@ export const GLBModel: React.FC<GLBModelProps> = ({
       onPointerOut={() => setHovered(false)}
       scale={hovered && isUnlocked ? 1.1 : 1}
     >
-      <primitive 
-        object={gltfData.scene.clone()} 
-        scale={isUnlocked ? 1 : 0.7}
-      />
-      
-      {/* Glow effect for unlocked models */}
+      {/* Realm-colored glow beneath model */}
       {isUnlocked && (
-        <mesh scale={1.5}>
-          <sphereGeometry args={[1]} />
+        <mesh ref={glowRef} position={[0, -0.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[2]} />
           <meshBasicMaterial
             color="#8b5cf6"
             transparent
-            opacity={0.1}
+            opacity={isPurchased ? 0.3 : 0.2}
           />
+        </mesh>
+      )}
+
+      <primitive 
+        object={gltfData.scene.clone()} 
+        scale={isPurchased ? 1.2 : isUnlocked ? 1 : 0.6}
+      />
+      
+      {/* Purchase success indicator */}
+      {isPurchased && (
+        <mesh position={[0, 3, 0]}>
+          <sphereGeometry args={[0.2]} />
+          <meshBasicMaterial color="#10b981" />
         </mesh>
       )}
       
       {/* Lock indicator for locked models */}
       {!isUnlocked && (
-        <mesh position={[0, 2, 0]}>
-          <sphereGeometry args={[0.3]} />
-          <meshBasicMaterial color="#ff4444" />
-        </mesh>
+        <>
+          <mesh position={[0, 2.5, 0]}>
+            <sphereGeometry args={[0.4]} />
+            <meshBasicMaterial color="#ff4444" />
+          </mesh>
+          {/* "Not Yet Unlocked" label */}
+          <mesh position={[0, 3.5, 0]}>
+            <planeGeometry args={[4, 1]} />
+            <meshBasicMaterial color="#000000" transparent opacity={0.8} />
+          </mesh>
+        </>
       )}
       
       {/* Interaction prompt when in range */}
-      {isWithinRange && isUnlocked && (
-        <mesh position={[0, 2.5, 0]}>
-          <planeGeometry args={[2, 0.5]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
+      {isWithinRange && isUnlocked && !isPurchased && (
+        <mesh position={[0, 3, 0]}>
+          <planeGeometry args={[3, 0.8]} />
+          <meshBasicMaterial color="#8b5cf6" transparent opacity={0.9} />
+        </mesh>
+      )}
+
+      {/* Guiding light/particle marker */}
+      {isUnlocked && (
+        <mesh position={[0, 4, 0]}>
+          <sphereGeometry args={[0.1]} />
+          <meshBasicMaterial color="#ffffff" />
         </mesh>
       )}
     </group>
   );
 };
 
-// Note: Commenting out preloads since the URLs return 404
-// useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/mana_altar.glb');
-// useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/magic_tree.glb');
-// useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/arcane_lab.glb');
-// useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/crystal_tower.glb');
-// useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/dream_gate.glb');
+// Preload all GLB models for performance
+useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/mana_altar.glb');
+useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/magic_tree.glb');
+useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/arcane_lab.glb');
+useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/crystal_tower.glb');
+useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/dream_gate.glb');

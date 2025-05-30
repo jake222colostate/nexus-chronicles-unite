@@ -12,41 +12,41 @@ interface Fantasy3DUpgradeWorldProps {
   onTapEffectComplete?: () => void;
 }
 
-// Upgrade data with GLB model URLs
+// Upgrade data with GLB model URLs in zigzag layout
 const upgradeModels = [
   { 
     name: 'Mana Altar', 
     description: 'Ancient stones that channel mystical energy',
     modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/mana_altar.glb',
-    position: [0, 0, 0] as [number, number, number],
+    position: [-4, 0, -5] as [number, number, number], // Left side
     cost: 50
   },
   { 
     name: 'Magic Tree', 
     description: 'Enchanted tree pulsing with natural magic',
     modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/magic_tree.glb',
-    position: [0, 0, -12] as [number, number, number],
+    position: [4, 0, -15] as [number, number, number], // Right side
     cost: 150
   },
   { 
     name: 'Arcane Lab', 
     description: 'Laboratory for magical research and experiments',
     modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/arcane_lab.glb',
-    position: [0, 0, -24] as [number, number, number],
+    position: [-4, 0, -25] as [number, number, number], // Left side
     cost: 500
   },
   { 
     name: 'Crystal Tower', 
     description: 'Towering spire of crystallized magic',
     modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/crystal_tower.glb',
-    position: [0, 0, -36] as [number, number, number],
+    position: [4, 0, -35] as [number, number, number], // Right side
     cost: 1500
   },
   { 
     name: 'Dream Gate', 
     description: 'Portal to mystical realms beyond',
     modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/dream_gate.glb',
-    position: [0, 0, -48] as [number, number, number],
+    position: [-4, 0, -45] as [number, number, number], // Left side
     cost: 5000
   }
 ];
@@ -57,45 +57,43 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   onTapEffectComplete
 }) => {
   const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 1.6, 0));
-  const [unlockedUpgrades, setUnlockedUpgrades] = useState([true, false, false, false, false]);
   const [purchasedUpgrades, setPurchasedUpgrades] = useState<boolean[]>([false, false, false, false, false]);
+  const [upgradeCount, setUpgradeCount] = useState(0);
 
   const handlePositionChange = useCallback((position: Vector3) => {
     setCameraPosition(position);
   }, []);
 
   const handleUpgradeClick = useCallback((upgradeName: string, index: number) => {
-    if (!unlockedUpgrades[index]) {
-      // Show tooltip for locked upgrade
+    // Check if upgrade is unlocked (first upgrade or previous one purchased)
+    if (index > 0 && !purchasedUpgrades[index - 1]) {
       console.log("Purchase the previous upgrade first!");
       return;
     }
     
     // Open upgrade modal
     onUpgradeClick(upgradeName);
-  }, [unlockedUpgrades, onUpgradeClick]);
+  }, [purchasedUpgrades, onUpgradeClick]);
 
   const handleUpgradePurchase = useCallback((index: number) => {
-    // Mark as purchased and unlock next upgrade
     setPurchasedUpgrades(prev => {
       const newPurchased = [...prev];
       newPurchased[index] = true;
       return newPurchased;
     });
     
-    setUnlockedUpgrades(prev => {
-      const newUnlocked = [...prev];
-      if (index + 1 < newUnlocked.length) {
-        newUnlocked[index + 1] = true;
-      }
-      return newUnlocked;
-    });
+    setUpgradeCount(prev => prev + 1);
   }, []);
+
+  // Check if upgrade is unlocked (first one or previous purchased)
+  const isUpgradeUnlocked = (index: number): boolean => {
+    return index === 0 || purchasedUpgrades[index - 1];
+  };
 
   // Check if player is within interaction range of upgrade
   const isWithinRange = (upgradePosition: [number, number, number]): boolean => {
     const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
-    return distance <= 2.5;
+    return distance <= 3.5;
   };
 
   const canMoveForward = cameraPosition.z > -50;
@@ -113,52 +111,65 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         shadows
         gl={{ antialias: true, alpha: true }}
         onCreated={({ scene }) => {
-          scene.fog = new Fog('#1a1a2e', 5, 50);
+          scene.fog = new Fog('#1a1a2e', 8, 60);
         }}
       >
         <Suspense fallback={null}>
-          {/* First Person Controller */}
+          {/* Enhanced First Person Controller */}
           <FirstPersonController
             position={[0, 1.6, 0]}
             onPositionChange={handlePositionChange}
             canMoveForward={canMoveForward}
           />
 
-          {/* Lighting setup */}
-          <ambientLight intensity={0.4} />
+          {/* Enhanced lighting setup */}
+          <ambientLight intensity={0.3} />
           <directionalLight
             position={[5, 10, 5]}
-            intensity={0.8}
+            intensity={0.6}
             castShadow
-            shadow-mapSize-width={1024}
-            shadow-mapSize-height={1024}
-            shadow-camera-far={50}
-            shadow-camera-left={-10}
-            shadow-camera-right={10}
-            shadow-camera-top={10}
-            shadow-camera-bottom={-10}
+            shadow-mapSize-width={2048}
+            shadow-mapSize-height={2048}
+            shadow-camera-far={60}
+            shadow-camera-left={-15}
+            shadow-camera-right={15}
+            shadow-camera-top={15}
+            shadow-camera-bottom={-15}
           />
-          <pointLight position={[-5, 5, 5]} intensity={0.5} color="#8b5cf6" />
+          
+          {/* Purple realm lighting for fantasy atmosphere */}
+          <pointLight position={[-6, 8, -10]} intensity={0.4} color="#8b5cf6" />
+          <pointLight position={[6, 8, -20]} intensity={0.4} color="#8b5cf6" />
+          <pointLight position={[-6, 8, -30]} intensity={0.4} color="#8b5cf6" />
+          <pointLight position={[6, 8, -40]} intensity={0.4} color="#8b5cf6" />
 
           {/* Environment and atmosphere */}
           <Environment preset="dawn" />
 
-          {/* Ground plane */}
+          {/* Enhanced ground plane with zigzag path markers */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -25]} receiveShadow>
-            <planeGeometry args={[20, 60]} />
+            <planeGeometry args={[25, 60]} />
             <meshLambertMaterial color="#2a2a3e" />
           </mesh>
+
+          {/* Path markers for guidance */}
+          {Array.from({ length: 10 }, (_, i) => (
+            <mesh key={i} position={[0, -0.4, -5 * i]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.3]} />
+              <meshBasicMaterial color="#8b5cf6" transparent opacity={0.6} />
+            </mesh>
+          ))}
 
           {/* Ground shadows */}
           <ContactShadows 
             position={[0, -0.4, -25]} 
-            opacity={0.3} 
-            scale={20} 
+            opacity={0.4} 
+            scale={25} 
             blur={2} 
-            far={4} 
+            far={6} 
           />
 
-          {/* Load and display GLB upgrade models */}
+          {/* Load and display GLB upgrade models in zigzag layout */}
           {upgradeModels.map((upgrade, index) => (
             <GLBModel
               key={upgrade.name}
@@ -166,45 +177,87 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               name={upgrade.name}
               position={upgrade.position}
               onClick={() => handleUpgradeClick(upgrade.name, index)}
-              isUnlocked={unlockedUpgrades[index]}
+              isUnlocked={isUpgradeUnlocked(index)}
+              isPurchased={purchasedUpgrades[index]}
               isWithinRange={isWithinRange(upgrade.position)}
             />
           ))}
 
-          {/* Particle effects for atmosphere */}
-          <mesh position={[0, 5, -25]}>
-            <sphereGeometry args={[0.05]} />
-            <meshBasicMaterial color="#8b5cf6" transparent opacity={0.6} />
-          </mesh>
+          {/* Atmospheric particles for immersion */}
+          {Array.from({ length: 20 }, (_, i) => {
+            const x = (Math.random() - 0.5) * 20;
+            const y = Math.random() * 10 + 2;
+            const z = Math.random() * -50 - 5;
+            return (
+              <mesh key={i} position={[x, y, z]}>
+                <sphereGeometry args={[0.02]} />
+                <meshBasicMaterial color="#8b5cf6" transparent opacity={0.6} />
+              </mesh>
+            );
+          })}
         </Suspense>
       </Canvas>
 
-      {/* Movement instructions overlay */}
+      {/* Enhanced movement instructions overlay */}
       <div className="absolute top-20 left-4 right-4 text-center pointer-events-none">
-        <p className="text-white/70 text-sm">
-          {canMoveForward ? "Tap screen or press W to walk forward" : "You've reached the end"}
+        <p className="text-white/80 text-sm font-medium">
+          {canMoveForward ? "Walk forward to discover upgrades" : "You've reached the end of the path"}
+        </p>
+        <p className="text-purple-300/60 text-xs mt-1">
+          Look left and right to spot upgrade nodes
         </p>
       </div>
 
-      {/* Upgrade status indicator */}
+      {/* Enhanced upgrade progress HUD */}
       <div className="absolute top-32 right-4 pointer-events-none">
-        <div className="bg-black/50 backdrop-blur-sm rounded-lg p-2">
-          <p className="text-white text-xs">Upgrades Unlocked:</p>
-          <div className="flex gap-1 mt-1">
-            {unlockedUpgrades.map((unlocked, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full ${
-                  purchasedUpgrades[index] 
-                    ? 'bg-green-400' 
-                    : unlocked 
-                      ? 'bg-yellow-400' 
-                      : 'bg-gray-600'
-                }`}
-              />
+        <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3 border border-purple-400/30">
+          <p className="text-white text-sm font-bold">Upgrades: {upgradeCount}/5</p>
+          <div className="flex gap-1 mt-2">
+            {purchasedUpgrades.map((purchased, index) => {
+              const isUnlocked = isUpgradeUnlocked(index);
+              return (
+                <div
+                  key={index}
+                  className={`w-3 h-3 rounded-full border-2 ${
+                    purchased 
+                      ? 'bg-green-400 border-green-300' 
+                      : isUnlocked 
+                        ? 'bg-purple-400 border-purple-300' 
+                        : 'bg-gray-600 border-gray-500'
+                  }`}
+                />
+              );
+            })}
+          </div>
+          <div className="text-xs text-white/60 mt-1 space-y-1">
+            {upgradeModels.map((upgrade, index) => (
+              <div key={index} className={`${purchasedUpgrades[index] ? 'text-green-400' : isUpgradeUnlocked(index) ? 'text-purple-300' : 'text-gray-500'}`}>
+                {upgrade.name}: {upgrade.cost} shards
+              </div>
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Distance indicator for nearest upgrade */}
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 pointer-events-none">
+        {upgradeModels.map((upgrade, index) => {
+          const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
+          const isNearby = distance <= 5;
+          const isUnlocked = isUpgradeUnlocked(index);
+          
+          if (!isNearby || !isUnlocked || purchasedUpgrades[index]) return null;
+          
+          return (
+            <div key={index} className="bg-purple-900/80 backdrop-blur-sm rounded-lg p-2 mb-2 border border-purple-400/30">
+              <p className="text-white text-sm font-bold">{upgrade.name}</p>
+              <p className="text-purple-300 text-xs">Distance: {distance.toFixed(1)}m</p>
+              {isWithinRange(upgrade.position) && (
+                <p className="text-green-400 text-xs animate-pulse">Click to upgrade!</p>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
