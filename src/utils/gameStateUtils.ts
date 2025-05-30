@@ -37,18 +37,18 @@ export const initializeGameState = (): GameState => {
     const parsedState = JSON.parse(saved);
     console.log('GameStateUtils: Loaded saved state', parsedState);
     
-    // Validate and merge with defaults - CRITICAL: Always provide safe fallbacks
+    // CRITICAL: Always provide safe fallbacks to prevent undefined values
     const safeState = {
-      mana: typeof parsedState.mana === 'number' ? parsedState.mana : defaultGameState.mana,
-      energyCredits: typeof parsedState.energyCredits === 'number' ? parsedState.energyCredits : defaultGameState.energyCredits,
-      manaPerSecond: typeof parsedState.manaPerSecond === 'number' ? parsedState.manaPerSecond : defaultGameState.manaPerSecond,
-      energyPerSecond: typeof parsedState.energyPerSecond === 'number' ? parsedState.energyPerSecond : defaultGameState.energyPerSecond,
-      nexusShards: typeof parsedState.nexusShards === 'number' ? parsedState.nexusShards : defaultGameState.nexusShards,
-      convergenceCount: typeof parsedState.convergenceCount === 'number' ? parsedState.convergenceCount : defaultGameState.convergenceCount,
-      fantasyBuildings: (typeof parsedState.fantasyBuildings === 'object' && parsedState.fantasyBuildings !== null) ? parsedState.fantasyBuildings : defaultGameState.fantasyBuildings,
-      scifiBuildings: (typeof parsedState.scifiBuildings === 'object' && parsedState.scifiBuildings !== null) ? parsedState.scifiBuildings : defaultGameState.scifiBuildings,
+      mana: typeof parsedState.mana === 'number' && isFinite(parsedState.mana) ? parsedState.mana : defaultGameState.mana,
+      energyCredits: typeof parsedState.energyCredits === 'number' && isFinite(parsedState.energyCredits) ? parsedState.energyCredits : defaultGameState.energyCredits,
+      manaPerSecond: typeof parsedState.manaPerSecond === 'number' && isFinite(parsedState.manaPerSecond) ? parsedState.manaPerSecond : defaultGameState.manaPerSecond,
+      energyPerSecond: typeof parsedState.energyPerSecond === 'number' && isFinite(parsedState.energyPerSecond) ? parsedState.energyPerSecond : defaultGameState.energyPerSecond,
+      nexusShards: typeof parsedState.nexusShards === 'number' && isFinite(parsedState.nexusShards) ? parsedState.nexusShards : defaultGameState.nexusShards,
+      convergenceCount: typeof parsedState.convergenceCount === 'number' && isFinite(parsedState.convergenceCount) ? parsedState.convergenceCount : defaultGameState.convergenceCount,
+      fantasyBuildings: (typeof parsedState.fantasyBuildings === 'object' && parsedState.fantasyBuildings !== null && !Array.isArray(parsedState.fantasyBuildings)) ? parsedState.fantasyBuildings : defaultGameState.fantasyBuildings,
+      scifiBuildings: (typeof parsedState.scifiBuildings === 'object' && parsedState.scifiBuildings !== null && !Array.isArray(parsedState.scifiBuildings)) ? parsedState.scifiBuildings : defaultGameState.scifiBuildings,
       purchasedUpgrades: Array.isArray(parsedState.purchasedUpgrades) ? parsedState.purchasedUpgrades : defaultGameState.purchasedUpgrades,
-      lastSaveTime: typeof parsedState.lastSaveTime === 'number' ? parsedState.lastSaveTime : defaultGameState.lastSaveTime,
+      lastSaveTime: typeof parsedState.lastSaveTime === 'number' && isFinite(parsedState.lastSaveTime) ? parsedState.lastSaveTime : defaultGameState.lastSaveTime,
     };
     
     console.log('GameStateUtils: Returning safe state', safeState);
@@ -63,16 +63,16 @@ export const saveGameState = (gameState: GameState): void => {
   try {
     // SAFE: Always validate state before saving to prevent corrupted data
     const safeGameState = {
-      mana: gameState.mana || 0,
-      energyCredits: gameState.energyCredits || 0,
-      manaPerSecond: gameState.manaPerSecond || 0,
-      energyPerSecond: gameState.energyPerSecond || 0,
-      nexusShards: gameState.nexusShards || 0,
-      convergenceCount: gameState.convergenceCount || 0,
-      fantasyBuildings: gameState.fantasyBuildings || {},
-      scifiBuildings: gameState.scifiBuildings || {},
-      purchasedUpgrades: gameState.purchasedUpgrades || [],
-      lastSaveTime: gameState.lastSaveTime || Date.now(),
+      mana: (typeof gameState.mana === 'number' && isFinite(gameState.mana)) ? gameState.mana : 0,
+      energyCredits: (typeof gameState.energyCredits === 'number' && isFinite(gameState.energyCredits)) ? gameState.energyCredits : 0,
+      manaPerSecond: (typeof gameState.manaPerSecond === 'number' && isFinite(gameState.manaPerSecond)) ? gameState.manaPerSecond : 0,
+      energyPerSecond: (typeof gameState.energyPerSecond === 'number' && isFinite(gameState.energyPerSecond)) ? gameState.energyPerSecond : 0,
+      nexusShards: (typeof gameState.nexusShards === 'number' && isFinite(gameState.nexusShards)) ? gameState.nexusShards : 0,
+      convergenceCount: (typeof gameState.convergenceCount === 'number' && isFinite(gameState.convergenceCount)) ? gameState.convergenceCount : 0,
+      fantasyBuildings: (typeof gameState.fantasyBuildings === 'object' && gameState.fantasyBuildings !== null && !Array.isArray(gameState.fantasyBuildings)) ? gameState.fantasyBuildings : {},
+      scifiBuildings: (typeof gameState.scifiBuildings === 'object' && gameState.scifiBuildings !== null && !Array.isArray(gameState.scifiBuildings)) ? gameState.scifiBuildings : {},
+      purchasedUpgrades: Array.isArray(gameState.purchasedUpgrades) ? gameState.purchasedUpgrades : [],
+      lastSaveTime: (typeof gameState.lastSaveTime === 'number' && isFinite(gameState.lastSaveTime)) ? gameState.lastSaveTime : Date.now(),
     };
     
     localStorage.setItem('celestialNexusGame', JSON.stringify(safeGameState));

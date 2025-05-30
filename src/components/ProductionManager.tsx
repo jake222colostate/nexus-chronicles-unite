@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { ProductionCalculator } from './ProductionCalculator';
 
 interface ProductionManagerProps {
@@ -15,19 +15,34 @@ export const ProductionManager: React.FC<ProductionManagerProps> = ({
   fantasyBuildingData,
   scifiBuildingData
 }) => {
-  // Stable callback that won't change
+  // Memoize the callback to prevent unnecessary re-renders
   const stableOnProductionUpdate = useCallback((manaRate: number, energyRate: number) => {
+    console.log('ProductionManager: Updating production rates', { manaRate, energyRate });
     onProductionUpdate(manaRate, energyRate);
   }, [onProductionUpdate]);
 
-  // Only render the ProductionCalculator - no timers here
+  // Memoize stable game state values
+  const stableGameState = useMemo(() => ({
+    fantasyBuildings: gameState?.fantasyBuildings || {},
+    scifiBuildings: gameState?.scifiBuildings || {},
+    purchasedUpgrades: gameState?.purchasedUpgrades || []
+  }), [
+    gameState?.fantasyBuildings,
+    gameState?.scifiBuildings,
+    gameState?.purchasedUpgrades
+  ]);
+
+  // Memoize building data to prevent re-renders
+  const stableFantasyBuildingData = useMemo(() => fantasyBuildingData || [], [fantasyBuildingData]);
+  const stableScifiBuildingData = useMemo(() => scifiBuildingData || [], [scifiBuildingData]);
+
   return (
     <ProductionCalculator
-      fantasyBuildings={gameState.fantasyBuildings || {}}
-      scifiBuildings={gameState.scifiBuildings || {}}
-      purchasedUpgrades={gameState.purchasedUpgrades || []}
-      fantasyBuildingData={fantasyBuildingData}
-      scifiBuildingData={scifiBuildingData}
+      fantasyBuildings={stableGameState.fantasyBuildings}
+      scifiBuildings={stableGameState.scifiBuildings}
+      purchasedUpgrades={stableGameState.purchasedUpgrades}
+      fantasyBuildingData={stableFantasyBuildingData}
+      scifiBuildingData={stableScifiBuildingData}
       onProductionUpdate={stableOnProductionUpdate}
     />
   );

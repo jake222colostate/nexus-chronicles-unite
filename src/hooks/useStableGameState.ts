@@ -39,66 +39,60 @@ const arrayEqual = (arr1: string[], arr2: string[]): boolean => {
 
 export const useStableGameState = (gameState: GameState) => {
   const previousStateRef = useRef<GameState | null>(null);
+  const stableStateRef = useRef<GameState | null>(null);
   
   return useMemo(() => {
     const prev = previousStateRef.current;
     
+    // Ensure safe defaults for all values
+    const safeGameState = {
+      mana: gameState.mana || 0,
+      energyCredits: gameState.energyCredits || 0,
+      manaPerSecond: gameState.manaPerSecond || 0,
+      energyPerSecond: gameState.energyPerSecond || 0,
+      nexusShards: gameState.nexusShards || 0,
+      convergenceCount: gameState.convergenceCount || 0,
+      lastSaveTime: gameState.lastSaveTime || Date.now(),
+      fantasyBuildings: gameState.fantasyBuildings || {},
+      scifiBuildings: gameState.scifiBuildings || {},
+      purchasedUpgrades: gameState.purchasedUpgrades || [],
+    };
+    
     // If no previous state, store current and return it
     if (!prev) {
-      const newState = {
-        mana: gameState.mana || 0,
-        energyCredits: gameState.energyCredits || 0,
-        manaPerSecond: gameState.manaPerSecond || 0,
-        energyPerSecond: gameState.energyPerSecond || 0,
-        nexusShards: gameState.nexusShards || 0,
-        convergenceCount: gameState.convergenceCount || 0,
-        lastSaveTime: gameState.lastSaveTime || Date.now(),
-        fantasyBuildings: gameState.fantasyBuildings || {},
-        scifiBuildings: gameState.scifiBuildings || {},
-        purchasedUpgrades: gameState.purchasedUpgrades || [],
-      };
-      previousStateRef.current = newState;
-      return newState;
+      previousStateRef.current = safeGameState;
+      stableStateRef.current = safeGameState;
+      return safeGameState;
     }
     
-    // Check if anything actually changed
+    // Check if anything actually changed using safe comparisons
     const primitivesChanged = 
-      gameState.mana !== prev.mana ||
-      gameState.energyCredits !== prev.energyCredits ||
-      gameState.manaPerSecond !== prev.manaPerSecond ||
-      gameState.energyPerSecond !== prev.energyPerSecond ||
-      gameState.nexusShards !== prev.nexusShards ||
-      gameState.convergenceCount !== prev.convergenceCount ||
-      gameState.lastSaveTime !== prev.lastSaveTime;
+      safeGameState.mana !== prev.mana ||
+      safeGameState.energyCredits !== prev.energyCredits ||
+      safeGameState.manaPerSecond !== prev.manaPerSecond ||
+      safeGameState.energyPerSecond !== prev.energyPerSecond ||
+      safeGameState.nexusShards !== prev.nexusShards ||
+      safeGameState.convergenceCount !== prev.convergenceCount ||
+      safeGameState.lastSaveTime !== prev.lastSaveTime;
     
     const buildingsChanged = 
-      !deepEqual(gameState.fantasyBuildings || {}, prev.fantasyBuildings || {}) ||
-      !deepEqual(gameState.scifiBuildings || {}, prev.scifiBuildings || {});
+      !deepEqual(safeGameState.fantasyBuildings, prev.fantasyBuildings) ||
+      !deepEqual(safeGameState.scifiBuildings, prev.scifiBuildings);
     
     const upgradesChanged = 
-      !arrayEqual(gameState.purchasedUpgrades || [], prev.purchasedUpgrades || []);
+      !arrayEqual(safeGameState.purchasedUpgrades, prev.purchasedUpgrades);
     
     // Only create new state if something actually changed
     if (primitivesChanged || buildingsChanged || upgradesChanged) {
-      const newState = {
-        mana: gameState.mana || 0,
-        energyCredits: gameState.energyCredits || 0,
-        manaPerSecond: gameState.manaPerSecond || 0,
-        energyPerSecond: gameState.energyPerSecond || 0,
-        nexusShards: gameState.nexusShards || 0,
-        convergenceCount: gameState.convergenceCount || 0,
-        lastSaveTime: gameState.lastSaveTime || Date.now(),
-        fantasyBuildings: gameState.fantasyBuildings || {},
-        scifiBuildings: gameState.scifiBuildings || {},
-        purchasedUpgrades: gameState.purchasedUpgrades || [],
-      };
-      previousStateRef.current = newState;
-      return newState;
+      previousStateRef.current = safeGameState;
+      stableStateRef.current = safeGameState;
+      return safeGameState;
     }
     
-    // Return previous state if nothing changed
-    return prev;
+    // Return cached stable state if nothing changed
+    return stableStateRef.current || safeGameState;
   }, [
+    // Use primitive values directly instead of JSON.stringify to prevent infinite loops
     gameState.mana,
     gameState.energyCredits,
     gameState.manaPerSecond,
@@ -106,8 +100,13 @@ export const useStableGameState = (gameState: GameState) => {
     gameState.nexusShards,
     gameState.convergenceCount,
     gameState.lastSaveTime,
-    JSON.stringify(gameState.fantasyBuildings || {}),
-    JSON.stringify(gameState.scifiBuildings || {}),
-    JSON.stringify(gameState.purchasedUpgrades || [])
+    // For objects/arrays, use length and key checks instead of stringification
+    Object.keys(gameState.fantasyBuildings || {}).length,
+    Object.keys(gameState.scifiBuildings || {}).length,
+    (gameState.purchasedUpgrades || []).length,
+    // Include a hash of the actual values but stable
+    Object.values(gameState.fantasyBuildings || {}).join(','),
+    Object.values(gameState.scifiBuildings || {}).join(','),
+    (gameState.purchasedUpgrades || []).join(',')
   ]);
 };

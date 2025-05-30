@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useMemo } from 'react';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 
@@ -25,26 +24,39 @@ export const ProductionCalculator: React.FC<ProductionCalculatorProps> = ({
   onProductionUpdate
 }) => {
   const lastResultRef = useRef<{ manaRate: number; energyRate: number } | null>(null);
+  const updateCallbackRef = useRef(onProductionUpdate);
+  
+  // Keep callback ref updated
+  updateCallbackRef.current = onProductionUpdate;
+
+  // Memoize stable values to prevent re-calculations
+  const stableFantasyBuildings = useMemo(() => fantasyBuildings || {}, [fantasyBuildings]);
+  const stableScifiBuildings = useMemo(() => scifiBuildings || {}, [scifiBuildings]);
+  const stablePurchasedUpgrades = useMemo(() => purchasedUpgrades || [], [purchasedUpgrades]);
+  const stableFantasyBuildingData = useMemo(() => fantasyBuildingData || [], [fantasyBuildingData]);
+  const stableScifiBuildingData = useMemo(() => scifiBuildingData || [], [scifiBuildingData]);
 
   // Memoize the calculation to prevent unnecessary recalculations
   const calculatedRates = useMemo(() => {
+    console.log('ProductionCalculator: Recalculating production rates');
+    
     let manaRate = 0;
     let energyRate = 0;
 
     // Calculate base production from buildings
-    (fantasyBuildingData || []).forEach(building => {
-      const count = (fantasyBuildings || {})[building.id] || 0;
+    stableFantasyBuildingData.forEach(building => {
+      const count = stableFantasyBuildings[building.id] || 0;
       manaRate += count * (building.production || 0);
     });
 
-    (scifiBuildingData || []).forEach(building => {
-      const count = (scifiBuildings || {})[building.id] || 0;
+    stableScifiBuildingData.forEach(building => {
+      const count = stableScifiBuildings[building.id] || 0;
       energyRate += count * (building.production || 0);
     });
 
     // Apply upgrade bonuses
     let globalMultiplier = 1;
-    (purchasedUpgrades || []).forEach(upgradeId => {
+    stablePurchasedUpgrades.forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade?.effects) {
         if (upgrade.effects.globalProductionBonus) {
@@ -68,11 +80,11 @@ export const ProductionCalculator: React.FC<ProductionCalculatorProps> = ({
 
     return { manaRate: finalManaRate, energyRate: finalEnergyRate };
   }, [
-    JSON.stringify(fantasyBuildings || {}),
-    JSON.stringify(scifiBuildings || {}),
-    JSON.stringify(purchasedUpgrades || []),
-    fantasyBuildingData,
-    scifiBuildingData
+    stableFantasyBuildings,
+    stableScifiBuildings,
+    stablePurchasedUpgrades,
+    stableFantasyBuildingData,
+    stableScifiBuildingData
   ]);
 
   // Only call onProductionUpdate when the calculated rates actually change
@@ -80,13 +92,14 @@ export const ProductionCalculator: React.FC<ProductionCalculatorProps> = ({
     const { manaRate, energyRate } = calculatedRates;
     
     if (!lastResultRef.current || 
-        lastResultRef.current.manaRate !== manaRate || 
-        lastResultRef.current.energyRate !== energyRate) {
+        Math.abs(lastResultRef.current.manaRate - manaRate) > 0.001 || 
+        Math.abs(lastResultRef.current.energyRate - energyRate) > 0.001) {
       
+      console.log('ProductionCalculator: Production rates changed', { manaRate, energyRate });
       lastResultRef.current = { manaRate, energyRate };
-      onProductionUpdate(manaRate, energyRate);
+      updateCallbackRef.current(manaRate, energyRate);
     }
-  }, [calculatedRates, onProductionUpdate]);
+  }, [calculatedRates]);
 
   return null;
 };
