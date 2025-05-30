@@ -10,7 +10,7 @@ interface EnvironmentSystemProps {
   onEnvironmentChange?: (tier: number) => void;
 }
 
-// Environment model URLs from GitHub - Updated with new crystal ground
+// Environment model URLs from GitHub - Updated with new fantasy skybox and fixed crystal ground
 const environmentAssets = {
   ground: [
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_basic.glb',
@@ -25,10 +25,10 @@ const environmentAssets = {
     'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_luminous.glb'
   ],
   sky: [
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_stars.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_aurora.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_celestial.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/sky/sky_celestial.glb'
+    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/fantasy_skybox.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/fantasy_skybox.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/fantasy_skybox.glb',
+    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/fantasy_skybox.glb'
   ]
 };
 
@@ -109,7 +109,7 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   useEffect(() => {
     const preloadModels = async () => {
       try {
-        // Preload all environment models including the new crystal ground
+        // Preload all environment models including the new fantasy skybox and crystal ground
         const allUrls = [
           ...environmentAssets.ground,
           ...environmentAssets.mountains,
