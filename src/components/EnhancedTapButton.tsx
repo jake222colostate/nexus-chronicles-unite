@@ -12,22 +12,22 @@ export const EnhancedTapButton: React.FC<EnhancedTapButtonProps> = ({
   onTap
 }) => {
   return (
-    <div className="absolute bottom-[72px] left-1/2 transform -translate-x-1/2 z-30">
+    <div className="absolute bottom-[80px] left-1/2 transform -translate-x-1/2 z-30">
       <Button 
         onClick={onTap}
-        className={`h-12 px-6 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm backdrop-blur-xl border relative overflow-hidden ${
+        className={`h-10 px-5 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm backdrop-blur-xl border relative overflow-hidden shadow-xl ${
           realm === 'fantasy'
-            ? 'bg-gradient-to-r from-purple-600/90 to-violet-700/90 hover:from-purple-500/90 hover:to-violet-600/90 border-purple-400/70 text-purple-100'
-            : 'bg-gradient-to-r from-cyan-600/90 to-blue-700/90 hover:from-cyan-500/90 hover:to-blue-600/90 border-cyan-400/70 text-cyan-100'
+            ? 'bg-gradient-to-r from-purple-600/90 to-violet-700/90 hover:from-purple-500/90 hover:to-violet-600/90 border-purple-400/70 text-purple-100 shadow-purple-500/40'
+            : 'bg-gradient-to-r from-cyan-600/90 to-blue-700/90 hover:from-cyan-500/90 hover:to-blue-600/90 border-cyan-400/70 text-cyan-100 shadow-cyan-500/40'
         }`}
         style={{
-          boxShadow: `0 0 20px ${realm === 'fantasy' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(34, 211, 238, 0.4)'}, 0 4px 16px rgba(0,0,0,0.3)`
+          filter: `drop-shadow(0 4px 16px ${realm === 'fantasy' ? 'rgba(168, 85, 247, 0.3)' : 'rgba(34, 211, 238, 0.3)'})`
         }}
       >
         {/* Enhanced glassmorphism inner glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10 pointer-events-none rounded-full" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-black/15 pointer-events-none rounded-full" />
         
-        <span className="flex items-center gap-2 relative z-10">
+        <span className="flex items-center gap-1.5 relative z-10 drop-shadow-sm">
           {realm === 'fantasy' ? '✨' : '⚡'}
           Tap for {realm === 'fantasy' ? 'Mana' : 'Energy'}
         </span>
