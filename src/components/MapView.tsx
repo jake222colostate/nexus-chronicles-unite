@@ -6,6 +6,7 @@ import { ParticleSystem } from './ParticleSystem';
 import { TapResourceEffect } from './TapResourceEffect';
 import { UpgradeFloatingTooltip } from './UpgradeFloatingTooltip';
 import { BuildingUpgradeModal } from './BuildingUpgradeModal';
+import { Button } from '@/components/ui/button';
 
 interface MapViewProps {
   realm: 'fantasy' | 'scifi';
@@ -23,6 +24,7 @@ interface MapViewProps {
   onRealmChange?: (realm: 'fantasy' | 'scifi') => void;
   showTapEffect?: boolean;
   onTapEffectComplete?: () => void;
+  onTapResource?: () => void;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -40,7 +42,8 @@ export const MapView: React.FC<MapViewProps> = ({
   buffSystem,
   onRealmChange,
   showTapEffect = false,
-  onTapEffectComplete
+  onTapEffectComplete,
+  onTapResource
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.9 });
@@ -328,6 +331,25 @@ export const MapView: React.FC<MapViewProps> = ({
           onClose={() => setSelectedBuilding(null)}
         />
       )}
+
+      {/* Anchored Tap to Generate Button - Above bottom action bar */}
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
+        <Button 
+          onClick={onTapResource}
+          className={`h-14 px-8 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 font-bold text-base ${
+            realm === 'fantasy'
+              ? 'bg-gradient-to-r from-purple-600/90 to-violet-700/90 hover:from-purple-500/90 hover:to-violet-600/90 border-2 border-purple-400/60 text-purple-100'
+              : 'bg-gradient-to-r from-cyan-600/90 to-blue-700/90 hover:from-cyan-500/90 hover:to-blue-600/90 border-2 border-cyan-400/60 text-cyan-100'
+          } backdrop-blur-sm shadow-lg ${
+            realm === 'fantasy' ? 'shadow-purple-500/30' : 'shadow-cyan-500/30'
+          }`}
+        >
+          <span className="flex items-center gap-2">
+            {realm === 'fantasy' ? '✨' : '⚡'}
+            Tap to Generate {realm === 'fantasy' ? 'Mana' : 'Energy'}
+          </span>
+        </Button>
+      </div>
 
       {/* Simple Realm indicator - Positioned in top right of map area */}
       <div className="absolute top-4 right-4 z-10">

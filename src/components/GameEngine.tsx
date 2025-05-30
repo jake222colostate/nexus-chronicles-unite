@@ -349,17 +349,17 @@ const GameEngine: React.FC = () => {
           isTransitioning={isTransitioning}
           showTapEffect={showTapEffect}
           onTapEffectComplete={handleTapEffectComplete}
+          onTapResource={handleTapResource}
         />
 
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Bottom Action Bar */}
+        {/* Bottom Action Bar - Removed tap button */}
         <BottomActionBar
           currentRealm={currentRealm}
           onRealmChange={switchRealm}
           onHybridClick={() => setShowHybridUpgrades(true)}
-          onTapResource={handleTapResource}
           isTransitioning={isTransitioning}
         />
 
