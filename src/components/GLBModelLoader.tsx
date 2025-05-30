@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -17,7 +16,8 @@ interface GLBModelProps {
   canAfford: boolean;
 }
 
-export const GLBModel: React.FC<GLBModelProps> = ({ 
+// Safe GLB Model component with error handling
+const SafeGLBModel: React.FC<GLBModelProps> = ({ 
   modelUrl, 
   position, 
   scale = 1,
@@ -34,8 +34,15 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   const [hovered, setHovered] = useState(false);
   const [glowIntensity, setGlowIntensity] = useState(1);
   
-  // Load GLB model with proper error handling
-  const { scene: gltfScene, error } = useGLTF(modelUrl);
+  // Load GLB model - let Suspense handle loading states
+  let gltfScene;
+  try {
+    const gltf = useGLTF(modelUrl);
+    gltfScene = gltf.scene;
+  } catch (error) {
+    console.warn(`Failed to load ${name}, using fallback:`, error);
+    gltfScene = null;
+  }
   
   // Enhanced click handler with better debugging
   const handleClick = (event: any) => {
@@ -47,6 +54,7 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   };
   
   useFrame((state) => {
+    // ... keep existing code (animation logic)
     if (groupRef.current) {
       // Enhanced floating animation based on unlock state
       if (isPurchased) {
@@ -90,8 +98,8 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   });
 
   // Enhanced fallback geometry for failed loads or loading state
-  if (error || !gltfScene) {
-    console.log(`Using fallback for ${name}, error:`, error);
+  if (!gltfScene) {
+    console.log(`Using fallback for ${name}`);
     return (
       <group
         ref={groupRef}
@@ -218,17 +226,73 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   );
 };
 
-// Preload the models for better performance
+// Error boundary component for GLB models
+class GLBModelErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: any, errorInfo: any) {
+    console.warn('GLB Model Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+
+    return this.props.children;
+  }
+}
+
+// Main export component with error boundary
+export const GLBModel: React.FC<GLBModelProps> = (props) => {
+  const fallbackComponent = (
+    <group
+      position={props.position}
+      onClick={props.onClick}
+    >
+      <mesh>
+        <octahedronGeometry args={[props.scale || 1]} />
+        <meshLambertMaterial 
+          color={props.isPurchased ? "#10b981" : props.canAfford ? "#8b5cf6" : "#6b7280"} 
+          transparent 
+          opacity={0.7} 
+        />
+      </mesh>
+    </group>
+  );
+
+  return (
+    <GLBModelErrorBoundary fallback={fallbackComponent}>
+      <SafeGLBModel {...props} />
+    </GLBModelErrorBoundary>
+  );
+};
+
+// Preload the models for better performance with error handling
 const modelUrls = [
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb',
-  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb'
 ];
 
+// Preload only working models, skip the corrupted upgrade_04.glb
 modelUrls.forEach(url => {
-  useGLTF.preload(url);
+  try {
+    useGLTF.preload(url);
+  } catch (error) {
+    console.warn(`Failed to preload model: ${url}`, error);
+  }
 });
