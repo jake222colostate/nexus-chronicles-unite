@@ -1,5 +1,5 @@
 
-import React, { Suspense, useState, useCallback } from 'react';
+import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
 import { Vector3, Fog } from 'three';
@@ -13,34 +13,69 @@ interface Fantasy3DUpgradeWorldProps {
   onTapEffectComplete?: () => void;
 }
 
+// Enhanced upgrade structure with exponential scaling
+interface UpgradeData {
+  id: number;
+  name: string;
+  baseCost: number;
+  baseManaPerSecond: number;
+  cost: number;
+  manaPerSecond: number;
+  unlocked: boolean;
+  modelUrl: string;
+  position: [number, number, number];
+  scale: number;
+}
+
 // 25 upgrades with exponential scaling
-const upgradeModels = [
-  { name: 'Mystic Fountain', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-3, 0, -6] as [number, number, number], cost: 50, manaPerSec: 10, scale: 1.0 },
-  { name: 'Crystal Grove', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [3, 0, -12] as [number, number, number], cost: 250, manaPerSec: 50, scale: 1.1 },
-  { name: 'Arcane Sanctum', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [-4, 0, -18] as [number, number, number], cost: 1000, manaPerSec: 150, scale: 1.2 },
-  { name: 'Celestial Spire', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [4, 0, -24] as [number, number, number], cost: 4000, manaPerSec: 400, scale: 1.3 },
-  { name: 'Nexus Gateway', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [-4.5, 0, -30] as [number, number, number], cost: 15000, manaPerSec: 1000, scale: 1.4 },
-  { name: 'Dragon\'s Heart', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb', position: [4.5, 0, -36] as [number, number, number], cost: 50000, manaPerSec: 2500, scale: 1.5 },
-  { name: 'Void Obelisk', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb', position: [-5, 0, -42] as [number, number, number], cost: 150000, manaPerSec: 6000, scale: 1.6 },
-  { name: 'Temporal Altar', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [5, 0, -48] as [number, number, number], cost: 400000, manaPerSec: 12000, scale: 1.7 },
-  { name: 'Phoenix Roost', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [-5.5, 0, -54] as [number, number, number], cost: 1000000, manaPerSec: 25000, scale: 1.8 },
-  { name: 'Ethereal Nexus', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [5.5, 0, -60] as [number, number, number], cost: 2500000, manaPerSec: 50000, scale: 1.9 },
-  { name: 'Starfall Chamber', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [-6, 0, -66] as [number, number, number], cost: 6000000, manaPerSec: 100000, scale: 2.0 },
-  { name: 'Infinity Well', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [6, 0, -72] as [number, number, number], cost: 15000000, manaPerSec: 200000, scale: 2.1 },
-  { name: 'Cosmic Forge', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb', position: [-6.5, 0, -78] as [number, number, number], cost: 35000000, manaPerSec: 400000, scale: 2.2 },
-  { name: 'Dimensional Anchor', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb', position: [6.5, 0, -84] as [number, number, number], cost: 80000000, manaPerSec: 800000, scale: 2.3 },
-  { name: 'Reality Prism', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-7, 0, -90] as [number, number, number], cost: 200000000, manaPerSec: 1600000, scale: 2.4 },
-  { name: 'Astral Crown', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [7, 0, -96] as [number, number, number], cost: 500000000, manaPerSec: 3200000, scale: 2.5 },
-  { name: 'Omni Core', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [-7.5, 0, -102] as [number, number, number], cost: 1200000000, manaPerSec: 6400000, scale: 2.6 },
-  { name: 'Genesis Matrix', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [7.5, 0, -108] as [number, number, number], cost: 3000000000, manaPerSec: 12800000, scale: 2.7 },
-  { name: 'Eternal Beacon', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [-8, 0, -114] as [number, number, number], cost: 7500000000, manaPerSec: 25600000, scale: 2.8 },
-  { name: 'Infinite Spiral', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb', position: [8, 0, -120] as [number, number, number], cost: 18000000000, manaPerSec: 51200000, scale: 2.9 },
-  { name: 'Transcendent Gate', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb', position: [-8.5, 0, -126] as [number, number, number], cost: 45000000000, manaPerSec: 102400000, scale: 3.0 },
-  { name: 'Primordial Engine', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [8.5, 0, -132] as [number, number, number], cost: 110000000000, manaPerSec: 204800000, scale: 3.1 },
-  { name: 'Universal Codex', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [-9, 0, -138] as [number, number, number], cost: 270000000000, manaPerSec: 409600000, scale: 3.2 },
-  { name: 'Apex Throne', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [9, 0, -144] as [number, number, number], cost: 650000000000, manaPerSec: 819200000, scale: 3.3 },
-  { name: 'Omega Singularity', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [0, 0, -150] as [number, number, number], cost: 1600000000000, manaPerSec: 1638400000, scale: 3.5 }
-];
+const createUpgradeData = (): UpgradeData[] => {
+  const baseUpgrades = [
+    { name: 'Mystic Fountain', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-3, 0, -6] as [number, number, number], scale: 1.0 },
+    { name: 'Crystal Grove', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [3, 0, -12] as [number, number, number], scale: 1.1 },
+    { name: 'Arcane Sanctum', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [-4, 0, -18] as [number, number, number], scale: 1.2 },
+    { name: 'Celestial Spire', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [4, 0, -24] as [number, number, number], scale: 1.3 },
+    { name: 'Nexus Gateway', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [-4.5, 0, -30] as [number, number, number], scale: 1.4 },
+    { name: 'Dragon\'s Heart', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb', position: [4.5, 0, -36] as [number, number, number], scale: 1.5 },
+    { name: 'Void Obelisk', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb', position: [-5, 0, -42] as [number, number, number], scale: 1.6 },
+    { name: 'Temporal Altar', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [5, 0, -48] as [number, number, number], scale: 1.7 },
+    { name: 'Phoenix Roost', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [-5.5, 0, -54] as [number, number, number], scale: 1.8 },
+    { name: 'Ethereal Nexus', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [5.5, 0, -60] as [number, number, number], scale: 1.9 },
+    { name: 'Starfall Chamber', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [-6, 0, -66] as [number, number, number], scale: 2.0 },
+    { name: 'Infinity Well', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [6, 0, -72] as [number, number, number], scale: 2.1 },
+    { name: 'Cosmic Forge', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb', position: [-6.5, 0, -78] as [number, number, number], scale: 2.2 },
+    { name: 'Dimensional Anchor', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb', position: [6.5, 0, -84] as [number, number, number], scale: 2.3 },
+    { name: 'Reality Prism', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-7, 0, -90] as [number, number, number], scale: 2.4 },
+    { name: 'Astral Crown', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [7, 0, -96] as [number, number, number], scale: 2.5 },
+    { name: 'Omni Core', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [-7.5, 0, -102] as [number, number, number], scale: 2.6 },
+    { name: 'Genesis Matrix', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [7.5, 0, -108] as [number, number, number], scale: 2.7 },
+    { name: 'Eternal Beacon', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [-8, 0, -114] as [number, number, number], scale: 2.8 },
+    { name: 'Infinite Spiral', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_06.glb', position: [8, 0, -120] as [number, number, number], scale: 2.9 },
+    { name: 'Transcendent Gate', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_07.glb', position: [-8.5, 0, -126] as [number, number, number], scale: 3.0 },
+    { name: 'Primordial Engine', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [8.5, 0, -132] as [number, number, number], scale: 3.1 },
+    { name: 'Universal Codex', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [-9, 0, -138] as [number, number, number], scale: 3.2 },
+    { name: 'Apex Throne', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb', position: [9, 0, -144] as [number, number, number], scale: 3.3 },
+    { name: 'Omega Singularity', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_04.glb', position: [0, 0, -150] as [number, number, number], scale: 3.5 }
+  ];
+
+  // Apply exponential scaling: cost = 50 * 2^n, manaPerSecond = 10 * 2^n
+  return baseUpgrades.map((upgrade, index) => {
+    const costMultiplier = Math.pow(2, index);
+    const manaMultiplier = Math.pow(2, index);
+    
+    return {
+      id: index + 1,
+      name: upgrade.name,
+      baseCost: 50,
+      baseManaPerSecond: 10,
+      cost: Math.floor(50 * costMultiplier),
+      manaPerSecond: Math.floor(10 * manaMultiplier),
+      unlocked: false,
+      modelUrl: upgrade.modelUrl,
+      position: upgrade.position,
+      scale: upgrade.scale
+    };
+  });
+};
 
 export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   onUpgradeClick,
@@ -48,45 +83,51 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   onTapEffectComplete
 }) => {
   const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 1.6, 0));
-  const [purchasedUpgrades, setPurchasedUpgrades] = useState<boolean[]>(Array(upgradeModels.length).fill(false));
-  const [currency, setCurrency] = useState(100); // Starting mana
-  const [manaPerSecond, setManaPerSecond] = useState(0);
-  const [selectedUpgrade, setSelectedUpgrade] = useState<typeof upgradeModels[0] | null>(null);
+  const [upgrades, setUpgrades] = useState<UpgradeData[]>(createUpgradeData());
+  const [currentMana, setCurrentMana] = useState(100);
+  const [totalManaPerSecond, setTotalManaPerSecond] = useState(0);
+  const [selectedUpgrade, setSelectedUpgrade] = useState<UpgradeData | null>(null);
+  const [showInsufficientMana, setShowInsufficientMana] = useState(false);
 
   const handlePositionChange = useCallback((position: Vector3) => {
     setCameraPosition(position);
   }, []);
 
-  const handleUpgradeClick = useCallback((upgradeName: string, index: number) => {
-    const upgrade = upgradeModels[index];
-    
+  const handleUpgradeClick = useCallback((upgrade: UpgradeData) => {
     // Check if player is within interaction range
-    const upgradePosition = upgrade.position;
-    const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
+    const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
     if (distance > 4) {
       console.log("Move closer to interact with this upgrade!");
       return;
     }
     
-    // Open upgrade modal
     setSelectedUpgrade(upgrade);
   }, [cameraPosition]);
 
-  const handleUpgradePurchase = useCallback((upgrade: typeof upgradeModels[0]) => {
-    const index = upgradeModels.findIndex(u => u.name === upgrade.name);
-    if (index === -1) return;
-    
-    if (currency >= upgrade.cost) {
-      setPurchasedUpgrades(prev => {
-        const newPurchased = [...prev];
-        newPurchased[index] = true;
-        return newPurchased;
-      });
-      setCurrency(prev => prev - upgrade.cost);
-      setManaPerSecond(prev => prev + upgrade.manaPerSec);
+  const handleUpgradePurchase = useCallback((upgrade: UpgradeData) => {
+    if (currentMana >= upgrade.cost) {
+      // Purchase successful
+      setCurrentMana(prev => prev - upgrade.cost);
+      setTotalManaPerSecond(prev => prev + upgrade.manaPerSecond);
+      
+      // Update upgrade state
+      setUpgrades(prev => 
+        prev.map(u => 
+          u.id === upgrade.id 
+            ? { ...u, unlocked: true }
+            : u
+        )
+      );
+      
       setSelectedUpgrade(null);
+      console.log(`Unlocked ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
+    } else {
+      // Insufficient mana
+      setShowInsufficientMana(true);
+      setTimeout(() => setShowInsufficientMana(false), 2000);
+      console.log("Not enough mana!");
     }
-  }, [currency]);
+  }, [currentMana]);
 
   // Check if player is within interaction range of upgrade
   const isWithinRange = (upgradePosition: [number, number, number]): boolean => {
@@ -98,12 +139,12 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   const canMoveForward = cameraPosition.z > -160;
 
   // Passive mana generation
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
-      setCurrency(prev => prev + manaPerSecond / 10);
+      setCurrentMana(prev => prev + totalManaPerSecond / 10);
     }, 100);
     return () => clearInterval(interval);
-  }, [manaPerSecond]);
+  }, [totalManaPerSecond]);
 
   const formatNumber = (num: number): string => {
     if (num >= 1e12) return (num / 1e12).toFixed(1) + 'T';
@@ -187,24 +228,24 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             far={10} 
           />
 
-          {/* Load all 25 GLB upgrade models */}
-          {upgradeModels.map((upgrade, index) => {
+          {/* Load all 25 GLB upgrade models with performance optimization */}
+          {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
             if (distance > 25) return null; // Performance optimization
             
             return (
               <GLBModel
-                key={upgrade.name}
+                key={upgrade.id}
                 modelUrl={upgrade.modelUrl}
                 name={upgrade.name}
                 position={upgrade.position}
                 scale={upgrade.scale}
-                onClick={() => handleUpgradeClick(upgrade.name, index)}
-                isUnlocked={true} // All upgrades are visible from start
-                isPurchased={purchasedUpgrades[index]}
+                onClick={() => handleUpgradeClick(upgrade)}
+                isUnlocked={upgrade.unlocked}
+                isPurchased={upgrade.unlocked}
                 isWithinRange={isWithinRange(upgrade.position)}
                 cost={upgrade.cost}
-                canAfford={currency >= upgrade.cost}
+                canAfford={currentMana >= upgrade.cost}
               />
             );
           })}
@@ -231,8 +272,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
       {/* Clean Resource Display - Top Right */}
       <div className="absolute top-4 right-4 pointer-events-none">
         <div className="bg-purple-900/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-400/40">
-          <div className="text-yellow-400 text-lg font-bold">{formatNumber(currency)} Mana</div>
-          <div className="text-purple-300 text-sm">{formatNumber(manaPerSecond)}/sec</div>
+          <div className="text-yellow-400 text-lg font-bold">{formatNumber(currentMana)} Mana</div>
+          <div className="text-purple-300 text-sm">{formatNumber(totalManaPerSecond)}/sec</div>
         </div>
       </div>
 
@@ -247,7 +288,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           />
         </div>
         <p className="text-white/50 text-xs text-center mt-1">
-          Journey Progress: {purchasedUpgrades.filter(p => p).length}/{upgradeModels.length} Upgrades
+          Journey Progress: {upgrades.filter(u => u.unlocked).length}/{upgrades.length} Upgrades
         </p>
       </div>
 
@@ -258,21 +299,32 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </p>
       </div>
 
-      {/* Upgrade Modal */}
+      {/* Insufficient Mana Warning */}
+      {showInsufficientMana && (
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
+          <div className="bg-red-600/90 text-white px-6 py-3 rounded-lg border border-red-400 animate-bounce">
+            <p className="font-bold">Not enough mana!</p>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Upgrade Modal with proper positioning */}
       {selectedUpgrade && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setSelectedUpgrade(null);
             }
           }}
         >
-          <Fantasy3DUpgradeModal
-            upgradeName={selectedUpgrade.name}
-            onClose={() => setSelectedUpgrade(null)}
-            onPurchase={() => handleUpgradePurchase(selectedUpgrade)}
-          />
+          <div className="w-full max-w-sm">
+            <Fantasy3DUpgradeModal
+              upgradeName={selectedUpgrade.name}
+              onClose={() => setSelectedUpgrade(null)}
+              onPurchase={() => handleUpgradePurchase(selectedUpgrade)}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -73,20 +73,25 @@ export const GLBModel: React.FC<GLBModelProps> = ({
       }
     }
 
-    // Enhanced pulsing glow effect
+    // Enhanced pulsing glow effect based on state
     if (glowRef.current) {
       if (isPurchased) {
         const purchasedGlow = Math.sin(state.clock.elapsedTime * 2) * 0.2 + 0.8;
         glowRef.current.scale.setScalar(purchasedGlow * 1.2);
-        setGlowIntensity(0.4);
-      } else if (canAfford) {
+        setGlowIntensity(0.6);
+      } else if (canAfford && isWithinRange) {
         const activeGlow = Math.sin(state.clock.elapsedTime * 3) * 0.4 + 1;
         glowRef.current.scale.setScalar(activeGlow);
-        setGlowIntensity(0.6);
+        setGlowIntensity(0.8);
+      } else if (!canAfford) {
+        // Locked state - dim and slow pulse
+        const lockedGlow = Math.sin(state.clock.elapsedTime * 1) * 0.2 + 0.4;
+        glowRef.current.scale.setScalar(lockedGlow);
+        setGlowIntensity(0.2);
       } else {
-        const subdued = Math.sin(state.clock.elapsedTime * 2) * 0.2 + 0.6;
-        glowRef.current.scale.setScalar(subdued);
-        setGlowIntensity(0.3);
+        const defaultGlow = Math.sin(state.clock.elapsedTime * 2) * 0.3 + 0.7;
+        glowRef.current.scale.setScalar(defaultGlow);
+        setGlowIntensity(0.4);
       }
     }
   });
@@ -101,21 +106,29 @@ export const GLBModel: React.FC<GLBModelProps> = ({
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        {/* Enhanced fallback crystal */}
+        {/* Enhanced fallback crystal with state-based coloring */}
         <mesh>
           <octahedronGeometry args={[scale * 0.8]} />
           <meshLambertMaterial 
-            color={isPurchased ? "#10b981" : "#8b5cf6"} 
+            color={
+              isPurchased ? "#10b981" : 
+              canAfford ? "#8b5cf6" : 
+              "#6b7280"
+            } 
             transparent 
-            opacity={0.9} 
+            opacity={isPurchased ? 0.9 : canAfford ? 0.7 : 0.5} 
           />
         </mesh>
         
-        {/* Fallback glow */}
+        {/* Fallback glow with state-based intensity */}
         <mesh ref={glowRef} position={[0, -0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[scale * 1.5]} />
           <meshBasicMaterial
-            color={isPurchased ? "#10b981" : "#8b5cf6"}
+            color={
+              isPurchased ? "#10b981" : 
+              canAfford ? "#8b5cf6" : 
+              "#6b7280"
+            }
             transparent
             opacity={glowIntensity * 0.3}
           />
@@ -132,20 +145,24 @@ export const GLBModel: React.FC<GLBModelProps> = ({
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
-      {/* Enhanced magical glow beneath model */}
+      {/* Enhanced magical glow beneath model with state-based coloring */}
       <mesh ref={glowRef} position={[0, -0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[scale * 1.8]} />
         <meshBasicMaterial
-          color={isPurchased ? "#10b981" : canAfford ? "#c084fc" : "#8b5cf6"}
+          color={
+            isPurchased ? "#10b981" : 
+            canAfford ? "#c084fc" : 
+            "#6b7280"
+          }
           transparent
           opacity={glowIntensity * 0.4}
         />
       </mesh>
 
-      {/* Main 3D model */}
+      {/* Main 3D model with state-based scaling and opacity */}
       <primitive 
         object={gltfData.scene.clone()} 
-        scale={scale * (isPurchased ? 1.1 : 1)}
+        scale={scale * (isPurchased ? 1.1 : canAfford ? 1 : 0.8)}
       />
       
       {/* Purchase success indicator */}
@@ -160,15 +177,35 @@ export const GLBModel: React.FC<GLBModelProps> = ({
       {isWithinRange && !isPurchased && (
         <mesh position={[0, scale * 2.2, 0]}>
           <ringGeometry args={[0.3, 0.4]} />
-          <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
+          <meshBasicMaterial 
+            color={canAfford ? "#ffffff" : "#ff6b6b"} 
+            transparent 
+            opacity={0.8} 
+          />
         </mesh>
       )}
 
-      {/* Available for unlock indicator */}
+      {/* State indicator */}
       {!isPurchased && (
         <mesh position={[0, scale * 3, 0]}>
           <sphereGeometry args={[0.08]} />
-          <meshBasicMaterial color="#ffffff" />
+          <meshBasicMaterial 
+            color={canAfford ? "#ffffff" : "#ff6b6b"} 
+            transparent
+            opacity={canAfford ? 1 : 0.6}
+          />
+        </mesh>
+      )}
+
+      {/* Locked state visual overlay */}
+      {!canAfford && !isPurchased && (
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[scale * 2, scale * 2, scale * 2]} />
+          <meshBasicMaterial 
+            color="#000000" 
+            transparent 
+            opacity={0.3} 
+          />
         </mesh>
       )}
     </group>

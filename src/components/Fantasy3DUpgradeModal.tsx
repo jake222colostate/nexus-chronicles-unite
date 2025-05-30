@@ -8,40 +8,46 @@ interface Fantasy3DUpgradeModalProps {
   upgradeName: string;
   onClose: () => void;
   onPurchase?: () => void;
+  upgradeData?: {
+    cost: number;
+    manaPerSecond: number;
+    unlocked: boolean;
+  };
 }
 
 const upgradeDetails = {
-  'Mystic Fountain': { description: 'Ancient stones channel mystical energy from flowing waters, providing a steady stream of magical power.', cost: 50, effect: '+10 Mana per second', icon: '⛲' },
-  'Crystal Grove': { description: 'Enchanted crystals that amplify magical resonance throughout your realm.', cost: 250, effect: '+50 Mana per second', icon: '💎' },
-  'Arcane Sanctum': { description: 'Sacred chamber where ancient magic is studied and preserved by mystical scholars.', cost: 1000, effect: '+150 Mana per second', icon: '🏛️' },
-  'Celestial Spire': { description: 'Towering monument that pierces the veil between realms, channeling cosmic energy.', cost: 4000, effect: '+400 Mana per second', icon: '🗼' },
-  'Nexus Gateway': { description: 'Portal to infinite dimensions of pure magical energy, unlocking untold power.', cost: 15000, effect: '+1000 Mana per second', icon: '🌌' },
-  'Dragon\'s Heart': { description: 'The beating heart of an ancient dragon, source of primal fire and raw power.', cost: 50000, effect: '+2500 Mana per second', icon: '🐉' },
-  'Void Obelisk': { description: 'Monolith that channels the power of the cosmic void, transcending reality itself.', cost: 150000, effect: '+6000 Mana per second', icon: '⚫' },
-  'Temporal Altar': { description: 'Sacred altar that manipulates the flow of time to accelerate magical processes.', cost: 400000, effect: '+12000 Mana per second', icon: '⏰' },
-  'Phoenix Roost': { description: 'Eternal flame that never dies, generating endless magical energy through rebirth.', cost: 1000000, effect: '+25000 Mana per second', icon: '🔥' },
-  'Ethereal Nexus': { description: 'Connection point between multiple planes of existence, channeling interdimensional power.', cost: 2500000, effect: '+50000 Mana per second', icon: '✨' },
-  'Starfall Chamber': { description: 'Observatory that captures the power of falling stars and converts it to pure magic.', cost: 6000000, effect: '+100000 Mana per second', icon: '🌠' },
-  'Infinity Well': { description: 'Bottomless well that taps into the infinite reservoir of magical energy.', cost: 15000000, effect: '+200000 Mana per second', icon: '🕳️' },
-  'Cosmic Forge': { description: 'Ancient forge that shapes reality itself, creating magical energy from the void.', cost: 35000000, effect: '+400000 Mana per second', icon: '⚒️' },
-  'Dimensional Anchor': { description: 'Stabilizes reality and draws power from dimensional fractures.', cost: 80000000, effect: '+800000 Mana per second', icon: '⚓' },
-  'Reality Prism': { description: 'Crystalline structure that refracts reality into infinite magical possibilities.', cost: 200000000, effect: '+1600000 Mana per second', icon: '🔮' },
-  'Astral Crown': { description: 'Crown of the astral realm, granting dominion over celestial magical forces.', cost: 500000000, effect: '+3200000 Mana per second', icon: '👑' },
-  'Omni Core': { description: 'Core of omnipotent energy that transcends all known magical limitations.', cost: 1200000000, effect: '+6400000 Mana per second', icon: '💫' },
-  'Genesis Matrix': { description: 'Matrix that contains the blueprint of creation itself, generating infinite power.', cost: 3000000000, effect: '+12800000 Mana per second', icon: '🌀' },
-  'Eternal Beacon': { description: 'Beacon of eternal light that guides lost souls and generates endless energy.', cost: 7500000000, effect: '+25600000 Mana per second', icon: '🗼' },
-  'Infinite Spiral': { description: 'Spiral pattern that contains infinite recursive magical energy loops.', cost: 18000000000, effect: '+51200000 Mana per second', icon: '🌀' },
-  'Transcendent Gate': { description: 'Gateway beyond all understanding, connecting to the source of all magic.', cost: 45000000000, effect: '+102400000 Mana per second', icon: '🚪' },
-  'Primordial Engine': { description: 'Engine that harnesses the primordial forces that created the universe.', cost: 110000000000, effect: '+204800000 Mana per second', icon: '⚙️' },
-  'Universal Codex': { description: 'Contains all knowledge of magic across every possible reality.', cost: 270000000000, effect: '+409600000 Mana per second', icon: '📜' },
-  'Apex Throne': { description: 'Throne of absolute magical supremacy, commanding all forces of creation.', cost: 650000000000, effect: '+819200000 Mana per second', icon: '🪑' },
-  'Omega Singularity': { description: 'The final singularity that represents the end and beginning of all magic.', cost: 1600000000000, effect: '+1638400000 Mana per second', icon: '🌑' }
+  'Mystic Fountain': { description: 'Ancient stones channel mystical energy from flowing waters, providing a steady stream of magical power.', icon: '⛲' },
+  'Crystal Grove': { description: 'Enchanted crystals that amplify magical resonance throughout your realm.', icon: '💎' },
+  'Arcane Sanctum': { description: 'Sacred chamber where ancient magic is studied and preserved by mystical scholars.', icon: '🏛️' },
+  'Celestial Spire': { description: 'Towering monument that pierces the veil between realms, channeling cosmic energy.', icon: '🗼' },
+  'Nexus Gateway': { description: 'Portal to infinite dimensions of pure magical energy, unlocking untold power.', icon: '🌌' },
+  'Dragon\'s Heart': { description: 'The beating heart of an ancient dragon, source of primal fire and raw power.', icon: '🐉' },
+  'Void Obelisk': { description: 'Monolith that channels the power of the cosmic void, transcending reality itself.', icon: '⚫' },
+  'Temporal Altar': { description: 'Sacred altar that manipulates the flow of time to accelerate magical processes.', icon: '⏰' },
+  'Phoenix Roost': { description: 'Eternal flame that never dies, generating endless magical energy through rebirth.', icon: '🔥' },
+  'Ethereal Nexus': { description: 'Connection point between multiple planes of existence, channeling interdimensional power.', icon: '✨' },
+  'Starfall Chamber': { description: 'Observatory that captures the power of falling stars and converts it to pure magic.', icon: '🌠' },
+  'Infinity Well': { description: 'Bottomless well that taps into the infinite reservoir of magical energy.', icon: '🕳️' },
+  'Cosmic Forge': { description: 'Ancient forge that shapes reality itself, creating magical energy from the void.', icon: '⚒️' },
+  'Dimensional Anchor': { description: 'Stabilizes reality and draws power from dimensional fractures.', icon: '⚓' },
+  'Reality Prism': { description: 'Crystalline structure that refracts reality into infinite magical possibilities.', icon: '🔮' },
+  'Astral Crown': { description: 'Crown of the astral realm, granting dominion over celestial magical forces.', icon: '👑' },
+  'Omni Core': { description: 'Core of omnipotent energy that transcends all known magical limitations.', icon: '💫' },
+  'Genesis Matrix': { description: 'Matrix that contains the blueprint of creation itself, generating infinite power.', icon: '🌀' },
+  'Eternal Beacon': { description: 'Beacon of eternal light that guides lost souls and generates endless energy.', icon: '🗼' },
+  'Infinite Spiral': { description: 'Spiral pattern that contains infinite recursive magical energy loops.', icon: '🌀' },
+  'Transcendent Gate': { description: 'Gateway beyond all understanding, connecting to the source of all magic.', icon: '🚪' },
+  'Primordial Engine': { description: 'Engine that harnesses the primordial forces that created the universe.', icon: '⚙️' },
+  'Universal Codex': { description: 'Contains all knowledge of magic across every possible reality.', icon: '📜' },
+  'Apex Throne': { description: 'Throne of absolute magical supremacy, commanding all forces of creation.', icon: '🪑' },
+  'Omega Singularity': { description: 'The final singularity that represents the end and beginning of all magic.', icon: '🌑' }
 };
 
 export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
   upgradeName,
   onClose,
-  onPurchase
+  onPurchase,
+  upgradeData
 }) => {
   const upgrade = upgradeDetails[upgradeName as keyof typeof upgradeDetails];
 
@@ -55,11 +61,10 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
     return num.toString();
   };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
+  // Use default values if upgradeData is not provided (backwards compatibility)
+  const cost = upgradeData?.cost ?? 50;
+  const manaPerSec = upgradeData?.manaPerSecond ?? 10;
+  const isUnlocked = upgradeData?.unlocked ?? false;
 
   return (
     <Card className="w-full max-w-sm max-h-[70vh] backdrop-blur-lg border-2 overflow-hidden flex flex-col bg-gradient-to-br from-purple-900/95 to-violet-800/90 border-purple-400/50"
@@ -73,7 +78,9 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
           <div className="text-3xl">{upgrade.icon}</div>
           <div>
             <h2 className="text-lg font-bold text-white">{upgradeName}</h2>
-            <p className="text-sm text-purple-200">Mystical Enhancement</p>
+            <p className="text-sm text-purple-200">
+              {isUnlocked ? 'Unlocked' : 'Mystical Enhancement'}
+            </p>
           </div>
         </div>
         <Button
@@ -98,19 +105,21 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
               <span className="text-white/80 text-sm">Power Bonus</span>
             </div>
             <span className="font-bold text-green-400 text-sm">
-              {upgrade.effect}
+              +{formatNumber(manaPerSec)} Mana/sec
             </span>
           </div>
           
-          <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg border border-purple-400/20">
-            <div className="flex items-center gap-2">
-              <Coins className="text-yellow-400" size={16} />
-              <span className="text-white/80 text-sm">Investment Cost</span>
+          {!isUnlocked && (
+            <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg border border-purple-400/20">
+              <div className="flex items-center gap-2">
+                <Coins className="text-yellow-400" size={16} />
+                <span className="text-white/80 text-sm">Investment Cost</span>
+              </div>
+              <span className="font-bold text-yellow-400 text-sm">
+                {formatNumber(cost)} Mana
+              </span>
             </div>
-            <span className="font-bold text-yellow-400 text-sm">
-              {formatNumber(upgrade.cost)} Mana
-            </span>
-          </div>
+          )}
         </div>
 
         {/* Mystical preview area */}
@@ -118,21 +127,39 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
           <p className="text-purple-200/80 text-xs mb-2">Mystical Preview</p>
           <div className="text-5xl mb-2">{upgrade.icon}</div>
           <div className="w-full h-1 bg-purple-800/50 rounded-full overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse" />
+            <div className={`w-full h-full ${
+              isUnlocked 
+                ? 'bg-gradient-to-r from-green-400 to-emerald-500' 
+                : 'bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse'
+            }`} />
           </div>
         </div>
       </div>
 
       {/* Purchase Button */}
-      <div className="p-4 border-t border-purple-300/30 flex-shrink-0">
-        <Button
-          onClick={onPurchase}
-          className="w-full transition-all duration-300 py-3 font-bold text-sm bg-gradient-to-r from-purple-600 to-violet-700 hover:from-purple-500 hover:to-violet-600 text-white hover:scale-[1.02] active:scale-95 shadow-lg hover:shadow-purple-500/25"
-        >
-          <Coins className="mr-2" size={16} />
-          Unlock for {formatNumber(upgrade.cost)} Mana
-        </Button>
-      </div>
+      {!isUnlocked && (
+        <div className="p-4 border-t border-purple-300/30 flex-shrink-0">
+          <Button
+            onClick={onPurchase}
+            className="w-full transition-all duration-300 py-3 font-bold text-sm bg-gradient-to-r from-purple-600 to-violet-700 hover:from-purple-500 hover:to-violet-600 text-white hover:scale-[1.02] active:scale-95 shadow-lg hover:shadow-purple-500/25"
+          >
+            <Coins className="mr-2" size={16} />
+            Unlock for {formatNumber(cost)} Mana
+          </Button>
+        </div>
+      )}
+
+      {/* Already Unlocked Message */}
+      {isUnlocked && (
+        <div className="p-4 border-t border-purple-300/30 flex-shrink-0">
+          <div className="w-full py-3 px-4 text-center bg-gradient-to-r from-green-600/80 to-emerald-700/80 rounded-lg border border-green-400/30">
+            <div className="text-green-100 font-bold text-sm flex items-center justify-center gap-2">
+              <Zap size={16} />
+              Already Unlocked
+            </div>
+          </div>
+        </div>
+      )}
     </Card>
   );
 };
