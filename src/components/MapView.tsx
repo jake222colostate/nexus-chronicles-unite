@@ -1,7 +1,7 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Structure } from './Structure';
-import { NexusCore } from './NexusCore';
+import { EnhancedStructure } from './EnhancedStructure';
+import { EnhancedNexusCore } from './EnhancedNexusCore';
+import { AnimatedBackground } from './AnimatedBackground';
 import { ParticleSystem } from './ParticleSystem';
 
 interface MapViewProps {
@@ -29,19 +29,19 @@ export const MapView: React.FC<MapViewProps> = ({
   const [lastTouch, setLastTouch] = useState({ x: 0, y: 0 });
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
 
-  // Structure positioning data for each realm
+  // Enhanced structure positioning for better visual hierarchy
   const structurePositions = {
     fantasy: [
-      { id: 'altar', x: 20, y: 70, size: 'small' },
-      { id: 'tower', x: 45, y: 40, size: 'medium' },
-      { id: 'grove', x: 70, y: 60, size: 'large' },
-      { id: 'temple', x: 25, y: 20, size: 'massive' },
+      { id: 'altar', x: 25, y: 75, size: 'small' },
+      { id: 'tower', x: 50, y: 45, size: 'medium' },
+      { id: 'grove', x: 75, y: 65, size: 'large' },
+      { id: 'temple', x: 30, y: 25, size: 'massive' },
     ],
     scifi: [
-      { id: 'generator', x: 15, y: 75, size: 'small' },
-      { id: 'reactor', x: 50, y: 50, size: 'medium' },
-      { id: 'station', x: 75, y: 30, size: 'large' },
-      { id: 'megastructure', x: 30, y: 15, size: 'massive' },
+      { id: 'generator', x: 20, y: 80, size: 'small' },
+      { id: 'reactor', x: 55, y: 55, size: 'medium' },
+      { id: 'station', x: 80, y: 35, size: 'large' },
+      { id: 'megastructure', x: 35, y: 20, size: 'massive' },
     ]
   };
 
@@ -163,22 +163,12 @@ export const MapView: React.FC<MapViewProps> = ({
   }, [handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
-    <div className={`relative w-full h-full overflow-hidden transition-all duration-1000 ${
-      realm === 'fantasy' 
-        ? 'bg-gradient-to-br from-purple-900 via-indigo-800 to-violet-900' 
-        : 'bg-gradient-to-br from-slate-900 via-cyan-900 to-blue-900'
-    }`}>
-      {/* Background Elements */}
-      <div className="absolute inset-0 opacity-30">
-        {realm === 'fantasy' ? (
-          <div className="stars-fantasy"></div>
-        ) : (
-          <div className="stars-scifi"></div>
-        )}
-      </div>
+    <div className="relative w-full h-full overflow-hidden">
+      {/* Enhanced Animated Background */}
+      <AnimatedBackground realm={realm} />
 
-      {/* Nexus Core */}
-      <NexusCore 
+      {/* Enhanced Nexus Core */}
+      <EnhancedNexusCore 
         manaFlow={manaPerSecond}
         energyFlow={energyPerSecond}
         realm={realm}
@@ -200,7 +190,7 @@ export const MapView: React.FC<MapViewProps> = ({
             : 'bg-gradient-to-t from-gray-800/20 to-transparent'
         }`} />
 
-        {/* Structures */}
+        {/* Enhanced Structures */}
         {structurePositions[realm].map((position) => {
           const building = buildingData.find(b => b.id === position.id);
           const count = buildings[position.id] || 0;
@@ -208,7 +198,7 @@ export const MapView: React.FC<MapViewProps> = ({
           if (!building) return null;
 
           return (
-            <Structure
+            <EnhancedStructure
               key={position.id}
               building={building}
               position={position}
@@ -220,19 +210,27 @@ export const MapView: React.FC<MapViewProps> = ({
           );
         })}
 
-        {/* Particle Systems */}
+        {/* Enhanced Particle Systems */}
         <ParticleSystem realm={realm} productionRate={realm === 'fantasy' ? manaPerSecond : energyPerSecond} />
       </div>
 
-      {/* iPhone UI Overlay */}
-      <div className="absolute bottom-2 left-2 right-2 text-white text-xs bg-black/20 p-2 rounded backdrop-blur-sm iphone-safe-bottom">
+      {/* Enhanced iPhone UI Overlay */}
+      <div className="absolute bottom-2 left-2 right-2 text-white text-xs bg-black/30 backdrop-blur-md p-3 rounded-xl border border-white/20 iphone-safe-bottom">
         <div className="flex justify-between items-center">
-          <div>
-            <div>Pinch to zoom • Drag to pan</div>
-            <div>Tap structures to upgrade</div>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+              <span>Pinch to zoom • Drag to pan</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span>Tap structures to upgrade</span>
+            </div>
           </div>
-          <div className="text-right opacity-70">
-            <div>Zoom: {(camera.zoom * 100).toFixed(0)}%</div>
+          <div className="text-right opacity-80">
+            <div className="bg-white/10 px-2 py-1 rounded">
+              Zoom: {(camera.zoom * 100).toFixed(0)}%
+            </div>
           </div>
         </div>
       </div>
