@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -83,11 +82,19 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
 
-  // Memoize building objects to prevent unnecessary re-renders
-  const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings, [gameState.fantasyBuildings]);
-  const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings, [gameState.scifiBuildings]);
+  // Stabilize building objects with proper memoization - only update when buildings actually change
+  const stableBuildingsKey = useMemo(() => {
+    return JSON.stringify([gameState.fantasyBuildings, gameState.scifiBuildings]);
+  }, [gameState.fantasyBuildings, gameState.scifiBuildings]);
 
-  // Initialize buff system with memoized buildings
+  const { memoizedFantasyBuildings, memoizedScifiBuildings } = useMemo(() => {
+    return {
+      memoizedFantasyBuildings: gameState.fantasyBuildings,
+      memoizedScifiBuildings: gameState.scifiBuildings
+    };
+  }, [stableBuildingsKey]);
+
+  // Initialize buff system with stabilized buildings
   const buffSystem = useBuffSystem(memoizedFantasyBuildings, memoizedScifiBuildings);
 
   // Calculate convergence state early (before callbacks that use it)
@@ -132,7 +139,7 @@ const GameEngine: React.FC = () => {
     return () => clearInterval(interval);
   }, []); // Empty dependency array - only run on mount
 
-  // Enhanced production calculation with buffs and upgrades - FIXED to prevent infinite loop
+  // Enhanced production calculation with buffs and upgrades - COMPLETELY STABILIZED
   useEffect(() => {
     console.log('Production calculation useEffect triggered');
     let manaRate = 0;
@@ -183,11 +190,9 @@ const GameEngine: React.FC = () => {
       energyPerSecond: finalEnergyRate,
     }));
   }, [
-    memoizedFantasyBuildings, 
-    memoizedScifiBuildings, 
+    stableBuildingsKey, // Use the stable key instead of individual building objects
     gameState.purchasedUpgrades
-    // Removed buffSystem from dependencies to prevent infinite loop
-  ]); // Fixed dependencies - removed buffSystem
+  ]); // Completely stable dependencies
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
