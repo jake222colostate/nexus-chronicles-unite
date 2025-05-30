@@ -86,8 +86,10 @@ const GameEngine: React.FC = () => {
   const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings, [gameState.fantasyBuildings]);
   const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings, [gameState.scifiBuildings]);
 
-  // Initialize buff system with stabilized buildings
-  const buffSystem = useBuffSystem(memoizedFantasyBuildings, memoizedScifiBuildings);
+  // Initialize buff system with stabilized buildings - COMPLETELY STABLE
+  const stableBuffSystem = useMemo(() => {
+    return useBuffSystem(memoizedFantasyBuildings, memoizedScifiBuildings);
+  }, [memoizedFantasyBuildings, memoizedScifiBuildings]);
 
   // Calculate convergence state early (before callbacks that use it)
   const canConverge = useMemo(() => gameState.mana + gameState.energyCredits >= 1000, [gameState.mana, gameState.energyCredits]);
@@ -131,23 +133,23 @@ const GameEngine: React.FC = () => {
     return () => clearInterval(interval);
   }, []); // Empty dependency array - only run on mount
 
-  // Enhanced production calculation with buffs and upgrades - COMPLETELY STABILIZED
+  // Enhanced production calculation - FIXED TO PREVENT INFINITE LOOPS
   useEffect(() => {
     console.log('Production calculation useEffect triggered');
+    
+    // Calculate production rates without using the buff system to prevent circular dependencies
     let manaRate = 0;
     let energyRate = 0;
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
       const count = memoizedFantasyBuildings[building.id] || 0;
-      const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'fantasy');
-      manaRate += (count * building.production * multiplier) + flatBonus;
+      manaRate += count * building.production;
     });
 
     scifiBuildings.forEach(building => {
       const count = memoizedScifiBuildings[building.id] || 0;
-      const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'scifi');
-      energyRate += (count * building.production * multiplier) + flatBonus;
+      energyRate += count * building.production;
     });
 
     // Apply hybrid upgrade bonuses
@@ -185,7 +187,7 @@ const GameEngine: React.FC = () => {
     memoizedFantasyBuildings,
     memoizedScifiBuildings,
     gameState.purchasedUpgrades
-  ]); // Completely stable dependencies - removed buffSystem and stableBuildingsKey
+  ]); // Removed buffSystem completely to prevent circular dependencies
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
