@@ -10,26 +10,33 @@ interface EnvironmentSystemProps {
   onEnvironmentChange?: (tier: number) => void;
 }
 
-// Environment model URLs from GitHub - Updated with new fantasy skybox and fixed crystal ground
-const environmentAssets = {
-  ground: [
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_basic.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_crystal.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/ground/ground_gold.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/crystal_ground.glb'
-  ],
-  mountains: [
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_dark.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_magical.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_luminous.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models/main/fantasy_environment_assets/mountains/mountains_luminous.glb'
-  ],
-  sky: [
-    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/fantasy_skybox.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/fantasy_skybox.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/fantasy_skybox.glb',
-    'https://raw.githubusercontent.com/jake222colostate/environment_models_new/refs/heads/main/fantasy_skybox.glb'
-  ]
+// New tiered fantasy pixel-art environment models
+const fantasyEnvModels = {
+  1: {
+    ground: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/ground_tier1.glb",
+    mountain: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/mountain_tier1.glb",
+    sky: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/sky_tier1.glb"
+  },
+  2: {
+    ground: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/ground_tier2.glb",
+    mountain: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/mountain_tier2.glb",
+    sky: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/sky_tier2.glb"
+  },
+  3: {
+    ground: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/ground_tier3.glb",
+    mountain: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/mountain_tier3.glb",
+    sky: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/sky_tier3.glb"
+  },
+  4: {
+    ground: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/ground_tier4.glb",
+    mountain: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/mountain_tier4.glb",
+    sky: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/sky_tier4.glb"
+  },
+  5: {
+    ground: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/ground_tier5.glb",
+    mountain: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/mountain_tier5.glb",
+    sky: "https://raw.githubusercontent.com/jake222colostate/environment_models_new/main/sky_tier5.glb"
+  }
 };
 
 // Individual environment component with error handling
@@ -39,7 +46,7 @@ const EnvironmentModel: React.FC<{
   scale: [number, number, number];
   rotation?: [number, number, number];
   opacity: number;
-  type: 'ground' | 'mountains' | 'sky';
+  type: 'ground' | 'mountain' | 'sky';
 }> = ({ modelUrl, position, scale, rotation = [0, 0, 0], opacity, type }) => {
   const groupRef = useRef<Group>(null);
   const [loadError, setLoadError] = useState(false);
@@ -65,10 +72,10 @@ const EnvironmentModel: React.FC<{
 
   // Fallback geometry for failed loads
   if (loadError || !gltfScene) {
-    const fallbackColor = type === 'ground' ? '#2a1810' : type === 'mountains' ? '#4a4a5c' : '#1e1e3f';
+    const fallbackColor = type === 'ground' ? '#2a1810' : type === 'mountain' ? '#4a4a5c' : '#1e1e3f';
     const fallbackGeometry = type === 'ground' ? 
       <planeGeometry args={[scale[0], scale[2]]} /> :
-      type === 'mountains' ?
+      type === 'mountain' ?
       <boxGeometry args={scale} /> :
       <sphereGeometry args={[scale[0]]} />;
 
@@ -101,7 +108,7 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   upgradeCount,
   onEnvironmentChange
 }) => {
-  const [currentTier, setCurrentTier] = useState(0);
+  const [currentTier, setCurrentTier] = useState(1);
   const [transitionOpacity, setTransitionOpacity] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -109,12 +116,12 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   useEffect(() => {
     const preloadModels = async () => {
       try {
-        // Preload all environment models including the new fantasy skybox and crystal ground
-        const allUrls = [
-          ...environmentAssets.ground,
-          ...environmentAssets.mountains,
-          ...environmentAssets.sky
-        ];
+        // Preload all tiered environment models
+        const allUrls = Object.values(fantasyEnvModels).flatMap(tier => [
+          tier.ground,
+          tier.mountain,
+          tier.sky
+        ]);
 
         allUrls.forEach(url => {
           try {
@@ -130,22 +137,22 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
     };
 
     preloadModels();
-  }, []); // Empty dependency array - only run once on mount
+  }, []);
 
-  // Calculate environment tier based on upgrade count - now with 4 tiers
+  // Calculate environment tier based on upgrade count - 5 tiers
   const environmentTier = useMemo(() => {
-    if (upgradeCount < 4) return 0;
-    if (upgradeCount < 8) return 1;
-    if (upgradeCount < 12) return 2;
-    return 3; // New tier 3 for crystal ground
+    if (upgradeCount < 3) return 1;
+    if (upgradeCount < 6) return 2;
+    if (upgradeCount < 9) return 3;
+    if (upgradeCount < 12) return 4;
+    return 5;
   }, [upgradeCount]);
 
-  // Handle environment transitions with simplified logic
+  // Handle environment transitions
   useEffect(() => {
     if (environmentTier !== currentTier && !isTransitioning) {
       setIsTransitioning(true);
       
-      // Simple transition: fade out, change tier, fade in
       setTransitionOpacity(0.1);
       setCurrentTier(environmentTier);
       
@@ -159,48 +166,51 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
     }
   }, [environmentTier, currentTier, isTransitioning, onEnvironmentChange]);
 
+  // Get current tier models
+  const currentModels = fantasyEnvModels[currentTier as keyof typeof fantasyEnvModels];
+
   // Memoized environment components for performance
   const groundComponent = useMemo(() => (
     <EnvironmentModel
-      modelUrl={environmentAssets.ground[currentTier]}
+      modelUrl={currentModels.ground}
       position={[0, -1, -50]}
       scale={[20, 1, 100]}
       opacity={transitionOpacity}
       type="ground"
     />
-  ), [currentTier, transitionOpacity]);
+  ), [currentTier, transitionOpacity, currentModels.ground]);
 
   const leftMountainsComponent = useMemo(() => (
     <EnvironmentModel
-      modelUrl={environmentAssets.mountains[currentTier]}
+      modelUrl={currentModels.mountain}
       position={[-15, 0, -30]}
       scale={[8, 12, 60]}
       rotation={[0, 0.2, 0]}
       opacity={transitionOpacity}
-      type="mountains"
+      type="mountain"
     />
-  ), [currentTier, transitionOpacity]);
+  ), [currentTier, transitionOpacity, currentModels.mountain]);
 
   const rightMountainsComponent = useMemo(() => (
     <EnvironmentModel
-      modelUrl={environmentAssets.mountains[currentTier]}
+      modelUrl={currentModels.mountain}
       position={[15, 0, -30]}
       scale={[8, 12, 60]}
       rotation={[0, -0.2, 0]}
       opacity={transitionOpacity}
-      type="mountains"
+      type="mountain"
     />
-  ), [currentTier, transitionOpacity]);
+  ), [currentTier, transitionOpacity, currentModels.mountain]);
 
   const skyComponent = useMemo(() => (
     <EnvironmentModel
-      modelUrl={environmentAssets.sky[currentTier]}
+      modelUrl={currentModels.sky}
       position={[0, 20, -40]}
       scale={[50, 50, 50]}
       opacity={transitionOpacity * 0.7}
       type="sky"
     />
-  ), [currentTier, transitionOpacity]);
+  ), [currentTier, transitionOpacity, currentModels.sky]);
 
   return (
     <>
@@ -214,30 +224,32 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
       {/* Sky dome */}
       {skyComponent}
       
-      {/* Atmospheric fog for depth - enhanced colors for new tier */}
+      {/* Atmospheric fog for depth - enhanced colors for pixel art */}
       <fog 
         attach="fog" 
         args={[
-          currentTier === 0 ? '#0f0f23' : 
-          currentTier === 1 ? '#1a1a3a' : 
-          currentTier === 2 ? '#2a2a4a' : '#3a1a5a', // New tier 3 color
+          currentTier === 1 ? '#0f0f23' : 
+          currentTier === 2 ? '#1a1a3a' : 
+          currentTier === 3 ? '#2a2a4a' : 
+          currentTier === 4 ? '#3a1a5a' : '#4a0a6a',
           20, 
           120
         ]} 
       />
       
-      {/* Additional ambient particles based on tier - enhanced for new tier */}
-      {Array.from({ length: currentTier === 0 ? 20 : currentTier === 1 ? 30 : currentTier === 2 ? 40 : 50 }, (_, i) => {
+      {/* Pixel-style ambient particles */}
+      {Array.from({ length: currentTier * 10 }, (_, i) => {
         const x = (Math.random() - 0.5) * 40;
         const y = Math.random() * 20 + 5;
         const z = Math.random() * -80 - 10;
-        const particleColor = currentTier === 0 ? '#8b5cf6' : 
-                            currentTier === 1 ? '#c084fc' : 
-                            currentTier === 2 ? '#e879f9' : '#f0abfc'; // New tier 3 color
+        const particleColor = currentTier === 1 ? '#8b5cf6' : 
+                            currentTier === 2 ? '#c084fc' : 
+                            currentTier === 3 ? '#e879f9' : 
+                            currentTier === 4 ? '#f0abfc' : '#fbbf24';
         
         return (
           <mesh key={i} position={[x, y, z]}>
-            <sphereGeometry args={[0.02]} />
+            <boxGeometry args={[0.05, 0.05, 0.05]} />
             <meshBasicMaterial 
               color={particleColor} 
               transparent 

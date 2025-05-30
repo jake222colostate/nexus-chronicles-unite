@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
@@ -83,15 +84,21 @@ const GameEngine: React.FC = () => {
   });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Initialize buff system
-  const buffSystem = useBuffSystem(gameState.fantasyBuildings, gameState.scifiBuildings);
+  // Stable references to prevent re-renders
+  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
+  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
+  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
+  const purchasedUpgradesCount = stablePurchasedUpgrades.length;
+
+  // Initialize buff system with stable dependencies
+  const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
 
   // Calculate offline progress on mount
   useEffect(() => {
     const now = Date.now();
-    const offlineTime = Math.min((now - gameState.lastSaveTime) / 1000, 3600); // Max 1 hour offline
+    const offlineTime = Math.min((now - gameState.lastSaveTime) / 1000, 3600);
     
-    if (offlineTime > 60) { // Only show if offline for more than 1 minute
+    if (offlineTime > 60) {
       const offlineMana = gameState.manaPerSecond * offlineTime;
       const offlineEnergy = gameState.energyPerSecond * offlineTime;
       
@@ -102,7 +109,7 @@ const GameEngine: React.FC = () => {
         lastSaveTime: now,
       }));
     }
-  }, []);
+  }, []); // Only run on mount
 
   // Game loop
   useEffect(() => {
@@ -115,7 +122,6 @@ const GameEngine: React.FC = () => {
           lastSaveTime: Date.now(),
         };
         
-        // Auto-save every 10 ticks
         localStorage.setItem('celestialNexusGame', JSON.stringify(newState));
         return newState;
       });
@@ -124,29 +130,29 @@ const GameEngine: React.FC = () => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, []); // Only run on mount
 
-  // Enhanced production calculation with buffs and upgrades
+  // Enhanced production calculation with stable dependencies
   useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
-      const count = gameState.fantasyBuildings[building.id] || 0;
+      const count = stableFantasyBuildings[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'fantasy');
       manaRate += (count * building.production * multiplier) + flatBonus;
     });
 
     scifiBuildings.forEach(building => {
-      const count = gameState.scifiBuildings[building.id] || 0;
+      const count = stableScifiBuildings[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'scifi');
       energyRate += (count * building.production * multiplier) + flatBonus;
     });
 
     // Apply hybrid upgrade bonuses
     let globalMultiplier = 1;
-    gameState.purchasedUpgrades.forEach(upgradeId => {
+    stablePurchasedUpgrades.forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
@@ -170,9 +176,9 @@ const GameEngine: React.FC = () => {
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [gameState.fantasyBuildings, gameState.scifiBuildings, gameState.purchasedUpgrades, buffSystem]);
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem]); // Use stable dependencies
 
-  const buyBuilding = (buildingId: string, isFantasy: boolean) => {
+  const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
     const building = buildings.find(b => b.id === buildingId);
     if (!building) return;
@@ -197,9 +203,9 @@ const GameEngine: React.FC = () => {
           : { ...prev.scifiBuildings, [buildingId]: currentCount + 1 },
       }));
     }
-  };
+  }, [gameState.mana, gameState.energyCredits, gameState.fantasyBuildings, gameState.scifiBuildings]);
 
-  const performConvergence = () => {
+  const performConvergence = useCallback(() => {
     const totalValue = gameState.mana + gameState.energyCredits;
     const shardsGained = Math.floor(Math.sqrt(totalValue / 1000)) + gameState.convergenceCount;
     
@@ -213,14 +219,14 @@ const GameEngine: React.FC = () => {
         convergenceCount: gameState.convergenceCount + 1,
         fantasyBuildings: {},
         scifiBuildings: {},
-        purchasedUpgrades: gameState.purchasedUpgrades, // Keep purchased upgrades
+        purchasedUpgrades: gameState.purchasedUpgrades,
         lastSaveTime: Date.now(),
       });
       setShowConvergence(false);
     }
-  };
+  }, [gameState]);
 
-  const purchaseUpgrade = (upgradeId: string) => {
+  const purchaseUpgrade = useCallback((upgradeId: string) => {
     const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
     if (!upgrade || gameState.nexusShards < upgrade.cost) return;
 
@@ -229,10 +235,10 @@ const GameEngine: React.FC = () => {
       nexusShards: prev.nexusShards - upgrade.cost,
       purchasedUpgrades: [...prev.purchasedUpgrades, upgradeId]
     }));
-  };
+  }, [gameState.nexusShards]);
 
   // Enhanced realm switching with proper visual feedback
-  const switchRealm = (newRealm: 'fantasy' | 'scifi') => {
+  const switchRealm = useCallback((newRealm: 'fantasy' | 'scifi') => {
     if (newRealm === currentRealm || isTransitioning) return;
     
     setIsTransitioning(true);
@@ -243,37 +249,37 @@ const GameEngine: React.FC = () => {
         setIsTransitioning(false);
       }, 300);
     }, 200);
-  };
+  }, [currentRealm, isTransitioning]);
 
-  const handleNexusClick = () => {
+  const handleNexusClick = useCallback(() => {
     if (canConverge) {
       setShowConvergence(true);
     }
-  };
+  }, []);
 
-  const handleShowHelp = () => {
+  const handleShowHelp = useCallback(() => {
     setShowQuickHelp(true);
-  };
+  }, []);
 
   // Handle tap resource generation with effect
-  const handleTapResource = () => {
+  const handleTapResource = useCallback(() => {
     setShowTapEffect(true);
     setGameState(prev => ({
       ...prev,
       mana: currentRealm === 'fantasy' ? prev.mana + 1 : prev.mana,
       energyCredits: currentRealm === 'scifi' ? prev.energyCredits + 1 : prev.energyCredits,
     }));
-  };
+  }, [currentRealm]);
 
-  const handleTapEffectComplete = () => {
+  const handleTapEffectComplete = useCallback(() => {
     setShowTapEffect(false);
-  };
+  }, []);
 
-  const formatNumber = (num: number): string => {
+  const formatNumber = useCallback((num: number): string => {
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
     if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
     return Math.floor(num).toString();
-  };
+  }, []);
 
   const canConverge = gameState.mana + gameState.energyCredits >= 1000;
   const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
