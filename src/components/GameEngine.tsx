@@ -290,7 +290,7 @@ const GameEngine: React.FC = () => {
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Top HUD - Enhanced spacing and alignment */}
+      {/* Top HUD - Compact and properly aligned */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -311,7 +311,7 @@ const GameEngine: React.FC = () => {
       />
 
       {/* Main Game Area - Full width with proper spacing */}
-      <div className="absolute inset-0 pt-14">
+      <div className="absolute inset-0 pt-12">
         {/* Map View - Takes full available space */}
         <MapView
           realm={currentRealm}
@@ -341,7 +341,7 @@ const GameEngine: React.FC = () => {
           onTap={handleTapResource}
         />
 
-        {/* Enhanced Bottom Action Bar - Consistent styling */}
+        {/* Enhanced Bottom Action Bar - Compact styling */}
         <BottomActionBar
           currentRealm={currentRealm}
           onRealmChange={switchRealm}
@@ -351,10 +351,10 @@ const GameEngine: React.FC = () => {
 
         {/* Convergence Ready Button - Enhanced positioning and styling */}
         {canConverge && (
-          <div className="absolute bottom-40 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
-              className="h-12 px-8 rounded-2xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border-2 border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-2xl shadow-yellow-500/50"
+              className="h-10 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
             >
               <span className="text-sm flex items-center gap-2">
                 🔁 Convergence Ready!
@@ -380,22 +380,22 @@ const GameEngine: React.FC = () => {
             }
           }}
         >
-          <Card className="w-full max-w-[90%] max-h-[70vh] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400/50 relative flex flex-col backdrop-blur-xl shadow-2xl rounded-2xl">
+          <Card className="w-full max-w-[90%] max-h-[70vh] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border border-purple-400/50 relative flex flex-col backdrop-blur-xl shadow-2xl rounded-xl">
             {/* Enhanced glassmorphism */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-xl" />
             
-            <div className="flex justify-between items-center p-4 border-b border-purple-400/30 flex-shrink-0">
+            <div className="flex justify-between items-center p-3 border-b border-purple-400/30 flex-shrink-0">
               <h2 className="text-lg font-bold text-white">✨ Hybrid Nexus</h2>
               <Button
                 onClick={() => setShowHybridUpgrades(false)}
                 variant="ghost"
                 size="sm"
-                className="text-white hover:bg-white/15 p-1 h-8 w-8 rounded-full transition-all duration-200"
+                className="text-white hover:bg-white/15 p-1 h-6 w-6 rounded-full transition-all duration-200"
               >
-                <X size={16} />
+                <X size={14} />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-3">
               <HybridUpgradesPanel
                 gameState={gameState}
                 onPurchaseUpgrade={purchaseUpgrade}
@@ -420,7 +420,7 @@ const GameEngine: React.FC = () => {
               gameState={gameState}
               onPerformConvergence={performConvergence}
             />
-            <div className="mt-4 text-center">
+            <div className="mt-3 text-center">
               <Button 
                 onClick={() => setShowConvergence(false)}
                 variant="outline"

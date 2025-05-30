@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { EnhancedStructure } from './EnhancedStructure';
 import { EnhancedNexusCore } from './EnhancedNexusCore';
@@ -6,7 +7,6 @@ import { ParticleSystem } from './ParticleSystem';
 import { TapResourceEffect } from './TapResourceEffect';
 import { UpgradeFloatingTooltip } from './UpgradeFloatingTooltip';
 import { BuildingUpgradeModal } from './BuildingUpgradeModal';
-import { Button } from '@/components/ui/button';
 
 interface MapViewProps {
   realm: 'fantasy' | 'scifi';
@@ -61,19 +61,19 @@ export const MapView: React.FC<MapViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Optimized structure positioning for full width map
+  // Vertical tiered structure positioning for mobile-first design
   const structurePositions = {
     fantasy: [
-      { id: 'altar', x: 20, y: 75, size: 'small' },
-      { id: 'tower', x: 45, y: 45, size: 'medium' },
-      { id: 'grove', x: 70, y: 65, size: 'large' },
-      { id: 'temple', x: 35, y: 25, size: 'massive' },
+      { id: 'temple', x: 50, y: 15, size: 'massive', tier: 1 }, // Top tier - most expensive
+      { id: 'grove', x: 30, y: 35, size: 'large', tier: 2 },   // Second tier
+      { id: 'tower', x: 70, y: 35, size: 'medium', tier: 2 },  // Second tier
+      { id: 'altar', x: 50, y: 75, size: 'small', tier: 3 },   // Bottom tier - cheapest
     ],
     scifi: [
-      { id: 'generator', x: 15, y: 80, size: 'small' },
-      { id: 'reactor', x: 50, y: 55, size: 'medium' },
-      { id: 'station', x: 75, y: 35, size: 'large' },
-      { id: 'megastructure', x: 25, y: 20, size: 'massive' },
+      { id: 'megastructure', x: 50, y: 15, size: 'massive', tier: 1 }, // Top tier
+      { id: 'station', x: 25, y: 35, size: 'large', tier: 2 },         // Second tier
+      { id: 'reactor', x: 75, y: 35, size: 'medium', tier: 2 },        // Second tier
+      { id: 'generator', x: 50, y: 75, size: 'small', tier: 3 },       // Bottom tier
     ]
   };
 
@@ -168,7 +168,7 @@ export const MapView: React.FC<MapViewProps> = ({
     setLastPinchDistance(0);
   }, []);
 
-  // Handle building selection - Clear all tooltips when selecting a new building
+  // Handle building selection - Only one tooltip at a time
   const handleBuildingClick = useCallback((buildingId: string) => {
     const building = buildingData.find(b => b.id === buildingId);
     const count = buildings[buildingId] || 0;
@@ -202,6 +202,13 @@ export const MapView: React.FC<MapViewProps> = ({
 
   const removeUpgradeTooltip = useCallback((id: number) => {
     setUpgradeTooltips(prev => prev.filter(tooltip => tooltip.id !== id));
+  }, []);
+
+  // Close modal when clicking outside
+  const handleModalBackdropClick = useCallback((e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setSelectedBuilding(null);
+    }
   }, []);
 
   useEffect(() => {
@@ -241,18 +248,6 @@ export const MapView: React.FC<MapViewProps> = ({
         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30 pointer-events-none" />
       </div>
 
-      {/* Enhanced Nexus Core - Perfectly centered */}
-      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
-        <EnhancedNexusCore 
-          manaFlow={manaPerSecond}
-          energyFlow={energyPerSecond}
-          realm={realm}
-          nexusShards={nexusShards}
-          convergenceProgress={convergenceProgress}
-          onNexusClick={onNexusClick}
-        />
-      </div>
-
       {/* Map Container with enhanced interaction */}
       <div 
         ref={mapRef}
@@ -271,7 +266,7 @@ export const MapView: React.FC<MapViewProps> = ({
             : 'bg-gradient-to-t from-cyan-900/30 via-blue-800/15 to-transparent'
         }`} />
 
-        {/* Enhanced Structures with proper spacing */}
+        {/* Enhanced Structures with proper vertical spacing */}
         {structurePositions[realm].map((position) => {
           const building = buildingData.find(b => b.id === position.id);
           const count = buildings[position.id] || 0;
@@ -324,10 +319,13 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       ))}
 
-      {/* Building Upgrade Modal - Enhanced positioning */}
+      {/* Building Upgrade Modal - Enhanced positioning and containment */}
       {selectedBuilding && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-[90%] max-h-[70%]">
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={handleModalBackdropClick}
+        >
+          <div className="w-full max-w-[90%] max-h-[70vh]">
             <BuildingUpgradeModal
               building={selectedBuilding.building}
               count={selectedBuilding.count}
