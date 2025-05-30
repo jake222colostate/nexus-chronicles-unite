@@ -314,28 +314,38 @@ const GameEngine: React.FC = () => {
     return Math.floor(num).toString();
   };
 
-  // Create a truly stable game state object for child components
-  const stableGameState = useMemo(() => ({
-    mana: gameState.mana,
-    energyCredits: gameState.energyCredits,
-    nexusShards: gameState.nexusShards,
-    convergenceCount: gameState.convergenceCount,
-    purchasedUpgrades: gameState.purchasedUpgrades,
-    manaPerSecond: gameState.manaPerSecond,
-    energyPerSecond: gameState.energyPerSecond,
-    fantasyBuildings: gameState.fantasyBuildings,
-    scifiBuildings: gameState.scifiBuildings,
-    lastSaveTime: gameState.lastSaveTime
-  }), [
-    Math.floor(gameState.mana),
-    Math.floor(gameState.energyCredits),
+  // Create a stable game state object for child components - FIXED VERSION
+  const stableGameState = useMemo(() => {
+    // Create a simple hash of the game state to detect real changes
+    const buildingsHash = JSON.stringify(gameState.fantasyBuildings) + JSON.stringify(gameState.scifiBuildings);
+    const upgradesHash = gameState.purchasedUpgrades.join(',');
+    
+    return {
+      mana: gameState.mana,
+      energyCredits: gameState.energyCredits,
+      nexusShards: gameState.nexusShards,
+      convergenceCount: gameState.convergenceCount,
+      purchasedUpgrades: gameState.purchasedUpgrades,
+      manaPerSecond: gameState.manaPerSecond,
+      energyPerSecond: gameState.energyPerSecond,
+      fantasyBuildings: gameState.fantasyBuildings,
+      scifiBuildings: gameState.scifiBuildings,
+      lastSaveTime: gameState.lastSaveTime,
+      // Add a stable hash to prevent unnecessary re-renders
+      _hash: buildingsHash + upgradesHash + gameState.nexusShards + gameState.convergenceCount
+    };
+  }, [
+    // Use stable references instead of computed values
     gameState.nexusShards,
     gameState.convergenceCount,
-    gameState.purchasedUpgrades.length,
-    Math.floor(gameState.manaPerSecond * 10),
-    Math.floor(gameState.energyPerSecond * 10),
-    Object.keys(gameState.fantasyBuildings).length,
-    Object.keys(gameState.scifiBuildings).length
+    gameState.purchasedUpgrades,
+    gameState.manaPerSecond,
+    gameState.energyPerSecond,
+    gameState.fantasyBuildings,
+    gameState.scifiBuildings,
+    // Only include rounded values for display purposes, not for computation
+    Math.round(gameState.mana / 10) * 10,
+    Math.round(gameState.energyCredits / 10) * 10
   ]);
 
   return (
