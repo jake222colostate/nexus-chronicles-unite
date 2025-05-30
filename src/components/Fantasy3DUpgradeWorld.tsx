@@ -184,17 +184,17 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             canMoveForward={canMoveForward}
           />
 
-          {/* Dynamic Environment System */}
+          {/* Dynamic Environment System - now with procedural generation */}
           <EnvironmentSystem 
             upgradeCount={unlockedUpgradeCount}
             onEnvironmentChange={handleEnvironmentChange}
           />
 
           {/* Enhanced fantasy lighting setup unified with environment */}
-          <ambientLight intensity={0.3 + (currentEnvironmentTier * 0.1)} color="#1a1a2e" />
+          <ambientLight intensity={0.4 + (currentEnvironmentTier * 0.1)} color="#1a1a2e" />
           <directionalLight
             position={[8, 15, 8]}
-            intensity={0.7 + (currentEnvironmentTier * 0.1)}
+            intensity={0.8 + (currentEnvironmentTier * 0.1)}
             color="#e6e6fa"
             castShadow
             shadow-mapSize-width={2048}
@@ -213,7 +213,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               <pointLight 
                 key={i}
                 position={[(i % 2 === 0 ? -6 : 6), 8, -12 - (i * 12)]} 
-                intensity={0.6 + (currentEnvironmentTier * 0.2)} 
+                intensity={0.8 + (currentEnvironmentTier * 0.2)} 
                 color={tierColors[currentEnvironmentTier]} 
                 distance={25} 
               />
@@ -237,7 +237,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
                 <meshBasicMaterial 
                   color={tierColors[currentEnvironmentTier]} 
                   transparent 
-                  opacity={0.4 + (currentEnvironmentTier * 0.1)} 
+                  opacity={0.5 + (currentEnvironmentTier * 0.1)} 
                 />
               </mesh>
             );
@@ -245,7 +245,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
           <ContactShadows 
             position={[0, -0.4, -50]} 
-            opacity={0.4 + (currentEnvironmentTier * 0.1)} 
+            opacity={0.5 + (currentEnvironmentTier * 0.1)} 
             scale={40} 
             blur={2.5} 
             far={10} 
