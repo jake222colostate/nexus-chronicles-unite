@@ -1,6 +1,8 @@
 
 import React, { useState, useCallback } from 'react';
 import { Scene3D } from './Scene3D';
+import { Fantasy3DUpgradeWorld } from './Fantasy3DUpgradeWorld';
+import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { TapResourceEffect } from './TapResourceEffect';
 import { UpgradeFloatingTooltip } from './UpgradeFloatingTooltip';
 import { BuildingUpgradeModal } from './BuildingUpgradeModal';
@@ -41,6 +43,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     count: number;
   } | null>(null);
   const [selectedUpgrade, setSelectedUpgrade] = useState<string | null>(null);
+  const [selected3DUpgrade, setSelected3DUpgrade] = useState<string | null>(null);
   const [upgradeTooltips, setUpgradeTooltips] = useState<Array<{
     id: number;
     buildingName: string;
@@ -52,12 +55,22 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     setSelectedUpgrade(upgradeId);
   }, []);
 
+  const handle3DUpgradeClick = useCallback((upgradeName: string) => {
+    setSelected3DUpgrade(upgradeName);
+  }, []);
+
   const handleUpgradePurchase = useCallback(() => {
     if (selectedUpgrade) {
       onPurchaseUpgrade(selectedUpgrade);
       setSelectedUpgrade(null);
     }
   }, [selectedUpgrade, onPurchaseUpgrade]);
+
+  const handle3DUpgradePurchase = useCallback(() => {
+    // Handle 3D upgrade purchase logic here
+    console.log('Purchasing 3D upgrade:', selected3DUpgrade);
+    setSelected3DUpgrade(null);
+  }, [selected3DUpgrade]);
 
   const removeUpgradeTooltip = useCallback((id: number) => {
     setUpgradeTooltips(prev => prev.filter(tooltip => tooltip.id !== id));
@@ -67,20 +80,29 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     if (e.target === e.currentTarget) {
       setSelectedBuilding(null);
       setSelectedUpgrade(null);
+      setSelected3DUpgrade(null);
     }
   }, []);
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* 3D Scene */}
-      <Scene3D
-        realm={realm}
-        gameState={gameState}
-        onUpgradeClick={handleUpgradeClick}
-        isTransitioning={isTransitioning}
-        showTapEffect={showTapEffect}
-        onTapEffectComplete={onTapEffectComplete}
-      />
+      {/* 3D Scene - Use Fantasy 3D World for fantasy realm, Scene3D for sci-fi */}
+      {realm === 'fantasy' ? (
+        <Fantasy3DUpgradeWorld
+          onUpgradeClick={handle3DUpgradeClick}
+          showTapEffect={showTapEffect}
+          onTapEffectComplete={onTapEffectComplete}
+        />
+      ) : (
+        <Scene3D
+          realm={realm}
+          gameState={gameState}
+          onUpgradeClick={handleUpgradeClick}
+          isTransitioning={isTransitioning}
+          showTapEffect={showTapEffect}
+          onTapEffectComplete={onTapEffectComplete}
+        />
+      )}
 
       {/* 2D Tap Resource Effect Overlay */}
       {showTapEffect && onTapEffectComplete && (
@@ -136,6 +158,15 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
             />
           </div>
         </div>
+      )}
+
+      {/* 3D Fantasy Upgrade Modal */}
+      {selected3DUpgrade && (
+        <Fantasy3DUpgradeModal
+          upgradeName={selected3DUpgrade}
+          onClose={() => setSelected3DUpgrade(null)}
+          onPurchase={handle3DUpgradePurchase}
+        />
       )}
     </div>
   );
