@@ -61,19 +61,19 @@ export const MapView: React.FC<MapViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Optimized structure positioning for the remaining map area (centered in right 2/3)
+  // Optimized structure positioning for full width map
   const structurePositions = {
     fantasy: [
-      { id: 'altar', x: 25, y: 75, size: 'small' },
-      { id: 'tower', x: 55, y: 45, size: 'medium' },
-      { id: 'grove', x: 75, y: 65, size: 'large' },
-      { id: 'temple', x: 40, y: 25, size: 'massive' },
+      { id: 'altar', x: 20, y: 75, size: 'small' },
+      { id: 'tower', x: 45, y: 45, size: 'medium' },
+      { id: 'grove', x: 70, y: 65, size: 'large' },
+      { id: 'temple', x: 35, y: 25, size: 'massive' },
     ],
     scifi: [
-      { id: 'generator', x: 20, y: 80, size: 'small' },
-      { id: 'reactor', x: 60, y: 55, size: 'medium' },
-      { id: 'station', x: 80, y: 35, size: 'large' },
-      { id: 'megastructure', x: 30, y: 20, size: 'massive' },
+      { id: 'generator', x: 15, y: 80, size: 'small' },
+      { id: 'reactor', x: 50, y: 55, size: 'medium' },
+      { id: 'station', x: 75, y: 35, size: 'large' },
+      { id: 'megastructure', x: 25, y: 20, size: 'massive' },
     ]
   };
 
@@ -253,7 +253,7 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       </div>
 
-      {/* Map Container with enhanced interaction and proper spacing */}
+      {/* Map Container with enhanced interaction */}
       <div 
         ref={mapRef}
         className={`absolute inset-0 transition-all duration-500 cursor-grab active:cursor-grabbing ${
@@ -312,37 +312,7 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       )}
 
-      {/* Enhanced Tap to Generate Button - Positioned above bottom bar with consistent styling and glow */}
-      <div className="absolute bottom-20 left-0 right-0 z-30 flex justify-center px-4">
-        <Button 
-          onClick={onTapResource}
-          className={`h-12 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 font-bold text-sm backdrop-blur-xl shadow-2xl border-2 relative overflow-hidden ${
-            realm === 'fantasy'
-              ? 'bg-gradient-to-r from-purple-600/80 to-violet-700/80 hover:from-purple-500/80 hover:to-violet-600/80 border-purple-400/60 text-purple-100 shadow-purple-500/40'
-              : 'bg-gradient-to-r from-cyan-600/80 to-blue-700/80 hover:from-cyan-500/80 hover:to-blue-600/80 border-cyan-400/60 text-cyan-100 shadow-cyan-500/40'
-          }`}
-          style={{
-            boxShadow: `0 0 20px ${realm === 'fantasy' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(34, 211, 238, 0.4)'}, 0 8px 32px rgba(0,0,0,0.3)`
-          }}
-        >
-          {/* Enhanced glassmorphism inner glow */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-xl" />
-          
-          <span className="flex items-center gap-2 relative z-10">
-            {realm === 'fantasy' ? '✨' : '⚡'}
-            Tap to Generate {realm === 'fantasy' ? 'Mana' : 'Energy'}
-          </span>
-          
-          {/* Animated glow ring */}
-          <div className={`absolute inset-0 rounded-xl animate-pulse ${
-            realm === 'fantasy' 
-              ? 'bg-purple-400/10' 
-              : 'bg-cyan-400/10'
-          }`} />
-        </Button>
-      </div>
-
-      {/* Enhanced Upgrade Tooltips - Only one at a time, smart positioning */}
+      {/* Enhanced Upgrade Tooltips - Smart positioning */}
       {upgradeTooltips.map((tooltip) => (
         <UpgradeFloatingTooltip
           key={tooltip.id}
@@ -354,16 +324,20 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       ))}
 
-      {/* Building Upgrade Modal */}
+      {/* Building Upgrade Modal - Enhanced positioning */}
       {selectedBuilding && (
-        <BuildingUpgradeModal
-          building={selectedBuilding.building}
-          count={selectedBuilding.count}
-          realm={realm}
-          currency={currency}
-          onBuy={handleBuildingPurchase}
-          onClose={() => setSelectedBuilding(null)}
-        />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-[90%] max-h-[70%]">
+            <BuildingUpgradeModal
+              building={selectedBuilding.building}
+              count={selectedBuilding.count}
+              realm={realm}
+              currency={currency}
+              onBuy={handleBuildingPurchase}
+              onClose={() => setSelectedBuilding(null)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

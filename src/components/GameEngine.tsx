@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Crown, Menu, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { MapView } from './MapView';
 import { RealmTransition } from './RealmTransition';
 import { HybridUpgradesPanel } from './HybridUpgradesPanel';
 import { ConvergenceSystem } from './ConvergenceSystem';
 import { BottomActionBar } from './BottomActionBar';
+import { TopHUD } from './TopHUD';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { hybridUpgrades } from '../data/HybridUpgrades';
-import { EnhancedResourceSidebar } from './EnhancedResourceSidebar';
-import { MapStatsHUD } from './MapStatsHUD';
 import { QuickHelpModal } from './QuickHelpModal';
 
 interface GameState {
@@ -233,29 +232,6 @@ const GameEngine: React.FC = () => {
     }));
   };
 
-  // Handle tap resource generation with effect
-  const handleTapResource = () => {
-    setShowTapEffect(true);
-    setGameState(prev => ({
-      ...prev,
-      mana: currentRealm === 'fantasy' ? prev.mana + 1 : prev.mana,
-      energyCredits: currentRealm === 'scifi' ? prev.energyCredits + 1 : prev.energyCredits,
-    }));
-  };
-
-  const handleTapEffectComplete = () => {
-    setShowTapEffect(false);
-  };
-
-  const formatNumber = (num: number): string => {
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-    return Math.floor(num).toString();
-  };
-
-  const canConverge = gameState.mana + gameState.energyCredits >= 1000;
-  const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
-
   // Enhanced realm switching with proper visual feedback
   const switchRealm = (newRealm: 'fantasy' | 'scifi') => {
     if (newRealm === currentRealm || isTransitioning) return;
@@ -280,38 +256,47 @@ const GameEngine: React.FC = () => {
     setShowQuickHelp(true);
   };
 
+  // Handle tap resource generation with effect
+  const handleTapResource = () => {
+    setShowTapEffect(true);
+    setGameState(prev => ({
+      ...prev,
+      mana: currentRealm === 'fantasy' ? prev.mana + 1 : prev.mana,
+      energyCredits: currentRealm === 'scifi' ? prev.energyCredits + 1 : prev.energyCredits,
+    }));
+  };
+
+  const handleTapEffectComplete = () => {
+    setShowTapEffect(false);
+  };
+
+  const formatNumber = (num: number): string => {
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+    return Math.floor(num).toString();
+  };
+
+  const canConverge = gameState.mana + gameState.energyCredits >= 1000;
+  const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
+
   return (
     <div className="h-[667px] w-full relative overflow-hidden bg-black">
-      {/* Enhanced Resource Sidebar - Now with 110px width for improved glassmorphism */}
-      <EnhancedResourceSidebar
+      {/* Enhanced background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
+
+      {/* Top HUD - Replaces sidebar */}
+      <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
         energyCredits={gameState.energyCredits}
-        manaPerSecond={gameState.manaPerSecond}
-        energyPerSecond={gameState.energyPerSecond}
         nexusShards={gameState.nexusShards}
         convergenceProgress={convergenceProgress}
         onHelpClick={handleShowHelp}
       />
 
-      {/* Simplified Header - Positioned to avoid sidebar */}
-      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-30">
-        <h1 className="text-sm font-bold text-white drop-shadow-lg">
-          Celestial Nexus
-        </h1>
-      </div>
-
-      {/* Main Game Area - Starts right after sidebar with proper spacing */}
-      <div className="absolute left-[110px] top-0 right-0 bottom-0">
-        {/* Map Stats HUD */}
-        <MapStatsHUD
-          realm={currentRealm}
-          manaPerSecond={gameState.manaPerSecond}
-          energyPerSecond={gameState.energyPerSecond}
-          convergenceProgress={convergenceProgress}
-        />
-
-        {/* Map View - Takes remaining space */}
+      {/* Main Game Area - Full width */}
+      <div className="absolute inset-0 pt-16">
+        {/* Map View - Takes full available space */}
         <MapView
           realm={currentRealm}
           buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
@@ -334,6 +319,36 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
+        {/* Enhanced Tap to Generate Button - Above bottom bar */}
+        <div className="absolute bottom-24 left-0 right-0 z-30 flex justify-center px-4">
+          <Button 
+            onClick={handleTapResource}
+            className={`h-12 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 font-bold text-sm backdrop-blur-xl shadow-2xl border-2 relative overflow-hidden ${
+              currentRealm === 'fantasy'
+                ? 'bg-gradient-to-r from-purple-600/80 to-violet-700/80 hover:from-purple-500/80 hover:to-violet-600/80 border-purple-400/60 text-purple-100 shadow-purple-500/40'
+                : 'bg-gradient-to-r from-cyan-600/80 to-blue-700/80 hover:from-cyan-500/80 hover:to-blue-600/80 border-cyan-400/60 text-cyan-100 shadow-cyan-500/40'
+            }`}
+            style={{
+              boxShadow: `0 0 20px ${currentRealm === 'fantasy' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(34, 211, 238, 0.4)'}, 0 8px 32px rgba(0,0,0,0.3)`
+            }}
+          >
+            {/* Enhanced glassmorphism inner glow */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-xl" />
+            
+            <span className="flex items-center gap-2 relative z-10">
+              {currentRealm === 'fantasy' ? '✨' : '⚡'}
+              Tap to Generate {currentRealm === 'fantasy' ? 'Mana' : 'Energy'}
+            </span>
+            
+            {/* Animated glow ring */}
+            <div className={`absolute inset-0 rounded-xl animate-pulse ${
+              currentRealm === 'fantasy' 
+                ? 'bg-purple-400/10' 
+                : 'bg-cyan-400/10'
+            }`} />
+          </Button>
+        </div>
+
         {/* Enhanced Bottom Action Bar */}
         <BottomActionBar
           currentRealm={currentRealm}
@@ -344,7 +359,7 @@ const GameEngine: React.FC = () => {
 
         {/* Convergence Ready Button - Enhanced positioning */}
         {canConverge && (
-          <div className="absolute bottom-28 left-0 right-0 z-30 flex justify-center px-4">
+          <div className="absolute bottom-36 left-0 right-0 z-30 flex justify-center px-4">
             <Button 
               onClick={() => setShowConvergence(true)}
               className="h-12 px-8 rounded-2xl bg-gradient-to-r from-yellow-500/90 to-orange-500/90 hover:from-yellow-600/90 hover:to-orange-600/90 backdrop-blur-xl border-2 border-yellow-400/60 animate-pulse transition-all duration-300 font-bold shadow-2xl shadow-yellow-500/40"
@@ -363,10 +378,10 @@ const GameEngine: React.FC = () => {
         onClose={() => setShowQuickHelp(false)}
       />
 
-      {/* Hybrid Upgrades Modal - Enhanced styling with proper containment */}
+      {/* Hybrid Upgrades Modal - Enhanced with proper containment */}
       {showHybridUpgrades && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-50"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowHybridUpgrades(false);
@@ -377,7 +392,7 @@ const GameEngine: React.FC = () => {
             {/* Enhanced glassmorphism */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-2xl" />
             
-            <div className="flex justify-between items-center p-4 border-b border-purple-400 flex-shrink-0">
+            <div className="flex justify-between items-center p-4 border-b border-purple-400/30 flex-shrink-0">
               <h2 className="text-lg font-bold text-white">Hybrid Nexus</h2>
               <Button
                 onClick={() => setShowHybridUpgrades(false)}
@@ -398,10 +413,10 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Convergence Modal - Enhanced styling with proper containment */}
+      {/* Convergence Modal - Enhanced with proper containment */}
       {showConvergence && (
         <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 z-50"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowConvergence(false);
