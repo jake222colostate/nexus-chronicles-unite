@@ -4,6 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Zap, Crown, Menu } from 'lucide-react';
 import { MapView } from './MapView';
 import { RealmTransition } from './RealmTransition';
+import { HybridUpgradesPanel } from './HybridUpgradesPanel';
+import { ConvergenceSystem } from './ConvergenceSystem';
+import { useBuffSystem } from './CrossRealmBuffSystem';
+import { hybridUpgrades } from '../data/HybridUpgrades';
 
 interface GameState {
   mana: number;
@@ -14,6 +18,7 @@ interface GameState {
   convergenceCount: number;
   fantasyBuildings: { [key: string]: number };
   scifiBuildings: { [key: string]: number };
+  purchasedUpgrades: string[];
   lastSaveTime: number;
 }
 
@@ -48,6 +53,7 @@ const GameEngine: React.FC = () => {
       const parsedState = JSON.parse(saved);
       return {
         ...parsedState,
+        purchasedUpgrades: parsedState.purchasedUpgrades || [],
         lastSaveTime: parsedState.lastSaveTime || Date.now(),
       };
     }
@@ -60,15 +66,20 @@ const GameEngine: React.FC = () => {
       convergenceCount: 0,
       fantasyBuildings: {},
       scifiBuildings: {},
+      purchasedUpgrades: [],
       lastSaveTime: Date.now(),
     };
   });
 
   const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi'>('fantasy');
   const [showConvergence, setShowConvergence] = useState(false);
+  const [showHybridUpgrades, setShowHybridUpgrades] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Initialize buff system
+  const buffSystem = useBuffSystem(gameState.fantasyBuildings, gameState.scifiBuildings);
 
   // Calculate offline progress on mount
   useEffect(() => {
@@ -110,33 +121,51 @@ const GameEngine: React.FC = () => {
     };
   }, []);
 
-  // Calculate production rates
+  // Enhanced production calculation with buffs and upgrades
   useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
 
-    // Fantasy production
+    // Base production from buildings
     fantasyBuildings.forEach(building => {
       const count = gameState.fantasyBuildings[building.id] || 0;
-      manaRate += count * building.production;
+      const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'fantasy');
+      manaRate += (count * building.production * multiplier) + flatBonus;
     });
 
-    // Sci-fi production
     scifiBuildings.forEach(building => {
       const count = gameState.scifiBuildings[building.id] || 0;
-      energyRate += count * building.production;
+      const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'scifi');
+      energyRate += (count * building.production * multiplier) + flatBonus;
+    });
+
+    // Apply hybrid upgrade bonuses
+    let globalMultiplier = 1;
+    gameState.purchasedUpgrades.forEach(upgradeId => {
+      const upgrade = hybridUpgrades.find(u => u.id === upgradeId);
+      if (upgrade) {
+        if (upgrade.effects.globalProductionBonus) {
+          globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
+        }
+        if (upgrade.effects.manaProductionBonus) {
+          manaRate += upgrade.effects.manaProductionBonus;
+        }
+        if (upgrade.effects.energyProductionBonus) {
+          energyRate += upgrade.effects.energyProductionBonus;
+        }
+      }
     });
 
     // Cross-realm bonuses
-    const fantasyBonus = 1 + (energyRate * 0.01); // 1% bonus per energy/sec
-    const scifiBonus = 1 + (manaRate * 0.01); // 1% bonus per mana/sec
+    const fantasyBonus = 1 + (energyRate * 0.01);
+    const scifiBonus = 1 + (manaRate * 0.01);
 
     setGameState(prev => ({
       ...prev,
-      manaPerSecond: manaRate * fantasyBonus,
-      energyPerSecond: energyRate * scifiBonus,
+      manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
+      energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [gameState.fantasyBuildings, gameState.scifiBuildings]);
+  }, [gameState.fantasyBuildings, gameState.scifiBuildings, gameState.purchasedUpgrades]);
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -167,7 +196,7 @@ const GameEngine: React.FC = () => {
 
   const performConvergence = () => {
     const totalValue = gameState.mana + gameState.energyCredits;
-    const shardsGained = Math.floor(Math.sqrt(totalValue / 1000));
+    const shardsGained = Math.floor(Math.sqrt(totalValue / 1000)) + gameState.convergenceCount;
     
     if (shardsGained > 0) {
       setGameState({
@@ -179,10 +208,22 @@ const GameEngine: React.FC = () => {
         convergenceCount: gameState.convergenceCount + 1,
         fantasyBuildings: {},
         scifiBuildings: {},
+        purchasedUpgrades: gameState.purchasedUpgrades, // Keep purchased upgrades
         lastSaveTime: Date.now(),
       });
       setShowConvergence(false);
     }
+  };
+
+  const purchaseUpgrade = (upgradeId: string) => {
+    const upgrade = hybridUpgrades.find(u => u.id === upgradeId);
+    if (!upgrade || gameState.nexusShards < upgrade.cost) return;
+
+    setGameState(prev => ({
+      ...prev,
+      nexusShards: prev.nexusShards - upgrade.cost,
+      purchasedUpgrades: [...prev.purchasedUpgrades, upgradeId]
+    }));
   };
 
   const formatNumber = (num: number): string => {
@@ -192,6 +233,7 @@ const GameEngine: React.FC = () => {
   };
 
   const canConverge = gameState.mana + gameState.energyCredits >= 1000;
+  const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
 
   // Modified realm switching with transition
   const switchRealm = (newRealm: 'fantasy' | 'scifi') => {
@@ -205,6 +247,12 @@ const GameEngine: React.FC = () => {
         setIsTransitioning(false);
       }, 500);
     }, 600);
+  };
+
+  const handleNexusClick = () => {
+    if (canConverge) {
+      setShowConvergence(true);
+    }
   };
 
   return (
@@ -231,11 +279,19 @@ const GameEngine: React.FC = () => {
               <Crown size={12} />
               <span className="font-bold text-xs">{gameState.nexusShards}</span>
             </div>
+            <Button 
+              onClick={() => setShowHybridUpgrades(true)}
+              size="sm"
+              className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-xs px-2 py-1 h-6"
+            >
+              <Sparkles className="mr-1" size={10} />
+              Hybrid
+            </Button>
             {canConverge && (
               <Button 
                 onClick={() => setShowConvergence(true)}
                 size="sm"
-                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-xs px-2 py-1 h-6"
+                className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-xs px-2 py-1 h-6 animate-pulse"
               >
                 <Sparkles className="mr-1" size={10} />
                 Conv
@@ -330,42 +386,59 @@ const GameEngine: React.FC = () => {
         onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
         buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
         currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
+        nexusShards={gameState.nexusShards}
+        convergenceProgress={convergenceProgress}
+        onNexusClick={handleNexusClick}
+        buffSystem={buffSystem}
       />
 
       {/* Realm Transition Effect */}
       <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
+      {/* Hybrid Upgrades Modal */}
+      {showHybridUpgrades && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="max-w-md w-full max-h-[80vh] overflow-hidden bg-gradient-to-br from-purple-900/90 to-cyan-900/90 border-2 border-purple-400">
+            <div className="flex justify-between items-center p-4 border-b border-purple-400">
+              <h2 className="text-lg font-bold text-white">Hybrid Nexus</h2>
+              <Button
+                onClick={() => setShowHybridUpgrades(false)}
+                variant="ghost"
+                size="sm"
+                className="text-white"
+              >
+                ✕
+              </Button>
+            </div>
+            <div className="overflow-y-auto max-h-96">
+              <HybridUpgradesPanel
+                gameState={gameState}
+                onPurchaseUpgrade={purchaseUpgrade}
+              />
+            </div>
+          </Card>
+        </div>
+      )}
+
       {/* Convergence Modal - iPhone optimized */}
       {showConvergence && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <Card className="p-4 bg-gradient-to-br from-purple-900 to-cyan-900 border-2 border-yellow-400 max-w-xs w-full">
-            <h2 className="text-lg font-bold text-white mb-3 text-center">Convergence Portal</h2>
-            <p className="text-white/80 mb-3 text-center text-sm">
-              Unite the realms and transcend to a higher timeline.
-            </p>
-            <div className="text-center mb-4">
-              <div className="text-yellow-300 text-lg font-bold">
-                +{Math.floor(Math.sqrt((gameState.mana + gameState.energyCredits) / 1000))} Nexus Shards
-              </div>
-            </div>
-            <div className="flex gap-2">
+          <div className="max-w-xs w-full">
+            <ConvergenceSystem
+              gameState={gameState}
+              onPerformConvergence={performConvergence}
+            />
+            <div className="mt-4 text-center">
               <Button 
                 onClick={() => setShowConvergence(false)}
                 variant="outline"
-                className="flex-1 border-gray-400 text-gray-300 text-sm h-8"
                 size="sm"
+                className="border-gray-400 text-gray-300"
               >
                 Cancel
               </Button>
-              <Button 
-                onClick={performConvergence}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-cyan-500 text-sm h-8"
-                size="sm"
-              >
-                Converge
-              </Button>
             </div>
-          </Card>
+          </div>
         </div>
       )}
     </div>

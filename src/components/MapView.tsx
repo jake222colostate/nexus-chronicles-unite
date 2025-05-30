@@ -14,6 +14,10 @@ interface MapViewProps {
   buildingData: any[];
   currency: number;
   isTransitioning?: boolean;
+  nexusShards?: number;
+  convergenceProgress?: number;
+  onNexusClick?: () => void;
+  buffSystem?: any;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -24,7 +28,11 @@ export const MapView: React.FC<MapViewProps> = ({
   onBuyBuilding,
   buildingData,
   currency,
-  isTransitioning = false
+  isTransitioning = false,
+  nexusShards = 0,
+  convergenceProgress = 0,
+  onNexusClick,
+  buffSystem
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.85 }); // Default 85% zoom for better overview
@@ -177,11 +185,14 @@ export const MapView: React.FC<MapViewProps> = ({
       {/* Enhanced Animated Background with realm-specific parallax */}
       <AnimatedBackground realm={realm} />
 
-      {/* Enhanced Nexus Core */}
+      {/* Enhanced Nexus Core with new functionality */}
       <EnhancedNexusCore 
         manaFlow={manaPerSecond}
         energyFlow={energyPerSecond}
         realm={realm}
+        nexusShards={nexusShards}
+        convergenceProgress={convergenceProgress}
+        onNexusClick={onNexusClick}
       />
 
       {/* Map Container */}
@@ -202,12 +213,15 @@ export const MapView: React.FC<MapViewProps> = ({
             : 'bg-gradient-to-t from-gray-800/30 via-cyan-900/20 to-transparent'
         }`} />
 
-        {/* Enhanced Structures */}
+        {/* Enhanced Structures with buff indicators */}
         {structurePositions[realm].map((position) => {
           const building = buildingData.find(b => b.id === position.id);
           const count = buildings[position.id] || 0;
           
           if (!building) return null;
+
+          // Get buffs for this building
+          const buffs = buffSystem ? buffSystem.getBuffsForBuilding(position.id, realm) : [];
 
           return (
             <EnhancedStructure
@@ -218,6 +232,7 @@ export const MapView: React.FC<MapViewProps> = ({
               realm={realm}
               onBuy={() => onBuyBuilding(position.id)}
               canAfford={currency >= Math.floor(building.cost * Math.pow(building.costMultiplier, count))}
+              buffs={buffs}
             />
           );
         })}
@@ -237,8 +252,14 @@ export const MapView: React.FC<MapViewProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span>Tap structures to upgrade</span>
+                <span>Tap structures to upgrade • Tap Nexus for Convergence</span>
               </div>
+              {nexusShards > 0 && (
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                  <span>🔁 = Cross-realm buffs active</span>
+                </div>
+              )}
             </div>
             <div className="text-right opacity-80">
               <div className="bg-white/10 px-2 py-1 rounded text-xs">

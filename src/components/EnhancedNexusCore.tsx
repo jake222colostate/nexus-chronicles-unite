@@ -1,29 +1,41 @@
 
 import React from 'react';
-import { Crown } from 'lucide-react';
+import { Crown, Sparkles } from 'lucide-react';
 
 interface EnhancedNexusCoreProps {
   manaFlow: number;
   energyFlow: number;
   realm: 'fantasy' | 'scifi';
+  nexusShards?: number;
+  convergenceProgress?: number;
+  onNexusClick?: () => void;
 }
 
-export const EnhancedNexusCore: React.FC<EnhancedNexusCoreProps> = ({ manaFlow, energyFlow, realm }) => {
+export const EnhancedNexusCore: React.FC<EnhancedNexusCoreProps> = ({ 
+  manaFlow, 
+  energyFlow, 
+  realm,
+  nexusShards = 0,
+  convergenceProgress = 0,
+  onNexusClick
+}) => {
   const totalFlow = manaFlow + energyFlow;
   const intensity = Math.min(totalFlow / 100, 1);
+  const convergenceIntensity = Math.min(convergenceProgress / 100, 1);
 
   return (
     <div className="absolute top-12 left-1/2 transform -translate-x-1/2 z-30">
       <div className="relative">
         {/* Core Orb with Enhanced Effects */}
         <div 
-          className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 flex items-center justify-center backdrop-blur-sm transition-all duration-700 ${
+          className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full border-4 flex items-center justify-center backdrop-blur-sm transition-all duration-700 cursor-pointer ${
             realm === 'fantasy'
               ? 'bg-gradient-to-br from-purple-500/90 to-violet-800/90 border-purple-300'
               : 'bg-gradient-to-br from-cyan-500/90 to-blue-800/90 border-cyan-300'
           }`}
+          onClick={onNexusClick}
           style={{
-            boxShadow: `0 0 ${30 + intensity * 50}px ${
+            boxShadow: `0 0 ${30 + intensity * 50 + convergenceIntensity * 30}px ${
               realm === 'fantasy' ? 'rgba(168, 85, 247, 0.8)' : 'rgba(34, 211, 238, 0.8)'
             }, inset 0 0 20px rgba(255, 255, 255, 0.1)`,
             animation: `pulse ${Math.max(0.8, 2.5 - intensity * 1.5)}s infinite alternate`
@@ -37,6 +49,16 @@ export const EnhancedNexusCore: React.FC<EnhancedNexusCoreProps> = ({ manaFlow, 
               ? 'bg-gradient-to-br from-purple-400/30 to-violet-600/30' 
               : 'bg-gradient-to-br from-cyan-400/30 to-blue-600/30'
           } animate-pulse`} />
+
+          {/* Convergence Progress Ring */}
+          {convergenceProgress > 0 && (
+            <div 
+              className="absolute inset-0 rounded-full border-4 border-yellow-400/60"
+              style={{
+                background: `conic-gradient(from 0deg, transparent ${100 - convergenceProgress}%, rgba(255, 215, 0, 0.3) ${convergenceProgress}%)`
+              }}
+            />
+          )}
         </div>
 
         {/* Enhanced Energy Rings */}
@@ -98,6 +120,16 @@ export const EnhancedNexusCore: React.FC<EnhancedNexusCoreProps> = ({ manaFlow, 
           </div>
         )}
 
+        {/* Nexus Shards Display */}
+        {nexusShards > 0 && (
+          <div className="absolute -top-8 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2 py-1 rounded-full border border-yellow-400/50">
+              <Crown className="text-yellow-400" size={12} />
+              <span className="text-yellow-400 font-bold text-xs">{nexusShards}</span>
+            </div>
+          </div>
+        )}
+
         {/* Enhanced Flow Indicators */}
         <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-center">
           <div className="bg-black/60 backdrop-blur-md px-3 py-2 rounded-lg border border-white/20">
@@ -110,6 +142,12 @@ export const EnhancedNexusCore: React.FC<EnhancedNexusCoreProps> = ({ manaFlow, 
                 <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
                 <span className="text-xs font-bold">Energy: +{energyFlow.toFixed(1)}/s</span>
               </div>
+              {convergenceProgress > 0 && (
+                <div className="flex items-center gap-2 text-yellow-300">
+                  <Sparkles size={8} className="animate-pulse" />
+                  <span className="text-xs font-bold">Convergence: {convergenceProgress.toFixed(1)}%</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
