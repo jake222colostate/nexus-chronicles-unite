@@ -24,44 +24,47 @@ export const ProductionCalculator: React.FC<ProductionCalculatorProps> = ({
   scifiBuildingData,
   onProductionUpdate
 }) => {
-  // Use refs to prevent unnecessary recalculations
-  const lastBuildingsRef = useRef<string>('');
-  const lastUpgradesRef = useRef<string>('');
+  // Use refs to prevent unnecessary recalculations and track stable state
+  const lastCalculationRef = useRef<{
+    buildingsKey: string;
+    upgradesKey: string;
+    result: { manaRate: number; energyRate: number };
+  } | null>(null);
 
   useEffect(() => {
+    // SAFE: Create stable keys to prevent infinite recalculation
     const buildingsKey = JSON.stringify({
-      fantasy: fantasyBuildings,
-      scifi: scifiBuildings
+      fantasy: fantasyBuildings || {},
+      scifi: scifiBuildings || {}
     });
-    const upgradesKey = JSON.stringify(purchasedUpgrades);
+    const upgradesKey = JSON.stringify(purchasedUpgrades || []);
     
-    // Only recalculate if buildings or upgrades actually changed
-    if (buildingsKey === lastBuildingsRef.current && upgradesKey === lastUpgradesRef.current) {
+    // CRITICAL: Only recalculate if buildings or upgrades actually changed
+    if (lastCalculationRef.current && 
+        buildingsKey === lastCalculationRef.current.buildingsKey && 
+        upgradesKey === lastCalculationRef.current.upgradesKey) {
       return;
     }
-    
-    lastBuildingsRef.current = buildingsKey;
-    lastUpgradesRef.current = upgradesKey;
     
     console.log('ProductionCalculator: Recalculating production rates');
     
     let manaRate = 0;
     let energyRate = 0;
 
-    // Calculate base production from buildings
-    fantasyBuildingData.forEach(building => {
-      const count = fantasyBuildings[building.id] || 0;
-      manaRate += count * building.production;
+    // SAFE: Calculate base production from buildings with null checks
+    (fantasyBuildingData || []).forEach(building => {
+      const count = (fantasyBuildings || {})[building.id] || 0;
+      manaRate += count * (building.production || 0);
     });
 
-    scifiBuildingData.forEach(building => {
-      const count = scifiBuildings[building.id] || 0;
-      energyRate += count * building.production;
+    (scifiBuildingData || []).forEach(building => {
+      const count = (scifiBuildings || {})[building.id] || 0;
+      energyRate += count * (building.production || 0);
     });
 
-    // Apply upgrade bonuses
+    // SAFE: Apply upgrade bonuses with null checks
     let globalMultiplier = 1;
-    purchasedUpgrades.forEach(upgradeId => {
+    (purchasedUpgrades || []).forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade?.effects) {
         if (upgrade.effects.globalProductionBonus) {
@@ -76,15 +79,30 @@ export const ProductionCalculator: React.FC<ProductionCalculatorProps> = ({
       }
     });
 
-    // Cross-realm bonuses
+    // SAFE: Cross-realm bonuses with null checks
     const fantasyBonus = 1 + (energyRate * 0.01);
     const scifiBonus = 1 + (manaRate * 0.01);
 
     const finalManaRate = manaRate * fantasyBonus * globalMultiplier;
     const finalEnergyRate = energyRate * scifiBonus * globalMultiplier;
 
+    // Cache the calculation result
+    lastCalculationRef.current = {
+      buildingsKey,
+      upgradesKey,
+      result: { manaRate: finalManaRate, energyRate: finalEnergyRate }
+    };
+
+    // SAFE: This callback is stable and won't cause re-renders
     onProductionUpdate(finalManaRate, finalEnergyRate);
-  }, [fantasyBuildings, scifiBuildings, purchasedUpgrades, fantasyBuildingData, scifiBuildingData, onProductionUpdate]);
+  }, [
+    JSON.stringify(fantasyBuildings || {}),
+    JSON.stringify(scifiBuildings || {}),
+    JSON.stringify(purchasedUpgrades || []),
+    fantasyBuildingData,
+    scifiBuildingData,
+    onProductionUpdate
+  ]);
 
   return null; // This is a logic-only component
 };

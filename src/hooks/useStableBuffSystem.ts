@@ -8,16 +8,27 @@ export const useStableBuffSystem = (
 ) => {
   // Create a stable key for buildings to prevent unnecessary recalculations
   const buildingsKey = useMemo(() => {
+    // Safely handle undefined buildings with fallbacks
+    const safeFantasy = fantasyBuildings || {};
+    const safeScifi = scifiBuildings || {};
+    
     return JSON.stringify({
-      fantasy: fantasyBuildings,
-      scifi: scifiBuildings
+      fantasy: safeFantasy,
+      scifi: safeScifi
     });
-  }, [fantasyBuildings, scifiBuildings]);
+  }, [
+    JSON.stringify(fantasyBuildings || {}),
+    JSON.stringify(scifiBuildings || {})
+  ]);
 
   // Memoize the buff system with stable dependencies
   const buffSystem = useMemo(() => {
-    return createBuffSystem(fantasyBuildings, scifiBuildings);
-  }, [buildingsKey]);
+    console.log('useStableBuffSystem: Creating new buff system');
+    return createBuffSystem(
+      fantasyBuildings || {},
+      scifiBuildings || {}
+    );
+  }, [buildingsKey]); // Use stable string key instead of objects
 
   return { buffSystem, buildingsKey };
 };
