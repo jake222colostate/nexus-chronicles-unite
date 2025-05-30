@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -58,6 +57,8 @@ const GameEngine: React.FC = () => {
         ...parsedState,
         purchasedUpgrades: Array.isArray(parsedState.purchasedUpgrades) ? parsedState.purchasedUpgrades : [],
         lastSaveTime: parsedState.lastSaveTime || Date.now(),
+        fantasyBuildings: parsedState.fantasyBuildings || {},
+        scifiBuildings: parsedState.scifiBuildings || {},
       };
     }
     return {
@@ -83,9 +84,9 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
 
-  // Stabilize building objects with proper memoization - COMPLETELY STABLE
-  const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings, [gameState.fantasyBuildings]);
-  const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings, [gameState.scifiBuildings]);
+  // Stabilize building objects with proper memoization - ensure they're never undefined
+  const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
+  const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
 
   // Initialize buff system with stabilized buildings - COMPLETELY STABLE
   const stableBuffSystem = useMemo(() => {
