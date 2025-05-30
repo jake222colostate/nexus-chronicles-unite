@@ -96,6 +96,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     return distance <= 3.5;
   };
 
+  // Player can move forward unless they've reached the end
   const canMoveForward = cameraPosition.z > -50;
 
   return (
@@ -201,10 +202,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
       {/* Enhanced movement instructions overlay */}
       <div className="absolute top-20 left-4 right-4 text-center pointer-events-none">
         <p className="text-white/80 text-sm font-medium">
-          {canMoveForward ? "Walk forward to discover upgrades" : "You've reached the end of the path"}
+          Use W/S or ↑/↓ to walk forward/backward
         </p>
         <p className="text-purple-300/60 text-xs mt-1">
-          Look left and right to spot upgrade nodes
+          Look left and right to spot upgrade nodes • Touch top/bottom to move
         </p>
       </div>
 

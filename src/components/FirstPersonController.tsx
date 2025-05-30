@@ -17,14 +17,22 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
   const { camera } = useThree();
   const targetPosition = useRef(new Vector3(...position));
   const moveSpeed = useRef(0);
+  const moveDirection = useRef(0); // 1 for forward, -1 for backward, 0 for stopped
   const swayTime = useRef(0);
   const lookDirection = useRef(0); // For subtle left/right looking
 
   // Handle keyboard input
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Forward movement
       if ((event.key === 'w' || event.key === 'W' || event.key === 'ArrowUp') && canMoveForward) {
         moveSpeed.current = 3;
+        moveDirection.current = 1;
+      }
+      // Backward movement
+      if (event.key === 's' || event.key === 'S' || event.key === 'ArrowDown') {
+        moveSpeed.current = 3;
+        moveDirection.current = -1;
       }
       // Subtle left/right look controls
       if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft') {
@@ -36,8 +44,10 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key === 'w' || event.key === 'W' || event.key === 'ArrowUp') {
+      if (event.key === 'w' || event.key === 'W' || event.key === 'ArrowUp' ||
+          event.key === 's' || event.key === 'S' || event.key === 'ArrowDown') {
         moveSpeed.current = 0;
+        moveDirection.current = 0;
       }
       if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft' ||
           event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight') {
@@ -57,15 +67,21 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
   // Handle touch input for mobile
   useEffect(() => {
     const handleTouchStart = (event: TouchEvent) => {
-      if (canMoveForward && event.touches.length === 1) {
+      if (event.touches.length === 1) {
         const touch = event.touches[0];
         const rect = (event.target as HTMLElement).getBoundingClientRect();
         const y = touch.clientY - rect.top;
         const x = touch.clientX - rect.left;
         
-        // Movement in upper portion
-        if (y < rect.height * 0.6) {
+        // Movement in upper portion (forward)
+        if (y < rect.height * 0.3 && canMoveForward) {
           moveSpeed.current = 3;
+          moveDirection.current = 1;
+        }
+        // Movement in lower portion (backward)
+        else if (y > rect.height * 0.7) {
+          moveSpeed.current = 3;
+          moveDirection.current = -1;
         }
         
         // Look direction based on horizontal position
@@ -79,6 +95,7 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
 
     const handleTouchEnd = () => {
       moveSpeed.current = 0;
+      moveDirection.current = 0;
       lookDirection.current = 0;
     };
 
@@ -99,11 +116,19 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
   useFrame((state, delta) => {
     swayTime.current += delta;
     
-    // Move forward when input is active (Z-axis only)
+    // Move based on direction and speed
     if (moveSpeed.current > 0) {
-      targetPosition.current.z -= moveSpeed.current * delta;
-      // Limit how far forward we can go
-      targetPosition.current.z = Math.max(-50, targetPosition.current.z);
+      if (moveDirection.current === 1 && canMoveForward) {
+        // Forward movement
+        targetPosition.current.z -= moveSpeed.current * delta;
+        // Limit how far forward we can go
+        targetPosition.current.z = Math.max(-50, targetPosition.current.z);
+      } else if (moveDirection.current === -1) {
+        // Backward movement
+        targetPosition.current.z += moveSpeed.current * delta;
+        // Limit how far backward we can go (back to starting position)
+        targetPosition.current.z = Math.min(0, targetPosition.current.z);
+      }
     }
     
     // Lock X-position to center path (with minimal sway)
