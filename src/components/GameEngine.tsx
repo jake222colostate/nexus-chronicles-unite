@@ -82,17 +82,9 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
 
-  // Stabilize building objects with proper memoization - only update when buildings actually change
-  const stableBuildingsKey = useMemo(() => {
-    return JSON.stringify([gameState.fantasyBuildings, gameState.scifiBuildings]);
-  }, [gameState.fantasyBuildings, gameState.scifiBuildings]);
-
-  const { memoizedFantasyBuildings, memoizedScifiBuildings } = useMemo(() => {
-    return {
-      memoizedFantasyBuildings: gameState.fantasyBuildings,
-      memoizedScifiBuildings: gameState.scifiBuildings
-    };
-  }, [stableBuildingsKey]);
+  // Stabilize building objects with proper memoization - COMPLETELY STABLE
+  const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings, [gameState.fantasyBuildings]);
+  const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings, [gameState.scifiBuildings]);
 
   // Initialize buff system with stabilized buildings
   const buffSystem = useBuffSystem(memoizedFantasyBuildings, memoizedScifiBuildings);
@@ -190,9 +182,10 @@ const GameEngine: React.FC = () => {
       energyPerSecond: finalEnergyRate,
     }));
   }, [
-    stableBuildingsKey, // Use the stable key instead of individual building objects
+    memoizedFantasyBuildings,
+    memoizedScifiBuildings,
     gameState.purchasedUpgrades
-  ]); // Completely stable dependencies
+  ]); // Completely stable dependencies - removed buffSystem and stableBuildingsKey
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
