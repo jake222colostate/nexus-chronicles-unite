@@ -54,11 +54,16 @@ const GameEngine: React.FC = () => {
     if (saved) {
       const parsedState = JSON.parse(saved);
       return {
-        ...parsedState,
-        purchasedUpgrades: Array.isArray(parsedState.purchasedUpgrades) ? parsedState.purchasedUpgrades : [],
-        lastSaveTime: parsedState.lastSaveTime || Date.now(),
+        mana: parsedState.mana || 10,
+        energyCredits: parsedState.energyCredits || 10,
+        manaPerSecond: parsedState.manaPerSecond || 0,
+        energyPerSecond: parsedState.energyPerSecond || 0,
+        nexusShards: parsedState.nexusShards || 0,
+        convergenceCount: parsedState.convergenceCount || 0,
         fantasyBuildings: parsedState.fantasyBuildings || {},
         scifiBuildings: parsedState.scifiBuildings || {},
+        purchasedUpgrades: Array.isArray(parsedState.purchasedUpgrades) ? parsedState.purchasedUpgrades : [],
+        lastSaveTime: parsedState.lastSaveTime || Date.now(),
       };
     }
     return {
@@ -135,41 +140,43 @@ const GameEngine: React.FC = () => {
     return () => clearInterval(interval);
   }, []); // Empty dependency array - only run on mount
 
-  // Enhanced production calculation with completely stable dependencies
+  // Enhanced production calculation with safe dependency tracking
   useEffect(() => {
     console.log('Production calculation useEffect triggered');
     
-    // Calculate production rates using current gameState
+    // Calculate production rates using current gameState with safe defaults
     let manaRate = 0;
     let energyRate = 0;
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
-      const count = (gameState.fantasyBuildings || {})[building.id] || 0;
+      const count = gameState.fantasyBuildings?.[building.id] || 0;
       manaRate += count * building.production;
     });
 
     scifiBuildings.forEach(building => {
-      const count = (gameState.scifiBuildings || {})[building.id] || 0;
+      const count = gameState.scifiBuildings?.[building.id] || 0;
       energyRate += count * building.production;
     });
 
     // Apply hybrid upgrade bonuses
     let globalMultiplier = 1;
-    (gameState.purchasedUpgrades || []).forEach(upgradeId => {
-      const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
-      if (upgrade) {
-        if (upgrade.effects.globalProductionBonus) {
-          globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
+    if (gameState.purchasedUpgrades) {
+      gameState.purchasedUpgrades.forEach(upgradeId => {
+        const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
+        if (upgrade) {
+          if (upgrade.effects.globalProductionBonus) {
+            globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
+          }
+          if (upgrade.effects.manaProductionBonus) {
+            manaRate += upgrade.effects.manaProductionBonus;
+          }
+          if (upgrade.effects.energyProductionBonus) {
+            energyRate += upgrade.effects.energyProductionBonus;
+          }
         }
-        if (upgrade.effects.manaProductionBonus) {
-          manaRate += upgrade.effects.manaProductionBonus;
-        }
-        if (upgrade.effects.energyProductionBonus) {
-          energyRate += upgrade.effects.energyProductionBonus;
-        }
-      }
-    });
+      });
+    }
 
     // Cross-realm bonuses
     const fantasyBonus = 1 + (energyRate * 0.01);
@@ -186,10 +193,10 @@ const GameEngine: React.FC = () => {
       energyPerSecond: finalEnergyRate,
     }));
   }, [
-    // Use only primitive values and guaranteed defined properties
-    gameState.fantasyBuildings,
-    gameState.scifiBuildings,
-    gameState.purchasedUpgrades
+    // Use safe string representations to avoid undefined length issues
+    JSON.stringify(gameState.fantasyBuildings || {}),
+    JSON.stringify(gameState.scifiBuildings || {}),
+    JSON.stringify(gameState.purchasedUpgrades || [])
   ]);
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
