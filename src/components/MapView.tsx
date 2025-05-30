@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { EnhancedStructure } from './EnhancedStructure';
 import { EnhancedNexusCore } from './EnhancedNexusCore';
@@ -44,7 +43,7 @@ export const MapView: React.FC<MapViewProps> = ({
   onTapEffectComplete
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.85 });
+  const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.9 });
   const [isDragging, setIsDragging] = useState(false);
   const [lastTouch, setLastTouch] = useState({ x: 0, y: 0 });
   const [lastPinchDistance, setLastPinchDistance] = useState(0);
@@ -59,19 +58,19 @@ export const MapView: React.FC<MapViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Enhanced structure positioning for both realms
+  // Adjusted structure positioning for the narrower map area
   const structurePositions = {
     fantasy: [
-      { id: 'altar', x: 25, y: 75, size: 'small' },
-      { id: 'tower', x: 55, y: 45, size: 'medium' },
-      { id: 'grove', x: 75, y: 65, size: 'large' },
-      { id: 'temple', x: 35, y: 25, size: 'massive' },
+      { id: 'altar', x: 30, y: 75, size: 'small' },
+      { id: 'tower', x: 60, y: 45, size: 'medium' },
+      { id: 'grove', x: 80, y: 65, size: 'large' },
+      { id: 'temple', x: 40, y: 25, size: 'massive' },
     ],
     scifi: [
-      { id: 'generator', x: 20, y: 80, size: 'small' },
-      { id: 'reactor', x: 60, y: 55, size: 'medium' },
-      { id: 'station', x: 80, y: 35, size: 'large' },
-      { id: 'megastructure', x: 30, y: 20, size: 'massive' },
+      { id: 'generator', x: 25, y: 80, size: 'small' },
+      { id: 'reactor', x: 65, y: 55, size: 'medium' },
+      { id: 'station', x: 85, y: 35, size: 'large' },
+      { id: 'megastructure', x: 35, y: 20, size: 'massive' },
     ]
   };
 
@@ -235,15 +234,17 @@ export const MapView: React.FC<MapViewProps> = ({
         <AnimatedBackground realm={realm} />
       </div>
 
-      {/* Enhanced Nexus Core */}
-      <EnhancedNexusCore 
-        manaFlow={manaPerSecond}
-        energyFlow={energyPerSecond}
-        realm={realm}
-        nexusShards={nexusShards}
-        convergenceProgress={convergenceProgress}
-        onNexusClick={onNexusClick}
-      />
+      {/* Enhanced Nexus Core - Positioned to avoid sidebar */}
+      <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <EnhancedNexusCore 
+          manaFlow={manaPerSecond}
+          energyFlow={energyPerSecond}
+          realm={realm}
+          nexusShards={nexusShards}
+          convergenceProgress={convergenceProgress}
+          onNexusClick={onNexusClick}
+        />
+      </div>
 
       {/* Map Container with enhanced interaction */}
       <div 
@@ -304,7 +305,7 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       )}
 
-      {/* Upgrade Floating Tooltips */}
+      {/* Upgrade Floating Tooltips - Constrained to map area */}
       {upgradeTooltips.map((tooltip) => (
         <UpgradeFloatingTooltip
           key={tooltip.id}
@@ -328,15 +329,15 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       )}
 
-      {/* Simple Realm indicator */}
-      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10">
+      {/* Simple Realm indicator - Positioned to avoid sidebar */}
+      <div className="absolute top-20 right-4 z-10">
         <div className={`px-3 py-1 rounded-full backdrop-blur-md border transition-all duration-700 ${
           realm === 'fantasy'
             ? 'bg-purple-800/50 border-purple-400/40 text-purple-100'
             : 'bg-cyan-800/50 border-cyan-400/40 text-cyan-100'
         }`}>
           <span className="text-xs font-medium">
-            {realm === 'fantasy' ? '🏰 Fantasy Realm' : '🚀 Sci-Fi Realm'}
+            {realm === 'fantasy' ? '🏰 Fantasy' : '🚀 Sci-Fi'}
           </span>
         </div>
       </div>

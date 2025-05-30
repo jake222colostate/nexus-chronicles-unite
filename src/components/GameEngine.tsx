@@ -76,7 +76,6 @@ const GameEngine: React.FC = () => {
   const [showConvergence, setShowConvergence] = useState(false);
   const [showHybridUpgrades, setShowHybridUpgrades] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showTapEffect, setShowTapEffect] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -256,7 +255,6 @@ const GameEngine: React.FC = () => {
     if (newRealm === currentRealm || isTransitioning) return;
     
     setIsTransitioning(true);
-    setShowMobileMenu(false);
     
     setTimeout(() => {
       setCurrentRealm(newRealm);
@@ -273,137 +271,123 @@ const GameEngine: React.FC = () => {
   };
 
   return (
-    <div className="h-[667px] w-full relative overflow-hidden">
-      {/* Simplified Header - Only title and menu */}
-      <div className="absolute top-6 left-0 right-0 z-30 p-3 backdrop-blur-md bg-black/30">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="text-white p-1 hover:bg-white/10"
-            >
-              <Menu size={16} />
-            </Button>
-            <h1 className="text-sm font-bold text-white drop-shadow-lg truncate">
-              Celestial Nexus
-            </h1>
-          </div>
-          {/* Crown icon for convergence status */}
-          <div className="flex items-center gap-1 text-yellow-300">
-            <Crown size={12} />
-            <span className="font-bold text-xs">{gameState.nexusShards}</span>
-          </div>
-        </div>
-
-        {/* Mobile Menu Overlay - Only resource info */}
-        {showMobileMenu && (
-          <div className="absolute top-full left-0 right-0 bg-black/90 backdrop-blur-md p-3 border-t border-white/10">
-            {/* Combined Resource Card */}
-            <Card className="p-3 backdrop-blur-md bg-gradient-to-r from-purple-800/40 to-cyan-800/40 border-purple-400/40">
-              <div className="grid grid-cols-2 gap-3 text-white text-xs">
-                <div className="text-center">
-                  <div className="text-purple-300 font-medium">Mana</div>
-                  <div className="text-lg font-bold">{formatNumber(gameState.mana)}</div>
-                  <div className="text-xs opacity-70">+{formatNumber(gameState.manaPerSecond)}/s</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-cyan-300 font-medium">Energy</div>
-                  <div className="text-lg font-bold">{formatNumber(gameState.energyCredits)}</div>
-                  <div className="text-xs opacity-70">+{formatNumber(gameState.energyPerSecond)}/s</div>
-                </div>
+    <div className="h-[667px] w-full relative overflow-hidden flex">
+      {/* Left Resource Sidebar */}
+      <div className="fixed left-0 top-0 bottom-0 w-1/3 max-w-[120px] z-30 pointer-events-none">
+        <div className="h-full flex flex-col justify-center p-2">
+          <Card className="backdrop-blur-md bg-black/40 border-white/20 pointer-events-auto">
+            <div className="p-3 space-y-3">
+              {/* Title */}
+              <div className="flex items-center justify-center gap-1 mb-2">
+                <Crown size={14} className="text-yellow-400" />
+                <span className="text-xs font-bold text-white">Nexus</span>
               </div>
+              
+              {/* Mana */}
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 text-purple-300 text-xs">
+                  <span>💠</span>
+                  <span>Mana</span>
+                </div>
+                <div className="text-white font-bold text-sm">{formatNumber(gameState.mana)}</div>
+                <div className="text-purple-200 text-xs">+{formatNumber(gameState.manaPerSecond)}/s</div>
+              </div>
+
+              {/* Energy */}
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1 text-cyan-300 text-xs">
+                  <span>⚡</span>
+                  <span>Energy</span>
+                </div>
+                <div className="text-white font-bold text-sm">{formatNumber(gameState.energyCredits)}</div>
+                <div className="text-cyan-200 text-xs">+{formatNumber(gameState.energyPerSecond)}/s</div>
+              </div>
+
+              {/* Convergence */}
               {canConverge && (
-                <div className="mt-2 pt-2 border-t border-white/20 text-center">
-                  <div className="text-yellow-300 text-xs font-medium">
-                    Convergence Ready: {convergenceProgress.toFixed(1)}%
+                <div className="text-center pt-2 border-t border-white/20">
+                  <div className="flex items-center justify-center gap-1 text-yellow-300 text-xs">
+                    <span>🌌</span>
+                    <span>Conv</span>
                   </div>
+                  <div className="text-yellow-300 font-bold text-sm">{convergenceProgress.toFixed(0)}%</div>
                 </div>
               )}
-            </Card>
+
+              {/* Nexus Shards */}
+              <div className="text-center pt-2 border-t border-white/20">
+                <div className="text-yellow-400 font-bold text-xs">{gameState.nexusShards} Shards</div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      {/* Simplified Header - Only title */}
+      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 z-30">
+        <h1 className="text-sm font-bold text-white drop-shadow-lg">
+          Celestial Nexus
+        </h1>
+      </div>
+
+      {/* Main Game Area - Right 2/3 of screen */}
+      <div className="flex-1 ml-[120px] relative">
+        {/* Map View */}
+        <MapView
+          realm={currentRealm}
+          buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
+          manaPerSecond={gameState.manaPerSecond}
+          energyPerSecond={gameState.energyPerSecond}
+          onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
+          buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
+          currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
+          nexusShards={gameState.nexusShards}
+          convergenceProgress={convergenceProgress}
+          onNexusClick={handleNexusClick}
+          buffSystem={buffSystem}
+          onRealmChange={switchRealm}
+          isTransitioning={isTransitioning}
+          showTapEffect={showTapEffect}
+          onTapEffectComplete={handleTapEffectComplete}
+        />
+
+        {/* Realm Transition Effect */}
+        <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
+
+        {/* Bottom Action Bar */}
+        <BottomActionBar
+          currentRealm={currentRealm}
+          onRealmChange={switchRealm}
+          onHybridClick={() => setShowHybridUpgrades(true)}
+          onTapResource={handleTapResource}
+          isTransitioning={isTransitioning}
+        />
+
+        {/* Convergence Ready Button - Show above action bar when ready */}
+        {canConverge && (
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
+            <Button 
+              onClick={() => setShowConvergence(true)}
+              className="h-10 px-6 rounded-full bg-gradient-to-r from-yellow-500/90 to-orange-500/90 hover:from-yellow-600/90 hover:to-orange-600/90 backdrop-blur-sm border-2 border-yellow-400/60 animate-pulse transition-all duration-300 font-bold"
+            >
+              <span className="text-sm">🔁 Convergence Ready!</span>
+            </Button>
           </div>
         )}
       </div>
 
-      {/* Floating Resource HUD - Positioned under crown */}
-      {!showMobileMenu && (
-        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-20">
-          <Card className="px-4 py-2 backdrop-blur-md bg-gradient-to-r from-purple-800/50 to-cyan-800/50 border-purple-400/50">
-            <div className="flex items-center gap-4 text-white text-xs">
-              <div className="text-center">
-                <div className="text-purple-300">Mana</div>
-                <div className="font-bold">{formatNumber(gameState.mana)}</div>
-                <div className="text-xs opacity-70">+{formatNumber(gameState.manaPerSecond)}/s</div>
-              </div>
-              <div className="w-px h-8 bg-white/30"></div>
-              <div className="text-center">
-                <div className="text-cyan-300">Energy</div>
-                <div className="font-bold">{formatNumber(gameState.energyCredits)}</div>
-                <div className="text-xs opacity-70">+{formatNumber(gameState.energyPerSecond)}/s</div>
-              </div>
-              {canConverge && (
-                <>
-                  <div className="w-px h-8 bg-white/30"></div>
-                  <div className="text-center">
-                    <div className="text-yellow-300">Conv</div>
-                    <div className="font-bold">{convergenceProgress.toFixed(0)}%</div>
-                  </div>
-                </>
-              )}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Map View */}
-      <MapView
-        realm={currentRealm}
-        buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
-        manaPerSecond={gameState.manaPerSecond}
-        energyPerSecond={gameState.energyPerSecond}
-        onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
-        buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
-        currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
-        nexusShards={gameState.nexusShards}
-        convergenceProgress={convergenceProgress}
-        onNexusClick={handleNexusClick}
-        buffSystem={buffSystem}
-        onRealmChange={switchRealm}
-        isTransitioning={isTransitioning}
-        showTapEffect={showTapEffect}
-        onTapEffectComplete={handleTapEffectComplete}
-      />
-
-      {/* Realm Transition Effect */}
-      <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
-
-      {/* Bottom Action Bar */}
-      <BottomActionBar
-        currentRealm={currentRealm}
-        onRealmChange={switchRealm}
-        onHybridClick={() => setShowHybridUpgrades(true)}
-        onTapResource={handleTapResource}
-        isTransitioning={isTransitioning}
-      />
-
-      {/* Convergence Ready Button - Show above action bar when ready */}
-      {canConverge && (
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
-          <Button 
-            onClick={() => setShowConvergence(true)}
-            className="h-10 px-6 rounded-full bg-gradient-to-r from-yellow-500/90 to-orange-500/90 hover:from-yellow-600/90 hover:to-orange-600/90 backdrop-blur-sm border-2 border-yellow-400/60 animate-pulse transition-all duration-300 font-bold"
-          >
-            <span className="text-sm">🔁 Convergence Ready!</span>
-          </Button>
-        </div>
-      )}
-
-      {/* Hybrid Upgrades Modal */}
+      {/* Hybrid Upgrades Modal - Improved responsiveness */}
       {showHybridUpgrades && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <Card className="max-w-sm w-full max-h-[400px] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400 relative">
-            <div className="flex justify-between items-center p-4 border-b border-purple-400">
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowHybridUpgrades(false);
+            }
+          }}
+        >
+          <Card className="w-[90%] max-w-md h-[70%] max-h-[400px] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border-2 border-purple-400 relative flex flex-col">
+            <div className="flex justify-between items-center p-4 border-b border-purple-400 flex-shrink-0">
               <h2 className="text-lg font-bold text-white">Hybrid Nexus</h2>
               <Button
                 onClick={() => setShowHybridUpgrades(false)}
@@ -414,7 +398,7 @@ const GameEngine: React.FC = () => {
                 <X size={16} />
               </Button>
             </div>
-            <div className="overflow-y-auto max-h-80">
+            <div className="flex-1 overflow-y-auto">
               <HybridUpgradesPanel
                 gameState={gameState}
                 onPurchaseUpgrade={purchaseUpgrade}
@@ -426,7 +410,14 @@ const GameEngine: React.FC = () => {
 
       {/* Convergence Modal */}
       {showConvergence && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div 
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowConvergence(false);
+            }
+          }}
+        >
           <div className="max-w-xs w-full">
             <ConvergenceSystem
               gameState={gameState}
