@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -85,6 +86,10 @@ const GameEngine: React.FC = () => {
 
   // Initialize buff system with proper memoization
   const buffSystem = useBuffSystem(gameState.fantasyBuildings, gameState.scifiBuildings);
+
+  // Calculate convergence state early (before callbacks that use it)
+  const canConverge = gameState.mana + gameState.energyCredits >= 1000;
+  const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
 
   // Calculate offline progress on mount
   useEffect(() => {
@@ -277,9 +282,6 @@ const GameEngine: React.FC = () => {
     if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
     return Math.floor(num).toString();
   };
-
-  const canConverge = gameState.mana + gameState.energyCredits >= 1000;
-  const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
 
   // Memoize gameState to prevent unnecessary re-renders
   const stableGameState = useMemo(() => gameState, [
