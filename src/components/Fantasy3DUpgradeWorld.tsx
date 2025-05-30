@@ -89,19 +89,23 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     console.log(`Camera position:`, cameraPosition);
     console.log(`Upgrade position:`, upgrade.position);
     
-    // Check if player is within interaction range (increased range for better UX)
+    // Check if player is within interaction range (much more generous range)
     const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
     console.log(`Distance to ${upgrade.name}: ${distance.toFixed(2)}`);
     
-    if (distance > 8) { // Increased from 6 to 8 for better UX
+    if (distance > 15) { // Increased range significantly
       console.log("Move closer to interact with this upgrade!");
       return;
     }
     
+    // Always open the modal when clicking (removed previous restriction)
+    console.log(`Opening modal for ${upgrade.name}`);
     setSelectedUpgrade(upgrade);
   }, [cameraPosition]);
 
   const handleUpgradePurchase = useCallback((upgrade: UpgradeData) => {
+    console.log(`Attempting to purchase ${upgrade.name} for ${upgrade.cost} mana. Current mana: ${currentMana}`);
+    
     if (currentMana >= upgrade.cost) {
       // Purchase successful
       setCurrentMana(prev => prev - upgrade.cost);
@@ -126,10 +130,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     }
   }, [currentMana]);
 
-  // Check if player is within interaction range of upgrade (increased range)
+  // Check if player is within interaction range of upgrade (much more generous)
   const isWithinRange = (upgradePosition: [number, number, number]): boolean => {
     const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
-    return distance <= 8; // Increased from 6 to 8
+    return distance <= 15; // Much more generous range
   };
 
   // Player can move forward unless they've reached the very end
@@ -228,7 +232,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           {/* Load GLB upgrade models with working URLs only */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-            if (distance > 30) return null; // Performance optimization
+            if (distance > 40) return null; // Performance optimization - increased render distance
             
             console.log(`Rendering upgrade: ${upgrade.name} at position:`, upgrade.position);
             
@@ -294,7 +298,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
       {/* Movement instructions */}
       <div className="absolute top-20 left-4 right-4 text-center pointer-events-none">
         <p className="text-white/70 text-sm font-medium">
-          Use WASD to move around, look around with mouse, get close and click upgrades to unlock
+          Use WASD to move around, click and drag or A/D to look around (180° range), get close and click upgrades to unlock
         </p>
       </div>
 
