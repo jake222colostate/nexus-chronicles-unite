@@ -23,9 +23,17 @@ export const GLBModel: React.FC<GLBModelProps> = ({
 }) => {
   const groupRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   
   // Load GLB model with error handling
-  const { scene, error } = useGLTF(modelUrl, true);
+  let scene;
+  try {
+    const gltf = useGLTF(modelUrl, true);
+    scene = gltf.scene;
+  } catch (error) {
+    console.warn(`Failed to load model ${name}:`, error);
+    setLoadError(true);
+  }
   
   useFrame((state) => {
     if (groupRef.current) {
@@ -42,7 +50,7 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   });
 
   // Fallback geometry if model fails to load
-  if (error || !scene) {
+  if (loadError || !scene) {
     console.warn(`Failed to load model ${name}, using fallback geometry`);
     return (
       <group

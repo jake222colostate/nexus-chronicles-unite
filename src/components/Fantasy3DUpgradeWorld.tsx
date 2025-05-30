@@ -1,8 +1,8 @@
 
 import React, { Suspense, useState, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Environment, ContactShadows, Fog } from '@react-three/drei';
-import { Vector3 } from 'three';
+import { Environment, ContactShadows } from '@react-three/drei';
+import { Vector3, Fog } from 'three';
 import { GLBModel } from './GLBModelLoader';
 import { FirstPersonController } from './FirstPersonController';
 
@@ -112,6 +112,9 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         }}
         shadows
         gl={{ antialias: true, alpha: true }}
+        onCreated={({ scene }) => {
+          scene.fog = new Fog('#1a1a2e', 5, 50);
+        }}
       >
         <Suspense fallback={null}>
           {/* First Person Controller */}
@@ -139,7 +142,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
           {/* Environment and atmosphere */}
           <Environment preset="dawn" />
-          <Fog attach="fog" args={['#1a1a2e', 5, 50]} />
 
           {/* Ground plane */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -25]} receiveShadow>
