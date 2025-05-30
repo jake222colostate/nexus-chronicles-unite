@@ -17,7 +17,8 @@ export const hybridUpgrades: HybridUpgrade[] = [
     },
     icon: '🤖',
     unlocked: false,
-    purchased: false
+    purchased: false,
+    tier: 1
   },
   {
     id: 'cyber_dragon',
@@ -35,7 +36,8 @@ export const hybridUpgrades: HybridUpgrade[] = [
     },
     icon: '🐲',
     unlocked: false,
-    purchased: false
+    purchased: false,
+    tier: 2
   },
   {
     id: 'temporal_nexus',
@@ -52,7 +54,8 @@ export const hybridUpgrades: HybridUpgrade[] = [
     },
     icon: '⏰',
     unlocked: false,
-    purchased: false
+    purchased: false,
+    tier: 3
   },
   {
     id: 'reality_engine',
@@ -70,6 +73,7 @@ export const hybridUpgrades: HybridUpgrade[] = [
     },
     icon: '🌌',
     unlocked: false,
-    purchased: false
+    purchased: false,
+    tier: 4
   }
 ];
