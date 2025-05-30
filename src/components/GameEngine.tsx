@@ -6,6 +6,7 @@ import { MapView } from './MapView';
 import { RealmTransition } from './RealmTransition';
 import { HybridUpgradesPanel } from './HybridUpgradesPanel';
 import { ConvergenceSystem } from './ConvergenceSystem';
+import { BottomActionBar } from './BottomActionBar';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { hybridUpgrades } from '../data/HybridUpgrades';
 
@@ -76,6 +77,7 @@ const GameEngine: React.FC = () => {
   const [showHybridUpgrades, setShowHybridUpgrades] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showTapEffect, setShowTapEffect] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize buff system
@@ -226,13 +228,18 @@ const GameEngine: React.FC = () => {
     }));
   };
 
-  // Handle tap resource generation
+  // Handle tap resource generation with effect
   const handleTapResource = () => {
+    setShowTapEffect(true);
     setGameState(prev => ({
       ...prev,
       mana: currentRealm === 'fantasy' ? prev.mana + 1 : prev.mana,
       energyCredits: currentRealm === 'scifi' ? prev.energyCredits + 1 : prev.energyCredits,
     }));
+  };
+
+  const handleTapEffectComplete = () => {
+    setShowTapEffect(false);
   };
 
   const formatNumber = (num: number): string => {
@@ -364,65 +371,33 @@ const GameEngine: React.FC = () => {
         buffSystem={buffSystem}
         onRealmChange={switchRealm}
         isTransitioning={isTransitioning}
-        onTapResource={handleTapResource}
+        showTapEffect={showTapEffect}
+        onTapEffectComplete={handleTapEffectComplete}
       />
 
       {/* Realm Transition Effect */}
       <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-      {/* Enhanced Bottom Button Cluster */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30">
-        <div className="flex items-center gap-3 bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/30">
-          {/* Realm Toggle Buttons */}
-          <div className="flex gap-2">
-            <Button
-              onClick={() => switchRealm('fantasy')}
-              disabled={isTransitioning}
-              className={`h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 ${
-                currentRealm === 'fantasy'
-                  ? 'bg-purple-600 hover:bg-purple-700 shadow-lg shadow-purple-500/50 scale-105 border-2 border-purple-400'
-                  : 'bg-transparent border-2 border-purple-400/60 text-purple-300 hover:bg-purple-900/40 hover:border-purple-400'
-              } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
-            >
-              <span className="text-xs font-medium">🏰 Fantasy</span>
-            </Button>
+      {/* Bottom Action Bar */}
+      <BottomActionBar
+        currentRealm={currentRealm}
+        onRealmChange={switchRealm}
+        onHybridClick={() => setShowHybridUpgrades(true)}
+        onTapResource={handleTapResource}
+        isTransitioning={isTransitioning}
+      />
 
-            <Button
-              onClick={() => switchRealm('scifi')}
-              disabled={isTransitioning}
-              className={`h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 ${
-                currentRealm === 'scifi'
-                  ? 'bg-cyan-600 hover:bg-cyan-700 shadow-lg shadow-cyan-500/50 scale-105 border-2 border-cyan-400'
-                  : 'bg-transparent border-2 border-cyan-400/60 text-cyan-300 hover:bg-cyan-900/40 hover:border-cyan-400'
-              } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
-            >
-              <span className="text-xs font-medium">🚀 Sci-Fi</span>
-            </Button>
-          </div>
-
-          {/* Divider */}
-          <div className="w-px h-8 bg-white/30"></div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            <Button 
-              onClick={() => setShowHybridUpgrades(true)}
-              className="h-12 px-4 rounded-full bg-gradient-to-r from-purple-500/80 to-cyan-500/80 hover:from-purple-600/80 hover:to-cyan-600/80 backdrop-blur-sm border-2 border-transparent hover:border-white/30 transition-all duration-300"
-            >
-              <span className="text-xs font-medium">✨ Hybrid</span>
-            </Button>
-
-            {canConverge && (
-              <Button 
-                onClick={() => setShowConvergence(true)}
-                className="h-12 px-4 rounded-full bg-gradient-to-r from-yellow-500/80 to-orange-500/80 hover:from-yellow-600/80 hover:to-orange-600/80 backdrop-blur-sm border-2 border-yellow-400/60 animate-pulse transition-all duration-300"
-              >
-                <span className="text-xs font-medium">🔁 Conv</span>
-              </Button>
-            )}
-          </div>
+      {/* Convergence Ready Button - Show above action bar when ready */}
+      {canConverge && (
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
+          <Button 
+            onClick={() => setShowConvergence(true)}
+            className="h-10 px-6 rounded-full bg-gradient-to-r from-yellow-500/90 to-orange-500/90 hover:from-yellow-600/90 hover:to-orange-600/90 backdrop-blur-sm border-2 border-yellow-400/60 animate-pulse transition-all duration-300 font-bold"
+          >
+            <span className="text-sm">🔁 Convergence Ready!</span>
+          </Button>
         </div>
-      </div>
+      )}
 
       {/* Hybrid Upgrades Modal */}
       {showHybridUpgrades && (
