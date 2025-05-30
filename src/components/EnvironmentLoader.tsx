@@ -2,7 +2,7 @@
 import React, { Suspense } from 'react';
 import { useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { useLoader } from '@react-three/fiber';
 
 interface EnvironmentProps {
