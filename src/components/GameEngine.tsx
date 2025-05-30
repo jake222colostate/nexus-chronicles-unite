@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -89,14 +90,15 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
 
-  // Simple memoized building objects that are always defined
-  const memoizedFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
-  const memoizedScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
+  // Create stable memoized dependencies that are guaranteed to never be undefined
+  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
+  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
+  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
 
   // Initialize buff system with stabilized buildings
   const stableBuffSystem = useMemo(() => {
-    return useBuffSystem(memoizedFantasyBuildings, memoizedScifiBuildings);
-  }, [memoizedFantasyBuildings, memoizedScifiBuildings]);
+    return useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
+  }, [stableFantasyBuildings, stableScifiBuildings]);
 
   // Calculate convergence state early (before callbacks that use it)
   const canConverge = useMemo(() => gameState.mana + gameState.energyCredits >= 1000, [gameState.mana, gameState.energyCredits]);
@@ -140,43 +142,41 @@ const GameEngine: React.FC = () => {
     return () => clearInterval(interval);
   }, []); // Empty dependency array - only run on mount
 
-  // Enhanced production calculation with safe dependency tracking
+  // Enhanced production calculation with guaranteed stable dependencies
   useEffect(() => {
     console.log('Production calculation useEffect triggered');
     
-    // Calculate production rates using current gameState with safe defaults
+    // Calculate production rates using stable building objects
     let manaRate = 0;
     let energyRate = 0;
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
-      const count = gameState.fantasyBuildings?.[building.id] || 0;
+      const count = stableFantasyBuildings[building.id] || 0;
       manaRate += count * building.production;
     });
 
     scifiBuildings.forEach(building => {
-      const count = gameState.scifiBuildings?.[building.id] || 0;
+      const count = stableScifiBuildings[building.id] || 0;
       energyRate += count * building.production;
     });
 
     // Apply hybrid upgrade bonuses
     let globalMultiplier = 1;
-    if (gameState.purchasedUpgrades) {
-      gameState.purchasedUpgrades.forEach(upgradeId => {
-        const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
-        if (upgrade) {
-          if (upgrade.effects.globalProductionBonus) {
-            globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
-          }
-          if (upgrade.effects.manaProductionBonus) {
-            manaRate += upgrade.effects.manaProductionBonus;
-          }
-          if (upgrade.effects.energyProductionBonus) {
-            energyRate += upgrade.effects.energyProductionBonus;
-          }
+    stablePurchasedUpgrades.forEach(upgradeId => {
+      const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
+      if (upgrade) {
+        if (upgrade.effects.globalProductionBonus) {
+          globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
         }
-      });
-    }
+        if (upgrade.effects.manaProductionBonus) {
+          manaRate += upgrade.effects.manaProductionBonus;
+        }
+        if (upgrade.effects.energyProductionBonus) {
+          energyRate += upgrade.effects.energyProductionBonus;
+        }
+      }
+    });
 
     // Cross-realm bonuses
     const fantasyBonus = 1 + (energyRate * 0.01);
@@ -192,12 +192,7 @@ const GameEngine: React.FC = () => {
       manaPerSecond: finalManaRate,
       energyPerSecond: finalEnergyRate,
     }));
-  }, [
-    // Use safe string representations to avoid undefined length issues
-    JSON.stringify(gameState.fantasyBuildings || {}),
-    JSON.stringify(gameState.scifiBuildings || {}),
-    JSON.stringify(gameState.purchasedUpgrades || [])
-  ]);
+  }, [stableFantasyBuildings, stableScifiBuildings, stablePurchasedUpgrades]);
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -308,22 +303,22 @@ const GameEngine: React.FC = () => {
     energyCredits: gameState.energyCredits,
     nexusShards: gameState.nexusShards,
     convergenceCount: gameState.convergenceCount,
-    purchasedUpgrades: gameState.purchasedUpgrades,
+    purchasedUpgrades: stablePurchasedUpgrades,
     manaPerSecond: gameState.manaPerSecond,
     energyPerSecond: gameState.energyPerSecond,
-    fantasyBuildings: memoizedFantasyBuildings,
-    scifiBuildings: memoizedScifiBuildings,
+    fantasyBuildings: stableFantasyBuildings,
+    scifiBuildings: stableScifiBuildings,
     lastSaveTime: gameState.lastSaveTime
   }), [
     gameState.mana,
     gameState.energyCredits,
     gameState.nexusShards,
     gameState.convergenceCount,
-    gameState.purchasedUpgrades,
+    stablePurchasedUpgrades,
     gameState.manaPerSecond,
     gameState.energyPerSecond,
-    memoizedFantasyBuildings,
-    memoizedScifiBuildings,
+    stableFantasyBuildings,
+    stableScifiBuildings,
     gameState.lastSaveTime
   ]);
 
@@ -350,7 +345,7 @@ const GameEngine: React.FC = () => {
         {/* Integrated Map and Skill Tree View */}
         <MapSkillTreeView
           realm={currentRealm}
-          buildings={currentRealm === 'fantasy' ? memoizedFantasyBuildings : memoizedScifiBuildings}
+          buildings={currentRealm === 'fantasy' ? stableFantasyBuildings : stableScifiBuildings}
           manaPerSecond={gameState.manaPerSecond}
           energyPerSecond={gameState.energyPerSecond}
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
