@@ -3,6 +3,7 @@ import { EnhancedStructure } from './EnhancedStructure';
 import { EnhancedNexusCore } from './EnhancedNexusCore';
 import { AnimatedBackground } from './AnimatedBackground';
 import { ParticleSystem } from './ParticleSystem';
+import { RealmToggleButtons } from './RealmToggleButtons';
 
 interface MapViewProps {
   realm: 'fantasy' | 'scifi';
@@ -17,6 +18,7 @@ interface MapViewProps {
   convergenceProgress?: number;
   onNexusClick?: () => void;
   buffSystem?: any;
+  onRealmChange?: (realm: 'fantasy' | 'scifi') => void;
 }
 
 export const MapView: React.FC<MapViewProps> = ({
@@ -31,7 +33,8 @@ export const MapView: React.FC<MapViewProps> = ({
   nexusShards = 0,
   convergenceProgress = 0,
   onNexusClick,
-  buffSystem
+  buffSystem,
+  onRealmChange
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.85 }); // Default 85% zoom for better overview
@@ -219,9 +222,6 @@ export const MapView: React.FC<MapViewProps> = ({
           
           if (!building) return null;
 
-          // Get buffs for this building
-          const buffs = buffSystem ? buffSystem.getBuffsForBuilding(position.id, realm) : [];
-
           return (
             <EnhancedStructure
               key={position.id}
@@ -241,7 +241,7 @@ export const MapView: React.FC<MapViewProps> = ({
 
       {/* iPhone UI Overlay with collapsible instructions */}
       {showInstructions && (
-        <div className="absolute bottom-4 left-4 right-4 text-white text-xs bg-black/40 backdrop-blur-md p-3 rounded-xl border border-white/20 iphone-safe-bottom animate-fade-in">
+        <div className="absolute bottom-20 left-4 right-4 text-white text-xs bg-black/40 backdrop-blur-md p-3 rounded-xl border border-white/20 iphone-safe-bottom animate-fade-in">
           <div className="flex justify-between items-center">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -250,7 +250,7 @@ export const MapView: React.FC<MapViewProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span>Tap structures to upgrade • Tap Nexus for Convergence</span>
+                <span>Tap structures to upgrade • Tap realm buttons to switch</span>
               </div>
               {nexusShards > 0 && (
                 <div className="flex items-center gap-2">
@@ -280,6 +280,15 @@ export const MapView: React.FC<MapViewProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Realm Toggle Buttons - positioned at bottom center */}
+      {onRealmChange && (
+        <RealmToggleButtons
+          currentRealm={realm}
+          onRealmChange={onRealmChange}
+          isTransitioning={isTransitioning}
+        />
+      )}
     </div>
   );
 };

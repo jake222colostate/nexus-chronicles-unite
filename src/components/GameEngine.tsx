@@ -377,7 +377,7 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Map View - adjusted for iPhone constraints */}
+      {/* Map View - now with realm switching functionality */}
       <MapView
         realm={currentRealm}
         buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
@@ -390,6 +390,8 @@ const GameEngine: React.FC = () => {
         convergenceProgress={convergenceProgress}
         onNexusClick={handleNexusClick}
         buffSystem={buffSystem}
+        onRealmChange={switchRealm}
+        isTransitioning={isTransitioning}
       />
 
       {/* Realm Transition Effect */}
