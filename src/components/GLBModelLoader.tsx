@@ -1,5 +1,5 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Mesh, Group } from 'three';
@@ -32,27 +32,11 @@ export const GLBModel: React.FC<GLBModelProps> = ({
   const groupRef = useRef<Group>(null);
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
-  const [loadError, setLoadError] = useState(false);
-  const [gltfData, setGltfData] = useState<any>(null);
   const [glowIntensity, setGlowIntensity] = useState(1);
   
-  // Load GLB model with enhanced error handling
-  useEffect(() => {
-    const loadModel = async () => {
-      try {
-        console.log(`Loading model: ${name} from ${modelUrl}`);
-        const gltf = await useGLTF.preload(modelUrl);
-        setGltfData(gltf);
-        console.log(`Successfully loaded: ${name}`);
-      } catch (error) {
-        console.warn(`Failed to load ${name}, using fallback:`, error);
-        setLoadError(true);
-      }
-    };
-
-    loadModel();
-  }, [modelUrl, name]);
-
+  // Load GLB model with proper error handling
+  const { scene: gltfScene, error } = useGLTF(modelUrl);
+  
   // Enhanced click handler with better debugging
   const handleClick = (event: any) => {
     event.stopPropagation();
@@ -105,8 +89,9 @@ export const GLBModel: React.FC<GLBModelProps> = ({
     }
   });
 
-  // Enhanced fallback geometry for failed loads
-  if (loadError || !gltfData) {
+  // Enhanced fallback geometry for failed loads or loading state
+  if (error || !gltfScene) {
+    console.log(`Using fallback for ${name}, error:`, error);
     return (
       <group
         ref={groupRef}
@@ -182,7 +167,7 @@ export const GLBModel: React.FC<GLBModelProps> = ({
 
       {/* Main 3D model with state-based scaling and opacity */}
       <primitive 
-        object={gltfData.scene.clone()} 
+        object={gltfScene.clone()} 
         scale={scale * (isPurchased ? 1.1 : canAfford ? 1 : 0.8)}
       />
       
