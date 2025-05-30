@@ -124,7 +124,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           />
 
           {/* Enhanced lighting setup */}
-          <ambientLight intensity={0.3} />
+          <ambientLight intensity={0.4} />
           <directionalLight
             position={[5, 10, 5]}
             intensity={0.6}
@@ -138,11 +138,30 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             shadow-camera-bottom={-15}
           />
           
-          {/* Purple realm lighting for fantasy atmosphere */}
-          <pointLight position={[-6, 8, -10]} intensity={0.4} color="#8b5cf6" />
-          <pointLight position={[6, 8, -20]} intensity={0.4} color="#8b5cf6" />
-          <pointLight position={[-6, 8, -30]} intensity={0.4} color="#8b5cf6" />
-          <pointLight position={[6, 8, -40]} intensity={0.4} color="#8b5cf6" />
+          {/* Enhanced purple realm lighting for fantasy atmosphere */}
+          <pointLight position={[-6, 8, -10]} intensity={0.6} color="#8b5cf6" />
+          <pointLight position={[6, 8, -20]} intensity={0.6} color="#8b5cf6" />
+          <pointLight position={[-6, 8, -30]} intensity={0.6} color="#8b5cf6" />
+          <pointLight position={[6, 8, -40]} intensity={0.6} color="#8b5cf6" />
+
+          {/* Additional ambient glow lights around upgrade positions */}
+          {upgradeModels.map((upgrade, index) => {
+            const isUnlocked = isUpgradeUnlocked(index);
+            const isPurchased = purchasedUpgrades[index];
+            
+            if (!isUnlocked && !isPurchased) return null;
+            
+            return (
+              <pointLight
+                key={`glow-${index}`}
+                position={[upgrade.position[0], upgrade.position[1] + 2, upgrade.position[2]]}
+                intensity={isPurchased ? 0.8 : 1.2}
+                color={isPurchased ? "#10b981" : "#c084fc"}
+                distance={8}
+                decay={2}
+              />
+            );
+          })}
 
           {/* Environment and atmosphere */}
           <Environment preset="dawn" />
@@ -184,63 +203,32 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             />
           ))}
 
-          {/* Atmospheric particles for immersion */}
-          {Array.from({ length: 20 }, (_, i) => {
+          {/* Enhanced atmospheric particles for immersion */}
+          {Array.from({ length: 30 }, (_, i) => {
             const x = (Math.random() - 0.5) * 20;
             const y = Math.random() * 10 + 2;
             const z = Math.random() * -50 - 5;
             return (
               <mesh key={i} position={[x, y, z]}>
                 <sphereGeometry args={[0.02]} />
-                <meshBasicMaterial color="#8b5cf6" transparent opacity={0.6} />
+                <meshBasicMaterial color="#8b5cf6" transparent opacity={0.7} />
               </mesh>
             );
           })}
         </Suspense>
       </Canvas>
 
-      {/* Enhanced movement instructions overlay */}
+      {/* Minimal movement instructions overlay */}
       <div className="absolute top-20 left-4 right-4 text-center pointer-events-none">
-        <p className="text-white/80 text-sm font-medium">
+        <p className="text-white/60 text-sm font-medium">
           Use W/S or ↑/↓ to walk forward/backward
         </p>
-        <p className="text-purple-300/60 text-xs mt-1">
-          Look left and right to spot upgrade nodes • Touch top/bottom to move
+        <p className="text-purple-300/40 text-xs mt-1">
+          Look left and right to spot magical upgrades
         </p>
       </div>
 
-      {/* Enhanced upgrade progress HUD */}
-      <div className="absolute top-32 right-4 pointer-events-none">
-        <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3 border border-purple-400/30">
-          <p className="text-white text-sm font-bold">Upgrades: {upgradeCount}/5</p>
-          <div className="flex gap-1 mt-2">
-            {purchasedUpgrades.map((purchased, index) => {
-              const isUnlocked = isUpgradeUnlocked(index);
-              return (
-                <div
-                  key={index}
-                  className={`w-3 h-3 rounded-full border-2 ${
-                    purchased 
-                      ? 'bg-green-400 border-green-300' 
-                      : isUnlocked 
-                        ? 'bg-purple-400 border-purple-300' 
-                        : 'bg-gray-600 border-gray-500'
-                  }`}
-                />
-              );
-            })}
-          </div>
-          <div className="text-xs text-white/60 mt-1 space-y-1">
-            {upgradeModels.map((upgrade, index) => (
-              <div key={index} className={`${purchasedUpgrades[index] ? 'text-green-400' : isUpgradeUnlocked(index) ? 'text-purple-300' : 'text-gray-500'}`}>
-                {upgrade.name}: {upgrade.cost} shards
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Distance indicator for nearest upgrade */}
+      {/* Contextual interaction hint only when near an upgrade */}
       <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 pointer-events-none">
         {upgradeModels.map((upgrade, index) => {
           const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
@@ -250,9 +238,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           if (!isNearby || !isUnlocked || purchasedUpgrades[index]) return null;
           
           return (
-            <div key={index} className="bg-purple-900/80 backdrop-blur-sm rounded-lg p-2 mb-2 border border-purple-400/30">
+            <div key={index} className="bg-purple-900/70 backdrop-blur-sm rounded-lg p-3 mb-2 border border-purple-400/30">
               <p className="text-white text-sm font-bold">{upgrade.name}</p>
-              <p className="text-purple-300 text-xs">Distance: {distance.toFixed(1)}m</p>
               {isWithinRange(upgrade.position) && (
                 <p className="text-green-400 text-xs animate-pulse">Click to upgrade!</p>
               )}
