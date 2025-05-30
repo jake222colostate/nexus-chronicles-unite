@@ -12,10 +12,10 @@ export const EnhancedTapButton: React.FC<EnhancedTapButtonProps> = ({
   onTap
 }) => {
   return (
-    <div className="absolute bottom-[72px] left-1/2 transform -translate-x-1/2 z-30">
+    <div className="absolute bottom-[64px] left-1/2 transform -translate-x-1/2 z-30">
       <Button 
         onClick={onTap}
-        className={`h-10 px-4 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm backdrop-blur-xl shadow-lg border relative overflow-hidden ${
+        className={`h-11 px-6 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm backdrop-blur-xl shadow-lg border relative overflow-hidden ${
           realm === 'fantasy'
             ? 'bg-gradient-to-r from-purple-600/90 to-violet-700/90 hover:from-purple-500/90 hover:to-violet-600/90 border-purple-400/70 text-purple-100 shadow-purple-500/30'
             : 'bg-gradient-to-r from-cyan-600/90 to-blue-700/90 hover:from-cyan-500/90 hover:to-blue-600/90 border-cyan-400/70 text-cyan-100 shadow-cyan-500/30'
@@ -29,7 +29,7 @@ export const EnhancedTapButton: React.FC<EnhancedTapButtonProps> = ({
         
         <span className="flex items-center gap-2 relative z-10">
           {realm === 'fantasy' ? '✨' : '⚡'}
-          Tap to Generate {realm === 'fantasy' ? 'Mana' : 'Energy'}
+          Tap for {realm === 'fantasy' ? 'Mana' : 'Energy'}
         </span>
         
         {/* Subtle pulse animation */}

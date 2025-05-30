@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 import { MapView } from './MapView';
 import { RealmTransition } from './RealmTransition';
-import { HybridUpgradesPanel } from './HybridUpgradesPanel';
+import { SkillTreeUpgradesPanel } from './SkillTreeUpgradesPanel';
 import { ConvergenceSystem } from './ConvergenceSystem';
 import { BottomActionBar } from './BottomActionBar';
 import { TopHUD } from './TopHUD';
@@ -12,7 +12,7 @@ import { ResourceTooltip } from './ResourceTooltip';
 import { EnhancedTapButton } from './EnhancedTapButton';
 import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
-import { hybridUpgrades } from '../data/HybridUpgrades';
+import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
 
 interface GameState {
@@ -79,7 +79,7 @@ const GameEngine: React.FC = () => {
 
   const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi'>('fantasy');
   const [showConvergence, setShowConvergence] = useState(false);
-  const [showHybridUpgrades, setShowHybridUpgrades] = useState(false);
+  const [showSkillTree, setShowSkillTree] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showTapEffect, setShowTapEffect] = useState(false);
   const [showQuickHelp, setShowQuickHelp] = useState(() => {
@@ -151,7 +151,7 @@ const GameEngine: React.FC = () => {
     // Apply hybrid upgrade bonuses
     let globalMultiplier = 1;
     gameState.purchasedUpgrades.forEach(upgradeId => {
-      const upgrade = hybridUpgrades.find(u => u.id === upgradeId);
+      const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
           globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
@@ -225,7 +225,7 @@ const GameEngine: React.FC = () => {
   };
 
   const purchaseUpgrade = (upgradeId: string) => {
-    const upgrade = hybridUpgrades.find(u => u.id === upgradeId);
+    const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
     if (!upgrade || gameState.nexusShards < upgrade.cost) return;
 
     setGameState(prev => ({
@@ -284,13 +284,13 @@ const GameEngine: React.FC = () => {
 
   return (
     <div className="h-[667px] w-full relative overflow-hidden bg-black">
-      {/* Enhanced background gradient with depth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/30 via-transparent to-cyan-900/30 pointer-events-none" />
+      {/* Enhanced background with better layering */}
+      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
       
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Top HUD - Compact and properly aligned */}
+      {/* Enhanced TopHUD */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -311,7 +311,7 @@ const GameEngine: React.FC = () => {
       />
 
       {/* Main Game Area - Full width with proper spacing */}
-      <div className="absolute inset-0 pt-12">
+      <div className="absolute inset-0 pt-16">
         {/* Map View - Takes full available space */}
         <MapView
           realm={currentRealm}
@@ -345,16 +345,16 @@ const GameEngine: React.FC = () => {
         <BottomActionBar
           currentRealm={currentRealm}
           onRealmChange={switchRealm}
-          onHybridClick={() => setShowHybridUpgrades(true)}
+          onHybridClick={() => setShowSkillTree(true)}
           isTransitioning={isTransitioning}
         />
 
         {/* Convergence Ready Button - Enhanced positioning and styling */}
         {canConverge && (
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
-              className="h-10 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
+              className="h-11 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
             >
               <span className="text-sm flex items-center gap-2">
                 🔁 Convergence Ready!
@@ -370,13 +370,13 @@ const GameEngine: React.FC = () => {
         onClose={() => setShowQuickHelp(false)}
       />
 
-      {/* Hybrid Upgrades Modal - Enhanced with proper containment and scrolling */}
-      {showHybridUpgrades && (
+      {/* Enhanced Skill Tree Modal - Enhanced with proper containment and scrolling */}
+      {showSkillTree && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              setShowHybridUpgrades(false);
+              setShowSkillTree(false);
             }
           }}
         >
@@ -384,23 +384,11 @@ const GameEngine: React.FC = () => {
             {/* Enhanced glassmorphism */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-xl" />
             
-            <div className="flex justify-between items-center p-3 border-b border-purple-400/30 flex-shrink-0">
-              <h2 className="text-lg font-bold text-white">✨ Hybrid Nexus</h2>
-              <Button
-                onClick={() => setShowHybridUpgrades(false)}
-                variant="ghost"
-                size="sm"
-                className="text-white hover:bg-white/15 p-1 h-6 w-6 rounded-full transition-all duration-200"
-              >
-                <X size={14} />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-3">
-              <HybridUpgradesPanel
-                gameState={gameState}
-                onPurchaseUpgrade={purchaseUpgrade}
-              />
-            </div>
+            <SkillTreeUpgradesPanel
+              gameState={gameState}
+              onPurchaseUpgrade={purchaseUpgrade}
+              onClose={() => setShowSkillTree(false)}
+            />
           </Card>
         </div>
       )}

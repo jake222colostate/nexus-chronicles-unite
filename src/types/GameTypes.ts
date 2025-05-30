@@ -34,6 +34,7 @@ export interface HybridUpgrade {
   icon: string;
   unlocked: boolean;
   purchased: boolean;
+  tier: number;
 }
 
 export interface ConvergenceData {

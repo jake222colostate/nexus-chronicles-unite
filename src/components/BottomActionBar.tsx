@@ -22,16 +22,16 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   };
 
   return (
-    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 z-30">
+    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-30">
       <div className="flex items-center gap-2 bg-black/50 backdrop-blur-xl p-2 rounded-xl border border-white/30 shadow-lg">
-        {/* Enhanced glassmorphism with consistent styling */}
+        {/* Enhanced glassmorphism */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-xl" />
         
         {/* Fantasy Realm Button */}
         <Button
           onClick={() => handleRealmSwitch('fantasy')}
           disabled={isTransitioning}
-          className={`h-10 px-4 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
+          className={`h-9 px-3 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-xs ${
             currentRealm === 'fantasy'
               ? 'bg-purple-600/90 hover:bg-purple-700/90 shadow-md shadow-purple-500/30 scale-105 border border-purple-400/80'
               : 'bg-transparent border border-purple-400/60 text-purple-300 hover:bg-purple-900/40 hover:border-purple-400'
@@ -49,7 +49,7 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
         <Button
           onClick={() => handleRealmSwitch('scifi')}
           disabled={isTransitioning}
-          className={`h-10 px-4 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
+          className={`h-9 px-3 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-xs ${
             currentRealm === 'scifi'
               ? 'bg-cyan-600/90 hover:bg-cyan-700/90 shadow-md shadow-cyan-500/30 scale-105 border border-cyan-400/80'
               : 'bg-transparent border border-cyan-400/60 text-cyan-300 hover:bg-cyan-900/40 hover:border-cyan-400'
@@ -64,15 +64,15 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
         </Button>
 
         {/* Vertical Divider */}
-        <div className="w-px h-6 bg-gradient-to-b from-transparent via-white/40 to-transparent mx-1"></div>
+        <div className="w-px h-5 bg-gradient-to-b from-transparent via-white/40 to-transparent mx-1"></div>
 
-        {/* Hybrid Button - matching style and spacing */}
+        {/* Hybrid Button */}
         <Button 
           onClick={onHybridClick}
-          className="h-10 px-4 rounded-lg bg-gradient-to-r from-purple-500/80 to-cyan-500/80 hover:from-purple-600/80 hover:to-cyan-600/80 backdrop-blur-sm border border-white/30 hover:border-white/50 transition-all duration-300 relative overflow-hidden active:scale-95 shadow-md shadow-purple-500/20 font-medium text-sm"
+          className="h-9 px-3 rounded-lg bg-gradient-to-r from-purple-500/80 to-cyan-500/80 hover:from-purple-600/80 hover:to-cyan-600/80 backdrop-blur-sm border border-white/30 hover:border-white/50 transition-all duration-300 relative overflow-hidden active:scale-95 shadow-md shadow-purple-500/20 font-medium text-xs"
         >
           <span className="relative z-10 flex items-center gap-1 text-white">
-            ✨ Hybrid
+            ✨ Tree
           </span>
           <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-cyan-400/20 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-lg" />
         </Button>

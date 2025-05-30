@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { EnhancedStructure } from './EnhancedStructure';
 import { EnhancedNexusCore } from './EnhancedNexusCore';
@@ -61,19 +60,19 @@ export const MapView: React.FC<MapViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Vertical tiered structure positioning for mobile-first design
+  // Enhanced structure positioning with better spacing and visual hierarchy
   const structurePositions = {
     fantasy: [
-      { id: 'temple', x: 50, y: 15, size: 'massive', tier: 1 }, // Top tier - most expensive
-      { id: 'grove', x: 30, y: 35, size: 'large', tier: 2 },   // Second tier
-      { id: 'tower', x: 70, y: 35, size: 'medium', tier: 2 },  // Second tier
-      { id: 'altar', x: 50, y: 75, size: 'small', tier: 3 },   // Bottom tier - cheapest
+      { id: 'temple', x: 50, y: 20, size: 'massive', tier: 1 },
+      { id: 'grove', x: 25, y: 45, size: 'large', tier: 2 },
+      { id: 'tower', x: 75, y: 45, size: 'medium', tier: 2 },
+      { id: 'altar', x: 50, y: 75, size: 'small', tier: 3 },
     ],
     scifi: [
-      { id: 'megastructure', x: 50, y: 15, size: 'massive', tier: 1 }, // Top tier
-      { id: 'station', x: 25, y: 35, size: 'large', tier: 2 },         // Second tier
-      { id: 'reactor', x: 75, y: 35, size: 'medium', tier: 2 },        // Second tier
-      { id: 'generator', x: 50, y: 75, size: 'small', tier: 3 },       // Bottom tier
+      { id: 'megastructure', x: 50, y: 20, size: 'massive', tier: 1 },
+      { id: 'station', x: 25, y: 45, size: 'large', tier: 2 },
+      { id: 'reactor', x: 75, y: 45, size: 'medium', tier: 2 },
+      { id: 'generator', x: 50, y: 75, size: 'small', tier: 3 },
     ]
   };
 
@@ -239,16 +238,16 @@ export const MapView: React.FC<MapViewProps> = ({
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* Enhanced Background with subtle gradient */}
+      {/* Enhanced Background with better layering */}
       <div className={`absolute inset-0 transition-all duration-700 ${
         isTransitioning ? 'opacity-50 scale-105' : 'opacity-100 scale-100'
       }`}>
         <AnimatedBackground realm={realm} />
-        {/* Enhanced top-to-bottom gradient overlay for visual hierarchy */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/30 pointer-events-none" />
+        {/* Improved gradient overlay for better content visibility */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
       </div>
 
-      {/* Map Container with enhanced interaction */}
+      {/* Map Container */}
       <div 
         ref={mapRef}
         className={`absolute inset-0 transition-all duration-500 cursor-grab active:cursor-grabbing ${
@@ -266,7 +265,7 @@ export const MapView: React.FC<MapViewProps> = ({
             : 'bg-gradient-to-t from-cyan-900/30 via-blue-800/15 to-transparent'
         }`} />
 
-        {/* Enhanced Structures with proper vertical spacing */}
+        {/* Enhanced Structures with improved positioning */}
         {structurePositions[realm].map((position) => {
           const building = buildingData.find(b => b.id === position.id);
           const count = buildings[position.id] || 0;
@@ -290,8 +289,8 @@ export const MapView: React.FC<MapViewProps> = ({
           );
         })}
 
-        {/* Enhanced Particle Systems */}
-        <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-30' : 'opacity-100'}`}>
+        {/* Optimized Particle Systems */}
+        <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-20' : 'opacity-60'}`}>
           <ParticleSystem 
             realm={realm} 
             productionRate={realm === 'fantasy' ? manaPerSecond : energyPerSecond} 
@@ -307,7 +306,7 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       )}
 
-      {/* Enhanced Upgrade Tooltips - Smart positioning */}
+      {/* Enhanced Upgrade Tooltips */}
       {upgradeTooltips.map((tooltip) => (
         <UpgradeFloatingTooltip
           key={tooltip.id}
@@ -319,10 +318,10 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       ))}
 
-      {/* Building Upgrade Modal - Enhanced positioning and containment */}
+      {/* Building Upgrade Modal - Enhanced containment */}
       {selectedBuilding && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={handleModalBackdropClick}
         >
           <div className="w-full max-w-[90%] max-h-[70vh]">
