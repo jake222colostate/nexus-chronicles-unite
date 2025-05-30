@@ -19,11 +19,7 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
   const moveSpeed = useRef(0);
   const moveDirection = useRef(0); // 1 for forward, -1 for backward, 0 for stopped
   const swayTime = useRef(0);
-  
-  // Camera rotation state
-  const yawAngle = useRef(0); // Horizontal rotation (-Math.PI to Math.PI for 180 degrees each way)
-  const isMouseDown = useRef(false);
-  const lastMouseX = useRef(0);
+  const lookDirection = useRef(0); // For subtle left/right looking
 
   // Handle keyboard input
   useEffect(() => {
@@ -38,12 +34,12 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
         moveSpeed.current = 3;
         moveDirection.current = -1;
       }
-      // Horizontal look controls with A/D keys
+      // Subtle left/right look controls
       if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft') {
-        yawAngle.current = Math.max(-Math.PI, yawAngle.current - 0.05);
+        lookDirection.current = -0.3;
       }
       if (event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight') {
-        yawAngle.current = Math.min(Math.PI, yawAngle.current + 0.05);
+        lookDirection.current = 0.3;
       }
     };
 
@@ -52,6 +48,10 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
           event.key === 's' || event.key === 'S' || event.key === 'ArrowDown') {
         moveSpeed.current = 0;
         moveDirection.current = 0;
+      }
+      if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft' ||
+          event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight') {
+        lookDirection.current = 0;
       }
     };
 
@@ -64,48 +64,7 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     };
   }, [canMoveForward]);
 
-  // Handle mouse look controls
-  useEffect(() => {
-    const handleMouseDown = (event: MouseEvent) => {
-      if (event.button === 0) { // Left mouse button
-        isMouseDown.current = true;
-        lastMouseX.current = event.clientX;
-      }
-    };
-
-    const handleMouseMove = (event: MouseEvent) => {
-      if (isMouseDown.current) {
-        const deltaX = event.clientX - lastMouseX.current;
-        lastMouseX.current = event.clientX;
-        
-        // Update yaw with mouse movement, clamped to 180 degrees each way
-        yawAngle.current = Math.max(-Math.PI, Math.min(Math.PI, yawAngle.current + deltaX * 0.003));
-      }
-    };
-
-    const handleMouseUp = () => {
-      isMouseDown.current = false;
-    };
-
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      canvas.addEventListener('mousedown', handleMouseDown);
-      canvas.addEventListener('mousemove', handleMouseMove);
-      canvas.addEventListener('mouseup', handleMouseUp);
-      canvas.addEventListener('mouseleave', handleMouseUp);
-    }
-
-    return () => {
-      if (canvas) {
-        canvas.removeEventListener('mousedown', handleMouseDown);
-        canvas.removeEventListener('mousemove', handleMouseMove);
-        canvas.removeEventListener('mouseup', handleMouseUp);
-        canvas.removeEventListener('mouseleave', handleMouseUp);
-      }
-    };
-  }, []);
-
-  // Handle touch input for mobile with improved look controls
+  // Handle touch input for mobile
   useEffect(() => {
     const handleTouchStart = (event: TouchEvent) => {
       if (event.touches.length === 1) {
@@ -127,9 +86,9 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
         
         // Look direction based on horizontal position
         if (x < rect.width * 0.3) {
-          yawAngle.current = Math.max(-Math.PI, yawAngle.current - 0.1);
+          lookDirection.current = -0.3; // Look left
         } else if (x > rect.width * 0.7) {
-          yawAngle.current = Math.min(Math.PI, yawAngle.current + 0.1);
+          lookDirection.current = 0.3; // Look right
         }
       }
     };
@@ -137,6 +96,7 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     const handleTouchEnd = () => {
       moveSpeed.current = 0;
       moveDirection.current = 0;
+      lookDirection.current = 0;
     };
 
     const canvas = document.querySelector('canvas');
@@ -182,16 +142,15 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     camera.position.x = targetPosition.current.x + Math.sin(swayTime.current * 1.8) * swayAmount;
     camera.position.y = targetPosition.current.y + Math.sin(swayTime.current * 2.2) * swayAmount * 0.5;
     
-    // Apply yaw rotation to camera look direction
-    const lookDistance = 5;
+    // Camera look direction with subtle left/right attention-drawing
     const lookTarget = new Vector3(
-      camera.position.x + Math.sin(yawAngle.current) * lookDistance,
-      camera.position.y,
-      camera.position.z - Math.cos(yawAngle.current) * lookDistance
+      camera.position.x + lookDirection.current * 2, // Subtle side-looking
+      camera.position.y, 
+      camera.position.z - 5
     );
     
-    // Add automatic attention-drawing rotation towards upgrades (subtle)
-    const autoLookOffset = Math.sin(swayTime.current * 0.8) * 0.05;
+    // Add automatic attention-drawing rotation towards upgrades
+    const autoLookOffset = Math.sin(swayTime.current * 0.8) * 0.1;
     lookTarget.x += autoLookOffset;
     
     camera.lookAt(lookTarget);

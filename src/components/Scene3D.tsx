@@ -1,12 +1,11 @@
 
-import React, { Suspense, useRef, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
 import { ResourceParticles } from './ResourceParticles';
 import { TapEffect3D } from './TapEffect3D';
-import EnvironmentLoader from './EnvironmentLoader';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 
 interface Scene3DProps {
@@ -40,68 +39,16 @@ export const Scene3D: React.FC<Scene3DProps> = ({
 }) => {
   const cameraRef = useRef();
 
-  // Stabilize the purchased upgrades length to prevent unnecessary recalculations
-  const purchasedUpgradesLength = useMemo(() => {
-    return gameState.purchasedUpgrades?.length || 0;
-  }, [gameState.purchasedUpgrades?.length]);
-
-  // Memoize environment tier calculation with stable dependency
-  const environmentTier = useMemo(() => {
-    if (purchasedUpgradesLength >= 8) return 5;
-    if (purchasedUpgradesLength >= 6) return 4;
-    if (purchasedUpgradesLength >= 4) return 3;
-    if (purchasedUpgradesLength >= 2) return 2;
-    return 1;
-  }, [purchasedUpgradesLength]);
-
-  // Stabilize gameState values to prevent unnecessary callback recreations
-  const stableGameValues = useMemo(() => ({
-    mana: gameState.mana,
-    energyCredits: gameState.energyCredits,
-    nexusShards: gameState.nexusShards,
-    convergenceCount: gameState.convergenceCount,
-    purchasedUpgrades: gameState.purchasedUpgrades || []
-  }), [
-    gameState.mana,
-    gameState.energyCredits, 
-    gameState.nexusShards,
-    gameState.convergenceCount,
-    gameState.purchasedUpgrades
-  ]);
-
-  const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
+  const checkUpgradeUnlocked = (upgrade: any): boolean => {
     const { requirements } = upgrade;
     
-    if (requirements.mana && stableGameValues.mana < requirements.mana) return false;
-    if (requirements.energy && stableGameValues.energyCredits < requirements.energy) return false;
-    if (requirements.nexusShards && stableGameValues.nexusShards < requirements.nexusShards) return false;
-    if (requirements.convergenceCount && stableGameValues.convergenceCount < requirements.convergenceCount) return false;
+    if (requirements.mana && gameState.mana < requirements.mana) return false;
+    if (requirements.energy && gameState.energyCredits < requirements.energy) return false;
+    if (requirements.nexusShards && gameState.nexusShards < requirements.nexusShards) return false;
+    if (requirements.convergenceCount && gameState.convergenceCount < requirements.convergenceCount) return false;
     
     return true;
-  }, [stableGameValues]);
-
-  // Memoize upgrade nodes with stable dependencies
-  const upgradeNodes = useMemo(() => {
-    return upgradePositions.map((position) => {
-      const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
-      if (!upgrade) return null;
-
-      return (
-        <UpgradeNode3D
-          key={upgrade.id}
-          upgrade={upgrade}
-          position={[position.x, position.y, position.z]}
-          isUnlocked={checkUpgradeUnlocked(upgrade)}
-          isPurchased={stableGameValues.purchasedUpgrades.includes(upgrade.id)}
-          canAfford={stableGameValues.nexusShards >= upgrade.cost}
-          onClick={() => onUpgradeClick(upgrade.id)}
-          realm={realm}
-        />
-      );
-    }).filter(Boolean);
-  }, [checkUpgradeUnlocked, stableGameValues.purchasedUpgrades, stableGameValues.nexusShards, onUpgradeClick, realm]);
-
-  console.log(`Scene3D: Rendering with environment tier ${environmentTier}, realm: ${realm}`);
+  };
 
   return (
     <div className="w-full h-full relative">
@@ -109,17 +56,16 @@ export const Scene3D: React.FC<Scene3DProps> = ({
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
         dpr={[1, 2]}
         performance={{ min: 0.5 }}
-        shadows
       >
         <Suspense fallback={null}>
-          {/* Camera positioned for first-person-like view */}
+          {/* Camera */}
           <PerspectiveCamera
             ref={cameraRef}
             makeDefault
-            position={[0, 2, 8]}
-            fov={65}
+            position={[0, 0, 8]}
+            fov={60}
             near={0.1}
-            far={200}
+            far={100}
           />
 
           {/* Controls - limited to vertical movement */}
@@ -135,18 +81,26 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             maxPolarAngle={3 * Math.PI / 4}
           />
 
-          {/* Environment Loader with tier-based models */}
-          <EnvironmentLoader tier={environmentTier} />
+          {/* Lighting */}
+          <ambientLight intensity={0.4} />
+          <directionalLight
+            position={[5, 5, 5]}
+            intensity={0.8}
+            castShadow
+            shadow-mapSize-width={1024}
+            shadow-mapSize-height={1024}
+          />
+          <pointLight position={[0, 10, 0]} intensity={0.3} color={realm === 'fantasy' ? '#8b5cf6' : '#06b6d4'} />
 
-          {/* Enhanced animated starfield background */}
+          {/* Animated starfield background */}
           <Stars
-            radius={80}
-            depth={60}
-            count={3000}
-            factor={6}
-            saturation={0.2}
+            radius={50}
+            depth={50}
+            count={2000}
+            factor={4}
+            saturation={0}
             fade
-            speed={0.3}
+            speed={0.5}
           />
 
           {/* Floating Island Base */}
@@ -159,23 +113,36 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             energyPerSecond={gameState.energyPerSecond}
           />
 
-          {/* 3D Upgrade Nodes - Memoized */}
-          {upgradeNodes}
+          {/* 3D Upgrade Nodes */}
+          {upgradePositions.map((position) => {
+            const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
+            if (!upgrade) return null;
+
+            return (
+              <UpgradeNode3D
+                key={upgrade.id}
+                upgrade={upgrade}
+                position={[position.x, position.y, position.z]}
+                isUnlocked={checkUpgradeUnlocked(upgrade)}
+                isPurchased={gameState.purchasedUpgrades?.includes(upgrade.id) || false}
+                canAfford={gameState.nexusShards >= upgrade.cost}
+                onClick={() => onUpgradeClick(upgrade.id)}
+                realm={realm}
+              />
+            );
+          })}
 
           {/* Tap Effect */}
           {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
           )}
-
-          {/* Additional atmospheric fog for depth */}
-          <fog attach="fog" args={['#1a0b2e', 30, 100]} />
         </Suspense>
       </Canvas>
 
       {/* Loading fallback */}
       <Suspense fallback={
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-white text-sm">Loading 3D Environment...</div>
+          <div className="text-white text-sm">Loading 3D Scene...</div>
         </div>
       }>
         <div />

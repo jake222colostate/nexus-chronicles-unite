@@ -1,12 +1,11 @@
 
-import React, { Suspense, useState, useCallback, useEffect, useMemo } from 'react';
+import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
-import { Vector3 } from 'three';
+import { Vector3, Fog } from 'three';
 import { GLBModel } from './GLBModelLoader';
 import { FirstPersonController } from './FirstPersonController';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
-import EnvironmentLoader from './EnvironmentLoader';
 
 interface Fantasy3DUpgradeWorldProps {
   onUpgradeClick: (upgradeName: string) => void;
@@ -81,17 +80,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   const [selectedUpgrade, setSelectedUpgrade] = useState<UpgradeData | null>(null);
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
 
-  // Calculate environment tier based on unlocked upgrades - memoized to prevent re-renders
-  const environmentTier = useMemo(() => {
-    const unlockedCount = upgrades.filter(upgrade => upgrade.unlocked).length;
-    
-    if (unlockedCount >= 12) return 5;
-    if (unlockedCount >= 9) return 4;
-    if (unlockedCount >= 6) return 3;
-    if (unlockedCount >= 3) return 2;
-    return 1;
-  }, [upgrades]);
-
   const handlePositionChange = useCallback((position: Vector3) => {
     setCameraPosition(position);
   }, []);
@@ -101,23 +89,19 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     console.log(`Camera position:`, cameraPosition);
     console.log(`Upgrade position:`, upgrade.position);
     
-    // Check if player is within interaction range (much more generous range)
+    // Check if player is within interaction range (increased range for better UX)
     const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
     console.log(`Distance to ${upgrade.name}: ${distance.toFixed(2)}`);
     
-    if (distance > 15) { // Increased range significantly
+    if (distance > 8) { // Increased from 6 to 8 for better UX
       console.log("Move closer to interact with this upgrade!");
       return;
     }
     
-    // Always open the modal when clicking (removed previous restriction)
-    console.log(`Opening modal for ${upgrade.name}`);
     setSelectedUpgrade(upgrade);
   }, [cameraPosition]);
 
   const handleUpgradePurchase = useCallback((upgrade: UpgradeData) => {
-    console.log(`Attempting to purchase ${upgrade.name} for ${upgrade.cost} mana. Current mana: ${currentMana}`);
-    
     if (currentMana >= upgrade.cost) {
       // Purchase successful
       setCurrentMana(prev => prev - upgrade.cost);
@@ -142,11 +126,11 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     }
   }, [currentMana]);
 
-  // Check if player is within interaction range of upgrade (much more generous)
-  const isWithinRange = useCallback((upgradePosition: [number, number, number]): boolean => {
+  // Check if player is within interaction range of upgrade (increased range)
+  const isWithinRange = (upgradePosition: [number, number, number]): boolean => {
     const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
-    return distance <= 15; // Much more generous range
-  }, [cameraPosition]);
+    return distance <= 8; // Increased from 6 to 8
+  };
 
   // Player can move forward unless they've reached the very end
   const canMoveForward = cameraPosition.z > -110;
@@ -167,16 +151,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     return Math.floor(num).toString();
   };
 
-  // Memoize visible upgrades to prevent unnecessary re-renders
-  const visibleUpgrades = useMemo(() => {
-    return upgrades.filter(upgrade => {
-      const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-      return distance <= 40;
-    });
-  }, [upgrades, cameraPosition]);
-
-  console.log(`Fantasy3DUpgradeWorld: Environment tier ${environmentTier}`);
-
   return (
     <div className="absolute inset-0 w-full h-full">
       <Canvas
@@ -189,6 +163,9 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         }}
         shadows
         gl={{ antialias: true, alpha: true }}
+        onCreated={({ scene }) => {
+          scene.fog = new Fog('#0f0f23', 15, 120);
+        }}
       >
         <Suspense fallback={null}>
           <FirstPersonController
@@ -197,56 +174,80 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             canMoveForward={canMoveForward}
           />
 
-          {/* Integrated Environment Loader - tier-based environment */}
-          <EnvironmentLoader tier={environmentTier} />
+          {/* Enhanced fantasy lighting setup */}
+          <ambientLight intensity={0.4} color="#1a1a2e" />
+          <directionalLight
+            position={[8, 15, 8]}
+            intensity={0.8}
+            color="#e6e6fa"
+            castShadow
+            shadow-mapSize-width={2048}
+            shadow-mapSize-height={2048}
+            shadow-camera-far={200}
+            shadow-camera-left={-30}
+            shadow-camera-right={30}
+            shadow-camera-top={30}
+            shadow-camera-bottom={-30}
+          />
+          
+          {/* Progressive lighting along the path */}
+          {Array.from({ length: 8 }, (_, i) => (
+            <pointLight 
+              key={i}
+              position={[(i % 2 === 0 ? -6 : 6), 8, -12 - (i * 12)]} 
+              intensity={0.8} 
+              color="#8b5cf6" 
+              distance={25} 
+            />
+          ))}
 
           <Environment preset="dawn" />
 
-          {/* Mystical ground plane */}
+          {/* Extended mystical ground plane */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -50]} receiveShadow>
             <planeGeometry args={[40, 120]} />
             <meshLambertMaterial color="#1a1a2e" />
           </mesh>
 
-          {/* Mystical path markers - style based on environment tier */}
-          {Array.from({ length: 20 }, (_, i) => {
-            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9', '#fbbf24', '#f59e0b'];
-            return (
-              <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
-                <circleGeometry args={[0.4]} />
-                <meshBasicMaterial 
-                  color={tierColors[environmentTier - 1]} 
-                  transparent 
-                  opacity={0.5 + (environmentTier * 0.1)} 
-                />
-              </mesh>
-            );
-          })}
+          {/* Mystical path markers */}
+          {Array.from({ length: 20 }, (_, i) => (
+            <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.4]} />
+              <meshBasicMaterial color="#8b5cf6" transparent opacity={0.5} />
+            </mesh>
+          ))}
 
           <ContactShadows 
             position={[0, -0.4, -50]} 
-            opacity={0.5 + (environmentTier * 0.1)} 
+            opacity={0.6} 
             scale={40} 
             blur={2.5} 
             far={10} 
           />
 
-          {/* Load GLB upgrade models with working URLs only - Memoized */}
-          {visibleUpgrades.map((upgrade) => (
-            <GLBModel
-              key={upgrade.id}
-              modelUrl={upgrade.modelUrl}
-              name={upgrade.name}
-              position={upgrade.position}
-              scale={upgrade.scale}
-              onClick={() => handleUpgradeClick(upgrade)}
-              isUnlocked={upgrade.unlocked}
-              isPurchased={upgrade.unlocked}
-              isWithinRange={isWithinRange(upgrade.position)}
-              cost={upgrade.cost}
-              canAfford={currentMana >= upgrade.cost}
-            />
-          ))}
+          {/* Load GLB upgrade models with working URLs only */}
+          {upgrades.map((upgrade) => {
+            const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
+            if (distance > 30) return null; // Performance optimization
+            
+            console.log(`Rendering upgrade: ${upgrade.name} at position:`, upgrade.position);
+            
+            return (
+              <GLBModel
+                key={upgrade.id}
+                modelUrl={upgrade.modelUrl}
+                name={upgrade.name}
+                position={upgrade.position}
+                scale={upgrade.scale}
+                onClick={() => handleUpgradeClick(upgrade)}
+                isUnlocked={upgrade.unlocked}
+                isPurchased={upgrade.unlocked}
+                isWithinRange={isWithinRange(upgrade.position)}
+                cost={upgrade.cost}
+                canAfford={currentMana >= upgrade.cost}
+              />
+            );
+          })}
 
           {/* Enhanced atmospheric particles */}
           {Array.from({ length: 40 }, (_, i) => {
@@ -267,40 +268,33 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </Suspense>
       </Canvas>
 
-      {/* Enhanced Resource Display with environment tier indicator */}
+      {/* Clean Resource Display - Top Right */}
       <div className="absolute top-4 right-4 pointer-events-none">
         <div className="bg-purple-900/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-400/40">
           <div className="text-yellow-400 text-lg font-bold">{formatNumber(currentMana)} Mana</div>
           <div className="text-purple-300 text-sm">{formatNumber(totalManaPerSecond)}/sec</div>
-          <div className="text-purple-200 text-xs mt-1">
-            Environment Tier {environmentTier}
-          </div>
         </div>
       </div>
 
-      {/* Progress indicator with environment transition markers */}
+      {/* Progress indicator */}
       <div className="absolute bottom-4 left-4 right-4 pointer-events-none">
-        <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
+        <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden">
           <div 
             className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
             style={{ 
               width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 100) * 100)))}%` 
             }}
           />
-          {/* Environment tier markers */}
-          <div className="absolute top-0 left-1/4 w-0.5 h-full bg-yellow-400 opacity-60" />
-          <div className="absolute top-0 left-2/4 w-0.5 h-full bg-yellow-400 opacity-60" />
-          <div className="absolute top-0 left-3/4 w-0.5 h-full bg-yellow-400 opacity-60" />
         </div>
         <p className="text-white/50 text-xs text-center mt-1">
-          Journey Progress: {upgrades.filter(u => u.unlocked).length}/{upgrades.length} Upgrades | Environment: Tier {environmentTier}
+          Journey Progress: {upgrades.filter(u => u.unlocked).length}/{upgrades.length} Upgrades
         </p>
       </div>
 
       {/* Movement instructions */}
       <div className="absolute top-20 left-4 right-4 text-center pointer-events-none">
         <p className="text-white/70 text-sm font-medium">
-          Use WASD to move around, click and drag or A/D to look around (180° range), get close and click upgrades to unlock
+          Use WASD to move around, look around with mouse, get close and click upgrades to unlock
         </p>
       </div>
 

@@ -52,18 +52,15 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   }>>([]);
 
   const handleUpgradeClick = useCallback((upgradeId: string) => {
-    console.log(`MapSkillTreeView: Upgrade clicked - ${upgradeId}`);
     setSelectedUpgrade(upgradeId);
   }, []);
 
   const handle3DUpgradeClick = useCallback((upgradeName: string) => {
-    console.log(`MapSkillTreeView: 3D Upgrade clicked - ${upgradeName}`);
     setSelected3DUpgrade(upgradeName);
   }, []);
 
   const handleUpgradePurchase = useCallback(() => {
     if (selectedUpgrade) {
-      console.log(`MapSkillTreeView: Purchasing upgrade - ${selectedUpgrade}`);
       onPurchaseUpgrade(selectedUpgrade);
       setSelectedUpgrade(null);
     }
@@ -86,8 +83,6 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
       setSelected3DUpgrade(null);
     }
   }, []);
-
-  console.log(`MapSkillTreeView: Rendering ${realm} realm with gameState:`, gameState);
 
   return (
     <div className="relative w-full h-full overflow-hidden">
