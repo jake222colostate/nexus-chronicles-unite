@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { EnhancedStructure } from './EnhancedStructure';
 import { EnhancedNexusCore } from './EnhancedNexusCore';
@@ -232,7 +231,6 @@ export const MapView: React.FC<MapViewProps> = ({
               realm={realm}
               onBuy={() => onBuyBuilding(position.id)}
               canAfford={currency >= Math.floor(building.cost * Math.pow(building.costMultiplier, count))}
-              buffs={buffs}
             />
           );
         })}

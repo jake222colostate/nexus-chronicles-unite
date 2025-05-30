@@ -8,10 +8,16 @@ interface CrossRealmBuffSystemProps {
   scifiBuildings: { [key: string]: number };
 }
 
-export const CrossRealmBuffSystem: React.FC<CrossRealmBuffSystemProps> = ({
-  fantasyBuildings,
-  scifiBuildings
-}) => {
+interface BuffSystemMethods {
+  getActiveBuffs: () => BuffIndicator[];
+  calculateBuildingMultiplier: (buildingId: string, realm: 'fantasy' | 'scifi') => { multiplier: number; flatBonus: number };
+  getBuffsForBuilding: (buildingId: string, realm: 'fantasy' | 'scifi') => BuffIndicator[];
+}
+
+export const createBuffSystem = (
+  fantasyBuildings: { [key: string]: number },
+  scifiBuildings: { [key: string]: number }
+): BuffSystemMethods => {
   
   const getActiveBuffs = (): BuffIndicator[] => {
     const activeBuffs: BuffIndicator[] = [];
@@ -33,7 +39,7 @@ export const CrossRealmBuffSystem: React.FC<CrossRealmBuffSystemProps> = ({
     return activeBuffs;
   };
 
-  const calculateBuildingMultiplier = (buildingId: string, realm: 'fantasy' | 'scifi'): number => {
+  const calculateBuildingMultiplier = (buildingId: string, realm: 'fantasy' | 'scifi'): { multiplier: number; flatBonus: number } => {
     let multiplier = 1;
     let flatBonus = 0;
     
@@ -70,6 +76,10 @@ export const CrossRealmBuffSystem: React.FC<CrossRealmBuffSystemProps> = ({
 };
 
 export const useBuffSystem = (fantasyBuildings: { [key: string]: number }, scifiBuildings: { [key: string]: number }) => {
-  const buffSystem = CrossRealmBuffSystem({ fantasyBuildings, scifiBuildings });
-  return buffSystem;
+  return createBuffSystem(fantasyBuildings, scifiBuildings);
+};
+
+// Legacy component export for compatibility
+export const CrossRealmBuffSystem: React.FC<CrossRealmBuffSystemProps> = () => {
+  return null;
 };
