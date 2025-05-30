@@ -40,29 +40,47 @@ export const Scene3D: React.FC<Scene3DProps> = ({
 }) => {
   const cameraRef = useRef();
 
-  // Memoize environment tier calculation to prevent re-renders
-  const environmentTier = useMemo(() => {
-    const upgradeCount = gameState.purchasedUpgrades?.length || 0;
-    
-    if (upgradeCount >= 8) return 5;
-    if (upgradeCount >= 6) return 4;
-    if (upgradeCount >= 4) return 3;
-    if (upgradeCount >= 2) return 2;
-    return 1;
+  // Stabilize the purchased upgrades length to prevent unnecessary recalculations
+  const purchasedUpgradesLength = useMemo(() => {
+    return gameState.purchasedUpgrades?.length || 0;
   }, [gameState.purchasedUpgrades?.length]);
+
+  // Memoize environment tier calculation with stable dependency
+  const environmentTier = useMemo(() => {
+    if (purchasedUpgradesLength >= 8) return 5;
+    if (purchasedUpgradesLength >= 6) return 4;
+    if (purchasedUpgradesLength >= 4) return 3;
+    if (purchasedUpgradesLength >= 2) return 2;
+    return 1;
+  }, [purchasedUpgradesLength]);
+
+  // Stabilize gameState values to prevent unnecessary callback recreations
+  const stableGameValues = useMemo(() => ({
+    mana: gameState.mana,
+    energyCredits: gameState.energyCredits,
+    nexusShards: gameState.nexusShards,
+    convergenceCount: gameState.convergenceCount,
+    purchasedUpgrades: gameState.purchasedUpgrades || []
+  }), [
+    gameState.mana,
+    gameState.energyCredits, 
+    gameState.nexusShards,
+    gameState.convergenceCount,
+    gameState.purchasedUpgrades
+  ]);
 
   const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
     const { requirements } = upgrade;
     
-    if (requirements.mana && gameState.mana < requirements.mana) return false;
-    if (requirements.energy && gameState.energyCredits < requirements.energy) return false;
-    if (requirements.nexusShards && gameState.nexusShards < requirements.nexusShards) return false;
-    if (requirements.convergenceCount && gameState.convergenceCount < requirements.convergenceCount) return false;
+    if (requirements.mana && stableGameValues.mana < requirements.mana) return false;
+    if (requirements.energy && stableGameValues.energyCredits < requirements.energy) return false;
+    if (requirements.nexusShards && stableGameValues.nexusShards < requirements.nexusShards) return false;
+    if (requirements.convergenceCount && stableGameValues.convergenceCount < requirements.convergenceCount) return false;
     
     return true;
-  }, [gameState.mana, gameState.energyCredits, gameState.nexusShards, gameState.convergenceCount]);
+  }, [stableGameValues]);
 
-  // Memoize upgrade nodes to prevent unnecessary re-renders
+  // Memoize upgrade nodes with stable dependencies
   const upgradeNodes = useMemo(() => {
     return upgradePositions.map((position) => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
@@ -74,14 +92,14 @@ export const Scene3D: React.FC<Scene3DProps> = ({
           upgrade={upgrade}
           position={[position.x, position.y, position.z]}
           isUnlocked={checkUpgradeUnlocked(upgrade)}
-          isPurchased={gameState.purchasedUpgrades?.includes(upgrade.id) || false}
-          canAfford={gameState.nexusShards >= upgrade.cost}
+          isPurchased={stableGameValues.purchasedUpgrades.includes(upgrade.id)}
+          canAfford={stableGameValues.nexusShards >= upgrade.cost}
           onClick={() => onUpgradeClick(upgrade.id)}
           realm={realm}
         />
       );
     }).filter(Boolean);
-  }, [checkUpgradeUnlocked, gameState.purchasedUpgrades, gameState.nexusShards, onUpgradeClick, realm]);
+  }, [checkUpgradeUnlocked, stableGameValues.purchasedUpgrades, stableGameValues.nexusShards, onUpgradeClick, realm]);
 
   console.log(`Scene3D: Rendering with environment tier ${environmentTier}, realm: ${realm}`);
 

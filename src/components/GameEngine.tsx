@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
@@ -104,9 +104,9 @@ const GameEngine: React.FC = () => {
     }
   }, []); // Empty dependency array - only run on mount
 
-  // Game loop
+  // Game loop with stable interval
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
+    const interval = setInterval(() => {
       setGameState(prev => {
         const newState = {
           ...prev,
@@ -121,9 +121,7 @@ const GameEngine: React.FC = () => {
       });
     }, 100);
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    return () => clearInterval(interval);
   }, []); // Empty dependency array - only run on mount
 
   // Enhanced production calculation with buffs and upgrades
@@ -237,7 +235,7 @@ const GameEngine: React.FC = () => {
   };
 
   // Enhanced realm switching with proper visual feedback
-  const switchRealm = (newRealm: 'fantasy' | 'scifi') => {
+  const switchRealm = useCallback((newRealm: 'fantasy' | 'scifi') => {
     if (newRealm === currentRealm || isTransitioning) return;
     
     setIsTransitioning(true);
@@ -248,31 +246,31 @@ const GameEngine: React.FC = () => {
         setIsTransitioning(false);
       }, 300);
     }, 200);
-  };
+  }, [currentRealm, isTransitioning]);
 
-  const handleNexusClick = () => {
+  const handleNexusClick = useCallback(() => {
     if (canConverge) {
       setShowConvergence(true);
     }
-  };
+  }, [canConverge]);
 
-  const handleShowHelp = () => {
+  const handleShowHelp = useCallback(() => {
     setShowQuickHelp(true);
-  };
+  }, []);
 
   // Handle tap resource generation with effect
-  const handleTapResource = () => {
+  const handleTapResource = useCallback(() => {
     setShowTapEffect(true);
     setGameState(prev => ({
       ...prev,
       mana: currentRealm === 'fantasy' ? prev.mana + 1 : prev.mana,
       energyCredits: currentRealm === 'scifi' ? prev.energyCredits + 1 : prev.energyCredits,
     }));
-  };
+  }, [currentRealm]);
 
-  const handleTapEffectComplete = () => {
+  const handleTapEffectComplete = useCallback(() => {
     setShowTapEffect(false);
-  };
+  }, []);
 
   const formatNumber = (num: number): string => {
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
@@ -282,6 +280,19 @@ const GameEngine: React.FC = () => {
 
   const canConverge = gameState.mana + gameState.energyCredits >= 1000;
   const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
+
+  // Memoize gameState to prevent unnecessary re-renders
+  const stableGameState = useMemo(() => gameState, [
+    gameState.mana,
+    gameState.energyCredits,
+    gameState.nexusShards,
+    gameState.convergenceCount,
+    gameState.purchasedUpgrades,
+    gameState.manaPerSecond,
+    gameState.energyPerSecond,
+    gameState.fantasyBuildings,
+    gameState.scifiBuildings
+  ]);
 
   return (
     <div className="h-[667px] w-full relative overflow-hidden bg-black">
@@ -312,7 +323,7 @@ const GameEngine: React.FC = () => {
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
           buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
           currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
-          gameState={gameState}
+          gameState={stableGameState}
           onPurchaseUpgrade={purchaseUpgrade}
           isTransitioning={isTransitioning}
           showTapEffect={showTapEffect}
