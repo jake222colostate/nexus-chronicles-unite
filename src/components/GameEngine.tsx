@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -131,8 +132,9 @@ const GameEngine: React.FC = () => {
     return () => clearInterval(interval);
   }, []); // Empty dependency array - only run on mount
 
-  // Enhanced production calculation with buffs and upgrades
+  // Enhanced production calculation with buffs and upgrades - FIXED to prevent infinite loop
   useEffect(() => {
+    console.log('Production calculation useEffect triggered');
     let manaRate = 0;
     let energyRate = 0;
 
@@ -170,17 +172,22 @@ const GameEngine: React.FC = () => {
     const fantasyBonus = 1 + (energyRate * 0.01);
     const scifiBonus = 1 + (manaRate * 0.01);
 
+    const finalManaRate = manaRate * fantasyBonus * globalMultiplier;
+    const finalEnergyRate = energyRate * scifiBonus * globalMultiplier;
+
+    console.log('Setting production rates:', { finalManaRate, finalEnergyRate });
+
     setGameState(prev => ({
       ...prev,
-      manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
-      energyPerSecond: energyRate * scifiBonus * globalMultiplier,
+      manaPerSecond: finalManaRate,
+      energyPerSecond: finalEnergyRate,
     }));
   }, [
     memoizedFantasyBuildings, 
     memoizedScifiBuildings, 
-    gameState.purchasedUpgrades, 
-    buffSystem
-  ]); // Proper dependencies with memoized buildings
+    gameState.purchasedUpgrades
+    // Removed buffSystem from dependencies to prevent infinite loop
+  ]); // Fixed dependencies - removed buffSystem
 
   const buyBuilding = (buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
