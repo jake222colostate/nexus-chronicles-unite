@@ -2,7 +2,6 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
-import { Text } from '@react-three/drei';
 
 interface UpgradeNode3DProps {
   upgrade: any;
@@ -108,18 +107,6 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = ({
           />
         </mesh>
       )}
-
-      {/* Node label */}
-      <Text
-        position={[0, -1, 0]}
-        fontSize={0.15}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={2}
-      >
-        {upgrade.name}
-      </Text>
 
       {/* Status indicator */}
       {isPurchased && (
