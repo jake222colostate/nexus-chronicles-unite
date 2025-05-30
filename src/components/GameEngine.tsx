@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
-import { MapView } from './MapView';
+import { MapSkillTreeView } from './MapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
-import { SkillTreeUpgradesPanel } from './SkillTreeUpgradesPanel';
 import { ConvergenceSystem } from './ConvergenceSystem';
 import { BottomActionBar } from './BottomActionBar';
 import { TopHUD } from './TopHUD';
-import { ResourceTooltip } from './ResourceTooltip';
 import { EnhancedTapButton } from './EnhancedTapButton';
 import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
@@ -300,20 +296,10 @@ const GameEngine: React.FC = () => {
         onHelpClick={handleShowHelp}
       />
 
-      {/* Resource Tooltip - Positioned above nexus */}
-      <ResourceTooltip
-        mana={gameState.mana}
-        energyCredits={gameState.energyCredits}
-        manaPerSecond={gameState.manaPerSecond}
-        energyPerSecond={gameState.energyPerSecond}
-        convergenceProgress={convergenceProgress}
-        realm={currentRealm}
-      />
-
-      {/* Main Game Area - Full width with proper spacing */}
+      {/* Main Game Area with integrated skill tree */}
       <div className="absolute inset-0 pt-16">
-        {/* Map View - Takes full available space */}
-        <MapView
+        {/* Integrated Map and Skill Tree View */}
+        <MapSkillTreeView
           realm={currentRealm}
           buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
           manaPerSecond={gameState.manaPerSecond}
@@ -321,35 +307,30 @@ const GameEngine: React.FC = () => {
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
           buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
           currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
-          nexusShards={gameState.nexusShards}
-          convergenceProgress={convergenceProgress}
-          onNexusClick={handleNexusClick}
-          buffSystem={buffSystem}
-          onRealmChange={switchRealm}
+          gameState={gameState}
+          onPurchaseUpgrade={purchaseUpgrade}
           isTransitioning={isTransitioning}
           showTapEffect={showTapEffect}
           onTapEffectComplete={handleTapEffectComplete}
-          onTapResource={handleTapResource}
         />
 
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Enhanced Tap Button - Properly positioned and styled */}
+        {/* Enhanced Tap Button */}
         <EnhancedTapButton
           realm={currentRealm}
           onTap={handleTapResource}
         />
 
-        {/* Enhanced Bottom Action Bar - Compact styling */}
+        {/* Enhanced Bottom Action Bar */}
         <BottomActionBar
           currentRealm={currentRealm}
           onRealmChange={switchRealm}
-          onHybridClick={() => setShowSkillTree(true)}
           isTransitioning={isTransitioning}
         />
 
-        {/* Convergence Ready Button - Enhanced positioning and styling */}
+        {/* Convergence Ready Button */}
         {canConverge && (
           <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
@@ -364,36 +345,13 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Help Modal - Enhanced containment */}
+      {/* Quick Help Modal */}
       <QuickHelpModal
         isOpen={showQuickHelp}
         onClose={() => setShowQuickHelp(false)}
       />
 
-      {/* Enhanced Skill Tree Modal - Enhanced with proper containment and scrolling */}
-      {showSkillTree && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowSkillTree(false);
-            }
-          }}
-        >
-          <Card className="w-full max-w-[90%] max-h-[70vh] overflow-hidden bg-gradient-to-br from-purple-900/95 to-cyan-900/95 border border-purple-400/50 relative flex flex-col backdrop-blur-xl shadow-2xl rounded-xl">
-            {/* Enhanced glassmorphism */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-xl" />
-            
-            <SkillTreeUpgradesPanel
-              gameState={gameState}
-              onPurchaseUpgrade={purchaseUpgrade}
-              onClose={() => setShowSkillTree(false)}
-            />
-          </Card>
-        </div>
-      )}
-
-      {/* Convergence Modal - Enhanced with proper containment */}
+      {/* Convergence Modal */}
       {showConvergence && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
