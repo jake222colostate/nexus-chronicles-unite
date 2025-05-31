@@ -6,18 +6,20 @@ import { PixelTerrainSystem } from './PixelTerrainSystem';
 interface EnvironmentSystemProps {
   upgradeCount: number;
   onEnvironmentChange?: (tier: number) => void;
+  playerPosition?: [number, number, number];
 }
 
 export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   upgradeCount,
-  onEnvironmentChange
+  onEnvironmentChange,
+  playerPosition = [0, 0, 0]
 }) => {
   const [currentTier, setCurrentTier] = useState(1);
   const [transitionOpacity, setTransitionOpacity] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const lastNotifiedTier = useRef(1);
 
-  // Calculate environment tier based on upgrade count - memoized to prevent recalculation
+  // Calculate environment tier based on upgrade count
   const environmentTier = useMemo(() => {
     if (upgradeCount < 3) return 1;
     if (upgradeCount < 6) return 2;
@@ -26,25 +28,25 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
     return 5;
   }, [upgradeCount]);
 
-  // Handle environment transitions - fixed to prevent infinite loops
+  // Handle environment transitions
   useEffect(() => {
     if (environmentTier !== currentTier && !isTransitioning) {
       setIsTransitioning(true);
       
-      // Quick fade transition
-      setTransitionOpacity(0.3);
+      // Smooth fade transition
+      setTransitionOpacity(0.5);
       
       const transitionTimeout = setTimeout(() => {
         setCurrentTier(environmentTier);
         setTransitionOpacity(1);
         setIsTransitioning(false);
         
-        // Only call onEnvironmentChange if tier actually changed and we haven't notified about this tier
+        // Notify of tier change
         if (lastNotifiedTier.current !== environmentTier && onEnvironmentChange) {
           lastNotifiedTier.current = environmentTier;
           onEnvironmentChange(environmentTier);
         }
-      }, 300);
+      }, 400);
 
       return () => clearTimeout(transitionTimeout);
     }
@@ -52,19 +54,23 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
 
   return (
     <>
-      {/* Dynamic Skybox - NO PARTICLES */}
+      {/* Enhanced Dynamic Skybox */}
       <DynamicSkybox tier={currentTier} opacity={transitionOpacity} />
       
-      {/* Pixel-style Terrain - NO PARTICLES */}
-      <PixelTerrainSystem tier={currentTier} opacity={transitionOpacity} />
+      {/* Seamless Pixel Terrain with Parallax */}
+      <PixelTerrainSystem 
+        tier={currentTier} 
+        opacity={transitionOpacity}
+        playerPosition={playerPosition}
+      />
       
-      {/* Clean atmospheric fog only */}
+      {/* Enhanced atmospheric fog */}
       <fog 
         attach="fog" 
         args={[
-          currentTier <= 2 ? '#87CEEB' : currentTier <= 3 ? '#8B5CF6' : '#1E1B4B', 
-          30, 
-          120
+          currentTier <= 2 ? '#E0F6FF' : currentTier <= 3 ? '#8B008B' : currentTier <= 4 ? '#191970' : '#0C0C0C', 
+          40, 
+          150
         ]} 
       />
     </>

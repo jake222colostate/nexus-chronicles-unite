@@ -1,14 +1,17 @@
+
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
 interface PixelTerrainSystemProps {
   tier: number;
   opacity?: number;
+  playerPosition?: [number, number, number];
 }
 
 export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({ 
   tier, 
-  opacity = 1 
+  opacity = 1,
+  playerPosition = [0, 0, 0]
 }) => {
   // Create pixel-style textures
   const createPixelTexture = useMemo(() => {
@@ -41,273 +44,125 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
   const grassTexture = useMemo(() => createPixelTexture('120'), [createPixelTexture]);
   const pathTexture = useMemo(() => createPixelTexture('30'), [createPixelTexture]);
 
-  // Create solid mountain geometries with proper face connections
-  const createSolidMountain = useMemo(() => {
-    return (width: number, height: number, depth: number, extendTowardsCenter: boolean = false) => {
+  // Create seamless mountain range with proper terrain generation
+  const createSeamlessMountainRange = useMemo(() => {
+    return (side: 'left' | 'right', segments: number = 20) => {
       const geometry = new THREE.BufferGeometry();
       const vertices = [];
       const indices = [];
+      const uvs = [];
       
-      // Create vertex rings from bottom to top
-      const rings = [
-        { segments: 12, radius: 1.0, height: -0.3 },  // Base ring (largest)
-        { segments: 10, radius: 0.7, height: 0.2 },   // Lower middle
-        { segments: 8, radius: 0.5, height: 0.5 },    // Upper middle  
-        { segments: 6, radius: 0.3, height: 0.8 },    // Near peak
-        { segments: 1, radius: 0.0, height: 1.0 }     // Peak (single point)
-      ];
+      const sideMultiplier = side === 'left' ? -1 : 1;
+      const baseDistance = 25; // Distance from center path
+      
+      // Generate mountain profile using noise-like function
+      const mountainProfile = [];
+      for (let i = 0; i <= segments; i++) {
+        const z = -10 - (i * 8); // Extend along path
+        const noiseValue = Math.sin(i * 0.3) * 0.5 + Math.cos(i * 0.7) * 0.3 + Math.sin(i * 0.1) * 0.2;
+        const height = 15 + noiseValue * 8; // Base height with variation
+        const width = 8 + Math.sin(i * 0.4) * 3; // Width variation
+        mountainProfile.push({ z, height, width });
+      }
       
       let vertexIndex = 0;
-      const ringStartIndices = [];
       
-      // Create vertices for each ring
-      rings.forEach((ring, ringIndex) => {
-        ringStartIndices.push(vertexIndex);
+      // Create vertices for mountain range
+      for (let i = 0; i < mountainProfile.length; i++) {
+        const profile = mountainProfile[i];
         
-        if (ring.segments === 1) {
-          // Peak vertex
-          const peakVariation = (Math.random() - 0.5) * 0.2;
-          vertices.push(
-            peakVariation * width,
-            height * ring.height,
-            peakVariation * depth
-          );
-          vertexIndex++;
-        } else {
-          // Ring vertices
-          for (let i = 0; i < ring.segments; i++) {
-            const angle = (i / ring.segments) * Math.PI * 2;
-            let radius = ring.radius;
-            
-            // Apply extension toward center if needed
-            if (extendTowardsCenter && ringIndex === 0) {
-              const centerAngle = 0;
-              const angleDiff = Math.abs(angle - centerAngle);
-              const normalizedDiff = Math.min(angleDiff, Math.PI * 2 - angleDiff);
-              const extensionFactor = 1 + (1 - normalizedDiff / Math.PI) * 0.4;
-              radius *= extensionFactor;
-            }
-            
-            // Add natural variation
-            radius *= (0.8 + Math.random() * 0.4);
-            
-            const x = Math.cos(angle) * radius * width;
-            const z = Math.sin(angle) * radius * depth;
-            const y = height * ring.height + (Math.random() - 0.5) * height * 0.1;
-            
-            vertices.push(x, y, z);
-            vertexIndex++;
-          }
-        }
-      });
-      
-      // Create faces between adjacent rings
-      for (let ringIndex = 0; ringIndex < rings.length - 1; ringIndex++) {
-        const currentRing = rings[ringIndex];
-        const nextRing = rings[ringIndex + 1];
-        const currentStart = ringStartIndices[ringIndex];
-        const nextStart = ringStartIndices[ringIndex + 1];
+        // Base vertices (ground level)
+        const baseX = sideMultiplier * (baseDistance + profile.width);
+        vertices.push(baseX, -1, profile.z); // Base outer
+        vertices.push(sideMultiplier * baseDistance, -1, profile.z); // Base inner
+        uvs.push(i / segments, 0, i / segments, 0);
         
-        if (nextRing.segments === 1) {
-          // Connect to peak
-          const peakIndex = nextStart;
-          for (let i = 0; i < currentRing.segments; i++) {
-            const current = currentStart + i;
-            const next = currentStart + ((i + 1) % currentRing.segments);
-            
-            // Triangle from current ring edge to peak
-            indices.push(current, next, peakIndex);
-          }
-        } else {
-          // Connect two rings with proper triangulation
-          for (let i = 0; i < currentRing.segments; i++) {
-            const currentVertex = currentStart + i;
-            const nextCurrentVertex = currentStart + ((i + 1) % currentRing.segments);
-            
-            // Map to next ring vertices (handle different segment counts)
-            const ratio = nextRing.segments / currentRing.segments;
-            const nextVertex = nextStart + Math.floor(i * ratio) % nextRing.segments;
-            const nextNextVertex = nextStart + Math.floor((i + 1) * ratio) % nextRing.segments;
-            
-            // Create quad using two triangles
-            if (nextVertex !== nextNextVertex) {
-              // Normal case: create quad
-              indices.push(currentVertex, nextCurrentVertex, nextVertex);
-              indices.push(nextCurrentVertex, nextNextVertex, nextVertex);
-            } else {
-              // Edge case: create single triangle
-              indices.push(currentVertex, nextCurrentVertex, nextVertex);
-            }
-          }
+        // Peak vertex
+        const peakX = sideMultiplier * (baseDistance + profile.width * 0.6);
+        vertices.push(peakX, profile.height, profile.z);
+        uvs.push(i / segments, 1);
+        
+        // Create triangles for this segment
+        if (i < mountainProfile.length - 1) {
+          const baseIndex = vertexIndex;
+          
+          // Triangle 1: base to peak
+          indices.push(baseIndex, baseIndex + 1, baseIndex + 2);
+          
+          // Triangle 2: connect to next segment
+          indices.push(baseIndex + 1, baseIndex + 4, baseIndex + 3);
+          indices.push(baseIndex + 1, baseIndex + 3, baseIndex + 2);
+          
+          // Triangle 3: outer base connection
+          indices.push(baseIndex, baseIndex + 2, baseIndex + 5);
+          indices.push(baseIndex, baseIndex + 5, baseIndex + 3);
         }
+        
+        vertexIndex += 3;
       }
-      
-      // Create base (bottom cap)
-      const baseRingStart = ringStartIndices[0];
-      const baseSegments = rings[0].segments;
-      for (let i = 1; i < baseSegments - 1; i++) {
-        indices.push(
-          baseRingStart,
-          baseRingStart + i,
-          baseRingStart + i + 1
-        );
-      }
-      
-      // Convert to typed arrays
-      const verticesArray = new Float32Array(vertices);
-      const indicesArray = new Uint16Array(indices);
       
       // Set geometry attributes
-      geometry.setAttribute('position', new THREE.BufferAttribute(verticesArray, 3));
-      geometry.setIndex(new THREE.BufferAttribute(indicesArray, 1));
+      geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+      geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
+      geometry.setIndex(indices);
       geometry.computeVertexNormals();
       
       return geometry;
     };
   }, []);
 
-  // Generate mountain data with better positioning
-  const mountainData = useMemo(() => {
-    const mountains = [];
+  // Generate mountain ranges with parallax effect
+  const mountainRanges = useMemo(() => {
+    const ranges = [];
     
-    // Left mountain range
-    for (let i = 0; i < 5; i++) {
-      const z = -20 - (i * 22);
-      const baseWidth = 12 + Math.sin(i * 0.7) * 4;
-      const height = 18 + Math.cos(i * 0.5) * 6;
-      const depth = 10 + Math.sin(i * 0.3) * 3;
-      const extendToCenter = Math.random() > 0.5;
-      
-      mountains.push({
-        position: [-30, 0, z],
-        geometry: createSolidMountain(baseWidth, height, depth, extendToCenter),
-        color: tier <= 2 ? '#6B7280' : tier <= 3 ? '#7C3AED' : '#1E1B4B',
-        scale: 1 + (i * 0.05)
-      });
-    }
+    // Near mountain ranges (main)
+    ranges.push({
+      geometry: createSeamlessMountainRange('left'),
+      position: [0, 0, playerPosition[2] * 0.1], // Slight parallax
+      color: tier <= 2 ? '#6B7280' : tier <= 3 ? '#7C3AED' : '#1E1B4B',
+      scale: 1
+    });
     
-    // Right mountain range
-    for (let i = 0; i < 6; i++) {
-      const z = -15 - (i * 18);
-      const baseWidth = 8 + Math.cos(i * 0.6) * 3;
-      const height = 12 + Math.sin(i * 0.8) * 4;
-      const depth = 7 + Math.cos(i * 0.4) * 2;
-      const extendToCenter = Math.random() > 0.4;
-      
-      mountains.push({
-        position: [26, 0, z],
-        geometry: createSolidMountain(baseWidth, height, depth, extendToCenter),
-        color: tier <= 2 ? '#9CA3AF' : tier <= 3 ? '#8B5CF6' : '#312E81',
-        scale: 0.9 + (i * 0.06)
-      });
-    }
+    ranges.push({
+      geometry: createSeamlessMountainRange('right'),
+      position: [0, 0, playerPosition[2] * 0.1],
+      color: tier <= 2 ? '#9CA3AF' : tier <= 3 ? '#8B5CF6' : '#312E81',
+      scale: 1
+    });
     
-    // Background distant mountains
-    for (let i = 0; i < 3; i++) {
-      const z = -120 - (i * 25);
-      const baseWidth = 20 + Math.random() * 10;
-      const height = 25 + Math.random() * 10;
-      const depth = 15 + Math.random() * 5;
-      const side = i % 2 === 0 ? -1 : 1;
-      
-      mountains.push({
-        position: [side * (40 + Math.random() * 10), -5, z],
-        geometry: createSolidMountain(baseWidth, height, depth, false),
-        color: tier <= 2 ? '#D1D5DB' : tier <= 3 ? '#A855F7' : '#4C1D95',
-        scale: 1.5 + Math.random() * 0.3
-      });
-    }
+    // Far mountain ranges (background with more parallax)
+    ranges.push({
+      geometry: createSeamlessMountainRange('left', 15),
+      position: [-20, -3, playerPosition[2] * 0.05], // More parallax
+      color: tier <= 2 ? '#D1D5DB' : tier <= 3 ? '#A855F7' : '#4C1D95',
+      scale: 1.8
+    });
     
-    return mountains;
-  }, [createSolidMountain, tier]);
+    ranges.push({
+      geometry: createSeamlessMountainRange('right', 15),
+      position: [20, -3, playerPosition[2] * 0.05],
+      color: tier <= 2 ? '#E5E7EB' : tier <= 3 ? '#C084FC' : '#6366F1',
+      scale: 1.8
+    });
+    
+    return ranges;
+  }, [createSeamlessMountainRange, tier, playerPosition]);
 
-  // Generate truly random tree positions for natural forest appearance
+  // Generate trees positioned safely away from path
   const treePositions = useMemo(() => {
     const positions = [];
-    const minDistance = 6; // Reduced minimum distance for denser forest
-    const maxAttempts = 100;
+    const minDistanceFromPath = 8; // Ensure trees don't block upgrades
     
-    // Create clusters of trees on each side
-    for (let cluster = 0; cluster < 8; cluster++) {
-      const clusterSide = cluster % 2 === 0 ? -1 : 1; // Alternate sides
-      const clusterCenterZ = -10 - (cluster * 15) + (Math.random() - 0.5) * 20;
-      const clusterCenterX = clusterSide * (12 + Math.random() * 15);
+    // Generate trees in safe zones
+    for (let cluster = 0; cluster < 12; cluster++) {
+      const side = cluster % 2 === 0 ? -1 : 1;
+      const clusterZ = -10 - (cluster * 12);
       
-      // Add 3-5 trees per cluster
-      const treesInCluster = 3 + Math.floor(Math.random() * 3);
-      
-      for (let t = 0; t < treesInCluster; t++) {
-        let attempts = 0;
-        let validPosition = false;
-        let x, z, scale;
+      for (let t = 0; t < 3; t++) {
+        const x = side * (minDistanceFromPath + Math.random() * 15);
+        const z = clusterZ + (Math.random() - 0.5) * 8;
+        const scale = 0.6 + Math.random() * 0.6;
         
-        while (!validPosition && attempts < maxAttempts) {
-          // Random offset from cluster center
-          const offsetX = (Math.random() - 0.5) * 25;
-          const offsetZ = (Math.random() - 0.5) * 30;
-          
-          x = clusterCenterX + offsetX;
-          z = clusterCenterZ + offsetZ;
-          
-          // Ensure trees stay on their side and away from path
-          if (clusterSide > 0) {
-            x = Math.max(6, x); // Right side, minimum 6 units from center
-          } else {
-            x = Math.min(-6, x); // Left side, minimum 6 units from center
-          }
-          
-          // Random scale for variety
-          scale = 0.6 + Math.random() * 0.8;
-          
-          // Check distance from existing trees
-          validPosition = true;
-          for (const existing of positions) {
-            const distance = Math.sqrt(
-              Math.pow(x - existing.x, 2) + Math.pow(z - existing.z, 2)
-            );
-            if (distance < minDistance) {
-              validPosition = false;
-              break;
-            }
-          }
-          
-          attempts++;
-        }
-        
-        if (validPosition) {
-          positions.push({ x, z, scale });
-        }
-      }
-    }
-    
-    // Add some scattered individual trees for extra randomness
-    for (let i = 0; i < 12; i++) {
-      let attempts = 0;
-      let validPosition = false;
-      let x, z, scale;
-      
-      while (!validPosition && attempts < maxAttempts) {
-        const side = Math.random() > 0.5 ? 1 : -1;
-        x = side * (8 + Math.random() * 20); // 8-28 units from center
-        z = -5 - Math.random() * 100; // Anywhere along the path
-        scale = 0.5 + Math.random() * 0.7;
-        
-        // Check distance from existing trees
-        validPosition = true;
-        for (const existing of positions) {
-          const distance = Math.sqrt(
-            Math.pow(x - existing.x, 2) + Math.pow(z - existing.z, 2)
-          );
-          if (distance < minDistance) {
-            validPosition = false;
-            break;
-          }
-        }
-        
-        attempts++;
-      }
-      
-      if (validPosition) {
         positions.push({ x, z, scale });
       }
     }
@@ -319,7 +174,7 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
     <group>
       {/* Main grass terrain */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, -50]} receiveShadow>
-        <planeGeometry args={[60, 120]} />
+        <planeGeometry args={[60, 140]} />
         <meshLambertMaterial 
           map={grassTexture}
           transparent 
@@ -327,9 +182,9 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         />
       </mesh>
 
-      {/* Pixel-style dirt path */}
+      {/* Clear, visible path for upgrades */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.1, -50]} receiveShadow>
-        <planeGeometry args={[3, 120]} />
+        <planeGeometry args={[4, 140]} />
         <meshLambertMaterial 
           map={pathTexture}
           transparent 
@@ -337,12 +192,12 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         />
       </mesh>
 
-      {/* Solid mountain ranges with proper geometry */}
-      {mountainData.map((mountain, index) => (
-        <group key={`mountain-${index}`} position={mountain.position} scale={[mountain.scale, mountain.scale, mountain.scale]}>
-          <mesh geometry={mountain.geometry} castShadow receiveShadow>
+      {/* Seamless mountain ranges with parallax */}
+      {mountainRanges.map((range, index) => (
+        <group key={`mountain-range-${index}`} position={range.position} scale={[range.scale, range.scale, range.scale]}>
+          <mesh geometry={range.geometry} castShadow receiveShadow>
             <meshLambertMaterial 
-              color={mountain.color}
+              color={range.color}
               transparent 
               opacity={opacity}
             />
@@ -350,7 +205,7 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         </group>
       ))}
 
-      {/* Naturally scattered trees creating diverse forest clusters */}
+      {/* Trees positioned safely away from upgrade path */}
       {treePositions.map((pos, i) => (
         <group key={`tree-${i}`} position={[pos.x, -1, pos.z]} scale={[pos.scale, pos.scale, pos.scale]}>
           {/* Tree trunk */}
