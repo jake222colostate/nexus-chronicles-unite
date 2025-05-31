@@ -10,12 +10,11 @@ import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
-import { GroundEnemySystem, GroundEnemy } from './GroundEnemySystem';
+import { Enemy3DSystem, Enemy3D } from './Enemy3DSystem';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
 import { MuzzleFlash } from './MuzzleFlash';
 import { WaveCompleteMessage } from './WaveCompleteMessage';
 import { JourneyTracker } from './JourneyTracker';
-import { AutoWeapon } from './AutoWeapon';
 import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem, CrossRealmUpgrade } from './CrossRealmUpgradeSystem';
 import { crossRealmUpgrades } from '../data/CrossRealmUpgrades';
@@ -200,7 +199,7 @@ const GameEngine: React.FC = () => {
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
-  const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
+  const [enemies, setEnemies] = useState<Enemy3D[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
@@ -576,14 +575,14 @@ const GameEngine: React.FC = () => {
     setShowTapEffect(false);
   }, []);
 
-  // Combat event handlers with scaling rewards
-  const handleEnemyReachPlayer = useCallback((enemy: GroundEnemy) => {
+  // Combat event handlers with scaling rewards for 3D enemies
+  const handleEnemyReachPlayer = useCallback((enemy: Enemy3D) => {
     setPlayerTakingDamage(true);
     setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
     setTimeout(() => setPlayerTakingDamage(false), 500);
   }, []);
 
-  const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
+  const handleEnemyDestroyed = useCallback((enemy: Enemy3D) => {
     const manaReward = Math.floor(8 + (currentJourneyDistance / 10));
     
     setGameState(prev => ({ 
@@ -623,12 +622,6 @@ const GameEngine: React.FC = () => {
       }));
     }
   }, [gameState.enemiesKilled, currentJourneyDistance]);
-
-  const handleEnemyHit = useCallback((enemyId: string, damage: number) => {
-    if ((window as any).damageEnemy) {
-      (window as any).damageEnemy(enemyId, damage);
-    }
-  }, []);
 
   const handleMuzzleFlash = useCallback(() => {
     setShowMuzzleFlash(true);
@@ -698,8 +691,8 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* Ground-based Enemy System with scaling */}
-        <GroundEnemySystem
+        {/* 3D Enemy System with animated models */}
+        <Enemy3DSystem
           realm={currentRealm}
           onEnemyReachPlayer={handleEnemyReachPlayer}
           onEnemyDestroyed={handleEnemyDestroyed}
@@ -707,14 +700,7 @@ const GameEngine: React.FC = () => {
           maxEnemies={Math.min(10, 4 + Math.floor(gameState.waveNumber / 2))}
           journeyDistance={currentJourneyDistance}
           onEnemiesUpdate={setEnemies}
-        />
-
-        {/* Auto Weapon System */}
-        <AutoWeapon
-          enemies={enemies}
-          combatStats={weaponStats}
-          onEnemyHit={handleEnemyHit}
-          onMuzzleFlash={handleMuzzleFlash}
+          weaponStats={weaponStats}
         />
 
         {/* Muzzle Flash Effect */}
