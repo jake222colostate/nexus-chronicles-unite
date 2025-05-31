@@ -1,15 +1,17 @@
 
 import React, { Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Environment, ContactShadows } from '@react-three/drei';
+import { ContactShadows } from '@react-three/drei';
 import { Vector3 } from 'three';
 import { Enhanced360Controller } from './Enhanced360Controller';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
-import { EnvironmentSystem } from './EnvironmentSystem';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { EnhancedPathwaySystem } from './EnhancedPathwaySystem';
-import { GLBTreeSystem } from './GLBTreeSystem';
 import { FantasyMountainSystem } from './FantasyMountainSystem';
+import { FantasyTreeSystem } from './FantasyTreeSystem';
+import { FantasyRoadSystem } from './FantasyRoadSystem';
+import { FantasyPortalSystem } from './FantasyPortalSystem';
+import { FantasySkyboxSystem } from './FantasySkyboxSystem';
 import { EnhancedUpgradePedestal } from './EnhancedUpgradePedestal';
 import { useInfiniteUpgrades } from './InfiniteUpgradeSystem';
 
@@ -101,18 +103,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     }
   }, []);
 
-  const isWithinRange = (upgradePosition: [number, number, number]): boolean => {
-    const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
-    return distance <= 15;
-  };
-
-  // Passive mana generation with ref to prevent re-renders
-  useEffect(() => {
-    const interval = setInterval(() => {
-      currentManaRef.current += totalManaPerSecondRef.current / 10;
-    }, 100);
-    return () => clearInterval(interval);
-  }, []); // Empty dependency array is intentional
+  const handleTierProgression = useCallback(() => {
+    console.log("Tier progression triggered!");
+    // Add tier progression logic here
+  }, []);
 
   // Only render if realm is fantasy
   if (realm !== 'fantasy') {
@@ -138,14 +132,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             onPositionChange={handlePositionChange}
           />
 
-          {/* Use EnvironmentSystem for non-tree elements, excluding trees completely */}
-          <EnvironmentSystem 
-            upgradeCount={maxUnlockedUpgrade + 1}
-            onEnvironmentChange={(tier) => console.log(`Environment tier: ${tier}`)}
-            excludeTrees={true}
-            realm={realm}
-          />
+          {/* Fantasy Skybox System */}
+          <FantasySkyboxSystem realm={realm} />
 
+          {/* Enhanced lighting for fantasy atmosphere */}
           <ambientLight intensity={0.8} color="#E6E6FA" />
           <directionalLight
             position={[20, 30, 20]}
@@ -167,8 +157,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             color="#DDA0DD"
           />
 
-          <Environment preset="sunset" />
-
           <ChunkSystem
             playerPosition={cameraPosition}
             chunkSize={CHUNK_SIZE}
@@ -176,20 +164,28 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           >
             {(chunks: ChunkData[]) => (
               <>
+                {/* Fantasy Road System */}
+                <FantasyRoadSystem
+                  chunks={chunks}
+                  chunkSize={CHUNK_SIZE}
+                  realm={realm}
+                />
+                
+                {/* Enhanced Pathway System */}
                 <EnhancedPathwaySystem
                   chunks={chunks}
                   chunkSize={CHUNK_SIZE}
                 />
                 
-                {/* Fantasy Mountains - only in Fantasy realm */}
+                {/* Fantasy Mountains - High poly models */}
                 <FantasyMountainSystem
                   chunks={chunks}
                   chunkSize={CHUNK_SIZE}
                   realm={realm}
                 />
 
-                {/* GLB Tree System for Fantasy realm only */}
-                <GLBTreeSystem
+                {/* Fantasy Tree System - High poly models */}
+                <FantasyTreeSystem
                   chunks={chunks}
                   chunkSize={CHUNK_SIZE}
                   realm={realm}
@@ -197,6 +193,15 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               </>
             )}
           </ChunkSystem>
+
+          {/* Fantasy Portal System */}
+          <FantasyPortalSystem
+            playerPosition={[cameraPosition.x, cameraPosition.y, cameraPosition.z]}
+            maxUnlockedUpgrade={maxUnlockedUpgrade}
+            upgradeSpacing={UPGRADE_SPACING}
+            realm={realm}
+            onTierProgression={handleTierProgression}
+          />
 
           <pointLight 
             position={[cameraPosition.x, 10, cameraPosition.z - 8]} 
