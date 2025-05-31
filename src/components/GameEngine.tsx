@@ -291,7 +291,7 @@ const GameEngine: React.FC = () => {
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Enhanced TopHUD */}
+      {/* Enhanced TopHUD with proper spacing */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -303,8 +303,8 @@ const GameEngine: React.FC = () => {
         onHelpClick={handleShowHelp}
       />
 
-      {/* Main Game Area with integrated skill tree */}
-      <div className="absolute inset-0 pt-16 pb-20">
+      {/* Main Game Area with proper top/bottom margins */}
+      <div className="absolute inset-0 pt-20 pb-20">
         {/* Integrated Map and Skill Tree View */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -324,9 +324,9 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Convergence Ready Button */}
+        {/* Convergence Ready Button with proper spacing */}
         {canConverge && (
-          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
               className="h-11 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
@@ -339,7 +339,7 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Enhanced Bottom Action Bar with integrated tap button */}
+      {/* Perfectly centered Bottom Action Bar */}
       <BottomActionBar
         currentRealm={currentRealm}
         onRealmChange={switchRealm}

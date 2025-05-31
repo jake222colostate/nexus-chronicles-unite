@@ -40,58 +40,64 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   return (
     <div className="absolute top-0 left-0 right-0 z-40 iphone-safe-top">
       <div className="px-3 py-2">
-        {/* Single unified HUD bar with help button on the left */}
-        <div className="flex items-center bg-black/60 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/20 shadow-lg">
+        {/* Shortened main stat bar */}
+        <div 
+          className="flex items-center bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-lg border border-white/20 relative"
+          style={{
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)'
+          }}
+        >
           {/* Enhanced glassmorphism effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-lg" />
           
-          {/* Help Button - moved to far left */}
+          {/* Help Button - flush left */}
           <Button
             onClick={onHelpClick}
             size="sm"
             variant="ghost"
-            className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-white/10 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-3"
+            className="h-6 w-6 p-0 rounded-md bg-transparent hover:bg-white/10 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-2"
           >
-            <HelpCircle size={14} />
+            <HelpCircle size={12} />
           </Button>
 
-          {/* Stats container with proper spacing */}
-          <div className="flex items-center gap-4 text-sm font-medium text-white relative z-10 flex-1 min-w-0">
+          {/* Stats container with perfect vertical alignment */}
+          <div className="flex items-center gap-3 text-xs font-medium text-white relative z-10 flex-1 min-w-0">
             {/* Mana */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <span className="text-sm">🧠</span>
-              <div className="flex flex-col">
-                <span className="text-purple-300 font-semibold text-xs">{formatNumber(mana)}</span>
-                <span className="text-purple-400/70 font-medium text-xs">+{formatRate(manaPerSecond)}/s</span>
-              </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-xs">🧠</span>
+              <span className="text-purple-300 font-semibold">{formatNumber(mana)}</span>
             </div>
             
-            <div className="w-px h-4 bg-white/20 flex-shrink-0"></div>
+            <div className="w-px h-3 bg-white/20 flex-shrink-0"></div>
             
             {/* Energy */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <span className="text-sm">⚡</span>
-              <div className="flex flex-col">
-                <span className="text-cyan-300 font-semibold text-xs">{formatNumber(energyCredits)}</span>
-                <span className="text-cyan-400/70 font-medium text-xs">+{formatRate(energyPerSecond)}/s</span>
-              </div>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-xs">⚡</span>
+              <span className="text-cyan-300 font-semibold">{formatNumber(energyCredits)}</span>
             </div>
             
-            <div className="w-px h-4 bg-white/20 flex-shrink-0"></div>
+            <div className="w-px h-3 bg-white/20 flex-shrink-0"></div>
             
             {/* Crystals (Nexus Shards) */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <span className="text-sm">💎</span>
-              <span className="text-yellow-300 font-semibold text-xs">{formatNumber(nexusShards)}</span>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-xs">💎</span>
+              <span className="text-yellow-300 font-semibold">{formatNumber(nexusShards)}</span>
             </div>
             
-            <div className="w-px h-4 bg-white/20 flex-shrink-0"></div>
+            <div className="w-px h-3 bg-white/20 flex-shrink-0"></div>
             
             {/* Progress */}
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <span className="text-sm">🔄</span>
-              <span className="text-orange-300 font-semibold text-xs">{Math.floor(convergenceProgress)}%</span>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-xs">🔄</span>
+              <span className="text-orange-300 font-semibold">{Math.floor(convergenceProgress)}%</span>
             </div>
+          </div>
+        </div>
+
+        {/* Centered mana tracking info below main bar */}
+        <div className="flex justify-center mt-1">
+          <div className="text-white/90 text-xs font-medium">
+            {formatNumber(mana)} Mana | +{formatRate(manaPerSecond)}/sec
           </div>
         </div>
       </div>

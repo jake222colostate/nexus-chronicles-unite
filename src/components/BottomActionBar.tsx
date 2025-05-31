@@ -23,47 +23,51 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   };
 
   return (
-    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-30">
-      {/* Main button container */}
-      <div className="flex items-center justify-center gap-6 mb-3">
-        {/* Fantasy Realm Button */}
-        <Button
-          onClick={() => handleRealmSwitch('fantasy')}
-          disabled={isTransitioning}
-          className={`h-12 px-6 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm border-2 ${
-            currentRealm === 'fantasy'
-              ? 'bg-purple-600/80 hover:bg-purple-700/80 border-purple-400/70 text-purple-100 shadow-lg shadow-purple-500/25 scale-105'
-              : 'bg-black/40 border-purple-400/50 text-purple-300 hover:bg-purple-900/30 hover:border-purple-400/70'
-          } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
-        >
-          <span className="relative z-10 flex items-center gap-2">
-            🏰 Fantasy
-          </span>
-          {currentRealm === 'fantasy' && (
-            <div className="absolute inset-0 bg-purple-400/15 animate-pulse rounded-lg" />
-          )}
-        </Button>
+    <div className="absolute bottom-3 left-0 right-0 z-30">
+      {/* Perfectly centered 3-button layout */}
+      <div className="flex items-center justify-center px-4">
+        <div className="flex items-center justify-between w-full max-w-xs">
+          {/* Fantasy Realm Button - Left */}
+          <Button
+            onClick={() => handleRealmSwitch('fantasy')}
+            disabled={isTransitioning}
+            className={`h-12 px-4 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm border-2 flex-shrink-0 ${
+              currentRealm === 'fantasy'
+                ? 'bg-purple-600/80 hover:bg-purple-700/80 border-purple-400/70 text-purple-100 shadow-lg shadow-purple-500/25 scale-105'
+                : 'bg-black/40 border-purple-400/50 text-purple-300 hover:bg-purple-900/30 hover:border-purple-400/70'
+            } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
+          >
+            <span className="relative z-10 flex items-center gap-1.5">
+              🏰 Fantasy
+            </span>
+            {currentRealm === 'fantasy' && (
+              <div className="absolute inset-0 bg-purple-400/15 animate-pulse rounded-lg" />
+            )}
+          </Button>
 
-        {/* Circular Tap Button in Center */}
-        <CircularTapButton realm={currentRealm} onTap={onTap} />
+          {/* Circular Tap Button - Perfect Center */}
+          <div className="flex-shrink-0">
+            <CircularTapButton realm={currentRealm} onTap={onTap} />
+          </div>
 
-        {/* Sci-Fi Realm Button */}
-        <Button
-          onClick={() => handleRealmSwitch('scifi')}
-          disabled={isTransitioning}
-          className={`h-12 px-6 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm border-2 ${
-            currentRealm === 'scifi'
-              ? 'bg-cyan-600/80 hover:bg-cyan-700/80 border-cyan-400/70 text-cyan-100 shadow-lg shadow-cyan-500/25 scale-105'
-              : 'bg-black/40 border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 hover:border-cyan-400/70'
-          } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
-        >
-          <span className="relative z-10 flex items-center gap-2">
-            🚀 Sci-Fi
-          </span>
-          {currentRealm === 'scifi' && (
-            <div className="absolute inset-0 bg-cyan-400/15 animate-pulse rounded-lg" />
-          )}
-        </Button>
+          {/* Sci-Fi Realm Button - Right */}
+          <Button
+            onClick={() => handleRealmSwitch('scifi')}
+            disabled={isTransitioning}
+            className={`h-12 px-4 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm border-2 flex-shrink-0 ${
+              currentRealm === 'scifi'
+                ? 'bg-cyan-600/80 hover:bg-cyan-700/80 border-cyan-400/70 text-cyan-100 shadow-lg shadow-cyan-500/25 scale-105'
+                : 'bg-black/40 border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 hover:border-cyan-400/70'
+            } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
+          >
+            <span className="relative z-10 flex items-center gap-1.5">
+              🚀 Sci-Fi
+            </span>
+            {currentRealm === 'scifi' && (
+              <div className="absolute inset-0 bg-cyan-400/15 animate-pulse rounded-lg" />
+            )}
+          </Button>
+        </div>
       </div>
     </div>
   );
