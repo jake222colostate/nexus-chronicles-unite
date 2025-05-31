@@ -7,12 +7,14 @@ interface EnvironmentSystemProps {
   upgradeCount: number;
   onEnvironmentChange?: (tier: number) => void;
   excludeTrees?: boolean;
+  realm?: 'fantasy' | 'scifi';
 }
 
 export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   upgradeCount,
   onEnvironmentChange,
-  excludeTrees = false
+  excludeTrees = false,
+  realm = 'fantasy'
 }) => {
   const [currentTier, setCurrentTier] = useState(1);
   const [transitionOpacity, setTransitionOpacity] = useState(1);
@@ -58,7 +60,12 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
       <DynamicSkybox tier={currentTier} opacity={transitionOpacity} />
       
       {/* Clean Pixel-style Terrain with stone path */}
-      <PixelTerrainSystem tier={currentTier} opacity={transitionOpacity} excludeTrees={excludeTrees} />
+      <PixelTerrainSystem 
+        tier={currentTier} 
+        opacity={transitionOpacity} 
+        excludeTrees={excludeTrees}
+        excludeMountains={realm === 'fantasy'}
+      />
       
       {/* Clean atmospheric fog only */}
       <fog 

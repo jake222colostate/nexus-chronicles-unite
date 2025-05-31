@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -9,6 +10,7 @@ import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
 import { GLBMountainSystem } from './GLBMountainSystem';
 import { GLBTreeSystem } from './GLBTreeSystem';
+import { EnvironmentSystem } from './EnvironmentSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
@@ -114,6 +116,13 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           />
 
           <FloatingIsland realm={realm} />
+
+          {/* Add the EnvironmentSystem with realm prop */}
+          <EnvironmentSystem
+            upgradeCount={gameState.purchasedUpgrades?.length || 0}
+            excludeTrees={true}
+            realm={realm}
+          />
 
           {/* Enhanced Chunk System with proper tree handling */}
           <ChunkSystem

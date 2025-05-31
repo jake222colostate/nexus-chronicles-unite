@@ -5,12 +5,14 @@ interface PixelTerrainSystemProps {
   tier: number;
   opacity?: number;
   excludeTrees?: boolean;
+  excludeMountains?: boolean;
 }
 
 export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({ 
   tier, 
   opacity = 1,
-  excludeTrees = false
+  excludeTrees = false,
+  excludeMountains = false
 }) => {
   // Create natural-looking textures
   const createNaturalTexture = useMemo(() => {
@@ -44,8 +46,12 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
   const pathTexture = useMemo(() => createNaturalTexture('30', ['25', '30', '35', '40']), [createNaturalTexture]);
   const mountainTexture = useMemo(() => createNaturalTexture('210', ['200', '210', '220', '215']), [createNaturalTexture]);
 
-  // Generate natural, organic mountain positions with varied shapes and heights
+  // Generate natural, organic mountain positions with varied shapes and heights - only if not excluded
   const mountainFormations = useMemo(() => {
+    if (excludeMountains) {
+      return []; // Return empty array if mountains should be excluded
+    }
+    
     const formations = [];
     
     // Left mountain range - organic, staggered heights
@@ -125,7 +131,7 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
     }
     
     return formations;
-  }, []);
+  }, [excludeMountains]);
 
   // Generate natural forest with realistic clustering - only if trees are not excluded
   const forestPositions = useMemo(() => {
@@ -246,8 +252,8 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         />
       </mesh>
 
-      {/* Natural, organic mountain formations with realistic colors */}
-      {mountainFormations.map((mountain, i) => {
+      {/* Natural, organic mountain formations with realistic colors - only render if not excluded */}
+      {!excludeMountains && mountainFormations.map((mountain, i) => {
         const colorIntensity = mountain.type === 'background' ? 0.4 : 
                              mountain.type === 'secondary' ? 0.6 : 0.8;
         
