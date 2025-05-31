@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { useGLTF } from '@react-three/drei';
+import * as THREE from 'three';
 
 interface WizardStaffProps {
   [key: string]: any;
@@ -9,7 +10,7 @@ interface WizardStaffProps {
 export const WizardStaff: React.FC<WizardStaffProps> = (props) => {
   const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/weapons_enemies/main/wizard_staff.glb');
   
-  // Enhanced debug logging
+  // Enhanced debug logging with proper type checking
   React.useEffect(() => {
     console.log('WizardStaff scene loaded:', scene);
     console.log('Scene children count:', scene.children.length);
@@ -18,15 +19,20 @@ export const WizardStaff: React.FC<WizardStaffProps> = (props) => {
       scene.children.forEach((child, index) => {
         console.log(`Child ${index}:`, child);
         console.log(`Child ${index} type:`, child.type);
-        console.log(`Child ${index} geometry:`, child.geometry);
-        console.log(`Child ${index} material:`, child.material);
+        
+        // Only log geometry and material for Mesh objects
+        if (child instanceof THREE.Mesh) {
+          console.log(`Child ${index} geometry:`, child.geometry);
+          console.log(`Child ${index} material:`, child.material);
+        }
+        
         console.log(`Child ${index} visible:`, child.visible);
       });
     }
     
     // Make sure all children are visible
     scene.traverse((child) => {
-      if (child.type === 'Mesh') {
+      if (child instanceof THREE.Mesh) {
         child.visible = true;
         child.castShadow = true;
         child.receiveShadow = true;
