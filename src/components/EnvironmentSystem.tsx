@@ -1,8 +1,5 @@
 
-import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
-import { Group } from 'three';
+import React, { useMemo, useState, useEffect } from 'react';
 import * as THREE from 'three';
 
 interface EnvironmentSystemProps {
@@ -68,17 +65,17 @@ const SimpleSkybox: React.FC<{
         />
       </mesh>
 
-      {/* Simple white clouds */}
+      {/* Simple white clouds - static positions */}
       {Array.from({ length: 8 }, (_, i) => {
         const angle = (i / 8) * Math.PI * 2;
         const radius = 30;
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
-        const y = 20 + Math.random() * 5;
+        const y = 20 + (i % 3) * 2;
         
         return (
           <mesh key={i} position={[x, y, z]}>
-            <sphereGeometry args={[2 + Math.random() * 2, 8, 8]} />
+            <sphereGeometry args={[2 + (i % 2), 8, 8]} />
             <meshBasicMaterial 
               color="#ffffff"
               transparent 
@@ -200,24 +197,6 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
         attach="fog" 
         args={['#87ceeb', 30, 120]} 
       />
-      
-      {/* Minimal ambient particles - no animation to prevent glitching */}
-      {Array.from({ length: 10 }, (_, i) => {
-        const x = (Math.random() - 0.5) * 30;
-        const y = Math.random() * 15 + 5;
-        const z = Math.random() * -60 - 10;
-        
-        return (
-          <mesh key={i} position={[x, y, z]}>
-            <sphereGeometry args={[0.05]} />
-            <meshBasicMaterial 
-              color="#ffffff" 
-              transparent 
-              opacity={0.6} 
-            />
-          </mesh>
-        );
-      })}
     </>
   );
 };
