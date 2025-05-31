@@ -288,8 +288,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       </div>
 
-      {/* Progress indicator with environment transition markers - positioned much higher to avoid overlap */}
-      <div className="absolute bottom-32 left-4 right-4 pointer-events-none">
+      {/* Progress indicator positioned underneath all interactable buttons */}
+      <div className="absolute bottom-2 left-4 right-4 pointer-events-none">
         <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
           <div 
             className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
