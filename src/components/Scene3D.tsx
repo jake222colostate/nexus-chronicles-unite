@@ -91,16 +91,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             far={100}
           />
 
-          {/* Wizard staff as HUD element - positioned relative to camera */}
-          <group>
-            <WizardStaff 
-              position={[2.2, -1.8, -3]} 
-              rotation={[0.3, -Math.PI / 6, 0.2]}
-              scale={[1.2, 1.2, 1.2]}
-              visible={true}
-            />
-          </group>
-
           {/* Optimized controls */}
           <OrbitControls
             enablePan={true}
@@ -116,19 +106,19 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           />
 
           {/* Enhanced lighting to ensure staff visibility */}
-          <ambientLight intensity={0.8} />
+          <ambientLight intensity={1.2} />
           <directionalLight
             position={[5, 5, 5]}
-            intensity={1.0}
+            intensity={1.5}
             castShadow={false}
           />
           
-          {/* Additional light specifically for the staff area */}
+          {/* Additional bright lighting for the staff area */}
           <pointLight
             position={[3, -1, -2]}
-            intensity={0.6}
+            intensity={1.5}
             color="#ffffff"
-            distance={5}
+            distance={8}
           />
 
           {/* Floating Island Base */}
@@ -137,12 +127,24 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Memoized upgrade nodes */}
           {upgradeNodes}
 
+          {/* Wizard staff as HUD element - positioned to be clearly visible */}
+          <WizardStaff 
+            visible={true}
+            castShadow={false}
+            receiveShadow={false}
+          />
+
           {/* Tap Effect */}
           {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
           )}
         </Suspense>
       </Canvas>
+
+      {/* Debug info overlay */}
+      <div className="absolute top-2 left-2 text-white text-xs bg-black/50 p-2 rounded">
+        Staff Debug: Check console for logs
+      </div>
 
       {/* Simplified loading fallback */}
       <Suspense fallback={
