@@ -96,20 +96,31 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
         
         clonedScene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
+            // Completely remove tree meshes from Fantasy realm
+            if (realm === 'fantasy') {
+              const isTree = child.name.toLowerCase().includes('tree') || 
+                           child.name.toLowerCase().includes('forest') ||
+                           child.name.toLowerCase().includes('vegetation') ||
+                           child.name.toLowerCase().includes('foliage') ||
+                           child.name.toLowerCase().includes('leaves') ||
+                           child.name.toLowerCase().includes('branch') ||
+                           (child.material && child.material.name && 
+                            (child.material.name.toLowerCase().includes('tree') ||
+                             child.material.name.toLowerCase().includes('leaf') ||
+                             child.material.name.toLowerCase().includes('bark') ||
+                             child.material.name.toLowerCase().includes('foliage')));
+              
+              if (isTree) {
+                // Remove the mesh completely from the parent
+                if (child.parent) {
+                  child.parent.remove(child);
+                }
+                return;
+              }
+            }
+            
             child.castShadow = true;
             child.receiveShadow = true;
-            
-            // Remove trees by checking material names or mesh names
-            if (child.name.toLowerCase().includes('tree') || 
-                child.name.toLowerCase().includes('forest') ||
-                child.name.toLowerCase().includes('vegetation') ||
-                (child.material && child.material.name && 
-                 (child.material.name.toLowerCase().includes('tree') ||
-                  child.material.name.toLowerCase().includes('leaf') ||
-                  child.material.name.toLowerCase().includes('bark')))) {
-              child.visible = false;
-              return;
-            }
             
             if (child.material) {
               child.material.needsUpdate = false;

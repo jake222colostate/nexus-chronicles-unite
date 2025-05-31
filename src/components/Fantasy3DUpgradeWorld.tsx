@@ -1,4 +1,3 @@
-
 import React, { Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -137,9 +136,11 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             onPositionChange={handlePositionChange}
           />
 
+          {/* Only use EnvironmentSystem for non-tree elements in Fantasy realm */}
           <EnvironmentSystem 
             upgradeCount={maxUnlockedUpgrade + 1}
             onEnvironmentChange={(tier) => console.log(`Environment tier: ${tier}`)}
+            excludeTrees={true}
           />
 
           <ambientLight intensity={0.8} color="#E6E6FA" />
@@ -177,9 +178,11 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
                   chunkSize={CHUNK_SIZE}
                 />
                 
+                {/* NaturalMountainSystem without trees for Fantasy realm */}
                 <NaturalMountainSystem
                   chunks={chunks}
                   chunkSize={CHUNK_SIZE}
+                  excludeTrees={realm === 'fantasy'}
                 />
               </>
             )}
