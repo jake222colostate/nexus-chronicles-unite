@@ -11,82 +11,85 @@ export const DynamicSkybox: React.FC<DynamicSkyboxProps> = ({
   tier, 
   opacity = 1 
 }) => {
-  // Create skybox texture based on tier
+  // Create dynamic skybox texture based on tier
   const skyboxTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 512;
+    canvas.width = 2048;
+    canvas.height = 1024;
     const ctx = canvas.getContext('2d')!;
     
-    // Define sky colors for each tier
+    // Define sky configurations for each tier
     const skyConfigs = {
       1: {
         topColor: '#87CEEB',
+        middleColor: '#B0E0E6', 
         bottomColor: '#E0F6FF',
-        middleColor: '#B0E0E6',
-        name: 'Clear Day'
+        name: 'Morning Sky'
       },
       2: {
-        topColor: '#FF8C42',
-        bottomColor: '#FFE4B5',
-        middleColor: '#FFA500',
-        name: 'Evening Glow'
+        topColor: '#FF6B35',
+        middleColor: '#F7931E',
+        bottomColor: '#FFD23F',
+        name: 'Sunset Glow'
       },
       3: {
         topColor: '#4B0082',
-        bottomColor: '#8B008B',
-        middleColor: '#9932CC',
-        name: 'Twilight'
+        middleColor: '#8B008B',
+        bottomColor: '#9932CC',
+        name: 'Twilight Magic'
       },
       4: {
         topColor: '#191970',
-        bottomColor: '#000080',
         middleColor: '#483D8B',
+        bottomColor: '#6A5ACD',
         name: 'Starry Night'
       },
       5: {
         topColor: '#0C0C0C',
-        bottomColor: '#2D1B69',
-        middleColor: '#4B0082',
-        name: 'Magical Aurora'
+        middleColor: '#2D1B69',
+        bottomColor: '#4B0082',
+        name: 'Aurora Dreams'
       }
     };
     
     const config = skyConfigs[Math.min(tier, 5) as keyof typeof skyConfigs];
     
-    // Create sophisticated gradient
+    // Create sophisticated gradient skybox
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
     gradient.addColorStop(0, config.topColor);
-    gradient.addColorStop(0.4, config.middleColor);
+    gradient.addColorStop(0.3, config.middleColor);
+    gradient.addColorStop(0.7, config.middleColor);
     gradient.addColorStop(1, config.bottomColor);
     
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add atmospheric effects based on tier
+    // Add tier-specific atmospheric effects
     if (tier >= 3) {
-      // Add stars for night tiers
+      // Add stars for night skies
       ctx.fillStyle = '#FFFFFF';
-      for (let i = 0; i < 300; i++) {
+      for (let i = 0; i < 400; i++) {
         const x = Math.random() * canvas.width;
-        const y = Math.random() * canvas.height * 0.7; // Upper portion
-        const size = Math.random() * 3 + 1;
-        const brightness = Math.random();
+        const y = Math.random() * canvas.height * 0.6; // Upper portion
+        const size = Math.random() * 2 + 1;
+        const brightness = Math.random() * 0.8 + 0.2;
         
         ctx.globalAlpha = brightness;
-        ctx.fillRect(x, y, size, size);
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
       }
       ctx.globalAlpha = 1;
     }
     
     if (tier >= 4) {
-      // Add nebula effects
+      // Add nebula clouds
       const nebulaGradient = ctx.createRadialGradient(
-        canvas.width * 0.3, canvas.height * 0.2, 0,
-        canvas.width * 0.3, canvas.height * 0.2, canvas.width * 0.4
+        canvas.width * 0.7, canvas.height * 0.3, 0,
+        canvas.width * 0.7, canvas.height * 0.3, canvas.width * 0.3
       );
-      nebulaGradient.addColorStop(0, 'rgba(138, 43, 226, 0.3)');
-      nebulaGradient.addColorStop(0.5, 'rgba(75, 0, 130, 0.2)');
+      nebulaGradient.addColorStop(0, 'rgba(138, 43, 226, 0.4)');
+      nebulaGradient.addColorStop(0.6, 'rgba(75, 0, 130, 0.2)');
       nebulaGradient.addColorStop(1, 'rgba(25, 25, 112, 0.1)');
       
       ctx.fillStyle = nebulaGradient;
@@ -94,21 +97,22 @@ export const DynamicSkybox: React.FC<DynamicSkyboxProps> = ({
     }
     
     if (tier === 5) {
-      // Add aurora effects
-      ctx.strokeStyle = 'rgba(0, 255, 136, 0.6)';
-      ctx.lineWidth = 3;
+      // Add magical aurora effects
+      ctx.strokeStyle = 'rgba(0, 255, 136, 0.7)';
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      for (let x = 0; x < canvas.width; x += 10) {
-        const y = canvas.height * 0.3 + Math.sin(x * 0.01) * 50;
+      for (let x = 0; x < canvas.width; x += 8) {
+        const y = canvas.height * 0.25 + Math.sin(x * 0.008) * 60;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.stroke();
       
-      ctx.strokeStyle = 'rgba(255, 0, 136, 0.4)';
+      ctx.strokeStyle = 'rgba(255, 0, 136, 0.5)';
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      for (let x = 0; x < canvas.width; x += 10) {
-        const y = canvas.height * 0.4 + Math.cos(x * 0.008) * 30;
+      for (let x = 0; x < canvas.width; x += 8) {
+        const y = canvas.height * 0.35 + Math.cos(x * 0.006) * 40;
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -125,24 +129,14 @@ export const DynamicSkybox: React.FC<DynamicSkyboxProps> = ({
 
   return (
     <group>
-      {/* Main skybox sphere */}
+      {/* Main skybox sphere - larger for better horizon blending */}
       <mesh>
-        <sphereGeometry args={[150, 32, 32]} />
+        <sphereGeometry args={[200, 64, 32]} />
         <meshBasicMaterial 
           map={skyboxTexture}
           transparent
           opacity={opacity}
           side={THREE.BackSide}
-        />
-      </mesh>
-      
-      {/* Atmospheric fog for depth */}
-      <mesh position={[0, -10, -80]}>
-        <planeGeometry args={[200, 40]} />
-        <meshBasicMaterial
-          color={tier <= 2 ? '#E0F6FF' : tier <= 3 ? '#8B008B' : '#191970'}
-          transparent
-          opacity={opacity * 0.3}
         />
       </mesh>
     </group>

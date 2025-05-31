@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { DynamicSkybox } from './DynamicSkybox';
-import { PixelTerrainSystem } from './PixelTerrainSystem';
+import { FantasyTerrainSystem } from './FantasyTerrainSystem';
 
 interface EnvironmentSystemProps {
   upgradeCount: number;
@@ -34,7 +34,7 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
       setIsTransitioning(true);
       
       // Smooth fade transition
-      setTransitionOpacity(0.5);
+      setTransitionOpacity(0.7);
       
       const transitionTimeout = setTimeout(() => {
         setCurrentTier(environmentTier);
@@ -57,20 +57,23 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
       {/* Enhanced Dynamic Skybox */}
       <DynamicSkybox tier={currentTier} opacity={transitionOpacity} />
       
-      {/* Seamless Pixel Terrain with Parallax */}
-      <PixelTerrainSystem 
+      {/* Fantasy Terrain System */}
+      <FantasyTerrainSystem 
         tier={currentTier} 
         opacity={transitionOpacity}
         playerPosition={playerPosition}
       />
       
-      {/* Enhanced atmospheric fog */}
+      {/* Tier-based atmospheric fog */}
       <fog 
         attach="fog" 
         args={[
-          currentTier <= 2 ? '#E0F6FF' : currentTier <= 3 ? '#8B008B' : currentTier <= 4 ? '#191970' : '#0C0C0C', 
-          40, 
-          150
+          currentTier <= 1 ? '#E0F6FF' : 
+          currentTier <= 2 ? '#FFB366' : 
+          currentTier <= 3 ? '#8B008B' : 
+          currentTier <= 4 ? '#191970' : '#0C0C0C', 
+          30, 
+          120
         ]} 
       />
     </>

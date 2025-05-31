@@ -166,7 +166,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           position: [0, 1.6, 0], 
           fov: 75,
           near: 0.1,
-          far: 300
+          far: 400
         }}
         shadows
         gl={{ antialias: true, alpha: true }}
@@ -178,54 +178,54 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             canMoveForward={canMoveForward}
           />
 
-          {/* Enhanced Environment System with parallax */}
+          {/* Enhanced Environment System */}
           <EnvironmentSystem 
             upgradeCount={unlockedUpgradeCount}
             onEnvironmentChange={handleEnvironmentChange}
             playerPosition={[cameraPosition.x, cameraPosition.y, cameraPosition.z]}
           />
 
-          {/* Enhanced lighting for better visibility */}
-          <ambientLight intensity={0.7} color="#ffffff" />
+          {/* Enhanced lighting system */}
+          <ambientLight intensity={0.8} color="#ffffff" />
           <directionalLight
-            position={[15, 25, 15]}
-            intensity={1.0}
+            position={[20, 30, 20]}
+            intensity={1.2}
             color="#ffffff"
             castShadow
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
-            shadow-camera-far={300}
-            shadow-camera-left={-40}
-            shadow-camera-right={40}
-            shadow-camera-top={40}
-            shadow-camera-bottom={-40}
+            shadow-camera-far={400}
+            shadow-camera-left={-50}
+            shadow-camera-right={50}
+            shadow-camera-top={50}
+            shadow-camera-bottom={-50}
           />
           
           {/* Path illumination lights */}
           {Array.from({ length: 12 }, (_, i) => (
             <pointLight 
               key={i}
-              position={[0, 6, -8 - (i * 8)]} 
-              intensity={0.6}
+              position={[0, 8, -8 - (i * 8)]} 
+              intensity={0.8}
               color="#FFE4B5" 
-              distance={20} 
+              distance={25} 
             />
           ))}
 
           <Environment preset="sunset" />
 
           <ContactShadows 
-            position={[0, -0.4, -50]} 
-            opacity={0.3} 
-            scale={40} 
-            blur={2.5} 
-            far={10} 
+            position={[0, -1.3, -50]} 
+            opacity={0.4} 
+            scale={50} 
+            blur={3} 
+            far={15} 
           />
 
-          {/* Load GLB upgrade models positioned on path */}
+          {/* Load GLB upgrade models positioned on path only */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-            if (distance > 50) return null;
+            if (distance > 60) return null;
             
             return (
               <GLBModel
@@ -246,8 +246,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </Suspense>
       </Canvas>
 
-      {/* Fixed Resource Display - no overlap with tutorial */}
-      <div className="absolute top-6 right-6 pointer-events-none z-40">
+      {/* Fixed Resource Display */}
+      <div className="absolute top-4 right-4 pointer-events-none z-40">
         <div className="bg-purple-900/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-400/40">
           <div className="text-yellow-400 text-lg font-bold">{formatNumber(currentMana)} Mana</div>
           <div className="text-purple-300 text-sm">{formatNumber(totalManaPerSecond)}/sec</div>
@@ -257,8 +257,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       </div>
 
-      {/* Fixed Tutorial Text - positioned to avoid overlaps */}
-      <div className="absolute top-24 left-4 right-4 text-center pointer-events-none z-30">
+      {/* Fixed Tutorial Text */}
+      <div className="absolute top-20 left-4 right-4 text-center pointer-events-none z-30">
         <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2 max-w-lg mx-auto">
           <p className="text-white/90 text-sm font-medium">
             Use WASD to move, mouse to look around. Walk close to upgrades and click to unlock them.
@@ -266,33 +266,34 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       </div>
 
-      {/* Fixed Bottom UI - proper spacing and no overlaps */}
-      <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-4 z-30">
-        {/* Tap Button - large and centered */}
+      {/* Fixed Bottom UI - Clean layout with proper spacing */}
+      <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-6 z-30">
+        {/* Single Tap Button */}
         <button 
           className="bg-gradient-to-r from-purple-600/90 to-violet-700/90 hover:from-purple-500/90 hover:to-violet-600/90 
-                     text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg border border-purple-400/50
+                     text-white px-10 py-5 rounded-full font-bold text-xl shadow-lg border border-purple-400/50
                      backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95"
           style={{
-            boxShadow: '0 0 20px rgba(168, 85, 247, 0.4), 0 4px 20px rgba(0,0,0,0.3)'
+            boxShadow: '0 0 25px rgba(168, 85, 247, 0.5), 0 6px 25px rgba(0,0,0,0.3)'
           }}
+          onClick={() => setCurrentMana(prev => prev + 1)}
         >
           ✨ Tap for Mana
         </button>
         
-        {/* Realm Toggle Buttons - side by side */}
-        <div className="flex items-center gap-4">
-          <button className="bg-purple-600/80 hover:bg-purple-700/80 text-white px-6 py-3 rounded-full font-medium border border-purple-400/60 backdrop-blur-sm transition-all duration-300 hover:scale-105">
+        {/* Realm Toggle Buttons */}
+        <div className="flex items-center gap-6">
+          <button className="bg-purple-600/80 hover:bg-purple-700/80 text-white px-8 py-4 rounded-full font-medium text-lg border border-purple-400/60 backdrop-blur-sm transition-all duration-300 hover:scale-105">
             🏰 Fantasy
           </button>
-          <button className="bg-transparent border border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 px-6 py-3 rounded-full font-medium backdrop-blur-sm transition-all duration-300 hover:scale-105">
+          <button className="bg-transparent border border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 px-8 py-4 rounded-full font-medium text-lg backdrop-blur-sm transition-all duration-300 hover:scale-105">
             🚀 Sci-Fi
           </button>
         </div>
         
-        {/* Progress Bar - separate from buttons */}
+        {/* Progress Bar */}
         <div className="w-full max-w-md px-4">
-          <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
+          <div className="bg-black/40 backdrop-blur-sm rounded-full h-3 overflow-hidden relative">
             <div 
               className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
               style={{ 
