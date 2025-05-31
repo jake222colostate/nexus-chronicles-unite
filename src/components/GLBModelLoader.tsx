@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -17,7 +16,7 @@ interface GLBModelProps {
   canAfford: boolean;
 }
 
-// Safe GLB Model component with error handling
+// Simplified GLB Model component with minimal fallbacks
 const SafeGLBModel: React.FC<GLBModelProps> = ({ 
   modelUrl, 
   position, 
@@ -50,13 +49,10 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   const handleClick = (event: any) => {
     event.stopPropagation();
     console.log(`Clicked on ${name}. Within range: ${isWithinRange}, Can afford: ${canAfford}`);
-    
-    // Always trigger the click, let parent handle the logic
     onClick();
   };
   
   useFrame((state) => {
-    // ... keep existing code (animation logic)
     if (groupRef.current) {
       // Enhanced floating animation based on unlock state
       if (isPurchased) {
@@ -99,9 +95,8 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
     }
   });
 
-  // Enhanced fallback geometry for failed loads or loading state
+  // Minimal fallback - no grey/black boxes
   if (loadError || !gltfScene) {
-    console.log(`Using fallback for ${name}`, loadError ? ', load error occurred' : ', model not loaded yet');
     return (
       <group
         ref={groupRef}
@@ -110,35 +105,31 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        {/* Much larger invisible interaction sphere for better click detection */}
+        {/* Invisible interaction sphere */}
         <mesh>
           <sphereGeometry args={[scale * 6]} />
           <meshBasicMaterial transparent opacity={0} />
         </mesh>
 
-        {/* Enhanced fallback crystal with state-based coloring */}
+        {/* Simple crystal instead of box - no grey/black elements */}
         <mesh>
           <octahedronGeometry args={[scale * 1.2]} />
           <meshLambertMaterial 
             color={
               isPurchased ? "#10b981" : 
               canAfford ? "#8b5cf6" : 
-              "#6b7280"
+              "#8b5cf6"
             } 
             transparent 
-            opacity={isPurchased ? 0.9 : canAfford ? 0.7 : 0.5} 
+            opacity={isPurchased ? 0.9 : canAfford ? 0.7 : 0.3} 
           />
         </mesh>
         
-        {/* Fallback glow with state-based intensity */}
+        {/* Simple glow */}
         <mesh ref={glowRef} position={[0, -0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[scale * 2]} />
           <meshBasicMaterial
-            color={
-              isPurchased ? "#10b981" : 
-              canAfford ? "#8b5cf6" : 
-              "#6b7280"
-            }
+            color="#8b5cf6"
             transparent
             opacity={glowIntensity * 0.3}
           />
@@ -155,27 +146,27 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
-      {/* Much larger invisible interaction sphere for better click detection */}
+      {/* Invisible interaction sphere */}
       <mesh>
         <sphereGeometry args={[scale * 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Enhanced magical glow beneath model with state-based coloring */}
+      {/* Glow beneath model */}
       <mesh ref={glowRef} position={[0, -0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[scale * 2.5]} />
         <meshBasicMaterial
           color={
             isPurchased ? "#10b981" : 
             canAfford ? "#c084fc" : 
-            "#6b7280"
+            "#8b5cf6"
           }
           transparent
           opacity={glowIntensity * 0.4}
         />
       </mesh>
 
-      {/* Main 3D model with state-based scaling and opacity */}
+      {/* Main 3D model */}
       <primitive 
         object={gltfScene.clone()} 
         scale={scale * (isPurchased ? 1.1 : canAfford ? 1 : 0.8)}
@@ -197,30 +188,6 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
             color={canAfford ? "#ffffff" : "#ff6b6b"} 
             transparent 
             opacity={0.8} 
-          />
-        </mesh>
-      )}
-
-      {/* State indicator */}
-      {!isPurchased && (
-        <mesh position={[0, scale * 3, 0]}>
-          <sphereGeometry args={[0.08]} />
-          <meshBasicMaterial 
-            color={canAfford ? "#ffffff" : "#ff6b6b"} 
-            transparent
-            opacity={canAfford ? 1 : 0.6}
-          />
-        </mesh>
-      )}
-
-      {/* Locked state visual overlay */}
-      {!canAfford && !isPurchased && (
-        <mesh position={[0, 0, 0]}>
-          <boxGeometry args={[scale * 2, scale * 2, scale * 2]} />
-          <meshBasicMaterial 
-            color="#000000" 
-            transparent 
-            opacity={0.3} 
           />
         </mesh>
       )}
@@ -265,7 +232,7 @@ export const GLBModel: React.FC<GLBModelProps> = (props) => {
       <mesh>
         <octahedronGeometry args={[props.scale || 1]} />
         <meshLambertMaterial 
-          color={props.isPurchased ? "#10b981" : props.canAfford ? "#8b5cf6" : "#6b7280"} 
+          color="#8b5cf6"
           transparent 
           opacity={0.7} 
         />
@@ -285,7 +252,7 @@ const workingModelUrls = [
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb',
-  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb'
+  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb'
 ];
 
 // Preload only confirmed working models

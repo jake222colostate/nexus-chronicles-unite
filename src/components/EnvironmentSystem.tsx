@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { DynamicSkybox } from './DynamicSkybox';
 import { PixelTerrainSystem } from './PixelTerrainSystem';
 
@@ -15,6 +15,7 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   const [currentTier, setCurrentTier] = useState(1);
   const [transitionOpacity, setTransitionOpacity] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const lastNotifiedTier = useRef(1);
 
   // Calculate environment tier based on upgrade count - memoized to prevent recalculation
   const environmentTier = useMemo(() => {
@@ -25,12 +26,7 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
     return 5;
   }, [upgradeCount]);
 
-  // Stable callback to prevent re-renders
-  const handleEnvironmentChange = useCallback((tier: number) => {
-    onEnvironmentChange?.(tier);
-  }, [onEnvironmentChange]);
-
-  // Handle environment transitions - prevent infinite loops
+  // Handle environment transitions - fixed to prevent infinite loops
   useEffect(() => {
     if (environmentTier !== currentTier && !isTransitioning) {
       setIsTransitioning(true);
@@ -42,12 +38,17 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
         setCurrentTier(environmentTier);
         setTransitionOpacity(1);
         setIsTransitioning(false);
-        handleEnvironmentChange(environmentTier);
+        
+        // Only call onEnvironmentChange if tier actually changed and we haven't notified about this tier
+        if (lastNotifiedTier.current !== environmentTier && onEnvironmentChange) {
+          lastNotifiedTier.current = environmentTier;
+          onEnvironmentChange(environmentTier);
+        }
       }, 300);
 
       return () => clearTimeout(transitionTimeout);
     }
-  }, [environmentTier, currentTier, isTransitioning, handleEnvironmentChange]);
+  }, [environmentTier, currentTier, isTransitioning, onEnvironmentChange]);
 
   return (
     <>
