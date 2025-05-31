@@ -6,6 +6,7 @@ import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
 import { WizardStaff } from './WizardStaff';
+import { VerticalCameraController } from './VerticalCameraController';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { sciFiUpgrades } from '../data/SciFiUpgrades';
 
@@ -113,24 +114,34 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             far={100}
           />
 
-          {/* Enhanced controls with vertical scrolling */}
-          <OrbitControls
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={true}
-            panSpeed={0.8}
-            zoomSpeed={0.6}
-            rotateSpeed={0.5}
-            minDistance={6}
-            maxDistance={20}
-            minPolarAngle={Math.PI / 6}
-            maxPolarAngle={5 * Math.PI / 6}
-            maxAzimuthAngle={Math.PI / 3}
-            minAzimuthAngle={-Math.PI / 3}
-            enableDamping={true}
-            dampingFactor={0.05}
-            target={[0, 2, 0]}
-          />
+          {/* Conditional controls based on realm */}
+          {realm === 'fantasy' ? (
+            <VerticalCameraController
+              initialY={2}
+              minY={-2}
+              maxY={8}
+              sensitivity={0.015}
+            />
+          ) : (
+            /* Enhanced controls with vertical scrolling for sci-fi */
+            <OrbitControls
+              enablePan={true}
+              enableZoom={true}
+              enableRotate={true}
+              panSpeed={0.8}
+              zoomSpeed={0.6}
+              rotateSpeed={0.5}
+              minDistance={6}
+              maxDistance={20}
+              minPolarAngle={Math.PI / 6}
+              maxPolarAngle={5 * Math.PI / 6}
+              maxAzimuthAngle={Math.PI / 3}
+              minAzimuthAngle={-Math.PI / 3}
+              enableDamping={true}
+              dampingFactor={0.05}
+              target={[0, 2, 0]}
+            />
+          )}
 
           {/* Enhanced lighting */}
           <ambientLight intensity={1.2} />
@@ -186,10 +197,16 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
         </Suspense>
       </Canvas>
 
-      {/* Scrolling Instructions */}
+      {/* Control Instructions - Updated for fantasy realm */}
       <div className="absolute bottom-4 left-4 text-white/70 text-xs bg-black/50 backdrop-blur-sm rounded p-2">
-        <div>🖱️ Drag to pan • 🔄 Right-click to rotate</div>
-        <div>🔍 Scroll to zoom • ⬆️⬇️ Vertical navigation</div>
+        {realm === 'fantasy' ? (
+          <div>📱 Swipe up/down to navigate • 🔍 Scroll to zoom</div>
+        ) : (
+          <>
+            <div>🖱️ Drag to pan • 🔄 Right-click to rotate</div>
+            <div>🔍 Scroll to zoom • ⬆️⬇️ Vertical navigation</div>
+          </>
+        )}
       </div>
 
       {/* Simplified loading fallback */}

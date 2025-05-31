@@ -10,6 +10,9 @@ export const sciFiUpgrades: HybridUpgrade[] = [
     icon: '⚛️',
     tier: 1,
     cost: 100,
+    costType: 'nexusShards',
+    unlocked: false,
+    purchased: false,
     requirements: {
       energy: 500
     },
@@ -27,6 +30,9 @@ export const sciFiUpgrades: HybridUpgrade[] = [
     icon: '⚡',
     tier: 2,
     cost: 250,
+    costType: 'nexusShards',
+    unlocked: false,
+    purchased: false,
     requirements: {
       energy: 1500,
       nexusShards: 25
@@ -43,6 +49,9 @@ export const sciFiUpgrades: HybridUpgrade[] = [
     icon: '💫',
     tier: 2,
     cost: 400,
+    costType: 'nexusShards',
+    unlocked: false,
+    purchased: false,
     requirements: {
       energy: 2500,
       nexusShards: 40
@@ -61,6 +70,9 @@ export const sciFiUpgrades: HybridUpgrade[] = [
     icon: '🧠',
     tier: 3,
     cost: 800,
+    costType: 'nexusShards',
+    unlocked: false,
+    purchased: false,
     requirements: {
       energy: 5000,
       nexusShards: 75,
@@ -78,6 +90,9 @@ export const sciFiUpgrades: HybridUpgrade[] = [
     icon: '🌐',
     tier: 3,
     cost: 1200,
+    costType: 'nexusShards',
+    unlocked: false,
+    purchased: false,
     requirements: {
       energy: 8000,
       nexusShards: 100,
@@ -95,6 +110,9 @@ export const sciFiUpgrades: HybridUpgrade[] = [
     icon: '🔥',
     tier: 3,
     cost: 1000,
+    costType: 'nexusShards',
+    unlocked: false,
+    purchased: false,
     requirements: {
       energy: 6500,
       nexusShards: 85,
@@ -112,6 +130,9 @@ export const sciFiUpgrades: HybridUpgrade[] = [
     icon: '⏰',
     tier: 3,
     cost: 1500,
+    costType: 'nexusShards',
+    unlocked: false,
+    purchased: false,
     requirements: {
       energy: 10000,
       nexusShards: 120,
@@ -131,6 +152,9 @@ export const sciFiUpgrades: HybridUpgrade[] = [
     icon: '🕳️',
     tier: 4,
     cost: 3000,
+    costType: 'nexusShards',
+    unlocked: false,
+    purchased: false,
     requirements: {
       energy: 25000,
       nexusShards: 250,
@@ -148,6 +172,9 @@ export const sciFiUpgrades: HybridUpgrade[] = [
     icon: '🌌',
     tier: 4,
     cost: 5000,
+    costType: 'nexusShards',
+    unlocked: false,
+    purchased: false,
     requirements: {
       energy: 50000,
       nexusShards: 400,
