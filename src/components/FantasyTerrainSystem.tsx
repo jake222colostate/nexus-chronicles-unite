@@ -15,7 +15,7 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = ({
 }) => {
   // Create fantasy ground textures
   const createFantasyTexture = useMemo(() => {
-    return (type: 'grass' | 'path' | 'stone', size: number = 128) => {
+    return (type: 'grass' | 'stone_path', size: number = 128) => {
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
@@ -37,18 +37,25 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = ({
           const y = Math.random() * size;
           ctx.fillRect(x, y, 2, 4);
         }
-      } else if (type === 'path') {
-        // Ancient stone path
-        const baseColor = tier <= 2 ? '#8B7355' : tier <= 3 ? '#6B5B95' : '#4A4458';
-        ctx.fillStyle = baseColor;
+      } else if (type === 'stone_path') {
+        // Fantasy stone tiles path
+        ctx.fillStyle = '#8B7355';
         ctx.fillRect(0, 0, size, size);
         
-        // Stone pattern
-        ctx.fillStyle = tier <= 2 ? '#A0916C' : tier <= 3 ? '#8A7CB8' : '#5D5566';
-        for (let x = 0; x < size; x += 16) {
-          for (let y = 0; y < size; y += 16) {
-            if (Math.random() > 0.3) {
-              ctx.fillRect(x + 1, y + 1, 14, 14);
+        // Create stone tile pattern
+        const tileSize = 16;
+        for (let x = 0; x < size; x += tileSize) {
+          for (let y = 0; y < size; y += tileSize) {
+            if (Math.random() > 0.2) {
+              const stoneColor = tier <= 2 ? '#A0916C' : tier <= 3 ? '#8A7CB8' : '#5D5566';
+              ctx.fillStyle = stoneColor;
+              ctx.fillRect(x + 1, y + 1, tileSize - 2, tileSize - 2);
+              
+              // Add magical glow for higher tiers
+              if (tier >= 3) {
+                ctx.fillStyle = 'rgba(138, 43, 226, 0.3)';
+                ctx.fillRect(x + 2, y + 2, tileSize - 4, tileSize - 4);
+              }
             }
           }
         }
@@ -63,29 +70,59 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = ({
   }, [tier]);
 
   const grassTexture = useMemo(() => createFantasyTexture('grass'), [createFantasyTexture]);
-  const pathTexture = useMemo(() => createFantasyTexture('path'), [createFantasyTexture]);
+  const pathTexture = useMemo(() => createFantasyTexture('stone_path'), [createFantasyTexture]);
 
-  // Create seamless mountain walls
-  const createMountainWall = useMemo(() => {
+  // Create canyon-style mountain walls
+  const createCanyonMountain = useMemo(() => {
     return (side: 'left' | 'right') => {
-      const geometry = new THREE.PlaneGeometry(100, 40, 32, 16);
-      const positions = geometry.attributes.position;
+      const geometry = new THREE.BufferGeometry();
+      const vertices = [];
+      const indices = [];
+      const uvs = [];
       
-      // Create natural mountain profile
-      for (let i = 0; i < positions.count; i++) {
-        const x = positions.getX(i);
-        const y = positions.getY(i);
-        const z = positions.getZ(i);
+      const sideMultiplier = side === 'left' ? -1 : 1;
+      const segments = 25;
+      const baseDistance = 20; // Distance from center path
+      
+      let vertexIndex = 0;
+      
+      // Create mountain wall along the path
+      for (let i = 0; i <= segments; i++) {
+        const z = -5 - (i * 6); // Position along path
+        const heightVariation = 12 + Math.sin(i * 0.4) * 6 + Math.cos(i * 0.8) * 3;
+        const widthVariation = 4 + Math.sin(i * 0.6) * 2;
         
-        // Add height variation based on x position
-        const heightVariation = Math.sin(x * 0.1) * 8 + Math.cos(x * 0.05) * 4;
-        const depthVariation = Math.sin(x * 0.08) * 3;
+        // Base vertices (ground level)
+        const baseX = sideMultiplier * baseDistance;
+        const outerX = sideMultiplier * (baseDistance + widthVariation);
         
-        positions.setY(i, y + heightVariation);
-        positions.setZ(i, z + depthVariation);
+        vertices.push(baseX, -1, z); // Inner base
+        vertices.push(outerX, -1, z); // Outer base
+        vertices.push(outerX, heightVariation, z); // Peak
+        
+        uvs.push(0, 0, 1, 0, 1, 1);
+        
+        // Create triangles for this segment
+        if (i < segments) {
+          const base = vertexIndex;
+          
+          // Current triangle
+          indices.push(base, base + 1, base + 2);
+          
+          // Connect to next segment
+          indices.push(base, base + 2, base + 3);
+          indices.push(base + 1, base + 4, base + 5);
+          indices.push(base + 2, base + 5, base + 4);
+        }
+        
+        vertexIndex += 3;
       }
       
+      geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+      geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
+      geometry.setIndex(indices);
       geometry.computeVertexNormals();
+      
       return geometry;
     };
   }, []);
@@ -93,27 +130,27 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = ({
   // Mountain colors based on tier
   const getMountainColor = () => {
     switch (tier) {
-      case 1: return '#6B7280';
-      case 2: return '#8B5A3C';
-      case 3: return '#7C3AED';
-      case 4: return '#1E1B4B';
-      default: return '#0F0F23';
+      case 1: return '#6B7280'; // Gray stone
+      case 2: return '#8B5A3C'; // Brown stone
+      case 3: return '#7C3AED'; // Purple magical
+      case 4: return '#1E1B4B'; // Dark mystical
+      default: return '#0F0F23'; // Deep shadow
     }
   };
 
   // Trees positioned safely away from path
   const treePositions = useMemo(() => {
     const positions = [];
-    const minDistanceFromPath = 12;
+    const minDistanceFromPath = 10;
     
-    for (let cluster = 0; cluster < 15; cluster++) {
+    for (let cluster = 0; cluster < 12; cluster++) {
       const side = cluster % 2 === 0 ? -1 : 1;
-      const clusterZ = -15 - (cluster * 10);
+      const clusterZ = -8 - (cluster * 8);
       
       for (let t = 0; t < 2; t++) {
-        const x = side * (minDistanceFromPath + Math.random() * 8);
-        const z = clusterZ + (Math.random() - 0.5) * 6;
-        const scale = 0.8 + Math.random() * 0.4;
+        const x = side * (minDistanceFromPath + Math.random() * 6);
+        const z = clusterZ + (Math.random() - 0.5) * 4;
+        const scale = 0.7 + Math.random() * 0.4;
         
         positions.push({ x, z, scale });
       }
@@ -124,9 +161,9 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = ({
 
   return (
     <group>
-      {/* Main grass terrain - expanded and seamless */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, -80]} receiveShadow>
-        <planeGeometry args={[80, 200]} />
+      {/* Main grass terrain - wider for canyon effect */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, -60]} receiveShadow>
+        <planeGeometry args={[50, 160]} />
         <meshLambertMaterial 
           map={grassTexture}
           transparent 
@@ -134,9 +171,9 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = ({
         />
       </mesh>
 
-      {/* Fantasy stone path - wider and more visible */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.4, -80]} receiveShadow>
-        <planeGeometry args={[6, 200]} />
+      {/* Fantasy stone path - centered and level */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.4, -60]} receiveShadow>
+        <planeGeometry args={[4, 160]} />
         <meshLambertMaterial 
           map={pathTexture}
           transparent 
@@ -144,11 +181,10 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = ({
         />
       </mesh>
 
-      {/* Seamless mountain walls on both sides */}
-      <group position={[-25, 8, -80]}>
+      {/* Canyon mountain walls - left side */}
+      <group position={[0, 0, -60]}>
         <mesh 
-          geometry={createMountainWall('left')} 
-          rotation={[0, Math.PI / 6, 0]}
+          geometry={createCanyonMountain('left')} 
           castShadow 
           receiveShadow
         >
@@ -160,10 +196,10 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = ({
         </mesh>
       </group>
       
-      <group position={[25, 8, -80]}>
+      {/* Canyon mountain walls - right side */}
+      <group position={[0, 0, -60]}>
         <mesh 
-          geometry={createMountainWall('right')} 
-          rotation={[0, -Math.PI / 6, 0]}
+          geometry={createCanyonMountain('right')} 
           castShadow 
           receiveShadow
         >
@@ -176,35 +212,37 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = ({
       </group>
 
       {/* Background mountain layers for depth */}
-      <group position={[-40, 12, -120]} scale={[1.5, 1.2, 1]}>
+      <group position={[0, 0, -90]}>
         <mesh 
-          geometry={createMountainWall('left')} 
+          geometry={createCanyonMountain('left')} 
+          scale={[1.5, 0.8, 1]}
           castShadow 
           receiveShadow
         >
           <meshLambertMaterial 
             color={getMountainColor()}
             transparent 
-            opacity={opacity * 0.6}
+            opacity={opacity * 0.4}
           />
         </mesh>
       </group>
       
-      <group position={[40, 12, -120]} scale={[1.5, 1.2, 1]}>
+      <group position={[0, 0, -90]}>
         <mesh 
-          geometry={createMountainWall('right')} 
+          geometry={createCanyonMountain('right')} 
+          scale={[1.5, 0.8, 1]}
           castShadow 
           receiveShadow
         >
           <meshLambertMaterial 
             color={getMountainColor()}
             transparent 
-            opacity={opacity * 0.6}
+            opacity={opacity * 0.4}
           />
         </mesh>
       </group>
 
-      {/* Fantasy trees positioned safely */}
+      {/* Trees positioned safely on canyon sides */}
       {treePositions.map((pos, i) => (
         <group key={`tree-${i}`} position={[pos.x, -1, pos.z]} scale={[pos.scale, pos.scale, pos.scale]}>
           {/* Tree trunk */}

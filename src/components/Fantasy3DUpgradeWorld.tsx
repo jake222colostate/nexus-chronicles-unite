@@ -28,21 +28,21 @@ interface UpgradeData {
   scale: number;
 }
 
-// Updated upgrades positioned directly on the path
+// Updated upgrades positioned slightly off the path to avoid clipping
 const createUpgradeData = (): UpgradeData[] => {
   const baseUpgrades = [
-    { name: 'Mystic Fountain', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [0, 0.5, -8] as [number, number, number], scale: 1.0 },
-    { name: 'Crystal Grove', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [0, 0.5, -16] as [number, number, number], scale: 1.1 },
-    { name: 'Arcane Sanctum', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [0, 0.5, -24] as [number, number, number], scale: 1.2 },
-    { name: 'Nexus Gateway', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [0, 0.5, -32] as [number, number, number], scale: 1.3 },
-    { name: 'Temporal Altar', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [0, 0.5, -40] as [number, number, number], scale: 1.4 },
-    { name: 'Phoenix Roost', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [0, 0.5, -48] as [number, number, number], scale: 1.5 },
-    { name: 'Ethereal Nexus', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [0, 0.5, -56] as [number, number, number], scale: 1.6 },
-    { name: 'Infinity Well', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [0, 0.5, -64] as [number, number, number], scale: 1.7 },
-    { name: 'Reality Prism', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [0, 0.5, -72] as [number, number, number], scale: 1.8 },
-    { name: 'Astral Crown', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [0, 0.5, -80] as [number, number, number], scale: 1.9 },
-    { name: 'Omni Core', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [0, 0.5, -88] as [number, number, number], scale: 2.0 },
-    { name: 'Eternal Beacon', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [0, 0.5, -96] as [number, number, number], scale: 2.1 },
+    { name: 'Mystic Fountain', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-2, 0.5, -8] as [number, number, number], scale: 1.0 },
+    { name: 'Crystal Grove', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [2, 0.5, -16] as [number, number, number], scale: 1.1 },
+    { name: 'Arcane Sanctum', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-2, 0.5, -24] as [number, number, number], scale: 1.2 },
+    { name: 'Nexus Gateway', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [2, 0.5, -32] as [number, number, number], scale: 1.3 },
+    { name: 'Temporal Altar', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-2, 0.5, -40] as [number, number, number], scale: 1.4 },
+    { name: 'Phoenix Roost', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [2, 0.5, -48] as [number, number, number], scale: 1.5 },
+    { name: 'Ethereal Nexus', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-2, 0.5, -56] as [number, number, number], scale: 1.6 },
+    { name: 'Infinity Well', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [2, 0.5, -64] as [number, number, number], scale: 1.7 },
+    { name: 'Reality Prism', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-2, 0.5, -72] as [number, number, number], scale: 1.8 },
+    { name: 'Astral Crown', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [2, 0.5, -80] as [number, number, number], scale: 1.9 },
+    { name: 'Omni Core', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-2, 0.5, -88] as [number, number, number], scale: 2.0 },
+    { name: 'Eternal Beacon', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [2, 0.5, -96] as [number, number, number], scale: 2.1 },
   ];
 
   // Apply exponential scaling
@@ -222,7 +222,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             far={15} 
           />
 
-          {/* Load GLB upgrade models positioned on path only */}
+          {/* Load GLB upgrade models positioned off path to prevent clipping */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
             if (distance > 60) return null;
@@ -246,13 +246,14 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </Suspense>
       </Canvas>
 
-      {/* Fixed Resource Display */}
-      <div className="absolute top-4 right-4 pointer-events-none z-40">
-        <div className="bg-purple-900/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-400/40">
-          <div className="text-yellow-400 text-lg font-bold">{formatNumber(currentMana)} Mana</div>
-          <div className="text-purple-300 text-sm">{formatNumber(totalManaPerSecond)}/sec</div>
-          <div className="text-purple-200 text-xs mt-1">
-            Environment Tier {currentEnvironmentTier}
+      {/* Fixed Top HUD Bar */}
+      <div className="absolute top-4 left-0 right-0 pointer-events-none z-40">
+        <div className="flex items-center justify-center px-4">
+          <div className="bg-purple-900/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-400/40 flex items-center gap-4">
+            <div className="text-yellow-400 text-lg font-bold">{formatNumber(currentMana)} 🔮</div>
+            <div className="text-purple-300 text-sm">⚡ {formatNumber(totalManaPerSecond)}/sec</div>
+            <div className="text-orange-300 text-sm">💎 {unlockedUpgradeCount}</div>
+            <div className="text-cyan-300 text-sm">🌌 Tier {currentEnvironmentTier}</div>
           </div>
         </div>
       </div>
@@ -266,47 +267,49 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       </div>
 
-      {/* Fixed Bottom UI - Clean layout with proper spacing */}
-      <div className="absolute bottom-6 left-0 right-0 flex flex-col items-center gap-6 z-30">
-        {/* Single Tap Button */}
-        <button 
-          className="bg-gradient-to-r from-purple-600/90 to-violet-700/90 hover:from-purple-500/90 hover:to-violet-600/90 
-                     text-white px-10 py-5 rounded-full font-bold text-xl shadow-lg border border-purple-400/50
-                     backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95"
-          style={{
-            boxShadow: '0 0 25px rgba(168, 85, 247, 0.5), 0 6px 25px rgba(0,0,0,0.3)'
-          }}
-          onClick={() => setCurrentMana(prev => prev + 1)}
-        >
-          ✨ Tap for Mana
-        </button>
-        
-        {/* Realm Toggle Buttons */}
-        <div className="flex items-center gap-6">
-          <button className="bg-purple-600/80 hover:bg-purple-700/80 text-white px-8 py-4 rounded-full font-medium text-lg border border-purple-400/60 backdrop-blur-sm transition-all duration-300 hover:scale-105">
-            🏰 Fantasy
+      {/* Fixed Bottom UI - Single Layer with Proper Spacing */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 pb-6">
+        <div className="flex flex-col items-center gap-4">
+          {/* Single Tap for Mana Button - Large Circle */}
+          <button 
+            className="bg-gradient-to-r from-purple-600/90 to-violet-700/90 hover:from-purple-500/90 hover:to-violet-600/90 
+                       text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg border border-purple-400/50
+                       backdrop-blur-sm transition-all duration-300 hover:scale-105 active:scale-95"
+            style={{
+              boxShadow: '0 0 25px rgba(168, 85, 247, 0.5), 0 6px 25px rgba(0,0,0,0.3)'
+            }}
+            onClick={() => setCurrentMana(prev => prev + 1)}
+          >
+            ✨ Tap for Mana
           </button>
-          <button className="bg-transparent border border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 px-8 py-4 rounded-full font-medium text-lg backdrop-blur-sm transition-all duration-300 hover:scale-105">
-            🚀 Sci-Fi
-          </button>
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="w-full max-w-md px-4">
-          <div className="bg-black/40 backdrop-blur-sm rounded-full h-3 overflow-hidden relative">
-            <div 
-              className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
-              style={{ 
-                width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 100) * 100)))}%` 
-              }}
-            />
-            <div className="absolute top-0 left-1/4 w-0.5 h-full bg-yellow-400 opacity-60" />
-            <div className="absolute top-0 left-1/2 w-0.5 h-full bg-yellow-400 opacity-60" />
-            <div className="absolute top-0 left-3/4 w-0.5 h-full bg-yellow-400 opacity-60" />
+          
+          {/* Realm Toggle Buttons - Side by Side */}
+          <div className="flex items-center gap-4">
+            <button className="bg-purple-600/80 hover:bg-purple-700/80 text-white px-6 py-3 rounded-full font-medium text-md border border-purple-400/60 backdrop-blur-sm transition-all duration-300 hover:scale-105">
+              🏰 Fantasy
+            </button>
+            <button className="bg-transparent border border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 px-6 py-3 rounded-full font-medium text-md backdrop-blur-sm transition-all duration-300 hover:scale-105">
+              🚀 Sci-Fi
+            </button>
           </div>
-          <p className="text-white/50 text-xs text-center mt-2">
-            Journey Progress: {unlockedUpgradeCount}/{upgrades.length} Upgrades | Environment: Tier {currentEnvironmentTier}
-          </p>
+          
+          {/* Journey Progress Bar */}
+          <div className="w-full max-w-md px-4">
+            <div className="bg-black/40 backdrop-blur-sm rounded-full h-3 overflow-hidden relative">
+              <div 
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
+                style={{ 
+                  width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 100) * 100)))}%` 
+                }}
+              />
+              <div className="absolute top-0 left-1/4 w-0.5 h-full bg-yellow-400 opacity-60" />
+              <div className="absolute top-0 left-1/2 w-0.5 h-full bg-yellow-400 opacity-60" />
+              <div className="absolute top-0 left-3/4 w-0.5 h-full bg-yellow-400 opacity-60" />
+            </div>
+            <p className="text-white/50 text-xs text-center mt-2">
+              Journey Progress: {unlockedUpgradeCount}/{upgrades.length} Upgrades
+            </p>
+          </div>
         </div>
       </div>
 
