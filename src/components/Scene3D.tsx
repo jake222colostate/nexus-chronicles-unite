@@ -5,6 +5,7 @@ import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
+import { WizardStaff } from './WizardStaff';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 
 interface Scene3DProps {
@@ -57,7 +58,7 @@ export const Scene3D: React.FC<Scene3DProps> = ({
         performance={{ min: 0.5 }}
       >
         <Suspense fallback={null}>
-          {/* Camera */}
+          {/* Camera with attached wizard staff */}
           <PerspectiveCamera
             ref={cameraRef}
             makeDefault
@@ -65,7 +66,10 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             fov={60}
             near={0.1}
             far={100}
-          />
+          >
+            {/* Wizard Staff attached to camera */}
+            <WizardStaff />
+          </PerspectiveCamera>
 
           {/* Controls - limited to vertical movement */}
           <OrbitControls
