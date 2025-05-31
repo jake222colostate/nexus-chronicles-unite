@@ -70,7 +70,11 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
       spawnTime: Date.now()
     };
     
-    setEnemies(prev => [...prev, newEnemy]);
+    setEnemies(prevEnemies => {
+      // Ensure prevEnemies is always an array
+      const currentEnemies = Array.isArray(prevEnemies) ? prevEnemies : [];
+      return [...currentEnemies, newEnemy];
+    });
   }, [realm, journeyDistance, enemyTypes]);
 
   // Spawn enemies
@@ -89,15 +93,20 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
   // Update enemies (movement and animations)
   useEffect(() => {
     const updateInterval = setInterval(() => {
-      setEnemies(prev => {
-        return prev.map(enemy => {
+      setEnemies(prevEnemies => {
+        // Ensure prevEnemies is always an array
+        const currentEnemies = Array.isArray(prevEnemies) ? prevEnemies : [];
+        
+        const updatedEnemies: GroundEnemy[] = [];
+        
+        for (const enemy of currentEnemies) {
           const age = Date.now() - enemy.spawnTime;
           
           // Spawn scale-in animation
           let size = enemy.size;
           if (age < 500) {
-            size = enemyTypes[realm].find(t => t.type === enemy.type)?.size || 1;
-            size = size * (age / 500); // Scale from 0 to full size over 500ms
+            const baseSize = enemyTypes[realm].find(t => t.type === enemy.type)?.size || 1;
+            size = baseSize * (age / 500); // Scale from 0 to full size over 500ms
           } else {
             size = enemyTypes[realm].find(t => t.type === enemy.type)?.size || 1;
           }
@@ -108,15 +117,17 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
           // Check if enemy reached player
           if (newZ <= -2) {
             onEnemyReachPlayer(enemy);
-            return null;
+            continue; // Skip adding this enemy to updatedEnemies
           }
 
-          return {
+          updatedEnemies.push({
             ...enemy,
             z: newZ,
             size: size
-          };
-        }).filter(Boolean) as GroundEnemy[];
+          });
+        }
+        
+        return updatedEnemies;
       });
     }, 50);
 
@@ -125,25 +136,33 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
 
   // Update parent with enemy list
   useEffect(() => {
-    if (onEnemiesUpdate) {
+    if (onEnemiesUpdate && Array.isArray(enemies)) {
       onEnemiesUpdate(enemies);
     }
   }, [enemies, onEnemiesUpdate]);
 
   // Handle enemy damage
   const handleEnemyDamage = useCallback((enemyId: string, damage: number) => {
-    setEnemies(prev => {
-      return prev.map(enemy => {
+    setEnemies(prevEnemies => {
+      // Ensure prevEnemies is always an array
+      const currentEnemies = Array.isArray(prevEnemies) ? prevEnemies : [];
+      
+      const updatedEnemies: GroundEnemy[] = [];
+      
+      for (const enemy of currentEnemies) {
         if (enemy.id === enemyId) {
           const newHealth = enemy.health - damage;
           if (newHealth <= 0) {
             onEnemyDestroyed(enemy);
-            return null;
+            continue; // Skip adding this enemy to updatedEnemies
           }
-          return { ...enemy, health: newHealth };
+          updatedEnemies.push({ ...enemy, health: newHealth });
+        } else {
+          updatedEnemies.push(enemy);
         }
-        return enemy;
-      }).filter(Boolean) as GroundEnemy[];
+      }
+      
+      return updatedEnemies;
     });
   }, [onEnemyDestroyed]);
 
@@ -159,6 +178,9 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
     handleEnemyDamage(enemyId, 1);
   }, [handleEnemyDamage]);
 
+  // Ensure enemies is always an array before rendering
+  const safeEnemies = Array.isArray(enemies) ? enemies : [];
+
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* 3D Canvas for enemies */}
@@ -172,7 +194,7 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
         <directionalLight position={[5, 5, 5]} intensity={0.8} />
         
         {/* Render 3D enemies */}
-        {enemies.map(enemy => (
+        {safeEnemies.map(enemy => (
           <Enemy3D
             key={enemy.id}
             enemy={enemy}
