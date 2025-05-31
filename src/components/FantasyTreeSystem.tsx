@@ -1,10 +1,10 @@
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-const FANTASY_TREE_URL = 'https://raw.githubusercontent.com/jake222colostate/HIGHPOLY/main/fantasy_tree.glb';
+const FANTASY_TREE_URL = 'https://github.com/jake222colostate/HIGHPOLY/raw/main/fantasy_tree.glb';
 
 // Simple seeded random number generator
 const seededRandom = (seed: number) => {
@@ -12,54 +12,19 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Fallback tree component using basic geometry
-const FallbackTree: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
-  position,
-  scale,
-  rotation
-}) => {
-  return (
-    <group
-      position={position}
-      scale={[scale, scale, scale]}
-      rotation={[0, rotation, 0]}
-    >
-      {/* Tree trunk */}
-      <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.1, 0.15, 1]} />
-        <meshLambertMaterial color="#8B4513" />
-      </mesh>
-      {/* Tree foliage */}
-      <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
-        <coneGeometry args={[0.8, 1.5, 8]} />
-        <meshLambertMaterial color="#228B22" />
-      </mesh>
-      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-        <coneGeometry args={[0.6, 1.2, 8]} />
-        <meshLambertMaterial color="#32CD32" />
-      </mesh>
-    </group>
-  );
-};
-
-// Individual tree component with proper GLB handling and fallback
+// Individual tree component with proper GLB handling
 const FantasyTree: React.FC<{ 
   position: [number, number, number]; 
   scale: number; 
   rotation: number;
-  useFallback: boolean;
-}> = ({ position, scale, rotation, useFallback }) => {
+}> = ({ position, scale, rotation }) => {
   
-  if (useFallback) {
-    return <FallbackTree position={position} scale={scale} rotation={rotation} />;
-  }
-
   try {
     const { scene } = useGLTF(FANTASY_TREE_URL);
     
     if (!scene) {
-      console.warn('Fantasy tree scene not loaded, using fallback');
-      return <FallbackTree position={position} scale={scale} rotation={rotation} />;
+      console.error('Fantasy tree scene not loaded');
+      return null;
     }
 
     console.log('Fantasy tree loaded successfully - Position:', position);
@@ -92,8 +57,8 @@ const FantasyTree: React.FC<{
       </group>
     );
   } catch (error) {
-    console.error('Failed to load fantasy tree model, using fallback:', error);
-    return <FallbackTree position={position} scale={scale} rotation={rotation} />;
+    console.error('Failed to load fantasy tree model:', error);
+    return null;
   }
 };
 
@@ -108,35 +73,7 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  const [modelLoadFailed, setModelLoadFailed] = useState(false);
-  const loadAttempted = useRef(false);
-
   console.log('FantasyTreeSystem render - Realm:', realm, 'Chunks:', chunks.length);
-
-  // Test model loading on mount
-  useEffect(() => {
-    if (!loadAttempted.current && realm === 'fantasy') {
-      loadAttempted.current = true;
-      
-      const testLoad = async () => {
-        try {
-          console.log('FantasyTreeSystem: Testing tree model load...');
-          const response = await fetch(FANTASY_TREE_URL);
-          if (!response.ok) {
-            console.error('FantasyTreeSystem: Tree model URL not accessible:', response.status);
-            setModelLoadFailed(true);
-          } else {
-            console.log('FantasyTreeSystem: Tree model URL is accessible');
-          }
-        } catch (error) {
-          console.error('FantasyTreeSystem: Tree model URL test failed:', error);
-          setModelLoadFailed(true);
-        }
-      };
-      
-      testLoad();
-    }
-  }, [realm]);
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -154,7 +91,7 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 3-5 trees per chunk in clusters
+      // Generate 3-5 trees per chunk in clusters within X-range ±30
       const treeCount = 3 + Math.floor(seededRandom(seed) * 3);
       console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
       
@@ -166,12 +103,11 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 73;
           
-          // Position trees on both sides of the path, avoiding the road area
-          const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          x = worldX + side * (8 + seededRandom(treeSeed) * 15); // Keep trees away from road
+          // Position trees randomly within ±30 range near the road
+          x = worldX + (seededRandom(treeSeed) - 0.5) * 60; // ±30 range
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.7;
           
-          // Varied scale and rotation for natural look (scale between 1.0 and 1.2)
+          // Varied scale and rotation for natural look
           scale = 1.0 + seededRandom(treeSeed + 2) * 0.2;
           rotation = seededRandom(treeSeed + 3) * Math.PI * 2;
           
@@ -208,13 +144,13 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
       {treePositions.map((pos, index) => {
         console.log(`Rendering fantasy tree ${index} at position:`, [pos.x, 0, pos.z]);
         return (
-          <FantasyTree
-            key={`fantasy-tree-${pos.chunkId}-${index}`}
-            position={[pos.x, 0, pos.z]}
-            scale={pos.scale}
-            rotation={pos.rotation}
-            useFallback={modelLoadFailed}
-          />
+          <Suspense key={`fantasy-tree-${pos.chunkId}-${index}`} fallback={null}>
+            <FantasyTree
+              position={[pos.x, 0, pos.z]}
+              scale={pos.scale}
+              rotation={pos.rotation}
+            />
+          </Suspense>
         );
       })}
     </group>
@@ -226,5 +162,5 @@ console.log('Attempting to preload fantasy tree model:', FANTASY_TREE_URL);
 try {
   useGLTF.preload(FANTASY_TREE_URL);
 } catch (error) {
-  console.warn('Failed to preload fantasy tree model, will use fallback trees:', error);
+  console.error('Failed to preload fantasy tree model:', error);
 }

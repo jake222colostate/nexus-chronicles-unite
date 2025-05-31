@@ -1,56 +1,27 @@
 
-import React, { useMemo, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-const FANTASY_MOUNTAIN_LEFT_URL = 'https://raw.githubusercontent.com/jake222colostate/HIGHPOLY/main/fantasy_mountain_left.glb';
-const FANTASY_MOUNTAIN_RIGHT_URL = 'https://raw.githubusercontent.com/jake222colostate/HIGHPOLY/main/fantasy_mountain_right.glb';
+const FANTASY_MOUNTAIN_LEFT_URL = 'https://github.com/jake222colostate/HIGHPOLY/raw/main/fantasy_mountain_left.glb';
+const FANTASY_MOUNTAIN_RIGHT_URL = 'https://github.com/jake222colostate/HIGHPOLY/raw/main/fantasy_mountain_right.glb';
 
 interface MountainProps {
   url: string;
   position: [number, number, number];
   scale: [number, number, number];
-  useFallback?: boolean;
 }
 
-function Mountain({ url, position, scale, useFallback = false }: MountainProps) {
-  console.log('Mountain: Attempting to load', url, 'at position:', position);
+function Mountain({ url, position, scale }: MountainProps) {
+  console.log('Mountain: Loading from', url, 'at position:', position);
   
-  // Fallback geometry if GLB fails
-  const fallbackGeometry = useMemo(() => {
-    const geometry = new THREE.ConeGeometry(3, 8, 8);
-    return geometry;
-  }, []);
-
-  const fallbackMaterial = useMemo(() => {
-    return new THREE.MeshLambertMaterial({ 
-      color: '#8B7355',
-      transparent: false
-    });
-  }, []);
-
-  if (useFallback) {
-    console.log('Mountain: Using fallback geometry at position:', position);
-    return (
-      <mesh position={position} scale={scale} castShadow receiveShadow>
-        <primitive object={fallbackGeometry} />
-        <primitive object={fallbackMaterial} />
-      </mesh>
-    );
-  }
-
   try {
     const { scene } = useGLTF(url);
     
     if (!scene) {
-      console.warn('Mountain: Scene is null for URL:', url);
-      return (
-        <mesh position={position} scale={scale} castShadow receiveShadow>
-          <primitive object={fallbackGeometry} />
-          <primitive object={fallbackMaterial} />
-        </mesh>
-      );
+      console.error('Mountain: Scene is null for URL:', url);
+      return null;
     }
     
     console.log('Mountain: Successfully loaded GLB, rendering at position:', position, 'scale:', scale);
@@ -70,12 +41,7 @@ function Mountain({ url, position, scale, useFallback = false }: MountainProps) 
     return <primitive object={clonedScene} position={position} scale={scale} />;
   } catch (error) {
     console.error(`Mountain: Failed to load mountain model: ${url}`, error);
-    return (
-      <mesh position={position} scale={scale} castShadow receiveShadow>
-        <primitive object={fallbackGeometry} />
-        <primitive object={fallbackMaterial} />
-      </mesh>
-    );
+    return null;
   }
 }
 
@@ -90,57 +56,11 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  const [leftModelLoadFailed, setLeftModelLoadFailed] = useState(false);
-  const [rightModelLoadFailed, setRightModelLoadFailed] = useState(false);
-  const loadAttempted = useRef(false);
-
   console.log('FantasyMountainSystem: Component mounted/rendered with:', {
     realm,
     chunksLength: chunks.length,
-    chunkSize,
-    leftModelLoadFailed,
-    rightModelLoadFailed
+    chunkSize
   });
-
-  // Test model loading on mount
-  useEffect(() => {
-    if (!loadAttempted.current && realm === 'fantasy') {
-      loadAttempted.current = true;
-      
-      // Test if the models can be loaded
-      const testLoad = async () => {
-        try {
-          console.log('FantasyMountainSystem: Testing left mountain load...');
-          const leftResponse = await fetch(FANTASY_MOUNTAIN_LEFT_URL);
-          if (!leftResponse.ok) {
-            console.error('FantasyMountainSystem: Left mountain URL not accessible:', leftResponse.status);
-            setLeftModelLoadFailed(true);
-          } else {
-            console.log('FantasyMountainSystem: Left mountain URL is accessible');
-          }
-        } catch (error) {
-          console.error('FantasyMountainSystem: Left mountain URL test failed:', error);
-          setLeftModelLoadFailed(true);
-        }
-
-        try {
-          console.log('FantasyMountainSystem: Testing right mountain load...');
-          const rightResponse = await fetch(FANTASY_MOUNTAIN_RIGHT_URL);
-          if (!rightResponse.ok) {
-            console.error('FantasyMountainSystem: Right mountain URL not accessible:', rightResponse.status);
-            setRightModelLoadFailed(true);
-          } else {
-            console.log('FantasyMountainSystem: Right mountain URL is accessible');
-          }
-        } catch (error) {
-          console.error('FantasyMountainSystem: Right mountain URL test failed:', error);
-          setRightModelLoadFailed(true);
-        }
-      };
-      
-      testLoad();
-    }
-  }, [realm]);
 
   // Early return check with logging
   if (realm !== 'fantasy') {
@@ -151,7 +71,7 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   console.log('FantasyMountainSystem: Realm is fantasy, proceeding with mountain generation');
 
   const mountainInstances = useMemo(() => {
-    console.log('FantasyMountainSystem useMemo - Realm:', realm, 'Chunks:', chunks.length, 'Models failed:', { leftModelLoadFailed, rightModelLoadFailed });
+    console.log('FantasyMountainSystem useMemo - Realm:', realm, 'Chunks:', chunks.length);
     
     const instances: React.ReactNode[] = [];
     
@@ -165,40 +85,40 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
         
         console.log(`FantasyMountainSystem: Creating mountains for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
         
-        // Left side mountains at x = -20, grounded at y = 0
+        // Left side mountains at x = -40, grounded at y = 0 (far from road)
         instances.push(
-          <Mountain 
-            key={`left-${chunk.id}-${zOffset}`} 
-            url={FANTASY_MOUNTAIN_LEFT_URL}
-            position={[-20, 0, finalZ]}
-            scale={[2, 2, 2]}
-            useFallback={leftModelLoadFailed}
-          />
+          <Suspense key={`left-${chunk.id}-${zOffset}`} fallback={null}>
+            <Mountain 
+              url={FANTASY_MOUNTAIN_LEFT_URL}
+              position={[-40, 0, finalZ]}
+              scale={[2, 2, 2]}
+            />
+          </Suspense>
         );
         
-        // Right side mountains at x = 20, grounded at y = 0
+        // Right side mountains at x = 40, grounded at y = 0 (far from road)
         instances.push(
-          <Mountain 
-            key={`right-${chunk.id}-${zOffset}`} 
-            url={FANTASY_MOUNTAIN_RIGHT_URL}
-            position={[20, 0, finalZ]}
-            scale={[2, 2, 2]}
-            useFallback={rightModelLoadFailed}
-          />
+          <Suspense key={`right-${chunk.id}-${zOffset}`} fallback={null}>
+            <Mountain 
+              url={FANTASY_MOUNTAIN_RIGHT_URL}
+              position={[40, 0, finalZ]}
+              scale={[2, 2, 2]}
+            />
+          </Suspense>
         );
       }
     });
     
     console.log(`FantasyMountainSystem: Created ${instances.length} mountain instances`);
     return instances;
-  }, [chunks, chunkSize, realm, leftModelLoadFailed, rightModelLoadFailed]);
+  }, [chunks, chunkSize, realm]);
 
   console.log('FantasyMountainSystem: About to render', mountainInstances.length, 'mountain instances');
 
   return <>{mountainInstances}</>;
 };
 
-// Preload the models for better performance - with error handling
+// Preload the models for better performance
 if (typeof window !== 'undefined') {
   try {
     useGLTF.preload(FANTASY_MOUNTAIN_LEFT_URL);
