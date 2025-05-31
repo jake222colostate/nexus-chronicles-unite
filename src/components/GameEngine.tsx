@@ -11,7 +11,6 @@ import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
 import { GroundEnemySystem, GroundEnemy } from './GroundEnemySystem';
-import { Enemy3DSystem, Enemy3DData } from './Enemy3DSystem';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
 import { MuzzleFlash } from './MuzzleFlash';
 import { WaveCompleteMessage } from './WaveCompleteMessage';
@@ -201,7 +200,7 @@ const GameEngine: React.FC = () => {
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
-  const [enemies, setEnemies] = useState<Enemy3DData[]>([]);
+  const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
@@ -578,13 +577,13 @@ const GameEngine: React.FC = () => {
   }, []);
 
   // Combat event handlers with scaling rewards
-  const handleEnemyReachPlayer = useCallback((enemy: Enemy3DData) => {
+  const handleEnemyReachPlayer = useCallback((enemy: GroundEnemy) => {
     setPlayerTakingDamage(true);
     setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
     setTimeout(() => setPlayerTakingDamage(false), 500);
   }, []);
 
-  const handleEnemyDestroyed = useCallback((enemy: Enemy3DData) => {
+  const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
     const manaReward = Math.floor(8 + (currentJourneyDistance / 10));
     
     setGameState(prev => ({ 
@@ -699,8 +698,8 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* 3D Enemy System with realistic models */}
-        <Enemy3DSystem
+        {/* Ground-based Enemy System with scaling */}
+        <GroundEnemySystem
           realm={currentRealm}
           onEnemyReachPlayer={handleEnemyReachPlayer}
           onEnemyDestroyed={handleEnemyDestroyed}
