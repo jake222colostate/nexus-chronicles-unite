@@ -14,11 +14,27 @@ import { EnhancedGrassSystem } from './EnhancedGrassSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
-// Lazy load fantasy components ONLY when explicitly needed
-const FantasyRoadSystem = React.lazy(() => import('./FantasyRoadSystem').then(module => ({ default: module.FantasyRoadSystem })));
-const FantasyMountainSystem = React.lazy(() => import('./FantasyMountainSystem').then(module => ({ default: module.FantasyMountainSystem })));
-const FantasyPortalSystem = React.lazy(() => import('./FantasyPortalSystem').then(module => ({ default: module.FantasyPortalSystem })));
-const FantasySkybox = React.lazy(() => import('./FantasySkybox').then(module => ({ default: module.FantasySkybox })));
+// CRITICAL: Only import fantasy components when explicitly in fantasy realm
+// These will ONLY be loaded if realm === 'fantasy'
+const FantasyRoadSystem = React.lazy(() => {
+  console.log('LOADING FantasyRoadSystem component');
+  return import('./FantasyRoadSystem').then(module => ({ default: module.FantasyRoadSystem }));
+});
+
+const FantasyMountainSystem = React.lazy(() => {
+  console.log('LOADING FantasyMountainSystem component');
+  return import('./FantasyMountainSystem').then(module => ({ default: module.FantasyMountainSystem }));
+});
+
+const FantasyPortalSystem = React.lazy(() => {
+  console.log('LOADING FantasyPortalSystem component');
+  return import('./FantasyPortalSystem').then(module => ({ default: module.FantasyPortalSystem }));
+});
+
+const FantasySkybox = React.lazy(() => {
+  console.log('LOADING FantasySkybox component');
+  return import('./FantasySkybox').then(module => ({ default: module.FantasySkybox }));
+});
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -50,6 +66,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   onTapEffectComplete
 }) => {
   const cameraRef = useRef();
+
+  // Add debugging
+  console.log('Scene3D rendering with realm:', realm);
 
   // Stable player position for chunk system
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
@@ -116,7 +135,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Skybox - Only load fantasy skybox in fantasy realm */}
+          {/* Skybox - CRITICAL: Only load fantasy skybox when realm is fantasy */}
           {realm === 'fantasy' ? (
             <Suspense fallback={<color attach="background" args={['#87CEEB']} />}>
               <FantasySkybox realm={realm} />
@@ -128,58 +147,64 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* Environment System - Strictly separated by realm */}
+          {/* Environment System - CRITICAL: Completely separated by realm */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
             renderDistance={200}
           >
-            {(chunks) => (
-              <>
-                {/* ONLY render fantasy environment when realm is explicitly 'fantasy' */}
-                {realm === 'fantasy' && (
-                  <Suspense fallback={null}>
-                    <FantasyRoadSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
-                    
-                    <FantasyMountainSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
-                    
-                    <FantasyPortalSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
-                  </Suspense>
-                )}
-                
-                {/* ONLY render sci-fi environment when realm is explicitly 'scifi' */}
-                {realm === 'scifi' && (
-                  <>
-                    <EnhancedGrassSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                    />
-                    
-                    <TreeSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                    />
-                    
-                    <GLBMountainSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                    />
-                  </>
-                )}
-              </>
-            )}
+            {(chunks) => {
+              console.log('ChunkSystem rendering with realm:', realm, 'chunks:', chunks.length);
+              
+              return (
+                <>
+                  {/* CRITICAL: ONLY render fantasy environment when realm is 'fantasy' */}
+                  {realm === 'fantasy' ? (
+                    <Suspense fallback={null}>
+                      {console.log('Rendering FANTASY components')}
+                      <FantasyRoadSystem
+                        chunks={chunks}
+                        chunkSize={50}
+                        realm={realm}
+                      />
+                      
+                      <FantasyMountainSystem
+                        chunks={chunks}
+                        chunkSize={50}
+                        realm={realm}
+                      />
+                      
+                      <FantasyPortalSystem
+                        chunks={chunks}
+                        chunkSize={50}
+                        realm={realm}
+                      />
+                    </Suspense>
+                  ) : null}
+                  
+                  {/* CRITICAL: ONLY render sci-fi environment when realm is 'scifi' */}
+                  {realm === 'scifi' ? (
+                    <>
+                      {console.log('Rendering SCIFI components')}
+                      <EnhancedGrassSystem
+                        chunks={chunks}
+                        chunkSize={50}
+                      />
+                      
+                      <TreeSystem
+                        chunks={chunks}
+                        chunkSize={50}
+                      />
+                      
+                      <GLBMountainSystem
+                        chunks={chunks}
+                        chunkSize={50}
+                      />
+                    </>
+                  ) : null}
+                </>
+              );
+            }}
           </ChunkSystem>
 
           {/* Memoized upgrade nodes */}

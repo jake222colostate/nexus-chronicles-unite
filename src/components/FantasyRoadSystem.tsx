@@ -17,14 +17,18 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
 }) => {
   const [hasError, setHasError] = useState(false);
   
-  // STRICT: Return null immediately if not fantasy realm
+  // CRITICAL: Immediate return if not fantasy realm
   if (realm !== 'fantasy') {
+    console.log('FantasyRoadContent: Rejecting render for realm:', realm);
     return null;
   }
+  
+  console.log('FantasyRoadContent: Loading for FANTASY realm');
   
   let model;
   try {
     model = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_road_tile.glb');
+    console.log('FantasyRoadContent: Model loaded successfully');
   } catch (error) {
     console.error("Failed to load road model:", error);
     setHasError(true);
@@ -35,9 +39,13 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
   
   // Memoize road tile instances
   const roadInstances = useMemo(() => {
-    // STRICT: Double-check realm before creating instances
-    if (!scene || hasError || realm !== 'fantasy') return [];
+    // CRITICAL: Triple-check realm before creating instances
+    if (!scene || hasError || realm !== 'fantasy') {
+      console.log('FantasyRoadContent: Skipping instance creation for realm:', realm);
+      return [];
+    }
     
+    console.log('FantasyRoadContent: Creating road instances for fantasy realm');
     const instances = [];
     
     chunks.forEach(chunk => {
@@ -57,13 +65,17 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
       }
     });
     
+    console.log('FantasyRoadContent: Created', instances.length, 'road instances');
     return instances;
   }, [chunks, chunkSize, scene, hasError, realm]);
 
-  // STRICT: Final realm check before rendering
+  // CRITICAL: Final realm check before rendering
   if (!scene || hasError || realm !== 'fantasy') {
+    console.log('FantasyRoadContent: Final check failed for realm:', realm);
     return null;
   }
+
+  console.log('FantasyRoadContent: Rendering', roadInstances.length, 'road instances');
 
   return (
     <group>
@@ -92,10 +104,13 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
 };
 
 export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
-  // STRICT: Return null immediately if not fantasy realm
+  // CRITICAL: Immediate return if not fantasy realm
   if (props.realm !== 'fantasy') {
+    console.log('FantasyRoadSystem: Rejecting render for realm:', props.realm);
     return null;
   }
+
+  console.log('FantasyRoadSystem: Rendering for FANTASY realm');
 
   return (
     <React.Suspense fallback={null}>
@@ -104,4 +119,4 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
   );
 };
 
-// NO preloading - only load when component is actually used
+// CRITICAL: NO preloading - only load when component is actually used
