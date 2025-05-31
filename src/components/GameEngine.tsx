@@ -200,7 +200,7 @@ const GameEngine: React.FC = () => {
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
-  const [enemies, setEnemies] = useState<any[]>([]);
+  const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
@@ -577,13 +577,13 @@ const GameEngine: React.FC = () => {
   }, []);
 
   // Combat event handlers with scaling rewards
-  const handleEnemyReachPlayer = useCallback((enemy: any) => {
+  const handleEnemyReachPlayer = useCallback((enemy: GroundEnemy) => {
     setPlayerTakingDamage(true);
     setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
     setTimeout(() => setPlayerTakingDamage(false), 500);
   }, []);
 
-  const handleEnemyDestroyed = useCallback((enemy: any) => {
+  const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
     const manaReward = Math.floor(8 + (currentJourneyDistance / 10));
     
     setGameState(prev => ({ 
@@ -613,6 +613,7 @@ const GameEngine: React.FC = () => {
       }
     }, 900);
 
+    // Check for wave complete
     if ((gameState.enemiesKilled + 1) % 15 === 0) {
       setShowWaveComplete(true);
       setGameState(prev => ({ 
@@ -679,7 +680,7 @@ const GameEngine: React.FC = () => {
       />
 
       {/* Main Game Area */}
-      <div className="absolute inset-0 pt-12 pb-32">
+      <div className="absolute inset-0 pt-16 pb-40">
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -733,20 +734,20 @@ const GameEngine: React.FC = () => {
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
         {/* Weapon Upgrade Button */}
-        <div className="absolute top-16 right-4 z-30">
+        <div className="absolute top-20 right-4 z-30">
           <Button 
             onClick={handleShowWeaponUpgrades}
-            className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0"
+            className="h-12 w-12 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0"
           >
             🏹
           </Button>
         </div>
 
         {/* Cross-Realm Upgrades Button */}
-        <div className="absolute top-16 left-4 z-30">
+        <div className="absolute top-20 left-4 z-30">
           <Button 
             onClick={handleShowCrossRealmUpgrades}
-            className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
+            className="h-12 w-12 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
           >
             🏰
           </Button>
@@ -754,10 +755,10 @@ const GameEngine: React.FC = () => {
 
         {/* Convergence Ready Button */}
         {canConverge && (
-          <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-40 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
-              className="h-10 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
+              className="h-12 px-8 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
             >
               🔁 Convergence Ready!
             </Button>

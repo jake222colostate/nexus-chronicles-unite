@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { GroundEnemy } from './GroundEnemySystem';
 
 interface Projectile {
   id: string;
@@ -12,7 +13,7 @@ interface Projectile {
 }
 
 interface AutoWeaponProps {
-  enemies: any[];
+  enemies: GroundEnemy[];
   combatStats: {
     damage: number;
     fireRate: number;
@@ -31,11 +32,11 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const lastFireTime = useRef(0);
 
-  // Auto-fire every 1.5 seconds at nearest enemy
+  // Auto-fire at nearest enemy
   useEffect(() => {
     const fireInterval = setInterval(() => {
       const now = Date.now();
-      if (now - lastFireTime.current >= 1500) { // 1.5 second intervals
+      if (now - lastFireTime.current >= combatStats.fireRate) {
         const nearestEnemy = enemies
           .filter(enemy => {
             const distance = Math.sqrt(enemy.x * enemy.x + enemy.z * enemy.z);
@@ -54,7 +55,7 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
             y: 1.5,
             z: 0,
             targetId: nearestEnemy.id,
-            speed: 0.8,
+            speed: 0.5,
             damage: combatStats.damage
           };
 
@@ -68,7 +69,7 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
     return () => clearInterval(fireInterval);
   }, [enemies, combatStats, onMuzzleFlash]);
 
-  // Move projectiles and handle hits
+  // Move projectiles
   useEffect(() => {
     const moveInterval = setInterval(() => {
       setProjectiles(prev => {
@@ -81,8 +82,8 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
           const dz = target.z - projectile.z;
           const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-          if (distance < 1.5) {
-            // Hit target and give +1 mana reward
+          if (distance < 1) {
+            // Hit target
             onEnemyHit(target.id, projectile.damage);
             return null;
           }
@@ -109,14 +110,14 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
     <div className="absolute inset-0 pointer-events-none">
       {/* Weapon Visual - positioned at player location */}
       <div className="absolute bottom-1/2 left-1/2 transform -translate-x-1/2 translate-y-8 z-30">
-        <div className="text-3xl animate-pulse">⚔️</div>
+        <div className="text-2xl animate-pulse">🏹</div>
       </div>
 
-      {/* Projectiles with enhanced visual effects */}
+      {/* Projectiles */}
       {projectiles.map(projectile => {
         const screenX = 50 + (projectile.x / 15) * 25;
         const screenY = 70 - ((projectile.z / 40) * 30);
-        const scale = Math.max(0.6, Math.min(1.4, (40 - projectile.z) / 40));
+        const scale = Math.max(0.5, Math.min(1.2, (40 - projectile.z) / 40));
 
         return (
           <div
@@ -129,7 +130,7 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
               zIndex: Math.floor(50 - projectile.z)
             }}
           >
-            <div className="text-xl text-yellow-400 drop-shadow-lg animate-pulse">🏹</div>
+            <div className="text-lg text-yellow-400 drop-shadow-lg animate-pulse">✨</div>
           </div>
         );
       })}
