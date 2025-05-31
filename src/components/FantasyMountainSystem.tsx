@@ -17,39 +17,39 @@ interface RightMountainProps {
 function LeftMountain({ position }: LeftMountainProps) {
   console.log('LeftMountain: Attempting to load', LEFT_MOUNTAIN_URL);
   
-  const { scene, error } = useGLTF(LEFT_MOUNTAIN_URL);
-  
-  if (error) {
+  try {
+    const { scene } = useGLTF(LEFT_MOUNTAIN_URL);
+    
+    if (!scene) {
+      console.warn('Left mountain scene is null');
+      return null;
+    }
+    
+    console.log('LeftMountain: Successfully loaded, rendering at position:', position);
+    return <primitive object={scene.clone()} position={position} scale={[1.5, 1.5, 1.5]} />;
+  } catch (error) {
     console.error('Failed to load left mountain:', error);
     return null;
   }
-  
-  if (!scene) {
-    console.warn('Left mountain scene is null');
-    return null;
-  }
-  
-  console.log('LeftMountain: Successfully loaded, rendering at position:', position);
-  return <primitive object={scene.clone()} position={position} scale={[1.5, 1.5, 1.5]} />;
 }
 
 function RightMountain({ position }: RightMountainProps) {
   console.log('RightMountain: Attempting to load', RIGHT_MOUNTAIN_URL);
   
-  const { scene, error } = useGLTF(RIGHT_MOUNTAIN_URL);
-  
-  if (error) {
+  try {
+    const { scene } = useGLTF(RIGHT_MOUNTAIN_URL);
+    
+    if (!scene) {
+      console.warn('Right mountain scene is null');
+      return null;
+    }
+    
+    console.log('RightMountain: Successfully loaded, rendering at position:', position);
+    return <primitive object={scene.clone()} position={position} scale={[1.5, 1.5, 1.5]} />;
+  } catch (error) {
     console.error('Failed to load right mountain:', error);
     return null;
   }
-  
-  if (!scene) {
-    console.warn('Right mountain scene is null');
-    return null;
-  }
-  
-  console.log('RightMountain: Successfully loaded, rendering at position:', position);
-  return <primitive object={scene.clone()} position={position} scale={[1.5, 1.5, 1.5]} />;
 }
 
 interface FantasyMountainSystemProps {
@@ -110,7 +110,6 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   return <>{mountainInstances}</>;
 };
 
-// Preload the models
-console.log('Preloading fantasy mountain models...');
-useGLTF.preload(LEFT_MOUNTAIN_URL);
-useGLTF.preload(RIGHT_MOUNTAIN_URL);
+// Don't preload the models since they appear to be corrupted
+// Instead, let them load on-demand with proper error handling
+console.log('FantasyMountainSystem: Ready to load models on demand');
