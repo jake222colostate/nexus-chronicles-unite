@@ -3,15 +3,15 @@ import React, { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 
-const LEFT_MOUNTAIN_URL = 'https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_left.glb';
-const RIGHT_MOUNTAIN_URL = 'https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_right.glb';
+const MAGICAL_MOUNTAINS_URL = 'https://raw.githubusercontent.com/jake222colostate/enviornment/main/high_poly_magical_mountains_placeholder.glb';
 
 interface MountainProps {
   url: string;
   position: [number, number, number];
+  scale: [number, number, number];
 }
 
-function Mountain({ url, position }: MountainProps) {
+function Mountain({ url, position, scale }: MountainProps) {
   console.log('Mountain: Attempting to load', url);
   
   try {
@@ -22,8 +22,8 @@ function Mountain({ url, position }: MountainProps) {
       return null;
     }
     
-    console.log('Mountain: Successfully loaded, rendering at position:', position);
-    return <primitive object={scene.clone()} position={position} scale={[1.5, 1.5, 1.5]} />;
+    console.log('Mountain: Successfully loaded, rendering at position:', position, 'scale:', scale);
+    return <primitive object={scene.clone()} position={position} scale={scale} />;
   } catch (error) {
     console.error(`Failed to load mountain model: ${url}`, error);
     return null;
@@ -64,24 +64,29 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
       console.log(`FantasyMountainSystem: Processing chunk ${chunkIndex}: worldZ=${chunk.worldZ}`);
       
       // Create multiple mountain instances along the Z-axis for seamless coverage
-      for (let zOffset = 0; zOffset < chunkSize; zOffset += 20) {
+      // Starting 30 units ahead and tiling back 50 units as specified
+      for (let zOffset = -30; zOffset < chunkSize + 20; zOffset += 25) {
         const finalZ = chunk.worldZ - zOffset;
         
         console.log(`FantasyMountainSystem: Creating mountains for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
         
+        // Left side mountains - positioned far enough from the road
         instances.push(
           <Mountain 
             key={`left-${chunk.id}-${zOffset}`} 
-            url={LEFT_MOUNTAIN_URL}
-            position={[-20, 0, finalZ]} 
+            url={MAGICAL_MOUNTAINS_URL}
+            position={[-35, -2, finalZ]}
+            scale={[2, 2, 2]}
           />
         );
         
+        // Right side mountains - mirrored via negative X scale
         instances.push(
           <Mountain 
             key={`right-${chunk.id}-${zOffset}`} 
-            url={RIGHT_MOUNTAIN_URL}
-            position={[20, 0, finalZ]} 
+            url={MAGICAL_MOUNTAINS_URL}
+            position={[35, -2, finalZ]}
+            scale={[-2, 2, 2]}
           />
         );
       }
@@ -96,10 +101,9 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   return <>{mountainInstances}</>;
 };
 
-// Preload both models for better performance
+// Preload the model for better performance
 if (typeof window !== 'undefined') {
-  useGLTF.preload(LEFT_MOUNTAIN_URL);
-  useGLTF.preload(RIGHT_MOUNTAIN_URL);
+  useGLTF.preload(MAGICAL_MOUNTAINS_URL);
 }
 
-console.log('FantasyMountainSystem: Models will be preloaded on mount');
+console.log('FantasyMountainSystem: High poly magical mountains model will be preloaded on mount');
