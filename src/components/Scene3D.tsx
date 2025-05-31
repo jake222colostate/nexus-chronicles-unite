@@ -1,4 +1,3 @@
-
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -116,30 +115,29 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
 
-          {/* Enhanced GLB Mountain System - Only for Fantasy Realm */}
-          {realm === 'fantasy' && (
-            <ChunkSystem
-              playerPosition={playerPosition}
-              chunkSize={50}
-              renderDistance={200}
-            >
-              {(chunks) => (
-                <>
-                  <GLBMountainSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                    realm={realm}
-                  />
-                  {/* Add GLB Tree System for Fantasy realm */}
-                  <GLBTreeSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                    realm={realm}
-                  />
-                </>
-              )}
-            </ChunkSystem>
-          )}
+          {/* Enhanced Chunk System with proper tree handling */}
+          <ChunkSystem
+            playerPosition={playerPosition}
+            chunkSize={50}
+            renderDistance={200}
+          >
+            {(chunks) => (
+              <>
+                {/* Mountains without trees for all realms */}
+                <GLBMountainSystem
+                  chunks={chunks}
+                  chunkSize={50}
+                  realm={realm}
+                />
+                {/* Custom GLB Tree System - Only for Fantasy realm */}
+                <GLBTreeSystem
+                  chunks={chunks}
+                  chunkSize={50}
+                  realm={realm}
+                />
+              </>
+            )}
+          </ChunkSystem>
 
           {upgradeNodes}
 

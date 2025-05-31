@@ -11,7 +11,7 @@ interface GLBTreeSystemProps {
   realm: 'fantasy' | 'scifi';
 }
 
-const TREE_MODEL_URL = 'https://github.com/jake222colostate/enviornment/raw/main/fantasy_tree.glb';
+const TREE_MODEL_URL = 'https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_tree.glb';
 
 // Simple seeded random number generator
 const seededRandom = (seed: number) => {
@@ -19,62 +19,37 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Custom hook to safely load GLB with error handling
-const useSafeGLTF = (url: string, enabled: boolean) => {
-  const [modelData, setModelData] = useState<{ scene: any } | null>(null);
-  const [loading, setLoading] = useState(enabled);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!enabled) {
-      setLoading(false);
-      return;
+// Simplified tree loading component
+const TreeModel: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
+  position,
+  scale,
+  rotation
+}) => {
+  const [loadError, setLoadError] = useState(false);
+  
+  try {
+    const { scene } = useGLTF(TREE_MODEL_URL);
+    
+    if (!scene || loadError) {
+      return null;
     }
 
-    // Create a timeout to catch hanging requests
-    const timeout = setTimeout(() => {
-      setError('Model loading timed out');
-      setLoading(false);
-    }, 10000); // 10 second timeout
-
-    // Try to load the model with error handling
-    const loadModel = async () => {
-      try {
-        console.log('Attempting to load GLB tree model...');
-        const gltf = await new Promise((resolve, reject) => {
-          // Use drei's useGLTF in a controlled way
-          try {
-            // We'll just return null for now since the URL is not accessible
-            // This prevents the app from crashing
-            setTimeout(() => {
-              reject(new Error('External model URL not accessible'));
-            }, 100);
-          } catch (err) {
-            reject(err);
-          }
-        });
-        
-        clearTimeout(timeout);
-        setModelData(gltf as any);
-        setLoading(false);
-        setError(null);
-      } catch (err) {
-        clearTimeout(timeout);
-        console.warn('Failed to load GLB tree model, falling back to no trees:', err);
-        setError('Failed to load model');
-        setLoading(false);
-        setModelData(null);
-      }
-    };
-
-    loadModel();
-
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [url, enabled]);
-
-  return { scene: modelData?.scene, loading, error };
+    return (
+      <group
+        position={position}
+        scale={[scale, scale, scale]}
+        rotation={[0, rotation, 0]}
+      >
+        <primitive object={scene.clone()} castShadow receiveShadow />
+      </group>
+    );
+  } catch (error) {
+    console.warn('Failed to load GLB tree model:', error);
+    if (!loadError) {
+      setLoadError(true);
+    }
+    return null;
+  }
 };
 
 export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
@@ -83,14 +58,21 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
   realm
 }) => {
   const groupRef = useRef();
+  const [systemEnabled, setSystemEnabled] = useState(false);
 
-  // Only attempt to load for fantasy realm
-  const shouldLoad = realm === 'fantasy';
-  const { scene: treeModel, loading, error } = useSafeGLTF(TREE_MODEL_URL, shouldLoad);
+  // Only enable for fantasy realm
+  useEffect(() => {
+    if (realm === 'fantasy') {
+      setSystemEnabled(true);
+      console.log('GLB tree system: Enabled for fantasy realm');
+    } else {
+      setSystemEnabled(false);
+    }
+  }, [realm]);
 
   // Generate tree positions for each chunk
   const treePositions = useMemo(() => {
-    if (realm !== 'fantasy' || !treeModel || error || loading) {
+    if (!systemEnabled) {
       return [];
     }
 
@@ -143,38 +125,26 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
     });
     
     return positions;
-  }, [chunks, chunkSize, realm, treeModel, error, loading]);
+  }, [chunks, chunkSize, systemEnabled]);
 
-  // Log status and don't render if conditions aren't met
-  useEffect(() => {
-    if (realm === 'fantasy') {
-      if (loading) {
-        console.log('GLB tree system: Loading tree model...');
-      } else if (error) {
-        console.log('GLB tree system: Failed to load model, no trees will be displayed');
-      } else if (treeModel) {
-        console.log('GLB tree system: Model loaded successfully');
-      }
-    }
-  }, [loading, error, treeModel, realm]);
-
-  // Don't render if not fantasy realm, no model, loading, or error
-  if (realm !== 'fantasy' || !treeModel || error || loading) {
+  // Don't render if not fantasy realm
+  if (!systemEnabled) {
     return null;
   }
 
   return (
     <group ref={groupRef}>
       {treePositions.map((pos, index) => (
-        <group
+        <TreeModel
           key={`glb-tree-${pos.chunkId}-${index}`}
           position={[pos.x, -1, pos.z]}
-          scale={[pos.scale, pos.scale, pos.scale]}
-          rotation={[0, pos.rotation, 0]}
-        >
-          <primitive object={treeModel.clone()} castShadow receiveShadow />
-        </group>
+          scale={pos.scale}
+          rotation={pos.rotation}
+        />
       ))}
     </group>
   );
 };
+
+// Preload the model
+useGLTF.preload(TREE_MODEL_URL);
