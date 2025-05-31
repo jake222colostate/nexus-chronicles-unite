@@ -19,6 +19,8 @@ import { AutoWeapon } from './AutoWeapon';
 import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem, CrossRealmUpgrade } from './CrossRealmUpgradeSystem';
 import { crossRealmUpgrades } from '../data/CrossRealmUpgrades';
+import { Enemy3DSystem, Enemy3D } from './Enemy3DSystem';
+import { Projectile3DSystem } from './Projectile3DSystem';
 
 interface GameState {
   mana: number;
@@ -201,6 +203,7 @@ const GameEngine: React.FC = () => {
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
   const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
+  const [enemies3D, setEnemies3D] = useState<Enemy3D[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
@@ -577,14 +580,14 @@ const GameEngine: React.FC = () => {
   }, []);
 
   // Combat event handlers with scaling rewards
-  const handleEnemyReachPlayer = useCallback((enemy: GroundEnemy) => {
+  const handleEnemyReachPlayer3D = useCallback((enemy: Enemy3D) => {
     setPlayerTakingDamage(true);
-    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
+    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 5) }));
     setTimeout(() => setPlayerTakingDamage(false), 500);
   }, []);
 
-  const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
-    const manaReward = Math.floor(8 + (currentJourneyDistance / 10));
+  const handleEnemyDestroyed3D = useCallback((enemy: Enemy3D) => {
+    const manaReward = Math.floor(12 + (currentJourneyDistance / 8));
     
     setGameState(prev => ({ 
       ...prev, 
@@ -614,19 +617,19 @@ const GameEngine: React.FC = () => {
     }, 900);
 
     // Check for wave complete
-    if ((gameState.enemiesKilled + 1) % 15 === 0) {
+    if ((gameState.enemiesKilled + 1) % 12 === 0) {
       setShowWaveComplete(true);
       setGameState(prev => ({ 
         ...prev, 
-        mana: prev.mana + 150,
+        mana: prev.mana + 200,
         waveNumber: prev.waveNumber + 1
       }));
     }
   }, [gameState.enemiesKilled, currentJourneyDistance]);
 
-  const handleEnemyHit = useCallback((enemyId: string, damage: number) => {
-    if ((window as any).damageEnemy) {
-      (window as any).damageEnemy(enemyId, damage);
+  const handleEnemyHit3D = useCallback((enemyId: string, damage: number) => {
+    if ((window as any).damageEnemy3D) {
+      (window as any).damageEnemy3D(enemyId, damage);
     }
   }, []);
 
@@ -698,23 +701,24 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* Ground-based Enemy System with scaling */}
-        <GroundEnemySystem
+        {/* 3D Enemy System - replaces GroundEnemySystem */}
+        <Enemy3DSystem
           realm={currentRealm}
-          onEnemyReachPlayer={handleEnemyReachPlayer}
-          onEnemyDestroyed={handleEnemyDestroyed}
-          spawnRate={Math.max(1000, 2500 - (gameState.waveNumber * 100))}
-          maxEnemies={Math.min(10, 4 + Math.floor(gameState.waveNumber / 2))}
+          onEnemyReachPlayer={handleEnemyReachPlayer3D}
+          onEnemyDestroyed={handleEnemyDestroyed3D}
+          spawnRate={Math.max(1200, 3000 - (gameState.waveNumber * 150))}
+          maxEnemies={Math.min(8, 4 + Math.floor(gameState.waveNumber / 3))}
           journeyDistance={currentJourneyDistance}
-          onEnemiesUpdate={setEnemies}
+          onEnemiesUpdate={setEnemies3D}
         />
 
-        {/* Auto Weapon System */}
-        <AutoWeapon
-          enemies={enemies}
+        {/* 3D Projectile System - replaces AutoWeapon */}
+        <Projectile3DSystem
+          enemies={enemies3D}
           combatStats={weaponStats}
-          onEnemyHit={handleEnemyHit}
+          onEnemyHit={handleEnemyHit3D}
           onMuzzleFlash={handleMuzzleFlash}
+          realm={currentRealm}
         />
 
         {/* Muzzle Flash Effect */}

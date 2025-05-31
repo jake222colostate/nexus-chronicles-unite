@@ -1,7 +1,4 @@
-
 import React from 'react';
-import { Button } from '@/components/ui/button';
-import { HelpCircle, Sword } from 'lucide-react';
 
 interface TopHUDProps {
   realm: 'fantasy' | 'scifi';
@@ -12,8 +9,8 @@ interface TopHUDProps {
   manaPerSecond: number;
   energyPerSecond: number;
   onHelpClick: () => void;
-  onCombatUpgradesClick?: () => void;
-  enemyCount?: number;
+  onCombatUpgradesClick: () => void;
+  enemyCount: number;
 }
 
 export const TopHUD: React.FC<TopHUDProps> = ({
@@ -26,89 +23,55 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   energyPerSecond,
   onHelpClick,
   onCombatUpgradesClick,
-  enemyCount = 0
+  enemyCount
 }) => {
   const formatNumber = (num: number): string => {
-    if (num >= 1e21) return (num / 1e21).toFixed(1) + 'Sx';
-    if (num >= 1e18) return (num / 1e18).toFixed(1) + 'Qi';
-    if (num >= 1e15) return (num / 1e15).toFixed(1) + 'Qa';
-    if (num >= 1e12) return (num / 1e12).toFixed(1) + 'T';
-    if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
     return Math.floor(num).toString();
   };
 
-  const formatRate = (rate: number): string => {
-    if (rate === 0) return '0';
-    return formatNumber(rate);
-  };
-
   return (
-    <div className="absolute top-0 left-0 right-0 z-40">
-      <div className="px-3 py-2">
-        <div 
-          className="flex items-center justify-between bg-black/80 backdrop-blur-xl px-4 py-3 rounded-xl border border-white/25 relative min-h-[48px]"
-          style={{
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 255, 255, 0.1)',
-          }}
-        >
-          {/* Enhanced glassmorphism effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/20 pointer-events-none rounded-xl" />
-          
-          {/* Help Button */}
-          <Button
-            onClick={onHelpClick}
-            size="sm"
-            variant="ghost"
-            className="h-9 w-9 p-0 rounded-lg bg-transparent hover:bg-white/15 hover:scale-105 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0"
-          >
-            <HelpCircle size={20} />
-          </Button>
-
-          {/* Main Resources - centered and properly spaced */}
-          <div className="flex items-center justify-center gap-5 text-lg font-bold text-white relative z-10 flex-1">
-            {/* Mana */}
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">🧙‍♂️</span>
-                <span className="text-purple-300 font-bold text-base">{formatNumber(mana)}</span>
-              </div>
-              <span className="text-xs text-purple-400 font-medium">+{formatRate(manaPerSecond)}/s</span>
-            </div>
-            
-            {/* Energy */}
-            <div className="flex flex-col items-center gap-0.5">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">⚡</span>
-                <span className="text-cyan-300 font-bold text-base">{formatNumber(energyCredits)}</span>
-              </div>
-              <span className="text-xs text-cyan-400 font-medium">+{formatRate(energyPerSecond)}/s</span>
-            </div>
-            
-            {/* Nexus Shards */}
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">💎</span>
-              <span className="text-yellow-300 font-bold text-base">{formatNumber(nexusShards)}</span>
-            </div>
+    <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-black/80 via-black/60 to-transparent backdrop-blur-sm">
+      <div className="flex items-center justify-between p-4 pb-6">
+        {/* Left Side - Resources */}
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-blue-900/30 border border-blue-500/50">
+            <span className="text-blue-400 text-sm font-medium">
+              {realm === 'fantasy' ? 'Mana:' : 'Energy:'}
+            </span>
+            <span className="text-blue-200 font-bold">{formatNumber(realm === 'fantasy' ? mana : energyCredits)}</span>
+            <span className="text-blue-300 text-xs">
+              (+{formatNumber(realm === 'fantasy' ? manaPerSecond : energyPerSecond)}/s)
+            </span>
           </div>
 
-          {/* Combat Button */}
-          {onCombatUpgradesClick && (
-            <Button
-              onClick={onCombatUpgradesClick}
-              size="sm"
-              variant="ghost"
-              className="h-9 w-9 p-0 rounded-lg bg-transparent hover:bg-red-500/20 hover:scale-105 text-red-400 hover:text-red-300 transition-all duration-200 relative flex-shrink-0"
-            >
-              <Sword size={20} />
-              {enemyCount > 0 && (
-                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
-                  {enemyCount}
-                </div>
-              )}
-            </Button>
-          )}
+          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-purple-900/30 border border-purple-500/50">
+            <span className="text-purple-400 text-sm font-medium">Nexus:</span>
+            <span className="text-purple-200 font-bold">{formatNumber(nexusShards)}</span>
+          </div>
+        </div>
+
+        {/* Center - Enemy Count with 3D styling */}
+        <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-red-900/30 border border-red-500/50">
+          <span className="text-red-400 text-sm font-medium">👾 3D Enemies:</span>
+          <span className="text-red-200 font-bold">{enemyCount}</span>
+        </div>
+
+        {/* Right Side - Buttons */}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={onCombatUpgradesClick}
+            className="px-4 py-2 rounded-lg bg-green-900/30 border border-green-500/50 text-green-300 hover:bg-green-800/40 transition-colors duration-200 text-sm font-medium"
+          >
+            Combat
+          </button>
+          <button
+            onClick={onHelpClick}
+            className="px-4 py-2 rounded-lg bg-gray-900/30 border border-gray-500/50 text-gray-300 hover:bg-gray-800/40 transition-colors duration-200 text-sm font-medium"
+          >
+            Help
+          </button>
         </div>
       </div>
     </div>
