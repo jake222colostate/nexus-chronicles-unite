@@ -17,28 +17,28 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
   const { camera } = useThree();
   const targetPosition = useRef(new Vector3(...position));
   const moveSpeed = useRef(0);
-  const moveDirection = useRef(0); // 1 for forward, -1 for backward, 0 for stopped
+  const moveDirection = useRef(0);
   const swayTime = useRef(0);
   
   // Camera rotation state
-  const yawAngle = useRef(0); // Horizontal rotation (-Math.PI to Math.PI for 180 degrees each way)
+  const yawAngle = useRef(0);
   const isMouseDown = useRef(false);
   const lastMouseX = useRef(0);
 
   // Handle keyboard input
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Forward movement
+      // Forward movement - no limits for infinite world
       if ((event.key === 'w' || event.key === 'W' || event.key === 'ArrowUp') && canMoveForward) {
-        moveSpeed.current = 3;
+        moveSpeed.current = 5; // Increased speed for infinite world
         moveDirection.current = 1;
       }
-      // Backward movement
+      // Backward movement - allow but with reasonable limit
       if (event.key === 's' || event.key === 'S' || event.key === 'ArrowDown') {
-        moveSpeed.current = 3;
+        moveSpeed.current = 5;
         moveDirection.current = -1;
       }
-      // Horizontal look controls with A/D keys
+      // Look controls
       if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft') {
         yawAngle.current = Math.max(-Math.PI, yawAngle.current - 0.05);
       }
@@ -64,10 +64,10 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     };
   }, [canMoveForward]);
 
-  // Handle mouse look controls
+  // Mouse look controls
   useEffect(() => {
     const handleMouseDown = (event: MouseEvent) => {
-      if (event.button === 0) { // Left mouse button
+      if (event.button === 0) {
         isMouseDown.current = true;
         lastMouseX.current = event.clientX;
       }
@@ -78,7 +78,6 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
         const deltaX = event.clientX - lastMouseX.current;
         lastMouseX.current = event.clientX;
         
-        // Update yaw with mouse movement, clamped to 180 degrees each way
         yawAngle.current = Math.max(-Math.PI, Math.min(Math.PI, yawAngle.current + deltaX * 0.003));
       }
     };
@@ -105,7 +104,7 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     };
   }, []);
 
-  // Handle touch input for mobile with improved look controls
+  // Touch controls for mobile
   useEffect(() => {
     const handleTouchStart = (event: TouchEvent) => {
       if (event.touches.length === 1) {
@@ -116,12 +115,12 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
         
         // Movement in upper portion (forward)
         if (y < rect.height * 0.3 && canMoveForward) {
-          moveSpeed.current = 3;
+          moveSpeed.current = 5;
           moveDirection.current = 1;
         }
         // Movement in lower portion (backward)
         else if (y > rect.height * 0.7) {
-          moveSpeed.current = 3;
+          moveSpeed.current = 5;
           moveDirection.current = -1;
         }
         
@@ -156,22 +155,19 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
   useFrame((state, delta) => {
     swayTime.current += delta;
     
-    // Move based on direction and speed
+    // Movement with infinite forward capability
     if (moveSpeed.current > 0) {
       if (moveDirection.current === 1 && canMoveForward) {
-        // Forward movement
+        // Infinite forward movement
         targetPosition.current.z -= moveSpeed.current * delta;
-        // Limit how far forward we can go
-        targetPosition.current.z = Math.max(-50, targetPosition.current.z);
       } else if (moveDirection.current === -1) {
-        // Backward movement
+        // Backward movement with reasonable limit (can go back to start)
         targetPosition.current.z += moveSpeed.current * delta;
-        // Limit how far backward we can go (back to starting position)
         targetPosition.current.z = Math.min(0, targetPosition.current.z);
       }
     }
     
-    // Lock X-position to center path (with minimal sway)
+    // Lock X-position to center path
     targetPosition.current.x = 0;
     
     // Smooth camera movement
@@ -182,17 +178,13 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     camera.position.x = targetPosition.current.x + Math.sin(swayTime.current * 1.8) * swayAmount;
     camera.position.y = targetPosition.current.y + Math.sin(swayTime.current * 2.2) * swayAmount * 0.5;
     
-    // Apply yaw rotation to camera look direction
+    // Apply yaw rotation
     const lookDistance = 5;
     const lookTarget = new Vector3(
       camera.position.x + Math.sin(yawAngle.current) * lookDistance,
       camera.position.y,
       camera.position.z - Math.cos(yawAngle.current) * lookDistance
     );
-    
-    // Add automatic attention-drawing rotation towards upgrades (subtle)
-    const autoLookOffset = Math.sin(swayTime.current * 0.8) * 0.05;
-    lookTarget.x += autoLookOffset;
     
     camera.lookAt(lookTarget);
     
