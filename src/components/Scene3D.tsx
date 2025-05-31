@@ -9,6 +9,7 @@ import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
 import { GLBMountainSystem } from './GLBMountainSystem';
+import { GLBTreeSystem } from './GLBTreeSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
@@ -123,11 +124,19 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               renderDistance={200}
             >
               {(chunks) => (
-                <GLBMountainSystem
-                  chunks={chunks}
-                  chunkSize={50}
-                  realm={realm}
-                />
+                <>
+                  <GLBMountainSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                    realm={realm}
+                  />
+                  {/* Add GLB Tree System for Fantasy realm */}
+                  <GLBTreeSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                    realm={realm}
+                  />
+                </>
               )}
             </ChunkSystem>
           )}
