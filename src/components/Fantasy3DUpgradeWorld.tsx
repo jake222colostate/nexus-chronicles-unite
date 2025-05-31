@@ -1,3 +1,4 @@
+
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -287,8 +288,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       </div>
 
-      {/* Progress indicator with environment transition markers - positioned higher to avoid overlap */}
-      <div className="absolute bottom-20 left-4 right-4 pointer-events-none">
+      {/* Progress indicator with environment transition markers - positioned much higher to avoid overlap */}
+      <div className="absolute bottom-32 left-4 right-4 pointer-events-none">
         <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
           <div 
             className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
