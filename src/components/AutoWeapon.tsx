@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { GroundEnemy } from './GroundEnemy3DSystem';
+import { GroundEnemy } from './GroundEnemySystem';
 
 interface Projectile {
   id: string;
@@ -22,20 +22,6 @@ interface AutoWeaponProps {
   onEnemyHit: (enemyId: string, damage: number) => void;
   onMuzzleFlash: () => void;
 }
-
-const Projectile3D: React.FC<{ projectile: Projectile }> = ({ projectile }) => {
-  return (
-    <mesh position={[projectile.x, projectile.y, projectile.z]}>
-      <boxGeometry args={[0.2, 0.2, 0.2]} />
-      <meshBasicMaterial color="#fbbf24" />
-      <pointLight 
-        color="#fbbf24" 
-        intensity={0.5} 
-        distance={2} 
-      />
-    </mesh>
-  );
-};
 
 export const AutoWeapon: React.FC<AutoWeaponProps> = ({
   enemies,
@@ -127,28 +113,27 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
         <div className="text-2xl animate-pulse">🏹</div>
       </div>
 
-      {/* 3D Projectiles Canvas */}
-      <Canvas
-        dpr={[1, 1.5]}
-        camera={{ 
-          position: [0, 8, 8], 
-          fov: 60,
-          near: 0.1,
-          far: 100
-        }}
-        gl={{ antialias: false, alpha: true }}
-        style={{ pointerEvents: 'none' }}
-      >
-        <ambientLight intensity={0.4} />
-        
-        {/* 3D Projectiles */}
-        {projectiles.map(projectile => (
-          <Projectile3D
+      {/* Projectiles */}
+      {projectiles.map(projectile => {
+        const screenX = 50 + (projectile.x / 15) * 25;
+        const screenY = 70 - ((projectile.z / 40) * 30);
+        const scale = Math.max(0.5, Math.min(1.2, (40 - projectile.z) / 40));
+
+        return (
+          <div
             key={projectile.id}
-            projectile={projectile}
-          />
-        ))}
-      </Canvas>
+            className="absolute transition-all duration-100"
+            style={{
+              left: `${screenX}%`,
+              top: `${screenY}%`,
+              transform: `translate(-50%, -50%) scale(${scale})`,
+              zIndex: Math.floor(50 - projectile.z)
+            }}
+          >
+            <div className="text-lg text-yellow-400 drop-shadow-lg animate-pulse">✨</div>
+          </div>
+        );
+      })}
     </div>
   );
 };

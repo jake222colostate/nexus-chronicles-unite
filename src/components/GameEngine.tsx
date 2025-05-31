@@ -10,7 +10,7 @@ import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
-import { GroundEnemy3DSystem, GroundEnemy } from './GroundEnemy3DSystem';
+import { GroundEnemySystem, GroundEnemy } from './GroundEnemySystem';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
 import { MuzzleFlash } from './MuzzleFlash';
 import { WaveCompleteMessage } from './WaveCompleteMessage';
@@ -698,8 +698,8 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* 3D Ground-based Enemy System with scaling - REPLACED 2D SYSTEM */}
-        <GroundEnemy3DSystem
+        {/* Ground-based Enemy System with scaling */}
+        <GroundEnemySystem
           realm={currentRealm}
           onEnemyReachPlayer={handleEnemyReachPlayer}
           onEnemyDestroyed={handleEnemyDestroyed}
