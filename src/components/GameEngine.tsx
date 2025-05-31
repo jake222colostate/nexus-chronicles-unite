@@ -299,6 +299,8 @@ const GameEngine: React.FC = () => {
         energyCredits={gameState.energyCredits}
         nexusShards={gameState.nexusShards}
         convergenceProgress={convergenceProgress}
+        manaPerSecond={gameState.manaPerSecond}
+        energyPerSecond={gameState.energyPerSecond}
         onHelpClick={handleShowHelp}
       />
 

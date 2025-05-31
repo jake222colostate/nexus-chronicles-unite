@@ -9,6 +9,8 @@ interface TopHUDProps {
   energyCredits: number;
   nexusShards: number;
   convergenceProgress: number;
+  manaPerSecond: number;
+  energyPerSecond: number;
   onHelpClick: () => void;
 }
 
@@ -18,12 +20,21 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   energyCredits,
   nexusShards,
   convergenceProgress,
+  manaPerSecond,
+  energyPerSecond,
   onHelpClick
 }) => {
   const formatNumber = (num: number): string => {
     if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
     if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
     return Math.floor(num).toString();
+  };
+
+  const formatRate = (rate: number): string => {
+    if (rate === 0) return '0';
+    if (rate >= 1e6) return (rate / 1e6).toFixed(1) + 'M';
+    if (rate >= 1e3) return (rate / 1e3).toFixed(1) + 'K';
+    return rate.toFixed(1);
   };
 
   return (
@@ -38,14 +49,20 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             {/* Resource indicators with consistent spacing */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className="text-sm">🔮</span>
-              <span className="text-purple-300 font-semibold text-xs">{formatNumber(mana)}</span>
+              <div className="flex flex-col">
+                <span className="text-purple-300 font-semibold text-xs">{formatNumber(mana)}</span>
+                <span className="text-purple-400/70 font-medium text-xs">+{formatRate(manaPerSecond)}/s</span>
+              </div>
             </div>
             
             <div className="w-px h-4 bg-white/30 flex-shrink-0"></div>
             
             <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className="text-sm">⚡</span>
-              <span className="text-cyan-300 font-semibold text-xs">{formatNumber(energyCredits)}</span>
+              <div className="flex flex-col">
+                <span className="text-cyan-300 font-semibold text-xs">{formatNumber(energyCredits)}</span>
+                <span className="text-cyan-400/70 font-medium text-xs">+{formatRate(energyPerSecond)}/s</span>
+              </div>
             </div>
             
             <div className="w-px h-4 bg-white/30 flex-shrink-0"></div>
