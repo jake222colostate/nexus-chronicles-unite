@@ -11,6 +11,11 @@ import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
+import { EnemySystem, Enemy } from './EnemySystem';
+import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
+import { ProjectileSystem } from './ProjectileSystem';
+import { MuzzleFlash } from './MuzzleFlash';
+import { WaveCompleteMessage } from './WaveCompleteMessage';
 
 interface GameState {
   mana: number;
@@ -23,6 +28,9 @@ interface GameState {
   scifiBuildings: { [key: string]: number };
   purchasedUpgrades: string[];
   lastSaveTime: number;
+  combatUpgrades: { [key: string]: number };
+  waveNumber: number;
+  enemiesKilled: number;
 }
 
 interface Building {
@@ -49,6 +57,59 @@ const scifiBuildings: Building[] = [
   { id: 'megastructure', name: 'Dyson Sphere', cost: 20000, production: 430, costMultiplier: 1.3, description: 'Planet-scale energy harvesting systems', icon: '🌌' },
 ];
 
+const defaultCombatUpgrades: CombatUpgrade[] = [
+  {
+    id: 'manaBlaster',
+    name: 'Mana Blaster',
+    description: 'Basic magical projectile',
+    icon: '🧙‍♂️',
+    level: 0,
+    maxLevel: 10,
+    baseCost: 50,
+    effect: { damage: 1 }
+  },
+  {
+    id: 'explosionRadius',
+    name: 'Explosion Radius',
+    description: 'Increases splash damage area',
+    icon: '💥',
+    level: 0,
+    maxLevel: 8,
+    baseCost: 100,
+    effect: { explosionRadius: 2 }
+  },
+  {
+    id: 'fireRate',
+    name: 'Fire Rate',
+    description: 'Faster projectile shooting',
+    icon: '⚡',
+    level: 0,
+    maxLevel: 15,
+    baseCost: 75,
+    effect: { fireRate: 0.8 }
+  },
+  {
+    id: 'accuracy',
+    name: 'Accuracy Boost',
+    description: 'Better aim and precision',
+    icon: '🎯',
+    level: 0,
+    maxLevel: 5,
+    baseCost: 150,
+    effect: { accuracy: 0.2 }
+  },
+  {
+    id: 'autoAim',
+    name: 'Auto-Aim Range',
+    description: 'Automatically targets enemies',
+    icon: '🔮',
+    level: 0,
+    maxLevel: 7,
+    baseCost: 200,
+    effect: { autoAimRange: 5 }
+  }
+];
+
 const GameEngine: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(() => {
     const saved = localStorage.getItem('celestialNexusGame');
@@ -58,6 +119,9 @@ const GameEngine: React.FC = () => {
         ...parsedState,
         purchasedUpgrades: parsedState.purchasedUpgrades || [],
         lastSaveTime: parsedState.lastSaveTime || Date.now(),
+        combatUpgrades: parsedState.combatUpgrades || {},
+        waveNumber: parsedState.waveNumber || 1,
+        enemiesKilled: parsedState.enemiesKilled || 0,
       };
     }
     return {
@@ -71,6 +135,9 @@ const GameEngine: React.FC = () => {
       scifiBuildings: {},
       purchasedUpgrades: [],
       lastSaveTime: Date.now(),
+      combatUpgrades: {},
+      waveNumber: 1,
+      enemiesKilled: 0,
     };
   });
 
@@ -82,6 +149,11 @@ const GameEngine: React.FC = () => {
   const [showQuickHelp, setShowQuickHelp] = useState(() => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
+  const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
+  const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
+  const [showWaveComplete, setShowWaveComplete] = useState(false);
+  const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Stable references to prevent re-renders
@@ -92,6 +164,28 @@ const GameEngine: React.FC = () => {
 
   // Initialize buff system with stable dependencies
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
+
+  // Combat upgrades with current levels
+  const combatUpgrades = useMemo(() => {
+    return defaultCombatUpgrades.map(upgrade => ({
+      ...upgrade,
+      level: gameState.combatUpgrades[upgrade.id] || 0
+    }));
+  }, [gameState.combatUpgrades]);
+
+  // Combat stats
+  const combatStats = useMemo(() => {
+    const manaBlasterLevel = gameState.combatUpgrades.manaBlaster || 0;
+    const fireRateLevel = gameState.combatUpgrades.fireRate || 0;
+    
+    return {
+      damage: 1 + manaBlasterLevel,
+      fireRate: Math.max(500, 1000 - (fireRateLevel * 80)), // Faster fire rate
+      explosionRadius: 2 + (gameState.combatUpgrades.explosionRadius || 0) * 2,
+      accuracy: 1 + (gameState.combatUpgrades.accuracy || 0) * 0.2,
+      autoAimRange: 5 + (gameState.combatUpgrades.autoAim || 0) * 5
+    };
+  }, [gameState.combatUpgrades]);
 
   // Calculate offline progress on mount
   useEffect(() => {
@@ -221,6 +315,9 @@ const GameEngine: React.FC = () => {
         scifiBuildings: {},
         purchasedUpgrades: gameState.purchasedUpgrades,
         lastSaveTime: Date.now(),
+        combatUpgrades: gameState.combatUpgrades,
+        waveNumber: gameState.waveNumber,
+        enemiesKilled: gameState.enemiesKilled,
       });
       setShowConvergence(false);
     }
@@ -236,6 +333,23 @@ const GameEngine: React.FC = () => {
       purchasedUpgrades: [...prev.purchasedUpgrades, upgradeId]
     }));
   }, [gameState.nexusShards]);
+
+  const purchaseCombatUpgrade = useCallback((upgradeId: string) => {
+    const upgrade = combatUpgrades.find(u => u.id === upgradeId);
+    if (!upgrade) return;
+
+    const cost = Math.floor(upgrade.baseCost * Math.pow(1.5, upgrade.level));
+    if (gameState.mana >= cost && upgrade.level < upgrade.maxLevel) {
+      setGameState(prev => ({
+        ...prev,
+        mana: prev.mana - cost,
+        combatUpgrades: {
+          ...prev.combatUpgrades,
+          [upgradeId]: (prev.combatUpgrades[upgradeId] || 0) + 1
+        }
+      }));
+    }
+  }, [gameState.mana, combatUpgrades]);
 
   // Enhanced realm switching with proper visual feedback
   const switchRealm = useCallback((newRealm: 'fantasy' | 'scifi') => {
@@ -259,6 +373,10 @@ const GameEngine: React.FC = () => {
 
   const handleShowHelp = useCallback(() => {
     setShowQuickHelp(true);
+  }, []);
+
+  const handleShowCombatUpgrades = useCallback(() => {
+    setShowCombatUpgrades(true);
   }, []);
 
   // Enhanced tap resource generation with effect and +1 animation
@@ -297,6 +415,43 @@ const GameEngine: React.FC = () => {
     setShowTapEffect(false);
   }, []);
 
+  // Combat event handlers
+  const handleEnemyReachPlayer = useCallback((enemy: Enemy) => {
+    setPlayerTakingDamage(true);
+    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 5) }));
+    setTimeout(() => setPlayerTakingDamage(false), 500);
+  }, []);
+
+  const handleEnemyDestroyed = useCallback((enemy: Enemy) => {
+    setGameState(prev => ({ 
+      ...prev, 
+      mana: prev.mana + 10,
+      enemiesKilled: prev.enemiesKilled + 1
+    }));
+
+    // Check for wave complete
+    if ((gameState.enemiesKilled + 1) % 10 === 0) {
+      setShowWaveComplete(true);
+      setGameState(prev => ({ 
+        ...prev, 
+        mana: prev.mana + 100,
+        waveNumber: prev.waveNumber + 1
+      }));
+    }
+  }, [gameState.enemiesKilled]);
+
+  const handleMuzzleFlash = useCallback(() => {
+    setShowMuzzleFlash(true);
+  }, []);
+
+  const handleMuzzleFlashComplete = useCallback(() => {
+    setShowMuzzleFlash(false);
+  }, []);
+
+  const handleWaveCompleteComplete = useCallback(() => {
+    setShowWaveComplete(false);
+  }, []);
+
   const formatNumber = useCallback((num: number): string => {
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
     if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
@@ -307,14 +462,14 @@ const GameEngine: React.FC = () => {
   const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
 
   return (
-    <div className="h-[667px] w-full relative overflow-hidden bg-black">
+    <div className={`h-[667px] w-full relative overflow-hidden bg-black ${playerTakingDamage ? 'animate-pulse bg-red-900/20' : ''}`}>
       {/* Enhanced background with better layering */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
       
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Clean TopHUD with unified stats */}
+      {/* Clean TopHUD with unified stats and combat button */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -324,6 +479,8 @@ const GameEngine: React.FC = () => {
         manaPerSecond={gameState.manaPerSecond}
         energyPerSecond={gameState.energyPerSecond}
         onHelpClick={handleShowHelp}
+        onCombatUpgradesClick={handleShowCombatUpgrades}
+        enemyCount={enemies.length}
       />
 
       {/* Main Game Area - clean and uncluttered */}
@@ -342,6 +499,38 @@ const GameEngine: React.FC = () => {
           isTransitioning={isTransitioning}
           showTapEffect={showTapEffect}
           onTapEffectComplete={handleTapEffectComplete}
+        />
+
+        {/* Enemy System */}
+        <EnemySystem
+          realm={currentRealm}
+          onEnemyReachPlayer={handleEnemyReachPlayer}
+          onEnemyDestroyed={handleEnemyDestroyed}
+          spawnRate={Math.max(1000, 3000 - (gameState.waveNumber * 100))}
+          maxEnemies={Math.min(12, 3 + gameState.waveNumber)}
+        />
+
+        {/* Projectile System */}
+        {combatStats.damage > 1 && (
+          <ProjectileSystem
+            enemies={enemies}
+            combatUpgrades={combatStats}
+            onProjectileHit={() => {}}
+            onMuzzleFlash={handleMuzzleFlash}
+          />
+        )}
+
+        {/* Muzzle Flash Effect */}
+        <MuzzleFlash
+          isVisible={showMuzzleFlash}
+          onComplete={handleMuzzleFlashComplete}
+        />
+
+        {/* Wave Complete Message */}
+        <WaveCompleteMessage
+          isVisible={showWaveComplete}
+          waveNumber={gameState.waveNumber}
+          onComplete={handleWaveCompleteComplete}
         />
 
         {/* Realm Transition Effect */}
@@ -375,6 +564,16 @@ const GameEngine: React.FC = () => {
         isOpen={showQuickHelp}
         onClose={() => setShowQuickHelp(false)}
       />
+
+      {/* Combat Upgrades Modal */}
+      {showCombatUpgrades && (
+        <CombatUpgradeSystem
+          upgrades={combatUpgrades}
+          mana={gameState.mana}
+          onUpgrade={purchaseCombatUpgrade}
+          onClose={() => setShowCombatUpgrades(false)}
+        />
+      )}
 
       {/* Convergence Modal */}
       {showConvergence && (

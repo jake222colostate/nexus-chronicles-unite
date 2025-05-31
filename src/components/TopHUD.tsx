@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Sword } from 'lucide-react';
 
 interface TopHUDProps {
   realm: 'fantasy' | 'scifi';
@@ -12,6 +12,8 @@ interface TopHUDProps {
   manaPerSecond: number;
   energyPerSecond: number;
   onHelpClick: () => void;
+  onCombatUpgradesClick?: () => void;
+  enemyCount?: number;
 }
 
 export const TopHUD: React.FC<TopHUDProps> = ({
@@ -22,7 +24,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   convergenceProgress,
   manaPerSecond,
   energyPerSecond,
-  onHelpClick
+  onHelpClick,
+  onCombatUpgradesClick,
+  enemyCount = 0
 }) => {
   const formatNumber = (num: number): string => {
     if (num >= 1e63) return (num / 1e63).toFixed(1) + 'Vi';
@@ -57,11 +61,12 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   return (
     <div className="absolute top-0 left-0 right-0 z-40 iphone-safe-top">
       <div className="px-4 py-2">
-        {/* Sleeker unified stats bar with reduced height and modern glassmorphism */}
+        {/* Reduced height HUD with improved spacing */}
         <div 
-          className="flex items-center bg-black/70 backdrop-blur-xl px-4 py-3 rounded-xl border border-white/20 relative min-h-[60px]"
+          className="flex items-center bg-black/70 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/20 relative min-h-[48px]"
           style={{
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.08)'
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.08)',
+            borderRadius: '12px'
           }}
         >
           {/* Enhanced glassmorphism effect */}
@@ -72,52 +77,64 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             onClick={onHelpClick}
             size="sm"
             variant="ghost"
-            className="h-10 w-10 p-0 rounded-lg bg-transparent hover:bg-white/15 hover:scale-105 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-4"
+            className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-white/15 hover:scale-105 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-3"
           >
-            <HelpCircle size={20} />
+            <HelpCircle size={18} />
           </Button>
 
-          {/* Optimized icons and numbers with perfect spacing and alignment */}
-          <div className="flex items-center justify-between text-lg font-bold text-white relative z-10 flex-1 min-w-0 gap-6">
-            {/* 🧠 Brain - perfectly sized and spaced */}
-            <div className="flex items-center gap-2.5 flex-shrink-0">
+          {/* Enemy Count Display */}
+          {enemyCount > 0 && (
+            <div className="flex items-center gap-2 flex-shrink-0 mr-4">
+              <span className="text-2xl leading-none">👁️</span>
+              <span className="text-red-400 font-bold text-xl">{enemyCount}</span>
+            </div>
+          )}
+
+          {/* Resource icons with 20% larger size and 12px spacing */}
+          <div className="flex items-center justify-between text-xl font-bold text-white relative z-10 flex-1 min-w-0 gap-3">
+            {/* 🧠 Brain */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               <span className="text-2xl leading-none">🧠</span>
-              <span className="text-purple-300 font-bold text-lg">{formatNumber(mana)}</span>
+              <span className="text-purple-300 font-bold text-xl">{formatNumber(mana)}</span>
             </div>
             
-            {/* ⚡ Energy - perfectly sized and spaced */}
-            <div className="flex items-center gap-2.5 flex-shrink-0">
+            {/* ⚡ Energy */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               <span className="text-2xl leading-none">⚡</span>
-              <span className="text-cyan-300 font-bold text-lg">{formatNumber(energyCredits)}</span>
+              <span className="text-cyan-300 font-bold text-xl">{formatNumber(energyCredits)}</span>
             </div>
             
-            {/* 💎 Crystals - perfectly sized and spaced */}
-            <div className="flex items-center gap-2.5 flex-shrink-0">
+            {/* 💎 Crystals */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               <span className="text-2xl leading-none">💎</span>
-              <span className="text-yellow-300 font-bold text-lg">{formatNumber(nexusShards)}</span>
+              <span className="text-yellow-300 font-bold text-xl">{formatNumber(nexusShards)}</span>
             </div>
             
-            {/* 🧱 Stone - perfectly sized and spaced */}
-            <div className="flex items-center gap-2.5 flex-shrink-0">
-              <span className="text-2xl leading-none">🧱</span>
-              <span className="text-orange-300 font-bold text-lg">0</span>
-            </div>
-            
-            {/* ✨ Mana with rate - compact with better alignment */}
+            {/* ✨ Mana with rate */}
             <div className="flex flex-col items-end gap-0.5 flex-shrink-0 min-w-[100px]">
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-3">
                 <span className="text-2xl leading-none">✨</span>
-                <span className="text-purple-300 font-bold text-lg">{formatNumber(mana)}</span>
+                <span className="text-purple-300 font-bold text-xl">{formatNumber(mana)}</span>
               </div>
               <span className="text-sm text-purple-400 leading-tight font-medium">+{formatRate(manaPerSecond)}/s</span>
             </div>
             
-            {/* 🔄 Progress - perfectly sized and spaced */}
-            <div className="flex items-center gap-2.5 flex-shrink-0">
+            {/* 🔄 Progress */}
+            <div className="flex items-center gap-3 flex-shrink-0">
               <span className="text-2xl leading-none">🔄</span>
-              <span className="text-orange-300 font-bold text-lg">{Math.floor(convergenceProgress)}%</span>
+              <span className="text-orange-300 font-bold text-xl">{Math.floor(convergenceProgress)}%</span>
             </div>
           </div>
+
+          {/* Combat Upgrades Button */}
+          <Button
+            onClick={onCombatUpgradesClick}
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-red-500/20 hover:scale-105 text-red-400 hover:text-red-300 transition-all duration-200 flex-shrink-0 ml-3"
+          >
+            <Sword size={18} />
+          </Button>
         </div>
       </div>
     </div>
