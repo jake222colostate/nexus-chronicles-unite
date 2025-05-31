@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 interface Enemy {
@@ -33,7 +32,7 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
 
   const enemyTypes = useMemo(() => ({
     fantasy: [
-      { type: 'eyeball' as const, icon: '👁️', health: 1, speed: 0.8 },
+      { type: 'eyeball' as const, icon: '👹', health: 1, speed: 0.8 },
       { type: 'bat' as const, icon: '🦇', health: 2, speed: 1.2 },
       { type: 'orb' as const, icon: '🔮', health: 3, speed: 0.6 }
     ],
@@ -119,7 +118,7 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
   const getEnemyIcon = useCallback((enemy: Enemy) => {
     const types = enemyTypes[realm];
     const typeData = types.find(t => t.type === enemy.type);
-    return typeData?.icon || '👁️';
+    return typeData?.icon || '👹';
   }, [realm, enemyTypes]);
 
   return (
@@ -133,7 +132,7 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
         return (
           <div
             key={enemy.id}
-            className="absolute transition-all duration-100"
+            className="absolute transition-all duration-200"
             style={{
               left: `${screenX}%`,
               top: `${screenY}%`,

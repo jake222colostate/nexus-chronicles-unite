@@ -61,9 +61,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   return (
     <div className="absolute top-0 left-0 right-0 z-40 iphone-safe-top">
       <div className="px-4 py-2">
-        {/* Compacted HUD with improved spacing - 10% smaller height */}
+        {/* Centered and compact HUD */}
         <div 
-          className="flex items-center bg-black/70 backdrop-blur-xl px-4 py-1.5 rounded-xl border border-white/20 relative min-h-[43px]"
+          className="flex items-center justify-between bg-black/70 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/20 relative min-h-[40px]"
           style={{
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.08)',
             borderRadius: '12px'
@@ -72,69 +72,57 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           {/* Enhanced glassmorphism effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/15 pointer-events-none rounded-xl" />
           
-          {/* Help Button - compact size */}
+          {/* Help Button */}
           <Button
             onClick={onHelpClick}
             size="sm"
             variant="ghost"
-            className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-white/15 hover:scale-105 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-3"
+            className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-white/15 hover:scale-105 text-white/80 hover:text-white transition-all duration-200"
           >
             <HelpCircle size={18} />
           </Button>
 
-          {/* Enemy Count Display - only show when enemies present */}
-          {enemyCount > 0 && (
-            <div className="flex items-center gap-2 flex-shrink-0 mr-4">
-              <span className="text-2xl leading-none">👁️</span>
-              <span className="text-red-400 font-bold text-xl">{enemyCount}</span>
-            </div>
-          )}
-
-          {/* Resource icons with 20% larger size and consistent 12px spacing */}
-          <div className="flex items-center justify-between text-xl font-bold text-white relative z-10 flex-1 min-w-0 gap-3">
-            {/* 🧠 Brain */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className="text-2xl leading-none">🧠</span>
-              <span className="text-purple-300 font-bold text-xl">{formatNumber(mana)}</span>
-            </div>
-            
-            {/* ⚡ Energy */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className="text-2xl leading-none">⚡</span>
-              <span className="text-cyan-300 font-bold text-xl">{formatNumber(energyCredits)}</span>
-            </div>
-            
-            {/* 💎 Crystals */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className="text-2xl leading-none">💎</span>
-              <span className="text-yellow-300 font-bold text-xl">{formatNumber(nexusShards)}</span>
-            </div>
-            
-            {/* ✨ Mana with rate */}
-            <div className="flex flex-col items-end gap-0.5 flex-shrink-0 min-w-[100px]">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl leading-none">✨</span>
-                <span className="text-purple-300 font-bold text-xl">{formatNumber(mana)}</span>
+          {/* Main Resources - centered and larger */}
+          <div className="flex items-center justify-center gap-6 text-lg font-bold text-white relative z-10">
+            {/* Mana */}
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🧙‍♂️</span>
+                <span className="text-purple-300 font-bold">{formatNumber(mana)}</span>
               </div>
-              <span className="text-sm text-purple-400 leading-tight font-medium">+{formatRate(manaPerSecond)}/s</span>
+              <span className="text-xs text-purple-400 font-medium">+{formatRate(manaPerSecond)}/s</span>
             </div>
             
-            {/* 🔄 Progress */}
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <span className="text-2xl leading-none">🔄</span>
-              <span className="text-orange-300 font-bold text-xl">{Math.floor(convergenceProgress)}%</span>
+            {/* Energy */}
+            <div className="flex flex-col items-center gap-0.5">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">⚡</span>
+                <span className="text-cyan-300 font-bold">{formatNumber(energyCredits)}</span>
+              </div>
+              <span className="text-xs text-cyan-400 font-medium">+{formatRate(energyPerSecond)}/s</span>
+            </div>
+            
+            {/* Nexus Shards */}
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">💎</span>
+              <span className="text-yellow-300 font-bold">{formatNumber(nexusShards)}</span>
             </div>
           </div>
 
-          {/* Combat Upgrades Button */}
+          {/* Combat Button */}
           {onCombatUpgradesClick && (
             <Button
               onClick={onCombatUpgradesClick}
               size="sm"
               variant="ghost"
-              className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-red-500/20 hover:scale-105 text-red-400 hover:text-red-300 transition-all duration-200 flex-shrink-0 ml-3"
+              className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-red-500/20 hover:scale-105 text-red-400 hover:text-red-300 transition-all duration-200 relative"
             >
               <Sword size={18} />
+              {enemyCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {enemyCount}
+                </div>
+              )}
             </Button>
           )}
         </div>

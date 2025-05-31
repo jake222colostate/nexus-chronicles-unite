@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -154,6 +153,7 @@ const GameEngine: React.FC = () => {
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
+  const [playerDistance, setPlayerDistance] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Stable references to prevent re-renders
@@ -205,7 +205,7 @@ const GameEngine: React.FC = () => {
     }
   }, []); // Only run on mount
 
-  // Game loop
+  // Game loop with distance tracking
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setGameState(prev => {
@@ -219,6 +219,9 @@ const GameEngine: React.FC = () => {
         localStorage.setItem('celestialNexusGame', JSON.stringify(newState));
         return newState;
       });
+      
+      // Increment player distance over time
+      setPlayerDistance(prev => prev + 0.5);
     }, 100);
 
     return () => {
@@ -484,7 +487,7 @@ const GameEngine: React.FC = () => {
       />
 
       {/* Main Game Area - clean and uncluttered */}
-      <div className="absolute inset-0 pt-16 pb-24">
+      <div className="absolute inset-0 pt-16 pb-40">
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -538,7 +541,7 @@ const GameEngine: React.FC = () => {
 
         {/* Convergence Ready Button - only when needed */}
         {canConverge && (
-          <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-40 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
               className="h-12 px-8 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
@@ -551,12 +554,13 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Clean Bottom Action Bar */}
+      {/* Enhanced Bottom Action Bar with journey tracking */}
       <BottomActionBar
         currentRealm={currentRealm}
         onRealmChange={switchRealm}
         onTap={handleTapResource}
         isTransitioning={isTransitioning}
+        playerDistance={playerDistance}
       />
 
       {/* Quick Help Modal */}
