@@ -43,7 +43,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 }) => {
   const cameraRef = useRef();
 
-  // Player position for chunk system (simulated forward movement)
+  // Stable player position for chunk system
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
 
   // Memoize upgrade unlock checking to prevent recalculation
@@ -83,9 +83,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     <div className="w-full h-full relative">
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
-        dpr={[1, 1.5]} // Reduced max DPR for better performance
-        performance={{ min: 0.6 }} // Slightly higher min performance threshold
-        gl={{ antialias: false, alpha: false }} // Disable expensive rendering options
+        dpr={[1, 1.5]}
+        performance={{ min: 0.6 }}
+        gl={{ antialias: false, alpha: false }}
       >
         <Suspense fallback={null}>
           {/* Camera with attached wizard staff */}
@@ -95,7 +95,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             position={[0, 0, 8]}
             fov={60}
             near={0.1}
-            far={100}
+            far={200}
           >
             <WizardStaff />
           </PerspectiveCamera>
@@ -111,15 +111,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Optimized lighting */}
           <ambientLight intensity={0.6} />
           <directionalLight
-            position={[5, 5, 5]}
+            position={[10, 10, 5]}
             intensity={0.8}
-            castShadow={false} // Disable shadows for better performance
+            castShadow={false}
           />
 
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* GLB Mountain System for Fantasy Realm */}
+          {/* Enhanced GLB Mountain System for Fantasy Realm */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
@@ -145,10 +145,10 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
         </Suspense>
       </Canvas>
 
-      {/* Simplified loading fallback */}
+      {/* Loading fallback */}
       <Suspense fallback={
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-white text-sm">Loading...</div>
+          <div className="text-white text-sm">Loading environment...</div>
         </div>
       }>
         <div />

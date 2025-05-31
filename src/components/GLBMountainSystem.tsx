@@ -18,10 +18,12 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   chunks,
   chunkSize
 }) => {
-  const { scene } = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
+  const { scene, error } = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
   
   // Memoize mountain instances to prevent re-creation on every render
   const mountainInstances = useMemo(() => {
+    if (!scene) return [];
+    
     const instances = [];
     
     chunks.forEach(chunk => {
@@ -31,15 +33,15 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
       const leftMountainCount = 2 + Math.floor(seededRandom(seed + 100) * 2);
       for (let i = 0; i < leftMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 1000;
-        const z = worldZ - (i * (chunkSize / leftMountainCount)) - seededRandom(mountainSeed) * 8;
-        const x = -40 - seededRandom(mountainSeed + 1) * 15; // Left side positioning
-        const y = seededRandom(mountainSeed + 2) * 3; // Slight height variation
+        const z = worldZ - (i * (chunkSize / leftMountainCount)) - seededRandom(mountainSeed) * 12;
+        const x = -35 - seededRandom(mountainSeed + 1) * 20; // Left side positioning
+        const y = seededRandom(mountainSeed + 2) * 2; // Slight height variation
         
         // Random rotation for variety
         const rotationY = seededRandom(mountainSeed + 3) * Math.PI * 2;
         
         // Scale variation for natural look
-        const scale = 0.8 + seededRandom(mountainSeed + 4) * 0.6;
+        const scale = 1.2 + seededRandom(mountainSeed + 4) * 0.8;
         
         instances.push({
           key: `left_${chunk.id}_${i}`,
@@ -53,15 +55,15 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
       const rightMountainCount = 2 + Math.floor(seededRandom(seed + 200) * 2);
       for (let i = 0; i < rightMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 2000;
-        const z = worldZ - (i * (chunkSize / rightMountainCount)) - seededRandom(mountainSeed) * 8;
-        const x = 40 + seededRandom(mountainSeed + 1) * 15; // Right side positioning
-        const y = seededRandom(mountainSeed + 2) * 3; // Slight height variation
+        const z = worldZ - (i * (chunkSize / rightMountainCount)) - seededRandom(mountainSeed) * 12;
+        const x = 35 + seededRandom(mountainSeed + 1) * 20; // Right side positioning
+        const y = seededRandom(mountainSeed + 2) * 2; // Slight height variation
         
         // Random rotation for variety
         const rotationY = seededRandom(mountainSeed + 3) * Math.PI * 2;
         
         // Scale variation for natural look
-        const scale = 0.8 + seededRandom(mountainSeed + 4) * 0.6;
+        const scale = 1.2 + seededRandom(mountainSeed + 4) * 0.8;
         
         instances.push({
           key: `right_${chunk.id}_${i}`,
@@ -73,39 +75,37 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize]);
+  }, [chunks, chunkSize, scene]);
 
-  // Clone the scene for each instance to avoid sharing geometry
-  const clonedScenes = useMemo(() => {
-    return mountainInstances.map(() => {
-      const cloned = scene.clone();
-      
-      // Optimize the cloned scene
-      cloned.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          
-          // Ensure materials are optimized
-          if (child.material) {
-            child.material.needsUpdate = false;
-          }
-        }
-      });
-      
-      return cloned;
-    });
-  }, [scene, mountainInstances.length]);
+  // Handle loading states and errors
+  if (error) {
+    console.error('Error loading mountain model:', error);
+    return null;
+  }
 
   if (!scene) {
-    console.log('GLB Mountain model loading...');
+    console.log('Loading fantasy mountain model...');
     return null;
   }
 
   return (
     <group>
-      {mountainInstances.map((instance, index) => {
-        const clonedScene = clonedScenes[index];
+      {mountainInstances.map((instance) => {
+        // Clone the scene for each instance to avoid sharing geometry
+        const clonedScene = scene.clone();
+        
+        // Optimize the cloned scene
+        clonedScene.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            
+            // Ensure materials are optimized
+            if (child.material) {
+              child.material.needsUpdate = false;
+            }
+          }
+        });
         
         return (
           <primitive
