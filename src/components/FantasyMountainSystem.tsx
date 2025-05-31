@@ -63,30 +63,30 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
     chunks.forEach((chunk, chunkIndex) => {
       console.log(`FantasyMountainSystem: Processing chunk ${chunkIndex}: worldZ=${chunk.worldZ}`);
       
-      // Create multiple mountain instances along the Z-axis for seamless coverage
-      // Starting 30 units ahead and tiling back 50 units as specified
-      for (let zOffset = -30; zOffset < chunkSize + 20; zOffset += 25) {
+      // Create mountain instances tiled every 45 units along the Z-axis (within 40-50 range)
+      // Starting 30 units ahead for better coverage
+      for (let zOffset = -30; zOffset < chunkSize + 20; zOffset += 45) {
         const finalZ = chunk.worldZ - zOffset;
         
         console.log(`FantasyMountainSystem: Creating mountains for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
         
-        // Left side mountains - positioned far enough from the road
+        // Left side mountains at x = -15
         instances.push(
           <Mountain 
             key={`left-${chunk.id}-${zOffset}`} 
             url={MAGICAL_MOUNTAINS_URL}
-            position={[-35, -2, finalZ]}
-            scale={[2, 2, 2]}
+            position={[-15, -2, finalZ]}
+            scale={[1.5, 1.5, 1.5]}
           />
         );
         
-        // Right side mountains - mirrored via negative X scale
+        // Right side mountains at x = 15, mirrored with negative X scale
         instances.push(
           <Mountain 
             key={`right-${chunk.id}-${zOffset}`} 
             url={MAGICAL_MOUNTAINS_URL}
-            position={[35, -2, finalZ]}
-            scale={[-2, 2, 2]}
+            position={[15, -2, finalZ]}
+            scale={[-1.5, 1.5, 1.5]}
           />
         );
       }
