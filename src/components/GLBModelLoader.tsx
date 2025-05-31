@@ -17,7 +17,7 @@ interface GLBModelProps {
   canAfford: boolean;
 }
 
-// Completely remove all black/grey/blue fallbacks - only bright colors
+// Completely remove all fallbacks - only show actual models
 const SafeGLBModel: React.FC<GLBModelProps> = ({ 
   modelUrl, 
   position, 
@@ -91,9 +91,9 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
     }
   });
 
-  // Only bright, colorful fallback - NO dark elements whatsoever
+  // Return nothing if model fails to load - no fallbacks
   if (loadError || !gltfScene) {
-    return null; // Return nothing instead of fallback to prevent visual noise
+    return null;
   }
 
   return (
@@ -173,7 +173,7 @@ class GLBModelErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
-      return null; // Return nothing instead of fallback
+      return null;
     }
 
     return this.props.children;
@@ -193,7 +193,7 @@ export const GLBModel: React.FC<GLBModelProps> = (props) => {
 const workingModelUrls = [
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb',
-  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb',
+  'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_03.glb',
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb'
 ];
 
