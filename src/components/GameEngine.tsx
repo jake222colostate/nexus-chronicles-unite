@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
 import { ConvergenceSystem } from './ConvergenceSystem';
-import { BottomActionBar } from './BottomActionBar';
 import { TopHUD } from './TopHUD';
 import { EnhancedTapButton } from './EnhancedTapButton';
 import { EnhancedParticleBackground } from './EnhancedParticleBackground';
@@ -306,8 +305,7 @@ const GameEngine: React.FC = () => {
       </div>
 
       {/* Main Game Area with proper spacing */}
-      <div className="absolute inset-0 pt-20 pb-32">
-        {/* Integrated Map and Skill Tree View */}
+      <div className="absolute inset-0 pt-20 pb-40">
         <MapSkillTreeView
           realm={currentRealm}
           buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
@@ -323,18 +321,17 @@ const GameEngine: React.FC = () => {
           onTapEffectComplete={handleTapEffectComplete}
         />
 
-        {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
       </div>
 
-      {/* Fixed Bottom UI Layout with proper spacing */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 p-4">
-        <div className="flex flex-col gap-4 items-center">
+      {/* Fixed Bottom UI Layout with improved spacing */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 p-6">
+        <div className="flex flex-col gap-6 items-center">
           {/* Convergence Ready Button */}
           {canConverge && (
             <Button 
               onClick={() => setShowConvergence(true)}
-              className="h-11 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
+              className="h-12 px-8 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
             >
               <span className="text-sm flex items-center gap-2">
                 🔁 Convergence Ready!
@@ -342,18 +339,52 @@ const GameEngine: React.FC = () => {
             </Button>
           )}
 
-          {/* Enhanced Tap Button - Centered */}
-          <EnhancedTapButton
-            realm={currentRealm}
-            onTap={handleTapResource}
-          />
+          {/* Enhanced Tap Button - Centered and prominent */}
+          <div className="flex justify-center">
+            <EnhancedTapButton
+              realm={currentRealm}
+              onTap={handleTapResource}
+            />
+          </div>
 
-          {/* Enhanced Bottom Action Bar */}
-          <BottomActionBar
-            currentRealm={currentRealm}
-            onRealmChange={switchRealm}
-            isTransitioning={isTransitioning}
-          />
+          {/* Realm Toggle Buttons - Positioned horizontally above tap button */}
+          <div className="flex items-center gap-4 bg-black/50 backdrop-blur-xl p-2 rounded-full border border-white/20 shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 pointer-events-none rounded-full" />
+            
+            <Button
+              onClick={() => switchRealm('fantasy')}
+              disabled={isTransitioning}
+              className={`h-10 px-6 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
+                currentRealm === 'fantasy'
+                  ? 'bg-purple-600/80 hover:bg-purple-700/80 shadow-md shadow-purple-500/20 scale-105 border border-purple-400/60'
+                  : 'bg-transparent border border-purple-400/50 text-purple-300 hover:bg-purple-900/30 hover:border-purple-400'
+              } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                🏰 Fantasy
+              </span>
+              {currentRealm === 'fantasy' && (
+                <div className="absolute inset-0 bg-purple-400/15 animate-pulse rounded-full" />
+              )}
+            </Button>
+
+            <Button
+              onClick={() => switchRealm('scifi')}
+              disabled={isTransitioning}
+              className={`h-10 px-6 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
+                currentRealm === 'scifi'
+                  ? 'bg-cyan-600/80 hover:bg-cyan-700/80 shadow-md shadow-cyan-500/20 scale-105 border border-cyan-400/60'
+                  : 'bg-transparent border border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 hover:border-cyan-400'
+              } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                🚀 Sci-Fi
+              </span>
+              {currentRealm === 'scifi' && (
+                <div className="absolute inset-0 bg-cyan-400/15 animate-pulse rounded-full" />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
