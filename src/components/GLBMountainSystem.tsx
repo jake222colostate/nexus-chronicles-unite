@@ -99,6 +99,18 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
             child.castShadow = true;
             child.receiveShadow = true;
             
+            // Remove trees by checking material names or mesh names
+            if (child.name.toLowerCase().includes('tree') || 
+                child.name.toLowerCase().includes('forest') ||
+                child.name.toLowerCase().includes('vegetation') ||
+                (child.material && child.material.name && 
+                 (child.material.name.toLowerCase().includes('tree') ||
+                  child.material.name.toLowerCase().includes('leaf') ||
+                  child.material.name.toLowerCase().includes('bark')))) {
+              child.visible = false;
+              return;
+            }
+            
             if (child.material) {
               child.material.needsUpdate = false;
             }
