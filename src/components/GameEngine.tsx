@@ -10,12 +10,8 @@ import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
-import { GroundEnemySystem, GroundEnemy } from './GroundEnemySystem';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
-import { MuzzleFlash } from './MuzzleFlash';
-import { WaveCompleteMessage } from './WaveCompleteMessage';
 import { JourneyTracker } from './JourneyTracker';
-import { AutoWeapon } from './AutoWeapon';
 import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem, CrossRealmUpgrade } from './CrossRealmUpgradeSystem';
 import { crossRealmUpgrades } from '../data/CrossRealmUpgrades';
@@ -34,10 +30,10 @@ interface GameState {
   combatUpgrades: { [key: string]: number };
   weaponUpgrades?: { [key: string]: number };
   crossRealmUpgrades?: { [key: string]: number };
-  waveNumber: number;
-  enemiesKilled: number;
   fantasyJourneyDistance: number;
   scifiJourneyDistance: number;
+  waveNumber: number;
+  enemiesKilled: number;
 }
 
 interface Building {
@@ -162,10 +158,10 @@ const GameEngine: React.FC = () => {
         combatUpgrades: parsedState.combatUpgrades || {},
         weaponUpgrades: parsedState.weaponUpgrades || {},
         crossRealmUpgrades: parsedState.crossRealmUpgrades || {},
-        waveNumber: parsedState.waveNumber || 1,
-        enemiesKilled: parsedState.enemiesKilled || 0,
         fantasyJourneyDistance: parsedState.fantasyJourneyDistance || 0,
         scifiJourneyDistance: parsedState.scifiJourneyDistance || 0,
+        waveNumber: parsedState.waveNumber || 1,
+        enemiesKilled: parsedState.enemiesKilled || 0,
       };
     }
     return {
@@ -182,10 +178,10 @@ const GameEngine: React.FC = () => {
       combatUpgrades: {},
       weaponUpgrades: {},
       crossRealmUpgrades: {},
-      waveNumber: 1,
-      enemiesKilled: 0,
       fantasyJourneyDistance: 0,
       scifiJourneyDistance: 0,
+      waveNumber: 1,
+      enemiesKilled: 0,
     };
   });
 
@@ -200,10 +196,6 @@ const GameEngine: React.FC = () => {
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
-  const [enemies, setEnemies] = useState<any[]>([]);
-  const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
-  const [showWaveComplete, setShowWaveComplete] = useState(false);
-  const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.6, z: 0 });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -576,71 +568,6 @@ const GameEngine: React.FC = () => {
     setShowTapEffect(false);
   }, []);
 
-  // Combat event handlers with scaling rewards
-  const handleEnemyReachPlayer = useCallback((enemy: any) => {
-    setPlayerTakingDamage(true);
-    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
-    setTimeout(() => setPlayerTakingDamage(false), 500);
-  }, []);
-
-  const handleEnemyDestroyed = useCallback((enemy: any) => {
-    const manaReward = Math.floor(8 + (currentJourneyDistance / 10));
-    
-    setGameState(prev => ({ 
-      ...prev, 
-      mana: prev.mana + manaReward,
-      enemiesKilled: prev.enemiesKilled + 1
-    }));
-
-    // Show floating reward
-    const floatingReward = document.createElement('div');
-    floatingReward.textContent = `+${manaReward} Mana`;
-    floatingReward.className = 'fixed text-yellow-400 font-bold text-lg pointer-events-none z-50 animate-fade-in';
-    floatingReward.style.left = '50%';
-    floatingReward.style.top = '40%';
-    floatingReward.style.transform = 'translateX(-50%)';
-    document.body.appendChild(floatingReward);
-    
-    setTimeout(() => {
-      floatingReward.style.transform = 'translateX(-50%) translateY(-30px)';
-      floatingReward.style.opacity = '0';
-      floatingReward.style.transition = 'all 0.8s ease-out';
-    }, 100);
-    
-    setTimeout(() => {
-      if (floatingReward.parentNode) {
-        document.body.removeChild(floatingReward);
-      }
-    }, 900);
-
-    if ((gameState.enemiesKilled + 1) % 15 === 0) {
-      setShowWaveComplete(true);
-      setGameState(prev => ({ 
-        ...prev, 
-        mana: prev.mana + 150,
-        waveNumber: prev.waveNumber + 1
-      }));
-    }
-  }, [gameState.enemiesKilled, currentJourneyDistance]);
-
-  const handleEnemyHit = useCallback((enemyId: string, damage: number) => {
-    if ((window as any).damageEnemy) {
-      (window as any).damageEnemy(enemyId, damage);
-    }
-  }, []);
-
-  const handleMuzzleFlash = useCallback(() => {
-    setShowMuzzleFlash(true);
-  }, []);
-
-  const handleMuzzleFlashComplete = useCallback(() => {
-    setShowMuzzleFlash(false);
-  }, []);
-
-  const handleWaveCompleteComplete = useCallback(() => {
-    setShowWaveComplete(false);
-  }, []);
-
   const formatNumber = useCallback((num: number): string => {
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
     if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
@@ -651,7 +578,7 @@ const GameEngine: React.FC = () => {
   const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
 
   return (
-    <div className={`h-[667px] w-full relative overflow-hidden bg-black ${playerTakingDamage ? 'animate-pulse bg-red-900/20' : ''}`}>
+    <div className={`h-[667px] w-full relative overflow-hidden bg-black ${false ? 'animate-pulse bg-red-900/20' : ''}`}>
       {/* Enhanced background with better layering */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
       
@@ -675,7 +602,7 @@ const GameEngine: React.FC = () => {
         energyPerSecond={gameState.energyPerSecond}
         onHelpClick={handleShowHelp}
         onCombatUpgradesClick={handleShowCombatUpgrades}
-        enemyCount={enemies.length}
+        enemyCount={0}
       />
 
       {/* Main Game Area */}
@@ -695,38 +622,6 @@ const GameEngine: React.FC = () => {
           showTapEffect={showTapEffect}
           onTapEffectComplete={handleTapEffectComplete}
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
-        />
-
-        {/* Ground-based Enemy System with scaling */}
-        <GroundEnemySystem
-          realm={currentRealm}
-          onEnemyReachPlayer={handleEnemyReachPlayer}
-          onEnemyDestroyed={handleEnemyDestroyed}
-          spawnRate={Math.max(1000, 2500 - (gameState.waveNumber * 100))}
-          maxEnemies={Math.min(10, 4 + Math.floor(gameState.waveNumber / 2))}
-          journeyDistance={currentJourneyDistance}
-          onEnemiesUpdate={setEnemies}
-        />
-
-        {/* Auto Weapon System */}
-        <AutoWeapon
-          enemies={enemies}
-          combatStats={weaponStats}
-          onEnemyHit={handleEnemyHit}
-          onMuzzleFlash={handleMuzzleFlash}
-        />
-
-        {/* Muzzle Flash Effect */}
-        <MuzzleFlash
-          isVisible={showMuzzleFlash}
-          onComplete={handleMuzzleFlashComplete}
-        />
-
-        {/* Wave Complete Message */}
-        <WaveCompleteMessage
-          isVisible={showWaveComplete}
-          waveNumber={gameState.waveNumber}
-          onComplete={handleWaveCompleteComplete}
         />
 
         {/* Realm Transition Effect */}
