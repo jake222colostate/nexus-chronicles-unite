@@ -39,11 +39,6 @@ export const EnhancedPathwaySystem: React.FC<EnhancedPathwaySystemProps> = ({
             <boxGeometry args={[2.5 * scale, 0.1, 2.5 * scale]} />
             <meshLambertMaterial color="#6B5B73" />
           </mesh>
-          {/* Glowing moss edges */}
-          <mesh position={[0, 0.06, 0]}>
-            <ringGeometry args={[1.2 * scale, 1.4 * scale, 8]} />
-            <meshBasicMaterial color="#4ADE80" transparent opacity={0.3} />
-          </mesh>
         </group>
       );
     }
