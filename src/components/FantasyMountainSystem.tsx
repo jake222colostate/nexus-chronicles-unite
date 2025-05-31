@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -135,10 +134,4 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = (prop
   );
 };
 
-// Only preload if we might need it for fantasy realm
-try {
-  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_left.glb');
-  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_right.glb');
-} catch (error) {
-  console.warn('Failed to preload mountain models:', error);
-}
+// Remove preloading - only load when component is actually used

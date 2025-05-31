@@ -13,10 +13,12 @@ import { TreeSystem } from './TreeSystem';
 import { EnhancedGrassSystem } from './EnhancedGrassSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
-import { FantasyRoadSystem } from './FantasyRoadSystem';
-import { FantasyMountainSystem } from './FantasyMountainSystem';
-import { FantasyPortalSystem } from './FantasyPortalSystem';
-import { FantasySkybox } from './FantasySkybox';
+
+// Lazy load fantasy components only when needed
+const FantasyRoadSystem = React.lazy(() => import('./FantasyRoadSystem').then(module => ({ default: module.FantasyRoadSystem })));
+const FantasyMountainSystem = React.lazy(() => import('./FantasyMountainSystem').then(module => ({ default: module.FantasyMountainSystem })));
+const FantasyPortalSystem = React.lazy(() => import('./FantasyPortalSystem').then(module => ({ default: module.FantasyPortalSystem })));
+const FantasySkybox = React.lazy(() => import('./FantasySkybox').then(module => ({ default: module.FantasySkybox })));
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -116,7 +118,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           {/* Fantasy skybox or bright blue sky color */}
           {realm === 'fantasy' ? (
-            <FantasySkybox realm={realm} />
+            <Suspense fallback={<color attach="background" args={['#87CEEB']} />}>
+              <FantasySkybox realm={realm} />
+            </Suspense>
           ) : (
             <color attach="background" args={['#87CEEB']} />
           )}
@@ -132,9 +136,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Fantasy Environment - New GLB Models */}
+                {/* Fantasy Environment - Only load when in fantasy realm */}
                 {realm === 'fantasy' && (
-                  <>
+                  <Suspense fallback={null}>
                     <FantasyRoadSystem
                       chunks={chunks}
                       chunkSize={50}
@@ -152,7 +156,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                       chunkSize={50}
                       realm={realm}
                     />
-                  </>
+                  </Suspense>
                 )}
                 
                 {/* Sci-Fi Environment - Original Systems */}

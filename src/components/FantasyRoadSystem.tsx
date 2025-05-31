@@ -102,9 +102,4 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
   );
 };
 
-// Only preload if we might need it for fantasy realm
-try {
-  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_road_tile.glb');
-} catch (error) {
-  console.warn('Failed to preload road model:', error);
-}
+// Remove preloading - only load when component is actually used

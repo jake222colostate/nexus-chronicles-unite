@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -115,9 +114,4 @@ export const FantasySkybox: React.FC<FantasySkyboxProps> = (props) => {
   );
 };
 
-// Only preload if we might need it for fantasy realm
-try {
-  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_skybox.glb');
-} catch (error) {
-  console.warn('Failed to preload skybox model:', error);
-}
+// Remove preloading - only load when component is actually used

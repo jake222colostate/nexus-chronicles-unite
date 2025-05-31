@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -129,9 +128,4 @@ export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = (props) =
   );
 };
 
-// Only preload if we might need it for fantasy realm
-try {
-  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_portal.glb');
-} catch (error) {
-  console.warn('Failed to preload portal model:', error);
-}
+// Remove preloading - only load when component is actually used
