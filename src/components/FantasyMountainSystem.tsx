@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -40,17 +39,7 @@ function Mountain({ url, position, scale, useFallback = false }: MountainProps) 
   }
 
   try {
-    const { scene, error } = useGLTF(url);
-    
-    if (error) {
-      console.error('Mountain: GLB loading error:', error);
-      return (
-        <mesh position={position} scale={scale} castShadow receiveShadow>
-          <primitive object={fallbackGeometry} />
-          <primitive object={fallbackMaterial} />
-        </mesh>
-      );
-    }
+    const { scene } = useGLTF(url);
     
     if (!scene) {
       console.warn('Mountain: Scene is null for URL:', url);
