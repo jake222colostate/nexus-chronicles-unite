@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { MapSkillTreeView } from './MapSkillTreeView';
+import { OptimizedMapSkillTreeView } from './OptimizedMapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
 import { ConvergenceSystem } from './ConvergenceSystem';
 import { BottomActionBar } from './BottomActionBar';
@@ -10,7 +10,6 @@ import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
-import { GroundEnemySystem, GroundEnemy } from './GroundEnemySystem';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
 import { MuzzleFlash } from './MuzzleFlash';
 import { WaveCompleteMessage } from './WaveCompleteMessage';
@@ -143,23 +142,20 @@ const GameEngine: React.FC = () => {
 
   const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi'>('fantasy');
   const [showConvergence, setShowConvergence] = useState(false);
-  const [showSkillTree, setShowSkillTree] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showTapEffect, setShowTapEffect] = useState(false);
   const [showQuickHelp, setShowQuickHelp] = useState(() => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
-  const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
-  const [playerDistance, setPlayerDistance] = useState(0);
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.6, z: 0 });
   const [actualJourneyDistance, setActualJourneyDistance] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Optimized stable references
+  // Stable references to prevent infinite loops
   const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
   const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
   const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
@@ -167,7 +163,7 @@ const GameEngine: React.FC = () => {
 
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
 
-  // Optimized combat upgrades calculation
+  // Combat upgrades calculation
   const combatUpgrades = useMemo(() => {
     return defaultCombatUpgrades.map(upgrade => ({
       ...upgrade,
@@ -190,13 +186,13 @@ const GameEngine: React.FC = () => {
   }, [gameState.combatUpgrades]);
 
   // Performance monitoring
-  const handlePerformanceUpdate = useCallback((fps: number, frameTime: number) => {
+  const handlePerformanceUpdate = useCallback((fps: number) => {
     if (fps < 30) {
       console.warn('Low FPS detected:', fps);
     }
   }, []);
 
-  // Optimized offline progress calculation
+  // Offline progress calculation
   useEffect(() => {
     const now = Date.now();
     const offlineTime = Math.min((now - gameState.lastSaveTime) / 1000, 3600);
@@ -212,9 +208,9 @@ const GameEngine: React.FC = () => {
         lastSaveTime: now,
       }));
     }
-  }, []);
+  }, []); // Only run once on mount
 
-  // Optimized game loop with reduced frequency
+  // Game loop with reduced frequency
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setGameState(prev => {
@@ -231,12 +227,12 @@ const GameEngine: React.FC = () => {
         }
         return newState;
       });
-    }, 200); // Reduced frequency
+    }, 200);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []);
+  }, []); // Empty dependency array to prevent recreation
 
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
     setPlayerPosition(position);
@@ -246,6 +242,7 @@ const GameEngine: React.FC = () => {
     setActualJourneyDistance(distance);
   }, []);
 
+  // Production calculation effect - stabilized
   useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
@@ -401,7 +398,7 @@ const GameEngine: React.FC = () => {
     setShowTapEffect(true);
     setGameState(prev => ({
       ...prev,
-      mana: prev.mana + 1, // Always add mana regardless of realm
+      mana: prev.mana + 1,
     }));
     
     // Show +1 mana animation
@@ -423,7 +420,9 @@ const GameEngine: React.FC = () => {
       }, 100);
       
       setTimeout(() => {
-        document.body.removeChild(popup);
+        if (document.body.contains(popup)) {
+          document.body.removeChild(popup);
+        }
       }, 600);
     }
   }, []);
@@ -432,18 +431,39 @@ const GameEngine: React.FC = () => {
     setShowTapEffect(false);
   }, []);
 
-  const handleEnemyReachPlayer = useCallback((enemy: GroundEnemy) => {
-    setPlayerTakingDamage(true);
-    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
-    setTimeout(() => setPlayerTakingDamage(false), 500);
-  }, []);
+  const handleEnemyDestroyed = useCallback(() => {
+    // Calculate reward based on distance and upgrades
+    const baseReward = 1;
+    const distanceBonus = Math.floor(actualJourneyDistance / 50);
+    const upgradeBonus = Math.floor(purchasedUpgradesCount / 5);
+    const totalReward = baseReward + distanceBonus + upgradeBonus;
 
-  const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
     setGameState(prev => ({ 
       ...prev, 
-      mana: prev.mana + 8,
+      mana: prev.mana + totalReward,
       enemiesKilled: prev.enemiesKilled + 1
     }));
+
+    // Show reward popup
+    const popup = document.createElement('div');
+    popup.textContent = `+${totalReward} Mana`;
+    popup.className = 'fixed text-green-400 font-bold text-xl pointer-events-none z-50 animate-fade-in';
+    popup.style.left = '50%';
+    popup.style.top = '40%';
+    popup.style.transform = 'translateX(-50%)';
+    document.body.appendChild(popup);
+    
+    setTimeout(() => {
+      popup.style.transform = 'translateX(-50%) translateY(-30px)';
+      popup.style.opacity = '0';
+      popup.style.transition = 'all 0.8s ease-out';
+    }, 100);
+    
+    setTimeout(() => {
+      if (document.body.contains(popup)) {
+        document.body.removeChild(popup);
+      }
+    }, 900);
 
     // Check for wave complete
     if ((gameState.enemiesKilled + 1) % 15 === 0) {
@@ -454,7 +474,13 @@ const GameEngine: React.FC = () => {
         waveNumber: prev.waveNumber + 1
       }));
     }
-  }, [gameState.enemiesKilled]);
+  }, [actualJourneyDistance, purchasedUpgradesCount, gameState.enemiesKilled]);
+
+  const handleEnemyReachPlayer = useCallback(() => {
+    setPlayerTakingDamage(true);
+    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
+    setTimeout(() => setPlayerTakingDamage(false), 500);
+  }, []);
 
   const handleMuzzleFlash = useCallback(() => {
     setShowMuzzleFlash(true);
@@ -466,12 +492,6 @@ const GameEngine: React.FC = () => {
 
   const handleWaveCompleteComplete = useCallback(() => {
     setShowWaveComplete(false);
-  }, []);
-
-  const formatNumber = useCallback((num: number): string => {
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-    return Math.floor(num).toString();
   }, []);
 
   const canConverge = gameState.mana + gameState.energyCredits >= 1000;
@@ -498,13 +518,12 @@ const GameEngine: React.FC = () => {
         convergenceProgress={convergenceProgress}
         manaPerSecond={gameState.manaPerSecond}
         energyPerSecond={gameState.energyPerSecond}
-        onHelpClick={handleShowHelp}
-        onCombatUpgradesClick={handleShowCombatUpgrades}
-        enemyCount={enemies.length}
+        onHelpClick={() => setShowQuickHelp(true)}
+        onCombatUpgradesClick={() => setShowCombatUpgrades(true)}
       />
 
       <div className="absolute inset-0 pt-16 pb-40">
-        <MapSkillTreeView
+        <OptimizedMapSkillTreeView
           realm={currentRealm}
           buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
           manaPerSecond={gameState.manaPerSecond}
@@ -518,15 +537,7 @@ const GameEngine: React.FC = () => {
           showTapEffect={showTapEffect}
           onTapEffectComplete={handleTapEffectComplete}
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
-        />
-
-        <GroundEnemySystem
-          realm={currentRealm}
-          onEnemyReachPlayer={handleEnemyReachPlayer}
-          onEnemyDestroyed={handleEnemyDestroyed}
-          spawnRate={Math.max(1500, 3000 - (gameState.waveNumber * 150))}
-          maxEnemies={Math.min(8, 3 + Math.floor(gameState.waveNumber / 2))}
-          combatStats={combatStats}
+          onJourneyUpdate={handleJourneyUpdate}
         />
 
         <MuzzleFlash
@@ -589,6 +600,7 @@ const GameEngine: React.FC = () => {
           </div>
         </div>
       )}
+
       {showQuickHelp && (
         <QuickHelpModal
           isOpen={showQuickHelp}
