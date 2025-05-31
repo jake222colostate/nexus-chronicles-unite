@@ -292,7 +292,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             const scale = getUpgradeScale(upgrade.position, upgrade.scale);
             
             return (
-              <group key={upgrade.id} opacity={opacity}>
+              <group key={upgrade.id}>
                 <GLBModel
                   modelUrl={upgrade.modelUrl}
                   name={upgrade.name}
