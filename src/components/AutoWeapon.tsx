@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { GroundEnemy } from './GroundEnemy3DSystem';
@@ -27,7 +26,7 @@ interface AutoWeaponProps {
 const Projectile3D: React.FC<{ projectile: Projectile }> = ({ projectile }) => {
   return (
     <mesh position={[projectile.x, projectile.y, projectile.z]}>
-      <sphereGeometry args={[0.1, 8, 8]} />
+      <boxGeometry args={[0.2, 0.2, 0.2]} />
       <meshBasicMaterial color="#fbbf24" />
       <pointLight 
         color="#fbbf24" 
