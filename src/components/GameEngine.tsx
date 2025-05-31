@@ -5,18 +5,20 @@ import { RealmTransition } from './RealmTransition';
 import { ConvergenceSystem } from './ConvergenceSystem';
 import { BottomActionBar } from './BottomActionBar';
 import { TopHUD } from './TopHUD';
+import { EnhancedTapButton } from './EnhancedTapButton';
+import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
-import { Enemy3DSystem } from './Enemy3DSystem';
-import { FloatingManaReward } from './FloatingManaReward';
+import { GroundEnemySystem, GroundEnemy } from './GroundEnemySystem';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
+import { MuzzleFlash } from './MuzzleFlash';
+import { WaveCompleteMessage } from './WaveCompleteMessage';
+import { JourneyTracker } from './JourneyTracker';
+import { AutoWeapon } from './AutoWeapon';
 import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem, CrossRealmUpgrade } from './CrossRealmUpgradeSystem';
 import { crossRealmUpgrades } from '../data/CrossRealmUpgrades';
-import { JourneyTracker } from './JourneyTracker';
-import { MuzzleFlash } from './MuzzleFlash';
-import { WaveCompleteMessage } from './WaveCompleteMessage';
 
 interface GameState {
   mana: number;
@@ -198,12 +200,7 @@ const GameEngine: React.FC = () => {
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
-  const [enemies, setEnemies] = useState<any[]>([]);
-  const [floatingRewards, setFloatingRewards] = useState<Array<{
-    id: string;
-    amount: number;
-    position: { x: number; y: number };
-  }>>([]);
+  const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
@@ -579,14 +576,14 @@ const GameEngine: React.FC = () => {
     setShowTapEffect(false);
   }, []);
 
-  // Combat event handlers with 3D-specific improvements
-  const handleEnemyReachPlayer = useCallback((enemy: any) => {
+  // Combat event handlers with scaling rewards
+  const handleEnemyReachPlayer = useCallback((enemy: GroundEnemy) => {
     setPlayerTakingDamage(true);
-    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 5) }));
+    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
     setTimeout(() => setPlayerTakingDamage(false), 500);
   }, []);
 
-  const handleEnemyDestroyed = useCallback((enemy: any) => {
+  const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
     const manaReward = Math.floor(8 + (currentJourneyDistance / 10));
     
     setGameState(prev => ({ 
@@ -595,13 +592,26 @@ const GameEngine: React.FC = () => {
       enemiesKilled: prev.enemiesKilled + 1
     }));
 
-    // Add floating mana reward
-    const newReward = {
-      id: `reward_${Date.now()}_${Math.random()}`,
-      amount: manaReward,
-      position: { x: 50, y: 40 } // Center of screen
-    };
-    setFloatingRewards(prev => [...prev, newReward]);
+    // Show floating reward
+    const floatingReward = document.createElement('div');
+    floatingReward.textContent = `+${manaReward} Mana`;
+    floatingReward.className = 'fixed text-yellow-400 font-bold text-lg pointer-events-none z-50 animate-fade-in';
+    floatingReward.style.left = '50%';
+    floatingReward.style.top = '40%';
+    floatingReward.style.transform = 'translateX(-50%)';
+    document.body.appendChild(floatingReward);
+    
+    setTimeout(() => {
+      floatingReward.style.transform = 'translateX(-50%) translateY(-30px)';
+      floatingReward.style.opacity = '0';
+      floatingReward.style.transition = 'all 0.8s ease-out';
+    }, 100);
+    
+    setTimeout(() => {
+      if (floatingReward.parentNode) {
+        document.body.removeChild(floatingReward);
+      }
+    }, 900);
 
     // Check for wave complete
     if ((gameState.enemiesKilled + 1) % 15 === 0) {
@@ -613,10 +623,6 @@ const GameEngine: React.FC = () => {
       }));
     }
   }, [gameState.enemiesKilled, currentJourneyDistance]);
-
-  const handleFloatingRewardComplete = useCallback((rewardId: string) => {
-    setFloatingRewards(prev => prev.filter(r => r.id !== rewardId));
-  }, []);
 
   const handleEnemyHit = useCallback((enemyId: string, damage: number) => {
     if ((window as any).damageEnemy) {
@@ -650,6 +656,9 @@ const GameEngine: React.FC = () => {
       {/* Enhanced background with better layering */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
       
+      {/* Enhanced particle background for visual depth */}
+      <EnhancedParticleBackground realm={currentRealm} />
+
       {/* Journey Tracker - invisible component that tracks real movement */}
       <JourneyTracker 
         playerPosition={playerPosition}
@@ -689,8 +698,8 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* 3D Enemy System - replaces old 2D GroundEnemySystem */}
-        <Enemy3DSystem
+        {/* Ground-based Enemy System with scaling */}
+        <GroundEnemySystem
           realm={currentRealm}
           onEnemyReachPlayer={handleEnemyReachPlayer}
           onEnemyDestroyed={handleEnemyDestroyed}
@@ -698,19 +707,15 @@ const GameEngine: React.FC = () => {
           maxEnemies={Math.min(10, 4 + Math.floor(gameState.waveNumber / 2))}
           journeyDistance={currentJourneyDistance}
           onEnemiesUpdate={setEnemies}
-          weaponStats={weaponStats}
-          onMuzzleFlash={handleMuzzleFlash}
         />
 
-        {/* Floating Mana Rewards */}
-        {floatingRewards.map(reward => (
-          <FloatingManaReward
-            key={reward.id}
-            amount={reward.amount}
-            position={reward.position}
-            onComplete={() => handleFloatingRewardComplete(reward.id)}
-          />
-        ))}
+        {/* Auto Weapon System */}
+        <AutoWeapon
+          enemies={enemies}
+          combatStats={weaponStats}
+          onEnemyHit={handleEnemyHit}
+          onMuzzleFlash={handleMuzzleFlash}
+        />
 
         {/* Muzzle Flash Effect */}
         <MuzzleFlash
