@@ -1,3 +1,4 @@
+
 import React, { Suspense, useState, useCallback, useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -8,6 +9,7 @@ import { EnvironmentSystem } from './EnvironmentSystem';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { EnhancedPathwaySystem } from './EnhancedPathwaySystem';
 import { GLBTreeSystem } from './GLBTreeSystem';
+import { FantasyMountainSystem } from './FantasyMountainSystem';
 import { EnhancedUpgradePedestal } from './EnhancedUpgradePedestal';
 import { useInfiniteUpgrades } from './InfiniteUpgradeSystem';
 
@@ -179,9 +181,14 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
                   chunkSize={CHUNK_SIZE}
                 />
                 
-                {/* Removed NaturalMountainSystem completely for Fantasy realm */}
+                {/* Fantasy Mountains - only in Fantasy realm */}
+                <FantasyMountainSystem
+                  chunks={chunks}
+                  chunkSize={CHUNK_SIZE}
+                  realm={realm}
+                />
 
-                {/* New GLB Tree System for Fantasy realm only */}
+                {/* GLB Tree System for Fantasy realm only */}
                 <GLBTreeSystem
                   chunks={chunks}
                   chunkSize={CHUNK_SIZE}
