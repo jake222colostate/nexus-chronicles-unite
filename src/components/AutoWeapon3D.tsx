@@ -11,8 +11,12 @@ interface Projectile3D {
   y: number;
   z: number;
   targetId: string;
+  targetX: number;
+  targetY: number;
+  targetZ: number;
   speed: number;
   damage: number;
+  lifeTime: number;
 }
 
 interface AutoWeapon3DProps {
@@ -29,15 +33,22 @@ interface AutoWeapon3DProps {
 const Projectile3DComponent: React.FC<{ projectile: Projectile3D }> = ({ projectile }) => {
   return (
     <group position={[projectile.x, projectile.y, projectile.z]}>
+      {/* Main projectile orb */}
       <mesh>
-        <sphereGeometry args={[0.1]} />
+        <sphereGeometry args={[0.12]} />
         <meshBasicMaterial color="#a855f7" transparent opacity={0.9} />
       </mesh>
       
-      {/* Projectile trail */}
-      <mesh position={[0, 0, 0.2]}>
-        <sphereGeometry args={[0.05]} />
-        <meshBasicMaterial color="#ffffff" transparent opacity={0.6} />
+      {/* Inner glow */}
+      <mesh>
+        <sphereGeometry args={[0.08]} />
+        <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
+      </mesh>
+      
+      {/* Outer particle effect */}
+      <mesh>
+        <sphereGeometry args={[0.18]} />
+        <meshBasicMaterial color="#7c3aed" transparent opacity={0.3} />
       </mesh>
     </group>
   );
@@ -53,32 +64,49 @@ export const AutoWeapon3D: React.FC<AutoWeapon3DProps> = ({
   const [isAttacking, setIsAttacking] = useState(false);
   const lastFireTime = useRef(0);
 
+  // Get nearest enemy within range
+  const getNearestEnemy = useCallback((): GroundEnemy | null => {
+    if (enemies.length === 0) return null;
+    
+    const enemiesInRange = enemies.filter(enemy => {
+      const distance = Math.sqrt(enemy.x * enemy.x + enemy.z * enemy.z);
+      return distance <= combatStats.range;
+    });
+    
+    if (enemiesInRange.length === 0) return null;
+    
+    // Sort by closest
+    enemiesInRange.sort((a, b) => {
+      const distA = Math.sqrt(a.x * a.x + a.z * a.z);
+      const distB = Math.sqrt(b.x * b.x + b.z * b.z);
+      return distA - distB;
+    });
+    
+    return enemiesInRange[0];
+  }, [enemies, combatStats.range]);
+
   // Auto-fire at nearest enemy
   useEffect(() => {
     const fireInterval = setInterval(() => {
       const now = Date.now();
       if (now - lastFireTime.current >= combatStats.fireRate) {
-        const nearestEnemy = enemies
-          .filter(enemy => {
-            const distance = Math.sqrt(enemy.x * enemy.x + enemy.z * enemy.z);
-            return distance <= combatStats.range;
-          })
-          .sort((a, b) => {
-            const distA = Math.sqrt(a.x * a.x + a.z * a.z);
-            const distB = Math.sqrt(b.x * b.x + b.z * b.z);
-            return distA - distB;
-          })[0];
-
-        if (nearestEnemy) {
+        const target = getNearestEnemy();
+        if (target) {
           const newProjectile: Projectile3D = {
             id: `proj_${Date.now()}_${Math.random()}`,
-            x: 0,
+            x: 1.2, // Start from staff position
             y: 1.5,
-            z: 0,
-            targetId: nearestEnemy.id,
-            speed: 0.5,
-            damage: combatStats.damage
+            z: -1,
+            targetId: target.id,
+            targetX: target.x,
+            targetY: target.y + 1, // Aim for center of enemy
+            targetZ: target.z,
+            speed: 0.8,
+            damage: combatStats.damage,
+            lifeTime: 0
           };
+
+          console.log(`Firing projectile at enemy ${target.id} at position (${target.x.toFixed(1)}, ${target.y.toFixed(1)}, ${target.z.toFixed(1)})`);
 
           setProjectiles(prev => [...prev, newProjectile]);
           setIsAttacking(true);
@@ -92,37 +120,51 @@ export const AutoWeapon3D: React.FC<AutoWeapon3DProps> = ({
     }, 100);
 
     return () => clearInterval(fireInterval);
-  }, [enemies, combatStats, onMuzzleFlash]);
+  }, [enemies, combatStats, onMuzzleFlash, getNearestEnemy]);
 
-  // Move projectiles
+  // Move projectiles and handle collisions
   useEffect(() => {
     const moveInterval = setInterval(() => {
       setProjectiles(prev => {
         return prev.map(projectile => {
           const target = enemies.find(e => e.id === projectile.targetId);
-          if (!target) return null;
+          
+          // Update projectile lifetime
+          const newLifeTime = projectile.lifeTime + 0.05;
+          
+          // Remove projectile if too old or no target
+          if (newLifeTime > 5 || !target) {
+            return null;
+          }
 
-          const dx = target.x - projectile.x;
-          const dy = target.y - projectile.y;
-          const dz = target.z - projectile.z;
+          // Calculate direction to target (use stored target position for consistency)
+          const dx = projectile.targetX - projectile.x;
+          const dy = projectile.targetY - projectile.y;
+          const dz = projectile.targetZ - projectile.z;
           const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-          if (distance < 1) {
-            // Hit target
-            onEnemyHit(target.id, projectile.damage);
+          // Check for hit
+          if (distance < 1.5) {
+            console.log(`Projectile ${projectile.id} hit enemy ${projectile.targetId}!`);
+            onEnemyHit(projectile.targetId, projectile.damage);
             return null;
           }
 
           // Move towards target
-          const newX = projectile.x + (dx / distance) * projectile.speed;
-          const newY = projectile.y + (dy / distance) * projectile.speed;
-          const newZ = projectile.z + (dz / distance) * projectile.speed;
+          const normalizedX = dx / distance;
+          const normalizedY = dy / distance;
+          const normalizedZ = dz / distance;
+          
+          const newX = projectile.x + normalizedX * projectile.speed;
+          const newY = projectile.y + normalizedY * projectile.speed;
+          const newZ = projectile.z + normalizedZ * projectile.speed;
 
           return {
             ...projectile,
             x: newX,
             y: newY,
-            z: newZ
+            z: newZ,
+            lifeTime: newLifeTime
           };
         }).filter(Boolean) as Projectile3D[];
       });

@@ -25,7 +25,7 @@ const enemyColors = {
   orc: '#8b5cf6'       // Purple - tank enemy
 };
 
-export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) => {
+export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, onClick }) => {
   const meshRef = useRef<Mesh>(null);
   const groupRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
@@ -54,28 +54,76 @@ export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) =
     }
   });
 
-  const handleClick = (event: any) => {
+  const handlePointerDown = (event: any) => {
     event.stopPropagation();
+    console.log(`Enemy ${enemy.id} clicked!`);
     onClick();
   };
 
-  const renderBlock = () => {
+  const handlePointerOver = (event: any) => {
+    event.stopPropagation();
+    setHovered(true);
+    document.body.style.cursor = 'pointer';
+  };
+
+  const handlePointerOut = (event: any) => {
+    event.stopPropagation();
+    setHovered(false);
+    document.body.style.cursor = 'default';
+  };
+
+  const renderEnemyModel = () => {
     const color = enemyColors[enemy.type];
 
     return (
       <mesh
         ref={meshRef}
-        onClick={handleClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+        onPointerDown={handlePointerDown}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
       >
-        {/* Simple block geometry - highly visible */}
-        <boxGeometry args={[2, 2, 2]} />
-        <meshLambertMaterial 
-          color={color} 
-          transparent 
-          opacity={hovered ? 0.8 : 0.9}
-        />
+        {/* 3D Enemy body - more detailed than simple box */}
+        <group>
+          {/* Main body */}
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[1.8, 2.2, 1.6]} />
+            <meshLambertMaterial 
+              color={color} 
+              transparent 
+              opacity={hovered ? 0.8 : 0.9}
+            />
+          </mesh>
+          
+          {/* Head */}
+          <mesh position={[0, 1.5, 0]}>
+            <sphereGeometry args={[0.6]} />
+            <meshLambertMaterial 
+              color={color} 
+              transparent 
+              opacity={hovered ? 0.8 : 0.9}
+            />
+          </mesh>
+          
+          {/* Eyes */}
+          <mesh position={[-0.2, 1.6, 0.5]}>
+            <sphereGeometry args={[0.1]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          <mesh position={[0.2, 1.6, 0.5]}>
+            <sphereGeometry args={[0.1]} />
+            <meshBasicMaterial color="#ffffff" />
+          </mesh>
+          
+          {/* Eye pupils */}
+          <mesh position={[-0.2, 1.6, 0.55]}>
+            <sphereGeometry args={[0.05]} />
+            <meshBasicMaterial color="#000000" />
+          </mesh>
+          <mesh position={[0.2, 1.6, 0.55]}>
+            <sphereGeometry args={[0.05]} />
+            <meshBasicMaterial color="#000000" />
+          </mesh>
+        </group>
       </mesh>
     );
   };
@@ -88,8 +136,8 @@ export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) =
       ref={groupRef}
       position={[enemy.x, enemy.y, enemy.z]}
     >
-      {/* Main enemy model - simple block placeholder */}
-      {renderBlock()}
+      {/* Main enemy model */}
+      {renderEnemyModel()}
       
       {/* Health bar above enemy */}
       <group position={[0, 3, 0]}>
@@ -113,8 +161,8 @@ export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) =
       {/* Damage indicator */}
       {enemy.health < enemy.maxHealth && (
         <mesh position={[0, 3.5, 0]}>
-          <sphereGeometry args={[0.2]} />
-          <meshBasicMaterial color="#ff6b6b" />
+          <sphereGeometry args={[0.15]} />
+          <meshBasicMaterial color="#ff6b6b" transparent opacity={0.7} />
         </mesh>
       )}
     </group>

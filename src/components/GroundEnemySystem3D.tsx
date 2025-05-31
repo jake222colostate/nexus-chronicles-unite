@@ -40,32 +40,32 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
 
   const enemyTypes = useMemo(() => ({
     fantasy: [
-      { type: 'slime' as const, health: 2, speed: 0.8, size: 1.0 },
-      { type: 'goblin' as const, health: 3, speed: 1.0, size: 0.9 },
-      { type: 'orc' as const, health: 4, speed: 0.6, size: 1.3 }
+      { type: 'slime' as const, health: 2, speed: 1.0, size: 1.0 },
+      { type: 'goblin' as const, health: 3, speed: 1.2, size: 0.9 },
+      { type: 'orc' as const, health: 5, speed: 0.8, size: 1.3 }
     ],
     scifi: [
-      { type: 'slime' as const, health: 2, speed: 0.8, size: 1.0 }, // Robot drone
-      { type: 'goblin' as const, health: 3, speed: 1.0, size: 0.9 }, // Alien scout
-      { type: 'orc' as const, health: 4, speed: 0.6, size: 1.3 } // Mech unit
+      { type: 'slime' as const, health: 2, speed: 1.0, size: 1.0 }, // Robot drone
+      { type: 'goblin' as const, health: 3, speed: 1.2, size: 0.9 }, // Alien scout
+      { type: 'orc' as const, health: 5, speed: 0.8, size: 1.3 } // Mech unit
     ]
   }), []);
 
-  // Spawn enemies with scale-in animation
+  // Spawn enemies with better distribution
   const spawnEnemy = useCallback(() => {
     const types = enemyTypes[realm];
     const randomType = types[Math.floor(Math.random() * types.length)];
-    const scaledHealth = Math.floor(randomType.health * (1 + journeyDistance / 100));
+    const scaledHealth = Math.floor(randomType.health * (1 + journeyDistance / 50));
     
     const newEnemy: GroundEnemy = {
       id: `enemy_${Date.now()}_${Math.random()}`,
-      x: (Math.random() - 0.5) * 12, // Spread enemies across wider area
+      x: (Math.random() - 0.5) * 16, // Wider spawn area
       y: 0,
-      z: 50 + Math.random() * 20, // Spawn much farther away (50-70 units)
+      z: 60 + Math.random() * 30, // Spawn very far away (60-90 units)
       health: scaledHealth,
       maxHealth: scaledHealth,
       type: randomType.type,
-      speed: randomType.speed + (Math.random() - 0.5) * 0.2,
+      speed: randomType.speed + (Math.random() - 0.5) * 0.3,
       size: 1.0,
       spawnTime: Date.now()
     };
@@ -73,15 +73,14 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
     console.log('Spawning enemy:', newEnemy.id, 'at position:', newEnemy.x, newEnemy.y, newEnemy.z);
     
     setEnemies(prevEnemies => {
-      // Ensure prevEnemies is always an array
       const currentEnemies = Array.isArray(prevEnemies) ? prevEnemies : [];
       return [...currentEnemies, newEnemy];
     });
   }, [realm, journeyDistance, enemyTypes]);
 
-  // Spawn enemies
+  // Spawn enemies at regular intervals
   useEffect(() => {
-    const adjustedSpawnRate = Math.max(800, spawnRate - (journeyDistance * 2));
+    const adjustedSpawnRate = Math.max(800, spawnRate - (journeyDistance * 3));
     
     const spawnInterval = setInterval(() => {
       if (enemies.length < maxEnemies) {
@@ -92,23 +91,21 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
     return () => clearInterval(spawnInterval);
   }, [enemies.length, maxEnemies, spawnRate, journeyDistance, spawnEnemy]);
 
-  // Update enemies (movement and animations)
+  // Update enemy movement and check for player collision
   useEffect(() => {
     const updateInterval = setInterval(() => {
       setEnemies(prevEnemies => {
-        // Ensure prevEnemies is always an array
         const currentEnemies = Array.isArray(prevEnemies) ? prevEnemies : [];
-        
         const updatedEnemies: GroundEnemy[] = [];
         
         for (const enemy of currentEnemies) {
           // Move toward player (decrease z to move closer)
-          const newZ = enemy.z - enemy.speed * 0.3; // Increased speed for better visibility
+          const newZ = enemy.z - enemy.speed * 0.4;
           
           console.log(`Enemy ${enemy.id} at z: ${newZ.toFixed(2)}`);
           
           // Check if enemy reached player (when z gets close to 0 or negative)
-          if (newZ <= 2) {
+          if (newZ <= 1) {
             console.log(`Enemy ${enemy.id} reached player!`);
             onEnemyReachPlayer(enemy);
             continue; // Skip adding this enemy to updatedEnemies
@@ -126,7 +123,7 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
     }, 50);
 
     return () => clearInterval(updateInterval);
-  }, [onEnemyReachPlayer, realm, enemyTypes]);
+  }, [onEnemyReachPlayer]);
 
   // Update parent with enemy list
   useEffect(() => {
@@ -138,9 +135,7 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
   // Handle enemy damage
   const handleEnemyDamage = useCallback((enemyId: string, damage: number) => {
     setEnemies(prevEnemies => {
-      // Ensure prevEnemies is always an array
       const currentEnemies = Array.isArray(prevEnemies) ? prevEnemies : [];
-      
       const updatedEnemies: GroundEnemy[] = [];
       
       for (const enemy of currentEnemies) {
@@ -162,7 +157,7 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
     });
   }, [onEnemyDestroyed]);
 
-  // Expose damage function
+  // Expose damage function globally for weapon system
   useEffect(() => {
     (window as any).damageEnemy = handleEnemyDamage;
     return () => {
@@ -171,6 +166,7 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
   }, [handleEnemyDamage]);
 
   const handleEnemyClick = useCallback((enemyId: string) => {
+    console.log(`Enemy ${enemyId} clicked - dealing 1 damage`);
     handleEnemyDamage(enemyId, 1);
   }, [handleEnemyDamage]);
 
@@ -181,17 +177,18 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* 3D Canvas for enemies */}
+      {/* 3D Canvas for enemies with pointer events enabled */}
       <Canvas
         className="pointer-events-auto"
         camera={{ position: [0, 2, 8], fov: 60 }}
         dpr={[1, 2]}
       >
-        {/* Lighting */}
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[5, 5, 5]} intensity={1.0} />
+        {/* Enhanced lighting for better visibility */}
+        <ambientLight intensity={0.7} />
+        <directionalLight position={[5, 10, 5]} intensity={1.2} castShadow />
+        <directionalLight position={[-5, 5, 5]} intensity={0.8} />
         
-        {/* Render 3D enemies */}
+        {/* Render 3D enemies with click handling */}
         {safeEnemies.map(enemy => (
           <Enemy3D
             key={enemy.id}
