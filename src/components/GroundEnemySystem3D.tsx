@@ -59,16 +59,18 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
     
     const newEnemy: GroundEnemy = {
       id: `enemy_${Date.now()}_${Math.random()}`,
-      x: (Math.random() - 0.5) * 12,
+      x: (Math.random() - 0.5) * 8, // Spawn closer to center
       y: 0,
-      z: 30 + Math.random() * 10,
+      z: 25 + Math.random() * 5, // Spawn closer to player for visibility
       health: scaledHealth,
       maxHealth: scaledHealth,
       type: randomType.type,
       speed: randomType.speed + (Math.random() - 0.5) * 0.2,
-      size: 0.1, // Start small for spawn animation
+      size: 1.0, // Fixed size for visibility
       spawnTime: Date.now()
     };
+    
+    console.log('Spawning enemy:', newEnemy.id, 'at position:', newEnemy.x, newEnemy.y, newEnemy.z);
     
     setEnemies(prevEnemies => {
       // Ensure prevEnemies is always an array
@@ -100,22 +102,14 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
         const updatedEnemies: GroundEnemy[] = [];
         
         for (const enemy of currentEnemies) {
-          const age = Date.now() - enemy.spawnTime;
-          
-          // Spawn scale-in animation
-          let size = enemy.size;
-          if (age < 500) {
-            const baseSize = enemyTypes[realm].find(t => t.type === enemy.type)?.size || 1;
-            size = baseSize * (age / 500); // Scale from 0 to full size over 500ms
-          } else {
-            size = enemyTypes[realm].find(t => t.type === enemy.type)?.size || 1;
-          }
-          
           // Move toward player
           const newZ = enemy.z - enemy.speed * 0.15;
           
+          console.log(`Enemy ${enemy.id} at z: ${newZ.toFixed(2)}`);
+          
           // Check if enemy reached player
           if (newZ <= -2) {
+            console.log(`Enemy ${enemy.id} reached player!`);
             onEnemyReachPlayer(enemy);
             continue; // Skip adding this enemy to updatedEnemies
           }
@@ -123,7 +117,7 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
           updatedEnemies.push({
             ...enemy,
             z: newZ,
-            size: size
+            size: 1.0 // Keep consistent size
           });
         }
         
@@ -152,7 +146,9 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
       for (const enemy of currentEnemies) {
         if (enemy.id === enemyId) {
           const newHealth = enemy.health - damage;
+          console.log(`Enemy ${enemyId} took ${damage} damage, health: ${newHealth}`);
           if (newHealth <= 0) {
+            console.log(`Enemy ${enemyId} destroyed!`);
             onEnemyDestroyed(enemy);
             continue; // Skip adding this enemy to updatedEnemies
           }
@@ -181,6 +177,8 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
   // Ensure enemies is always an array before rendering
   const safeEnemies = Array.isArray(enemies) ? enemies : [];
 
+  console.log('Rendering enemies:', safeEnemies.length, safeEnemies.map(e => `${e.id}: (${e.x.toFixed(1)}, ${e.y.toFixed(1)}, ${e.z.toFixed(1)})`));
+
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* 3D Canvas for enemies */}
@@ -190,8 +188,8 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
         dpr={[1, 2]}
       >
         {/* Lighting */}
-        <ambientLight intensity={0.6} />
-        <directionalLight position={[5, 5, 5]} intensity={0.8} />
+        <ambientLight intensity={0.8} />
+        <directionalLight position={[5, 5, 5]} intensity={1.0} />
         
         {/* Render 3D enemies */}
         {safeEnemies.map(enemy => (

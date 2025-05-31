@@ -25,17 +25,10 @@ const enemyColors = {
   orc: '#8b5cf6'       // Purple - tank enemy
 };
 
-const enemyShapes = {
-  slime: 'sphere',
-  goblin: 'box',
-  orc: 'octahedron'
-};
-
 export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) => {
   const meshRef = useRef<Mesh>(null);
   const groupRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
-  const [loadError, setLoadError] = useState(!modelPath); // Start with placeholder if no model path
 
   // Walking animation
   useFrame((state) => {
@@ -62,9 +55,8 @@ export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) =
     onClick();
   };
 
-  const renderPlaceholder = () => {
+  const renderBlock = () => {
     const color = enemyColors[enemy.type];
-    const shape = enemyShapes[enemy.type];
 
     return (
       <mesh
@@ -73,9 +65,8 @@ export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) =
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        {shape === 'sphere' && <sphereGeometry args={[1, 16, 16]} />}
-        {shape === 'box' && <boxGeometry args={[1.5, 1.5, 1.5]} />}
-        {shape === 'octahedron' && <octahedronGeometry args={[1.2]} />}
+        {/* Simple block geometry - highly visible */}
+        <boxGeometry args={[2, 2, 2]} />
         <meshLambertMaterial 
           color={color} 
           transparent 
@@ -93,11 +84,11 @@ export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) =
       ref={groupRef}
       position={[enemy.x, enemy.y, enemy.z]}
     >
-      {/* Main enemy model - placeholder for now */}
-      {renderPlaceholder()}
+      {/* Main enemy model - simple block placeholder */}
+      {renderBlock()}
       
       {/* Health bar above enemy */}
-      <group position={[0, 2, 0]}>
+      <group position={[0, 3, 0]}>
         {/* Health bar background */}
         <mesh position={[0, 0, 0.01]}>
           <planeGeometry args={[2, 0.3]} />
@@ -117,8 +108,8 @@ export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) =
 
       {/* Damage indicator */}
       {enemy.health < enemy.maxHealth && (
-        <mesh position={[0, 2.5, 0]}>
-          <sphereGeometry args={[0.1]} />
+        <mesh position={[0, 3.5, 0]}>
+          <sphereGeometry args={[0.2]} />
           <meshBasicMaterial color="#ff6b6b" />
         </mesh>
       )}
