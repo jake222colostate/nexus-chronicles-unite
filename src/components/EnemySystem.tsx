@@ -133,7 +133,7 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
         return (
           <div
             key={enemy.id}
-            className="absolute transition-all duration-100 animate-pulse"
+            className="absolute transition-all duration-100"
             style={{
               left: `${screenX}%`,
               top: `${screenY}%`,

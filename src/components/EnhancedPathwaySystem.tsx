@@ -60,31 +60,6 @@ export const EnhancedPathwaySystem: React.FC<EnhancedPathwaySystemProps> = ({
           {generatePathTiles(chunk)}
         </group>
       ))}
-      
-      {/* Subtle glowing path particles */}
-      {chunks.map(chunk => {
-        const particles = [];
-        const particleCount = 3;
-        
-        for (let i = 0; i < particleCount; i++) {
-          const particleSeed = chunk.seed + i * 23;
-          const x = (seededRandom(particleSeed) - 0.5) * 6;
-          const z = chunk.worldZ - seededRandom(particleSeed + 1) * chunkSize;
-          
-          particles.push(
-            <mesh key={`particle_${chunk.id}_${i}`} position={[x, 0.2, z]}>
-              <sphereGeometry args={[0.05]} />
-              <meshBasicMaterial color="#A78BFA" transparent opacity={0.6} />
-            </mesh>
-          );
-        }
-        
-        return (
-          <group key={`particles_${chunk.id}`}>
-            {particles}
-          </group>
-        );
-      })}
     </group>
   );
 };
