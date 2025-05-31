@@ -88,7 +88,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
         gl={{ antialias: false, alpha: false }}
       >
         <Suspense fallback={null}>
-          {/* Camera with attached wizard staff */}
           <PerspectiveCamera
             ref={cameraRef}
             makeDefault
@@ -100,7 +99,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             <WizardStaff />
           </PerspectiveCamera>
 
-          {/* Vertical Camera Controller for both realms */}
           <VerticalCameraController 
             camera={cameraRef.current}
             minY={-5}
@@ -108,7 +106,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Optimized lighting */}
           <ambientLight intensity={0.6} />
           <directionalLight
             position={[10, 10, 5]}
@@ -116,10 +113,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             castShadow={false}
           />
 
-          {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* Enhanced GLB Mountain System for Fantasy Realm */}
+          {/* Enhanced GLB Mountain System - Only for Fantasy Realm */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
@@ -130,22 +126,20 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 <GLBMountainSystem
                   chunks={chunks}
                   chunkSize={50}
+                  realm={realm}
                 />
               )}
             </ChunkSystem>
           )}
 
-          {/* Memoized upgrade nodes */}
           {upgradeNodes}
 
-          {/* Tap Effect */}
           {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
           )}
         </Suspense>
       </Canvas>
 
-      {/* Loading fallback */}
       <Suspense fallback={
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
           <div className="text-white text-sm">Loading environment...</div>

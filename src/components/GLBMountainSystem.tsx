@@ -7,6 +7,7 @@ import * as THREE from 'three';
 interface GLBMountainSystemProps {
   chunks: ChunkData[];
   chunkSize: number;
+  realm?: 'fantasy' | 'scifi';
 }
 
 const seededRandom = (seed: number) => {
@@ -16,13 +17,25 @@ const seededRandom = (seed: number) => {
 
 export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   chunks,
-  chunkSize
+  chunkSize,
+  realm = 'fantasy'
 }) => {
-  const { scene } = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
+  // Only load GLB model if in fantasy realm
+  const shouldLoadModel = realm === 'fantasy';
+  
+  let scene = null;
+  if (shouldLoadModel) {
+    try {
+      const gltf = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
+      scene = gltf.scene;
+    } catch (error) {
+      console.warn('Failed to load fantasy mountain model:', error);
+    }
+  }
   
   // Memoize mountain instances to prevent re-creation on every render
   const mountainInstances = useMemo(() => {
-    if (!scene) return [];
+    if (!scene || !shouldLoadModel) return [];
     
     const instances = [];
     
@@ -34,13 +47,10 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
       for (let i = 0; i < leftMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 1000;
         const z = worldZ - (i * (chunkSize / leftMountainCount)) - seededRandom(mountainSeed) * 12;
-        const x = -35 - seededRandom(mountainSeed + 1) * 20; // Left side positioning
-        const y = seededRandom(mountainSeed + 2) * 2; // Slight height variation
+        const x = -35 - seededRandom(mountainSeed + 1) * 20;
+        const y = seededRandom(mountainSeed + 2) * 2;
         
-        // Random rotation for variety
         const rotationY = seededRandom(mountainSeed + 3) * Math.PI * 2;
-        
-        // Scale variation for natural look
         const scale = 1.2 + seededRandom(mountainSeed + 4) * 0.8;
         
         instances.push({
@@ -56,13 +66,10 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
       for (let i = 0; i < rightMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 2000;
         const z = worldZ - (i * (chunkSize / rightMountainCount)) - seededRandom(mountainSeed) * 12;
-        const x = 35 + seededRandom(mountainSeed + 1) * 20; // Right side positioning
-        const y = seededRandom(mountainSeed + 2) * 2; // Slight height variation
+        const x = 35 + seededRandom(mountainSeed + 1) * 20;
+        const y = seededRandom(mountainSeed + 2) * 2;
         
-        // Random rotation for variety
         const rotationY = seededRandom(mountainSeed + 3) * Math.PI * 2;
-        
-        // Scale variation for natural look
         const scale = 1.2 + seededRandom(mountainSeed + 4) * 0.8;
         
         instances.push({
@@ -75,27 +82,23 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize, scene]);
+  }, [chunks, chunkSize, scene, shouldLoadModel]);
 
-  // Handle loading state
-  if (!scene) {
-    console.log('Loading fantasy mountain model...');
+  // Don't render anything if not in fantasy realm or no model loaded
+  if (!shouldLoadModel || !scene) {
     return null;
   }
 
   return (
     <group>
       {mountainInstances.map((instance) => {
-        // Clone the scene for each instance to avoid sharing geometry
         const clonedScene = scene.clone();
         
-        // Optimize the cloned scene
         clonedScene.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             child.castShadow = true;
             child.receiveShadow = true;
             
-            // Ensure materials are optimized
             if (child.material) {
               child.material.needsUpdate = false;
             }
@@ -116,5 +119,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   );
 };
 
-// Preload the model for better performance
-useGLTF.preload('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
+// Only preload the model for fantasy realm
+if (typeof window !== 'undefined') {
+  useGLTF.preload('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
+}
