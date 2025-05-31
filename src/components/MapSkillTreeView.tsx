@@ -22,7 +22,6 @@ interface MapSkillTreeViewProps {
   onPurchaseUpgrade: (upgradeId: string) => void;
   showTapEffect?: boolean;
   onTapEffectComplete?: () => void;
-  onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
 }
 
 export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
@@ -37,8 +36,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   gameState,
   onPurchaseUpgrade,
   showTapEffect = false,
-  onTapEffectComplete,
-  onPlayerPositionUpdate
+  onTapEffectComplete
 }) => {
   const [selectedBuilding, setSelectedBuilding] = useState<{
     building: any;
@@ -94,9 +92,6 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
           onUpgradeClick={handle3DUpgradeClick}
           showTapEffect={showTapEffect}
           onTapEffectComplete={onTapEffectComplete}
-          gameState={gameState}
-          realm={realm}
-          onPlayerPositionUpdate={onPlayerPositionUpdate}
         />
       ) : (
         <Scene3D

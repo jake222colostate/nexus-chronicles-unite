@@ -1,3 +1,4 @@
+
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -17,7 +18,6 @@ interface Fantasy3DUpgradeWorldProps {
   onTapEffectComplete?: () => void;
   gameState?: any;
   realm?: 'fantasy' | 'scifi';
-  onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
 }
 
 export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
@@ -25,8 +25,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   showTapEffect,
   onTapEffectComplete,
   gameState,
-  realm = 'fantasy',
-  onPlayerPositionUpdate
+  realm = 'fantasy'
 }) => {
   const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 1.6, 0));
   const [currentMana, setCurrentMana] = useState(gameState?.mana || 100);
@@ -37,8 +36,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
   // Enhanced infinite world parameters
   const CHUNK_SIZE = 80;
-  const RENDER_DISTANCE = 200;
-  const UPGRADE_SPACING = 35; // Increased spacing between upgrades
+  const RENDER_DISTANCE = 160;
+  const UPGRADE_SPACING = 28; // Every 28 meters as requested
 
   // Get dynamic upgrades based on player position
   const upgrades = useInfiniteUpgrades({
@@ -58,15 +57,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
   const handlePositionChange = useCallback((position: Vector3) => {
     setCameraPosition(position);
-    // Notify parent component of position change
-    if (onPlayerPositionUpdate) {
-      onPlayerPositionUpdate({
-        x: position.x,
-        y: position.y,
-        z: position.z
-      });
-    }
-  }, [onPlayerPositionUpdate]);
+  }, []);
 
   const handleUpgradeClick = useCallback((upgrade: any) => {
     console.log(`Clicked upgrade: ${upgrade.name}`);
@@ -119,7 +110,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           position: [0, 1.6, 0], 
           fov: 75,
           near: 0.1,
-          far: 1200
+          far: 1000
         }}
         shadows
         gl={{ antialias: true, alpha: true }}
@@ -131,31 +122,31 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             onPositionChange={handlePositionChange}
           />
 
-          {/* Clean Environment System */}
+          {/* Clean Environment System - no random effects */}
           <EnvironmentSystem 
             upgradeCount={maxUnlockedUpgrade + 1}
             onEnvironmentChange={(tier) => console.log(`Environment tier: ${tier}`)}
           />
 
-          {/* Stable lighting */}
-          <ambientLight intensity={0.8} color="#E6E6FA" />
+          {/* Stable lighting - no flickering */}
+          <ambientLight intensity={0.7} color="#E6E6FA" />
           <directionalLight
             position={[20, 30, 20]}
-            intensity={1.2}
+            intensity={1.0}
             color="#FFFFFF"
             castShadow
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
-            shadow-camera-far={1200}
-            shadow-camera-left={-120}
-            shadow-camera-right={120}
-            shadow-camera-top={120}
-            shadow-camera-bottom={-120}
+            shadow-camera-far={1000}
+            shadow-camera-left={-100}
+            shadow-camera-right={100}
+            shadow-camera-top={100}
+            shadow-camera-bottom={-100}
           />
           
           <directionalLight
-            position={[-15, 25, 15]}
-            intensity={0.6}
+            position={[-15, 20, 10]}
+            intensity={0.5}
             color="#DDA0DD"
           />
 
@@ -169,13 +160,13 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           >
             {(chunks: ChunkData[]) => (
               <>
-                {/* Enhanced Cobblestone Pathway - Better Aligned */}
+                {/* Enhanced Cobblestone Pathway */}
                 <EnhancedPathwaySystem
                   chunks={chunks}
                   chunkSize={CHUNK_SIZE}
                 />
                 
-                {/* Natural Mountain System - Improved Organic Look */}
+                {/* Natural Mountain System */}
                 <NaturalMountainSystem
                   chunks={chunks}
                   chunkSize={CHUNK_SIZE}
@@ -184,26 +175,26 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             )}
           </ChunkSystem>
 
-          {/* Player lighting */}
+          {/* Stable player lighting */}
           <pointLight 
-            position={[cameraPosition.x, 10, cameraPosition.z - 8]} 
-            intensity={1.0}
+            position={[cameraPosition.x, 8, cameraPosition.z - 5]} 
+            intensity={0.8}
             color="#DDA0DD" 
-            distance={50} 
+            distance={40} 
           />
 
           <ContactShadows 
-            position={[0, -0.45, cameraPosition.z]} 
-            opacity={0.5} 
-            scale={80} 
-            blur={2.5} 
-            far={20} 
+            position={[0, -0.4, cameraPosition.z]} 
+            opacity={0.4} 
+            scale={60} 
+            blur={2.0} 
+            far={15} 
           />
 
-          {/* Enhanced Upgrade Pedestals - Wider Spacing */}
+          {/* Clean Upgrade Pedestals - no unwanted effects */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-            if (distance > 120) return null; // Performance culling
+            if (distance > 100) return null; // Performance culling
             
             return (
               <EnhancedUpgradePedestal
@@ -221,7 +212,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </Suspense>
       </Canvas>
 
-      {/* Clean insufficient mana warning */}
+      {/* Clean, stable insufficient mana warning */}
       {showInsufficientMana && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
           <div className="bg-red-600/95 text-white px-8 py-4 rounded-xl border-2 border-red-400 animate-bounce shadow-2xl">
