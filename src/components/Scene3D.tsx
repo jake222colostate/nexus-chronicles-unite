@@ -156,54 +156,50 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             {(chunks) => {
               console.log('ChunkSystem rendering with realm:', realm, 'chunks:', chunks.length);
               
-              return (
-                <>
-                  {/* CRITICAL: ONLY render fantasy environment when realm is 'fantasy' */}
-                  {realm === 'fantasy' ? (
-                    <Suspense fallback={null}>
-                      {console.log('Rendering FANTASY components')}
-                      <FantasyRoadSystem
-                        chunks={chunks}
-                        chunkSize={50}
-                        realm={realm}
-                      />
-                      
-                      <FantasyMountainSystem
-                        chunks={chunks}
-                        chunkSize={50}
-                        realm={realm}
-                      />
-                      
-                      <FantasyPortalSystem
-                        chunks={chunks}
-                        chunkSize={50}
-                        realm={realm}
-                      />
-                    </Suspense>
-                  ) : null}
-                  
-                  {/* CRITICAL: ONLY render sci-fi environment when realm is 'scifi' */}
-                  {realm === 'scifi' ? (
-                    <>
-                      {console.log('Rendering SCIFI components')}
-                      <EnhancedGrassSystem
-                        chunks={chunks}
-                        chunkSize={50}
-                      />
-                      
-                      <TreeSystem
-                        chunks={chunks}
-                        chunkSize={50}
-                      />
-                      
-                      <GLBMountainSystem
-                        chunks={chunks}
-                        chunkSize={50}
-                      />
-                    </>
-                  ) : null}
-                </>
-              );
+              if (realm === 'fantasy') {
+                console.log('Rendering FANTASY components');
+                return (
+                  <Suspense fallback={null}>
+                    <FantasyRoadSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                      realm={realm}
+                    />
+                    
+                    <FantasyMountainSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                      realm={realm}
+                    />
+                    
+                    <FantasyPortalSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                      realm={realm}
+                    />
+                  </Suspense>
+                );
+              } else {
+                console.log('Rendering SCIFI components');
+                return (
+                  <>
+                    <EnhancedGrassSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                    />
+                    
+                    <TreeSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                    />
+                    
+                    <GLBMountainSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                    />
+                  </>
+                );
+              }
             }}
           </ChunkSystem>
 
