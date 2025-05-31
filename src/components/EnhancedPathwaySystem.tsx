@@ -74,7 +74,7 @@ export const EnhancedPathwaySystem: React.FC<EnhancedPathwaySystemProps> = ({
         for (let i = 0; i < particleCount; i++) {
           const particleSeed = chunk.seed + i * 23;
           const x = (seededRandom(particleSeed) - 0.5) * 6;
-          const z = chunk.worldZ - seededRandom(particleSeed + 1) * chunk.chunkSize;
+          const z = chunk.worldZ - seededRandom(particleSeed + 1) * chunkSize;
           
           particles.push(
             <mesh key={`particle_${chunk.id}_${i}`} position={[x, 0.2, z]}>
