@@ -59,14 +59,14 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
     
     const newEnemy: GroundEnemy = {
       id: `enemy_${Date.now()}_${Math.random()}`,
-      x: (Math.random() - 0.5) * 8, // Spawn closer to center
+      x: (Math.random() - 0.5) * 12, // Spread enemies across wider area
       y: 0,
-      z: 25 + Math.random() * 5, // Spawn closer to player for visibility
+      z: 50 + Math.random() * 20, // Spawn much farther away (50-70 units)
       health: scaledHealth,
       maxHealth: scaledHealth,
       type: randomType.type,
       speed: randomType.speed + (Math.random() - 0.5) * 0.2,
-      size: 1.0, // Fixed size for visibility
+      size: 1.0,
       spawnTime: Date.now()
     };
     
@@ -102,13 +102,13 @@ export const GroundEnemySystem3D: React.FC<GroundEnemySystem3DProps> = ({
         const updatedEnemies: GroundEnemy[] = [];
         
         for (const enemy of currentEnemies) {
-          // Move toward player
-          const newZ = enemy.z - enemy.speed * 0.15;
+          // Move toward player (decrease z to move closer)
+          const newZ = enemy.z - enemy.speed * 0.3; // Increased speed for better visibility
           
           console.log(`Enemy ${enemy.id} at z: ${newZ.toFixed(2)}`);
           
-          // Check if enemy reached player
-          if (newZ <= -2) {
+          // Check if enemy reached player (when z gets close to 0 or negative)
+          if (newZ <= 2) {
             console.log(`Enemy ${enemy.id} reached player!`);
             onEnemyReachPlayer(enemy);
             continue; // Skip adding this enemy to updatedEnemies

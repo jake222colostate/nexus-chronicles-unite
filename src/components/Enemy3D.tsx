@@ -39,6 +39,10 @@ export const Enemy3D: React.FC<Enemy3DProps> = ({ enemy, modelPath, onClick }) =
       
       // Slight rotation for movement feel
       groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
+      
+      // Update position to match enemy data
+      groupRef.current.position.x = enemy.x;
+      groupRef.current.position.z = enemy.z;
     }
 
     if (meshRef.current && hovered) {
