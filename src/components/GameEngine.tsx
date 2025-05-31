@@ -50,14 +50,14 @@ interface Building {
   icon: string;
 }
 
-const fantasyBuildings: Building[] = [
+const fantasyBuildingDefinitions: Building[] = [
   { id: 'altar', name: 'Mana Altar', cost: 10, production: 1, costMultiplier: 1.15, description: 'Ancient stones that channel mystical energy', icon: '🔮' },
   { id: 'tower', name: 'Wizard Tower', cost: 100, production: 8, costMultiplier: 1.2, description: 'Towering spires where mages conduct research', icon: '🗼' },
   { id: 'grove', name: 'Enchanted Grove', cost: 1000, production: 47, costMultiplier: 1.25, description: 'Sacred forests pulsing with natural magic', icon: '🌳' },
   { id: 'temple', name: 'Arcane Temple', cost: 11000, production: 260, costMultiplier: 1.3, description: 'Massive structures devoted to magical arts', icon: '🏛️' },
 ];
 
-const scifiBuildings: Building[] = [
+const scifiBuildingDefinitions: Building[] = [
   { id: 'generator', name: 'Solar Panel', cost: 15, production: 1, costMultiplier: 1.15, description: 'Basic renewable energy collection', icon: '☀️' },
   { id: 'reactor', name: 'Fusion Reactor', cost: 150, production: 10, costMultiplier: 1.2, description: 'Advanced nuclear fusion technology', icon: '⚡' },
   { id: 'station', name: 'Space Station', cost: 1500, production: 64, costMultiplier: 1.25, description: 'Orbital platforms generating massive energy', icon: '🛰️' },
@@ -220,13 +220,13 @@ const GameEngine: React.FC = () => {
     return JSON.stringify(gameState.purchasedUpgrades || []);
   }, [gameState.purchasedUpgrades]);
 
-  // Parse stable references back to objects
-  const fantasyBuildings = useMemo(() => JSON.parse(stableFantasyBuildings), [stableFantasyBuildings]);
-  const scifiBuildings = useMemo(() => JSON.parse(stableScifiBuildings), [stableScifiBuildings]);
+  // Parse stable references back to objects - fix naming to avoid conflicts
+  const fantasyBuildingCounts = useMemo(() => JSON.parse(stableFantasyBuildings), [stableFantasyBuildings]);
+  const scifiBuildingCounts = useMemo(() => JSON.parse(stableScifiBuildings), [stableScifiBuildings]);
   const purchasedUpgrades = useMemo(() => JSON.parse(stablePurchasedUpgrades), [stablePurchasedUpgrades]);
 
   // Initialize buff system with stable dependencies
-  const buffSystem = useBuffSystem(fantasyBuildings, scifiBuildings);
+  const buffSystem = useBuffSystem(fantasyBuildingCounts, scifiBuildingCounts);
 
   // Cross-realm upgrades with current levels
   const crossRealmUpgradesWithLevels = useMemo(() => {
@@ -344,15 +344,15 @@ const GameEngine: React.FC = () => {
     let manaRate = 0;
     let energyRate = 0;
 
-    // Base production from buildings
-    fantasyBuildings.forEach(building => {
-      const count = fantasyBuildings[building.id] || 0;
+    // Base production from buildings - use building definitions arrays, not counts
+    fantasyBuildingDefinitions.forEach(building => {
+      const count = fantasyBuildingCounts[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'fantasy');
       manaRate += (count * building.production * multiplier) + flatBonus;
     });
 
-    scifiBuildings.forEach(building => {
-      const count = scifiBuildings[building.id] || 0;
+    scifiBuildingDefinitions.forEach(building => {
+      const count = scifiBuildingCounts[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'scifi');
       energyRate += (count * building.production * multiplier) + flatBonus;
     });
@@ -395,11 +395,11 @@ const GameEngine: React.FC = () => {
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, stablePurchasedUpgrades, buffSystem, crossRealmUpgradesWithLevels]);
+  }, [stableFantasyBuildings, stableScifiBuildings, stablePurchasedUpgrades, buffSystem, crossRealmUpgradesWithLevels, fantasyBuildingDefinitions, scifiBuildingDefinitions, purchasedUpgrades]);
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
-    const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
-    const building = buildings.find(b => b.id === buildingId);
+    const buildingDefinitions = isFantasy ? fantasyBuildingDefinitions : scifiBuildingDefinitions;
+    const building = buildingDefinitions.find(b => b.id === buildingId);
     if (!building) return;
 
     const currentCount = isFantasy 
@@ -701,7 +701,7 @@ const GameEngine: React.FC = () => {
           manaPerSecond={gameState.manaPerSecond}
           energyPerSecond={gameState.energyPerSecond}
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
-          buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
+          buildingData={currentRealm === 'fantasy' ? fantasyBuildingDefinitions : scifiBuildingDefinitions}
           currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
           gameState={gameState}
           onPurchaseUpgrade={purchaseUpgrade}
