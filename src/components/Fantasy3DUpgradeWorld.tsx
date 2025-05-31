@@ -1,4 +1,3 @@
-
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -185,7 +184,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             canMoveForward={canMoveForward}
           />
 
-          {/* Simplified Environment System */}
+          {/* Clean Environment System without floating indicators */}
           <EnvironmentSystem 
             upgradeCount={unlockedUpgradeCount}
             onEnvironmentChange={handleEnvironmentChange}
@@ -227,20 +226,20 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
           <Environment preset="sunset" />
 
-          {/* Simple ground plane with green grass color */}
+          {/* Stone path instead of wooden floor */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -50]} receiveShadow>
             <planeGeometry args={[40, 120]} />
-            <meshLambertMaterial color="#22c55e" />
+            <meshLambertMaterial color="#8B7355" />
           </mesh>
 
-          {/* Simple path markers */}
+          {/* Stone path markers */}
           {Array.from({ length: 20 }, (_, i) => (
             <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
-              <circleGeometry args={[0.4]} />
+              <circleGeometry args={[0.6]} />
               <meshBasicMaterial 
-                color="#fbbf24" 
+                color="#A0A0A0" 
                 transparent 
-                opacity={0.6} 
+                opacity={0.8} 
               />
             </mesh>
           ))}
@@ -277,18 +276,15 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </Suspense>
       </Canvas>
 
-      {/* Enhanced Resource Display with environment tier indicator */}
+      {/* Clean Resource Display - no environment tier */}
       <div className="absolute top-4 right-4 pointer-events-none">
         <div className="bg-purple-900/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-400/40">
           <div className="text-yellow-400 text-lg font-bold">{formatNumber(currentMana)} Mana</div>
           <div className="text-purple-300 text-sm">{formatNumber(totalManaPerSecond)}/sec</div>
-          <div className="text-purple-200 text-xs mt-1">
-            Environment Tier {currentEnvironmentTier + 1}
-          </div>
         </div>
       </div>
 
-      {/* Progress indicator positioned underneath all interactable buttons */}
+      {/* Clean progress indicator */}
       <div className="absolute bottom-2 left-4 right-4 pointer-events-none">
         <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
           <div 
@@ -297,21 +293,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 100) * 100)))}%` 
             }}
           />
-          {/* Environment tier markers - updated for 4 tiers */}
-          <div className="absolute top-0 left-1/4 w-0.5 h-full bg-yellow-400 opacity-60" />
-          <div className="absolute top-0 left-1/2 w-0.5 h-full bg-yellow-400 opacity-60" />
-          <div className="absolute top-0 left-3/4 w-0.5 h-full bg-yellow-400 opacity-60" />
         </div>
-        <p className="text-white/50 text-xs text-center mt-1">
-          Journey Progress: {unlockedUpgradeCount}/{upgrades.length} Upgrades | Environment: Tier {currentEnvironmentTier + 1}
-        </p>
-      </div>
-
-      {/* Movement instructions */}
-      <div className="absolute top-20 left-4 right-4 text-center pointer-events-none">
-        <p className="text-white/70 text-sm font-medium">
-          Use WASD to move around, click and drag or A/D to look around (180° range), get close and click upgrades to unlock
-        </p>
       </div>
 
       {/* Insufficient Mana Warning */}

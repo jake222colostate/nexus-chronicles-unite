@@ -52,10 +52,10 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
 
   return (
     <>
-      {/* Dynamic Skybox - NO PARTICLES */}
+      {/* Dynamic Skybox with natural mountain transitions */}
       <DynamicSkybox tier={currentTier} opacity={transitionOpacity} />
       
-      {/* Pixel-style Terrain - NO PARTICLES */}
+      {/* Clean Pixel-style Terrain with stone path */}
       <PixelTerrainSystem tier={currentTier} opacity={transitionOpacity} />
       
       {/* Clean atmospheric fog only */}

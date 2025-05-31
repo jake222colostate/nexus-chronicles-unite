@@ -40,9 +40,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   return (
     <div className="absolute top-0 left-0 right-0 z-40 iphone-safe-top">
       <div className="px-3 py-2">
-        {/* Unified resource bar with mana inline */}
+        {/* Single unified stats bar */}
         <div 
-          className="flex items-center bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-lg border border-white/20 relative"
+          className="flex items-center bg-black/70 backdrop-blur-xl px-3 py-2 rounded-lg border border-white/20 relative"
           style={{
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.1)'
           }}
@@ -55,48 +55,49 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             onClick={onHelpClick}
             size="sm"
             variant="ghost"
-            className="h-6 w-6 p-0 rounded-md bg-transparent hover:bg-white/10 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-2"
+            className="h-6 w-6 p-0 rounded-md bg-transparent hover:bg-white/10 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-3"
           >
             <HelpCircle size={12} />
           </Button>
 
-          {/* Unified stats container with mana inline */}
-          <div className="flex items-center gap-3 text-xs font-medium text-white relative z-10 flex-1 min-w-0">
-            {/* Brain/Intelligence */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className="text-xs">🧠</span>
+          {/* Clean horizontal stats layout: 🧠 Brain ⚡ Energy 💎 Crystals 🧱 Resources ✨ Mana (+X/s) 🔄 Progress % */}
+          <div className="flex items-center gap-4 text-sm font-medium text-white relative z-10 flex-1 min-w-0">
+            {/* 🧠 Brain */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-sm">🧠</span>
               <span className="text-purple-300 font-semibold">{formatNumber(mana)}</span>
             </div>
             
-            <div className="w-px h-3 bg-white/20 flex-shrink-0"></div>
-            
-            {/* Energy */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className="text-xs">⚡</span>
+            {/* ⚡ Energy */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-sm">⚡</span>
               <span className="text-cyan-300 font-semibold">{formatNumber(energyCredits)}</span>
             </div>
             
-            <div className="w-px h-3 bg-white/20 flex-shrink-0"></div>
-            
-            {/* Crystals (Nexus Shards) */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className="text-xs">💎</span>
+            {/* 💎 Crystals */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-sm">💎</span>
               <span className="text-yellow-300 font-semibold">{formatNumber(nexusShards)}</span>
             </div>
             
-            <div className="w-px h-3 bg-white/20 flex-shrink-0"></div>
-            
-            {/* Mana with rate inline using ✨ icon */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className="text-xs">✨</span>
-              <span className="text-purple-300 font-semibold">{formatNumber(mana)} | +{formatRate(manaPerSecond)}/s</span>
+            {/* 🧱 Resources (placeholder for future use) */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-sm">🧱</span>
+              <span className="text-orange-300 font-semibold">0</span>
             </div>
             
-            <div className="w-px h-3 bg-white/20 flex-shrink-0"></div>
+            {/* ✨ Mana with rate inline */}
+            <div className="flex flex-col items-center gap-0 flex-shrink-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">✨</span>
+                <span className="text-purple-300 font-semibold">{formatNumber(mana)}</span>
+              </div>
+              <span className="text-xs text-gray-400">+{formatRate(manaPerSecond)}/s</span>
+            </div>
             
-            {/* Progress */}
-            <div className="flex items-center gap-1 flex-shrink-0">
-              <span className="text-xs">🔄</span>
+            {/* 🔄 Progress */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-sm">🔄</span>
               <span className="text-orange-300 font-semibold">{Math.floor(convergenceProgress)}%</span>
             </div>
           </div>
