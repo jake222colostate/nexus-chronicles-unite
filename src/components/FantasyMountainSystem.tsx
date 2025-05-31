@@ -41,25 +41,33 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  const mountainInstances = useMemo(() => {
-    console.log('FantasyMountainSystem render - Realm:', realm, 'Chunks:', chunks.length);
-    
-    // Only render in fantasy realm
-    if (realm !== 'fantasy') {
-      console.log('FantasyMountainSystem: Not fantasy realm, skipping');
-      return [];
-    }
+  console.log('FantasyMountainSystem: Component mounted/rendered with:', {
+    realm,
+    chunksLength: chunks.length,
+    chunkSize
+  });
 
+  // Early return check with logging
+  if (realm !== 'fantasy') {
+    console.log('FantasyMountainSystem: Not fantasy realm, realm is:', realm);
+    return null;
+  }
+
+  console.log('FantasyMountainSystem: Realm is fantasy, proceeding with mountain generation');
+
+  const mountainInstances = useMemo(() => {
+    console.log('FantasyMountainSystem useMemo - Realm:', realm, 'Chunks:', chunks.length);
+    
     const instances: React.ReactNode[] = [];
     
     chunks.forEach((chunk, chunkIndex) => {
-      console.log(`Processing chunk ${chunkIndex}: worldZ=${chunk.worldZ}`);
+      console.log(`FantasyMountainSystem: Processing chunk ${chunkIndex}: worldZ=${chunk.worldZ}`);
       
       // Create multiple mountain instances along the Z-axis for seamless coverage
       for (let zOffset = 0; zOffset < chunkSize; zOffset += 20) {
         const finalZ = chunk.worldZ - zOffset;
         
-        console.log(`Creating mountains for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
+        console.log(`FantasyMountainSystem: Creating mountains for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
         
         instances.push(
           <Mountain 
@@ -83,10 +91,7 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
     return instances;
   }, [chunks, chunkSize, realm]);
 
-  // Don't render anything if not in fantasy realm
-  if (realm !== 'fantasy') {
-    return null;
-  }
+  console.log('FantasyMountainSystem: About to render', mountainInstances.length, 'mountain instances');
 
   return <>{mountainInstances}</>;
 };
