@@ -89,6 +89,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       if (event.button === 0) {
         isMouseDown.current = true;
         lastMouse.current = { x: event.clientX, y: event.clientY };
+        event.preventDefault();
       }
     };
 
@@ -101,28 +102,25 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         pitchAngle.current = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, pitchAngle.current - deltaY * 0.002));
         
         lastMouse.current = { x: event.clientX, y: event.clientY };
+        event.preventDefault();
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (event: MouseEvent) => {
       isMouseDown.current = false;
+      event.preventDefault();
     };
 
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      canvas.addEventListener('mousedown', handleMouseDown);
-      canvas.addEventListener('mousemove', handleMouseMove);
-      canvas.addEventListener('mouseup', handleMouseUp);
-      canvas.addEventListener('mouseleave', handleMouseUp);
-    }
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseleave', handleMouseUp);
 
     return () => {
-      if (canvas) {
-        canvas.removeEventListener('mousedown', handleMouseDown);
-        canvas.removeEventListener('mousemove', handleMouseMove);
-        canvas.removeEventListener('mouseup', handleMouseUp);
-        canvas.removeEventListener('mouseleave', handleMouseUp);
-      }
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseleave', handleMouseUp);
     };
   }, []);
 
@@ -133,21 +131,8 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         const touch = event.touches[0];
         lastMouse.current = { x: touch.clientX, y: touch.clientY };
         isMouseDown.current = true;
-      } else if (event.touches.length === 2) {
-        // Two finger touch for movement
-        const rect = (event.target as HTMLElement).getBoundingClientRect();
-        const touch1 = event.touches[0];
-        const touch2 = event.touches[1];
-        
-        if (touch1.clientY < rect.height * 0.5) {
-          keys.current.forward = true;
-        }
-        if (touch1.clientX < rect.width * 0.5) {
-          keys.current.left = true;
-        } else {
-          keys.current.right = true;
-        }
       }
+      event.preventDefault();
     };
 
     const handleTouchMove = (event: TouchEvent) => {
@@ -161,33 +146,30 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         
         lastMouse.current = { x: touch.clientX, y: touch.clientY };
       }
+      event.preventDefault();
     };
 
-    const handleTouchEnd = () => {
+    const handleTouchEnd = (event: TouchEvent) => {
       isMouseDown.current = false;
       keys.current = { forward: false, backward: false, left: false, right: false };
+      event.preventDefault();
     };
 
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
-      canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
-      canvas.addEventListener('touchend', handleTouchEnd);
-    }
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
 
     return () => {
-      if (canvas) {
-        canvas.removeEventListener('touchstart', handleTouchStart);
-        canvas.removeEventListener('touchmove', handleTouchMove);
-        canvas.removeEventListener('touchend', handleTouchEnd);
-      }
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, []);
 
   useFrame((state, delta) => {
-    const moveSpeed = 12;
-    const acceleration = 0.15;
-    const damping = 0.85;
+    const moveSpeed = 8;
+    const acceleration = 0.12;
+    const damping = 0.88;
     
     // Calculate movement direction based on camera orientation
     const forward = new Vector3(-Math.sin(yawAngle.current), 0, -Math.cos(yawAngle.current));

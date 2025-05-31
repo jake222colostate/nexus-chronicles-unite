@@ -14,7 +14,7 @@ import { GroundEnemySystem3D, GroundEnemy } from './GroundEnemySystem3D';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
 import { MuzzleFlash } from './MuzzleFlash';
 import { WaveCompleteMessage } from './WaveCompleteMessage';
-import { JourneyTracker } from './JourneyTracker';
+import { CompactJourneyTracker } from './CompactJourneyTracker';
 import { AutoWeapon3D } from './AutoWeapon3D';
 import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem, CrossRealmUpgrade } from './CrossRealmUpgradeSystem';
@@ -659,13 +659,14 @@ const GameEngine: React.FC = () => {
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Journey Tracker - invisible component that tracks real movement */}
-      <JourneyTracker 
+      {/* Compact Journey Tracker - Clean progress bar */}
+      <CompactJourneyTracker 
         playerPosition={playerPosition}
+        realm={currentRealm}
         onJourneyUpdate={handleJourneyUpdate}
       />
 
-      {/* Clean TopHUD with cross-realm upgrade button */}
+      {/* Clean TopHUD */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -717,23 +718,21 @@ const GameEngine: React.FC = () => {
           onMuzzleFlash={handleMuzzleFlash}
         />
 
-        {/* Muzzle Flash Effect */}
+        {/* Visual Effects */}
         <MuzzleFlash
           isVisible={showMuzzleFlash}
           onComplete={handleMuzzleFlashComplete}
         />
 
-        {/* Wave Complete Message */}
         <WaveCompleteMessage
           isVisible={showWaveComplete}
           waveNumber={gameState.waveNumber}
           onComplete={handleWaveCompleteComplete}
         />
 
-        {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Weapon Upgrade Button */}
+        {/* Clean UI Buttons */}
         <div className="absolute top-20 right-4 z-30">
           <Button 
             onClick={handleShowWeaponUpgrades}
@@ -743,7 +742,6 @@ const GameEngine: React.FC = () => {
           </Button>
         </div>
 
-        {/* Cross-Realm Upgrades Button */}
         <div className="absolute top-20 left-4 z-30">
           <Button 
             onClick={handleShowCrossRealmUpgrades}
@@ -766,7 +764,7 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Enhanced Bottom Action Bar with realm-specific journey progress */}
+      {/* Clean Bottom Action Bar */}
       <BottomActionBar
         currentRealm={currentRealm}
         onRealmChange={switchRealm}
@@ -775,13 +773,12 @@ const GameEngine: React.FC = () => {
         playerDistance={currentJourneyDistance}
       />
 
-      {/* Quick Help Modal */}
+      {/* Modals */}
       <QuickHelpModal
         isOpen={showQuickHelp}
         onClose={() => setShowQuickHelp(false)}
       />
 
-      {/* Combat Upgrades Modal */}
       {showCombatUpgrades && (
         <CombatUpgradeSystem
           upgrades={combatUpgrades}
@@ -791,7 +788,6 @@ const GameEngine: React.FC = () => {
         />
       )}
 
-      {/* Weapon Upgrades Modal */}
       {showWeaponUpgrades && (
         <WeaponUpgradeSystem
           upgrades={weaponUpgrades}
@@ -801,7 +797,6 @@ const GameEngine: React.FC = () => {
         />
       )}
 
-      {/* Cross-Realm Upgrades Modal */}
       {showCrossRealmUpgrades && (
         <CrossRealmUpgradeSystem
           upgrades={crossRealmUpgradesWithLevels}
@@ -815,7 +810,6 @@ const GameEngine: React.FC = () => {
         />
       )}
 
-      {/* Convergence Modal */}
       {showConvergence && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
