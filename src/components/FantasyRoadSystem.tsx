@@ -15,7 +15,7 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyRoadContent: Checking realm before any operations:', realm);
+  console.log('FantasyRoadContent: Active Realm:', realm);
   
   // CRITICAL: Absolutely no operations if not fantasy realm
   if (realm !== 'fantasy') {
@@ -106,7 +106,7 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
 };
 
 export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
-  console.log('FantasyRoadSystem: Called with realm:', props.realm);
+  console.log('FantasyRoadSystem: Active Realm:', props.realm);
   
   // CRITICAL: Absolutely no rendering if not fantasy realm
   if (props.realm !== 'fantasy') {

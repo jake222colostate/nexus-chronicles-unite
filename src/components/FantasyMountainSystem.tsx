@@ -20,7 +20,7 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyMountainContent: Checking realm before any operations:', realm);
+  console.log('FantasyMountainContent: Active Realm:', realm);
   
   // CRITICAL: Absolutely no operations if not fantasy realm
   if (realm !== 'fantasy') {
@@ -139,7 +139,7 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
 };
 
 export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = (props) => {
-  console.log('FantasyMountainSystem: Called with realm:', props.realm);
+  console.log('FantasyMountainSystem: Active Realm:', props.realm);
   
   // CRITICAL: Absolutely no rendering if not fantasy realm
   if (props.realm !== 'fantasy') {

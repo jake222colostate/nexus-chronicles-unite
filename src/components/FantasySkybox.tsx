@@ -12,7 +12,7 @@ const FantasySkyboxContent: React.FC<FantasySkyboxProps> = ({
   opacity = 1,
   realm
 }) => {
-  console.log('FantasySkyboxContent: Checking realm before any operations:', realm);
+  console.log('FantasySkyboxContent: Active Realm:', realm);
   
   // CRITICAL: Absolutely no operations if not fantasy realm
   if (realm !== 'fantasy') {
@@ -101,7 +101,7 @@ const FantasySkyboxContent: React.FC<FantasySkyboxProps> = ({
 };
 
 export const FantasySkybox: React.FC<FantasySkyboxProps> = (props) => {
-  console.log('FantasySkybox: Called with realm:', props.realm);
+  console.log('FantasySkybox: Active Realm:', props.realm);
   
   // CRITICAL: Absolutely no rendering if not fantasy realm
   if (props.realm !== 'fantasy') {

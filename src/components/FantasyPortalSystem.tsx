@@ -16,7 +16,7 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyPortalContent: Checking realm before any operations:', realm);
+  console.log('FantasyPortalContent: Active Realm:', realm);
   
   // CRITICAL: Absolutely no operations if not fantasy realm
   if (realm !== 'fantasy') {
@@ -131,7 +131,7 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
 };
 
 export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = (props) => {
-  console.log('FantasyPortalSystem: Called with realm:', props.realm);
+  console.log('FantasyPortalSystem: Active Realm:', props.realm);
   
   // CRITICAL: Absolutely no rendering if not fantasy realm
   if (props.realm !== 'fantasy') {
