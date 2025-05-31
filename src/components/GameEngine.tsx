@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -18,6 +17,8 @@ import { WaveCompleteMessage } from './WaveCompleteMessage';
 import { JourneyTracker } from './JourneyTracker';
 import { AutoWeapon } from './AutoWeapon';
 import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
+import { CrossRealmUpgradeSystem, CrossRealmUpgrade } from './CrossRealmUpgradeSystem';
+import { crossRealmUpgrades } from '../data/CrossRealmUpgrades';
 
 interface GameState {
   mana: number;
@@ -32,19 +33,14 @@ interface GameState {
   lastSaveTime: number;
   combatUpgrades: { [key: string]: number };
   weaponUpgrades?: { [key: string]: number };
+  crossRealmUpgrades?: { [key: string]: number };
   waveNumber: number;
   enemiesKilled: number;
+  fantasyJourneyDistance: number;
+  scifiJourneyDistance: number;
 }
 
-interface Building {
-  id: string;
-  name: string;
-  cost: number;
-  production: number;
-  costMultiplier: number;
-  description: string;
-  icon: string;
-}
+// ... keep existing code (Building interface and building data)
 
 const fantasyBuildings: Building[] = [
   { id: 'altar', name: 'Mana Altar', cost: 10, production: 1, costMultiplier: 1.15, description: 'Ancient stones that channel mystical energy', icon: '🔮' },
@@ -157,8 +153,11 @@ const GameEngine: React.FC = () => {
         lastSaveTime: parsedState.lastSaveTime || Date.now(),
         combatUpgrades: parsedState.combatUpgrades || {},
         weaponUpgrades: parsedState.weaponUpgrades || {},
+        crossRealmUpgrades: parsedState.crossRealmUpgrades || {},
         waveNumber: parsedState.waveNumber || 1,
         enemiesKilled: parsedState.enemiesKilled || 0,
+        fantasyJourneyDistance: parsedState.fantasyJourneyDistance || 0,
+        scifiJourneyDistance: parsedState.scifiJourneyDistance || 0,
       };
     }
     return {
@@ -174,8 +173,11 @@ const GameEngine: React.FC = () => {
       lastSaveTime: Date.now(),
       combatUpgrades: {},
       weaponUpgrades: {},
+      crossRealmUpgrades: {},
       waveNumber: 1,
       enemiesKilled: 0,
+      fantasyJourneyDistance: 0,
+      scifiJourneyDistance: 0,
     };
   });
 
@@ -189,13 +191,12 @@ const GameEngine: React.FC = () => {
   });
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
+  const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
   const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
-  const [playerDistance, setPlayerDistance] = useState(0);
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.6, z: 0 });
-  const [actualJourneyDistance, setActualJourneyDistance] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Stable references to prevent re-renders
@@ -206,6 +207,14 @@ const GameEngine: React.FC = () => {
 
   // Initialize buff system with stable dependencies
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
+
+  // Cross-realm upgrades with current levels
+  const crossRealmUpgradesWithLevels = useMemo(() => {
+    return crossRealmUpgrades.map(upgrade => ({
+      ...upgrade,
+      level: gameState.crossRealmUpgrades?.[upgrade.id] || 0
+    }));
+  }, [gameState.crossRealmUpgrades]);
 
   // Combat upgrades with current levels
   const combatUpgrades = useMemo(() => {
@@ -297,10 +306,13 @@ const GameEngine: React.FC = () => {
 
   // Handle journey distance updates (only forward progress)
   const handleJourneyUpdate = useCallback((distance: number) => {
-    setActualJourneyDistance(distance);
-  }, []);
+    setGameState(prev => ({
+      ...prev,
+      [currentRealm === 'fantasy' ? 'fantasyJourneyDistance' : 'scifiJourneyDistance']: distance
+    }));
+  }, [currentRealm]);
 
-  // Enhanced production calculation with stable dependencies
+  // Enhanced production calculation with cross-realm upgrades
   useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
@@ -316,6 +328,18 @@ const GameEngine: React.FC = () => {
       const count = stableScifiBuildings[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'scifi');
       energyRate += (count * building.production * multiplier) + flatBonus;
+    });
+
+    // Apply cross-realm upgrade bonuses
+    crossRealmUpgradesWithLevels.forEach(upgrade => {
+      if (upgrade.level > 0) {
+        if (upgrade.effect.manaPerSecond && upgrade.realm === 'fantasy') {
+          manaRate += upgrade.effect.manaPerSecond * upgrade.level;
+        }
+        if (upgrade.effect.energyPerSecond && upgrade.realm === 'scifi') {
+          energyRate += upgrade.effect.energyPerSecond * upgrade.level;
+        }
+      }
     });
 
     // Apply hybrid upgrade bonuses
@@ -344,7 +368,7 @@ const GameEngine: React.FC = () => {
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem]);
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels]);
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -443,6 +467,26 @@ const GameEngine: React.FC = () => {
     }
   }, [gameState.mana, weaponUpgrades]);
 
+  const purchaseCrossRealmUpgrade = useCallback((upgradeId: string) => {
+    const upgrade = crossRealmUpgradesWithLevels.find(u => u.id === upgradeId);
+    if (!upgrade) return;
+
+    const cost = Math.floor(upgrade.baseCost * Math.pow(1.6, upgrade.level));
+    const currency = currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits;
+    
+    if (currency >= cost && upgrade.level < upgrade.maxLevel) {
+      setGameState(prev => ({
+        ...prev,
+        mana: currentRealm === 'fantasy' ? prev.mana - cost : prev.mana,
+        energyCredits: currentRealm === 'scifi' ? prev.energyCredits - cost : prev.energyCredits,
+        crossRealmUpgrades: {
+          ...prev.crossRealmUpgrades,
+          [upgradeId]: (prev.crossRealmUpgrades?.[upgradeId] || 0) + 1
+        }
+      }));
+    }
+  }, [gameState.mana, gameState.energyCredits, currentRealm, crossRealmUpgradesWithLevels]);
+
   // Enhanced realm switching with proper visual feedback
   const switchRealm = useCallback((newRealm: 'fantasy' | 'scifi') => {
     if (newRealm === currentRealm || isTransitioning) return;
@@ -475,7 +519,10 @@ const GameEngine: React.FC = () => {
     setShowWeaponUpgrades(true);
   }, []);
 
-  // Enhanced tap resource generation with effect and +1 animation
+  const handleShowCrossRealmUpgrades = useCallback(() => {
+    setShowCrossRealmUpgrades(true);
+  }, []);
+
   const handleTapResource = useCallback(() => {
     setShowTapEffect(true);
     setGameState(prev => ({
@@ -586,6 +633,10 @@ const GameEngine: React.FC = () => {
   const canConverge = gameState.mana + gameState.energyCredits >= 1000;
   const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
 
+  const currentJourneyDistance = currentRealm === 'fantasy' 
+    ? gameState.fantasyJourneyDistance 
+    : gameState.scifiJourneyDistance;
+
   return (
     <div className={`h-[667px] w-full relative overflow-hidden bg-black ${playerTakingDamage ? 'animate-pulse bg-red-900/20' : ''}`}>
       {/* Enhanced background with better layering */}
@@ -600,7 +651,7 @@ const GameEngine: React.FC = () => {
         onJourneyUpdate={handleJourneyUpdate}
       />
 
-      {/* Clean TopHUD with weapon upgrade button */}
+      {/* Clean TopHUD with cross-realm upgrade button */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -678,6 +729,16 @@ const GameEngine: React.FC = () => {
           </Button>
         </div>
 
+        {/* Cross-Realm Upgrades Button */}
+        <div className="absolute top-20 left-4 z-30">
+          <Button 
+            onClick={handleShowCrossRealmUpgrades}
+            className="h-12 w-12 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
+          >
+            🏰
+          </Button>
+        </div>
+
         {/* Convergence Ready Button */}
         {canConverge && (
           <div className="absolute bottom-40 left-1/2 transform -translate-x-1/2 z-30">
@@ -691,13 +752,13 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Enhanced Bottom Action Bar with real journey progress */}
+      {/* Enhanced Bottom Action Bar with realm-specific journey progress */}
       <BottomActionBar
         currentRealm={currentRealm}
         onRealmChange={switchRealm}
         onTap={handleTapResource}
         isTransitioning={isTransitioning}
-        playerDistance={actualJourneyDistance}
+        playerDistance={currentJourneyDistance}
       />
 
       {/* Quick Help Modal */}
@@ -723,6 +784,20 @@ const GameEngine: React.FC = () => {
           mana={gameState.mana}
           onUpgrade={purchaseWeaponUpgrade}
           onClose={() => setShowWeaponUpgrades(false)}
+        />
+      )}
+
+      {/* Cross-Realm Upgrades Modal */}
+      {showCrossRealmUpgrades && (
+        <CrossRealmUpgradeSystem
+          upgrades={crossRealmUpgradesWithLevels}
+          currentRealm={currentRealm}
+          mana={gameState.mana}
+          energyCredits={gameState.energyCredits}
+          fantasyJourneyDistance={gameState.fantasyJourneyDistance}
+          scifiJourneyDistance={gameState.scifiJourneyDistance}
+          onUpgrade={purchaseCrossRealmUpgrade}
+          onClose={() => setShowCrossRealmUpgrades(false)}
         />
       )}
 
