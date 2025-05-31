@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -305,7 +304,7 @@ const GameEngine: React.FC = () => {
       />
 
       {/* Main Game Area with integrated skill tree */}
-      <div className="absolute inset-0 pt-16">
+      <div className="absolute inset-0 pt-16 pb-20">
         {/* Integrated Map and Skill Tree View */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -325,22 +324,9 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Enhanced Tap Button */}
-        <EnhancedTapButton
-          realm={currentRealm}
-          onTap={handleTapResource}
-        />
-
-        {/* Enhanced Bottom Action Bar */}
-        <BottomActionBar
-          currentRealm={currentRealm}
-          onRealmChange={switchRealm}
-          isTransitioning={isTransitioning}
-        />
-
         {/* Convergence Ready Button */}
         {canConverge && (
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-24 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
               className="h-11 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
@@ -352,6 +338,14 @@ const GameEngine: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Enhanced Bottom Action Bar with integrated tap button */}
+      <BottomActionBar
+        currentRealm={currentRealm}
+        onRealmChange={switchRealm}
+        onTap={handleTapResource}
+        isTransitioning={isTransitioning}
+      />
 
       {/* Quick Help Modal */}
       <QuickHelpModal

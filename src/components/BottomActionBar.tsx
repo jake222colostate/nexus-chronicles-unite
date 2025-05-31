@@ -1,16 +1,19 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { CircularTapButton } from './CircularTapButton';
 
 interface BottomActionBarProps {
   currentRealm: 'fantasy' | 'scifi';
   onRealmChange: (realm: 'fantasy' | 'scifi') => void;
+  onTap: () => void;
   isTransitioning?: boolean;
 }
 
 export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   currentRealm,
   onRealmChange,
+  onTap,
   isTransitioning = false
 }) => {
   const handleRealmSwitch = (realm: 'fantasy' | 'scifi') => {
@@ -21,43 +24,44 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
 
   return (
     <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-30">
-      <div className="flex items-center gap-3 bg-black/50 backdrop-blur-xl p-2 rounded-full border border-white/30 shadow-lg">
-        {/* Enhanced glassmorphism */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-full" />
-        
+      {/* Main button container */}
+      <div className="flex items-center justify-center gap-6 mb-3">
         {/* Fantasy Realm Button */}
         <Button
           onClick={() => handleRealmSwitch('fantasy')}
           disabled={isTransitioning}
-          className={`h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
+          className={`h-12 px-6 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm border-2 ${
             currentRealm === 'fantasy'
-              ? 'bg-purple-600/80 hover:bg-purple-700/80 shadow-md shadow-purple-500/20 scale-105 border border-purple-400/60'
-              : 'bg-transparent border border-purple-400/50 text-purple-300 hover:bg-purple-900/30 hover:border-purple-400'
+              ? 'bg-purple-600/80 hover:bg-purple-700/80 border-purple-400/70 text-purple-100 shadow-lg shadow-purple-500/25 scale-105'
+              : 'bg-black/40 border-purple-400/50 text-purple-300 hover:bg-purple-900/30 hover:border-purple-400/70'
           } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
         >
-          <span className="relative z-10 flex items-center gap-1.5">
+          <span className="relative z-10 flex items-center gap-2">
             🏰 Fantasy
           </span>
           {currentRealm === 'fantasy' && (
-            <div className="absolute inset-0 bg-purple-400/15 animate-pulse rounded-full" />
+            <div className="absolute inset-0 bg-purple-400/15 animate-pulse rounded-lg" />
           )}
         </Button>
+
+        {/* Circular Tap Button in Center */}
+        <CircularTapButton realm={currentRealm} onTap={onTap} />
 
         {/* Sci-Fi Realm Button */}
         <Button
           onClick={() => handleRealmSwitch('scifi')}
           disabled={isTransitioning}
-          className={`h-12 px-4 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
+          className={`h-12 px-6 rounded-lg transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm border-2 ${
             currentRealm === 'scifi'
-              ? 'bg-cyan-600/80 hover:bg-cyan-700/80 shadow-md shadow-cyan-500/20 scale-105 border border-cyan-400/60'
-              : 'bg-transparent border border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 hover:border-cyan-400'
+              ? 'bg-cyan-600/80 hover:bg-cyan-700/80 border-cyan-400/70 text-cyan-100 shadow-lg shadow-cyan-500/25 scale-105'
+              : 'bg-black/40 border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 hover:border-cyan-400/70'
           } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
         >
-          <span className="relative z-10 flex items-center gap-1.5">
+          <span className="relative z-10 flex items-center gap-2">
             🚀 Sci-Fi
           </span>
           {currentRealm === 'scifi' && (
-            <div className="absolute inset-0 bg-cyan-400/15 animate-pulse rounded-full" />
+            <div className="absolute inset-0 bg-cyan-400/15 animate-pulse rounded-lg" />
           )}
         </Button>
       </div>
