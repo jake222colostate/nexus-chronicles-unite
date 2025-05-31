@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
@@ -43,21 +42,25 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
   const pathTexture = useMemo(() => createPixelTexture('30'), [createPixelTexture]);
   const rockTexture = useMemo(() => createPixelTexture('0'), [createPixelTexture]);
 
-  // Generate stable random positions for trees using seeded random
+  // Generate stable random positions for trees using seeded random - spread out individually
   const treePositions = useMemo(() => {
     const positions = [];
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 20; i++) {
       // Use a simple seeded random function to ensure consistent positioning
       const seed = i * 12345;
       const random1 = ((seed * 9301 + 49297) % 233280) / 233280;
       const random2 = (((seed + 1) * 9301 + 49297) % 233280) / 233280;
       const random3 = (((seed + 2) * 9301 + 49297) % 233280) / 233280;
       
-      const x = (random1 - 0.5) * 35; // Spread across terrain width
-      const z = -10 - (random2 * 70); // Spread along path length
-      const scale = 0.8 + random3 * 0.4; // Vary tree sizes
+      // Spread trees across the entire terrain width and length individually
+      const x = (random1 - 0.5) * 50; // Spread across full terrain width (60 units)
+      const z = -5 - (random2 * 110); // Spread along the entire path length
+      const scale = 0.6 + random3 * 0.5; // Vary tree sizes
       
-      positions.push({ x, z, scale });
+      // Ensure trees aren't too close to the path (middle section)
+      const adjustedX = Math.abs(x) < 4 ? (x > 0 ? 8 : -8) : x;
+      
+      positions.push({ x: adjustedX, z, scale });
     }
     return positions;
   }, []);
@@ -146,7 +149,7 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         );
       })}
 
-      {/* Randomly scattered but stable trees */}
+      {/* Individually scattered trees across the landscape */}
       {treePositions.map((pos, i) => (
         <group key={`tree-${i}`} position={[pos.x, -1, pos.z]} scale={[pos.scale, pos.scale, pos.scale]}>
           {/* Tree trunk */}
