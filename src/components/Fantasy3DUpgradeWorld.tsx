@@ -290,20 +290,20 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             const scale = getUpgradeScale(upgrade.position, upgrade.scale);
             
             return (
-              <group key={upgrade.id} opacity={opacity}>
-                <GLBModel
-                  modelUrl={upgrade.modelUrl}
-                  name={upgrade.name}
-                  position={upgrade.position}
-                  scale={scale}
-                  onClick={() => handleUpgradeClick(upgrade)}
-                  isUnlocked={upgrade.unlocked}
-                  isPurchased={upgrade.unlocked}
-                  isWithinRange={isWithinRange(upgrade.position)}
-                  cost={upgrade.cost}
-                  canAfford={currentMana >= upgrade.cost}
-                />
-              </group>
+              <GLBModel
+                key={upgrade.id}
+                modelUrl={upgrade.modelUrl}
+                name={upgrade.name}
+                position={upgrade.position}
+                scale={scale}
+                onClick={() => handleUpgradeClick(upgrade)}
+                isUnlocked={upgrade.unlocked}
+                isPurchased={upgrade.unlocked}
+                isWithinRange={isWithinRange(upgrade.position)}
+                cost={upgrade.cost}
+                canAfford={currentMana >= upgrade.cost}
+                opacity={opacity}
+              />
             );
           })}
         </Suspense>
