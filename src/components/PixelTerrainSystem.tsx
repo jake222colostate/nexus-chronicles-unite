@@ -1,15 +1,16 @@
-
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
 interface PixelTerrainSystemProps {
   tier: number;
   opacity?: number;
+  excludeTrees?: boolean;
 }
 
 export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({ 
   tier, 
-  opacity = 1 
+  opacity = 1,
+  excludeTrees = false
 }) => {
   // Create natural-looking textures
   const createNaturalTexture = useMemo(() => {
@@ -126,8 +127,12 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
     return formations;
   }, []);
 
-  // Generate natural forest with realistic clustering
+  // Generate natural forest with realistic clustering - only if trees are not excluded
   const forestPositions = useMemo(() => {
+    if (excludeTrees) {
+      return []; // Return empty array if trees should be excluded
+    }
+    
     const positions = [];
     const minDistance = 8;
     const maxAttempts = 150;
@@ -217,7 +222,7 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
     }
     
     return positions;
-  }, []);
+  }, [excludeTrees]);
 
   return (
     <group>
@@ -300,8 +305,8 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         );
       })}
 
-      {/* Natural forest with diverse tree types */}
-      {forestPositions.map((pos, i) => (
+      {/* Natural forest with diverse tree types - only render if not excluding trees */}
+      {!excludeTrees && forestPositions.map((pos, i) => (
         <group key={`tree-${i}`} position={[pos.x, -1, pos.z]} scale={[pos.scale, pos.scale, pos.scale]}>
           {/* Tree trunk - varied colors */}
           <mesh position={[0, 1.8, 0]} castShadow>
