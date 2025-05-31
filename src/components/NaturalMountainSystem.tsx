@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
 
 interface NaturalMountainSystemProps {
   chunks: ChunkData[];
   chunkSize: number;
+  excludeTrees?: boolean;
 }
 
 const seededRandom = (seed: number) => {
@@ -14,7 +14,8 @@ const seededRandom = (seed: number) => {
 
 export const NaturalMountainSystem: React.FC<NaturalMountainSystemProps> = ({
   chunks,
-  chunkSize
+  chunkSize,
+  excludeTrees = false
 }) => {
   const generateMountainRidge = (chunk: ChunkData, side: 'left' | 'right') => {
     const mountains = [];
@@ -83,19 +84,21 @@ export const NaturalMountainSystem: React.FC<NaturalMountainSystemProps> = ({
         );
       }
       
-      // Add some scattered rocks for detail
-      for (let j = 0; j < 3; j++) {
-        const rockSeed = peakSeed + j * 31;
-        const rockX = x + (seededRandom(rockSeed) - 0.5) * width * 2;
-        const rockZ = z + (seededRandom(rockSeed + 1) - 0.5) * depth * 2;
-        const rockSize = 1 + seededRandom(rockSeed + 2) * 2;
-        
-        mountains.push(
-          <mesh key={`rock_${side}_${chunk.id}_${i}_${j}`} position={[rockX, rockSize / 2, rockZ]} receiveShadow>
-            <boxGeometry args={[rockSize, rockSize, rockSize]} />
-            <meshLambertMaterial color="#5A6575" />
-          </mesh>
-        );
+      // Add some scattered rocks for detail (skip if excluding trees to keep it cleaner)
+      if (!excludeTrees) {
+        for (let j = 0; j < 3; j++) {
+          const rockSeed = peakSeed + j * 31;
+          const rockX = x + (seededRandom(rockSeed) - 0.5) * width * 2;
+          const rockZ = z + (seededRandom(rockSeed + 1) - 0.5) * depth * 2;
+          const rockSize = 1 + seededRandom(rockSeed + 2) * 2;
+          
+          mountains.push(
+            <mesh key={`rock_${side}_${chunk.id}_${i}_${j}`} position={[rockX, rockSize / 2, rockZ]} receiveShadow>
+              <boxGeometry args={[rockSize, rockSize, rockSize]} />
+              <meshLambertMaterial color="#5A6575" />
+            </mesh>
+          );
+        }
       }
     }
     

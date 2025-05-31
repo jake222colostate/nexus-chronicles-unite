@@ -6,11 +6,13 @@ import { PixelTerrainSystem } from './PixelTerrainSystem';
 interface EnvironmentSystemProps {
   upgradeCount: number;
   onEnvironmentChange?: (tier: number) => void;
+  excludeTrees?: boolean;
 }
 
 export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
   upgradeCount,
-  onEnvironmentChange
+  onEnvironmentChange,
+  excludeTrees = false
 }) => {
   const [currentTier, setCurrentTier] = useState(1);
   const [transitionOpacity, setTransitionOpacity] = useState(1);
