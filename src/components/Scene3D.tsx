@@ -124,36 +124,40 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* Enhanced Environment System for Fantasy Realm */}
-          {realm === 'fantasy' && (
-            <ChunkSystem
-              playerPosition={playerPosition}
-              chunkSize={50}
-              renderDistance={200}
-            >
-              {(chunks) => (
-                <>
-                  {/* Green grass system like in the image */}
+          {/* Enhanced Environment System - ALWAYS render for fantasy realm */}
+          <ChunkSystem
+            playerPosition={playerPosition}
+            chunkSize={50}
+            renderDistance={200}
+          >
+            {(chunks) => (
+              <>
+                {/* Green grass system like in the image - render for fantasy */}
+                {realm === 'fantasy' && (
                   <EnhancedGrassSystem
                     chunks={chunks}
                     chunkSize={50}
                   />
-                  
-                  {/* GLB Mountains in the background */}
+                )}
+                
+                {/* GLB Mountains in the background - render for fantasy */}
+                {realm === 'fantasy' && (
                   <GLBMountainSystem
                     chunks={chunks}
                     chunkSize={50}
                   />
-                  
-                  {/* Tree system for the green trees */}
+                )}
+                
+                {/* Tree system for the green trees - render for fantasy */}
+                {realm === 'fantasy' && (
                   <TreeSystem
                     chunks={chunks}
                     chunkSize={50}
                   />
-                </>
-              )}
-            </ChunkSystem>
-          )}
+                )}
+              </>
+            )}
+          </ChunkSystem>
 
           {/* Memoized upgrade nodes */}
           {upgradeNodes}
