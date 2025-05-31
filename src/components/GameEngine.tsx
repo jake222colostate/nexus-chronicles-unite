@@ -291,7 +291,7 @@ const GameEngine: React.FC = () => {
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Enhanced TopHUD with proper spacing */}
+      {/* Enhanced TopHUD with unified resource display */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -305,7 +305,7 @@ const GameEngine: React.FC = () => {
 
       {/* Main Game Area with proper top/bottom margins */}
       <div className="absolute inset-0 pt-20 pb-20">
-        {/* Integrated Map and Skill Tree View */}
+        {/* Integrated Map and Skill Tree View - NO overlays or floating elements */}
         <MapSkillTreeView
           realm={currentRealm}
           buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
@@ -324,9 +324,18 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
+        {/* Clean Progress Bar - positioned above bottom bar */}
+        <div className="absolute bottom-20 left-0 right-0 z-25 px-4">
+          <div className="bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg border border-white/20 text-center">
+            <div className="text-xs text-green-400 font-medium">
+              Journey Progress: {gameState.purchasedUpgrades.length}/16 Upgrades | Environment: Tier 1
+            </div>
+          </div>
+        </div>
+
         {/* Convergence Ready Button with proper spacing */}
         {canConverge && (
-          <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-28 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
               className="h-11 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"

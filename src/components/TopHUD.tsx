@@ -40,7 +40,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   return (
     <div className="absolute top-0 left-0 right-0 z-40 iphone-safe-top">
       <div className="px-3 py-2">
-        {/* Shortened main stat bar */}
+        {/* Unified resource bar with mana inline */}
         <div 
           className="flex items-center bg-black/70 backdrop-blur-xl px-3 py-1.5 rounded-lg border border-white/20 relative"
           style={{
@@ -60,9 +60,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             <HelpCircle size={12} />
           </Button>
 
-          {/* Stats container with perfect vertical alignment */}
+          {/* Unified stats container with mana inline */}
           <div className="flex items-center gap-3 text-xs font-medium text-white relative z-10 flex-1 min-w-0">
-            {/* Mana */}
+            {/* Brain/Intelligence */}
             <div className="flex items-center gap-1 flex-shrink-0">
               <span className="text-xs">🧠</span>
               <span className="text-purple-300 font-semibold">{formatNumber(mana)}</span>
@@ -86,18 +86,19 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             
             <div className="w-px h-3 bg-white/20 flex-shrink-0"></div>
             
+            {/* Mana with rate inline using ✨ icon */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-xs">✨</span>
+              <span className="text-purple-300 font-semibold">{formatNumber(mana)} | +{formatRate(manaPerSecond)}/s</span>
+            </div>
+            
+            <div className="w-px h-3 bg-white/20 flex-shrink-0"></div>
+            
             {/* Progress */}
             <div className="flex items-center gap-1 flex-shrink-0">
               <span className="text-xs">🔄</span>
               <span className="text-orange-300 font-semibold">{Math.floor(convergenceProgress)}%</span>
             </div>
-          </div>
-        </div>
-
-        {/* Centered mana tracking info below main bar */}
-        <div className="flex justify-center mt-1">
-          <div className="text-white/90 text-xs font-medium">
-            {formatNumber(mana)} Mana | +{formatRate(manaPerSecond)}/sec
           </div>
         </div>
       </div>
