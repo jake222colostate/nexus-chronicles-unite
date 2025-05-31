@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
@@ -10,21 +11,21 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
   tier, 
   opacity = 1 
 }) => {
-  // Create pixel-style textures
-  const createPixelTexture = useMemo(() => {
-    return (color: string, size: number = 64) => {
+  // Create natural-looking textures
+  const createNaturalTexture = useMemo(() => {
+    return (baseColor: string, variations: string[], size: number = 128) => {
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
       const ctx = canvas.getContext('2d')!;
       
-      // Create pixelated pattern
-      const pixelSize = 4;
+      // Create organic, natural pattern
+      const pixelSize = 3;
       for (let x = 0; x < size; x += pixelSize) {
         for (let y = 0; y < size; y += pixelSize) {
-          const brightness = 0.8 + Math.random() * 0.4;
-          const pixelColor = `hsl(${color}, 60%, ${brightness * 50}%)`;
-          ctx.fillStyle = pixelColor;
+          const randomVariation = variations[Math.floor(Math.random() * variations.length)];
+          const brightness = 0.7 + Math.random() * 0.5;
+          ctx.fillStyle = `hsl(${randomVariation}, 45%, ${brightness * 35}%)`;
           ctx.fillRect(x, y, pixelSize, pixelSize);
         }
       }
@@ -38,47 +39,129 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
     };
   }, []);
 
-  const grassTexture = useMemo(() => createPixelTexture('120'), [createPixelTexture]);
-  const pathTexture = useMemo(() => createPixelTexture('30'), [createPixelTexture]);
-  const rockTexture = useMemo(() => createPixelTexture('0'), [createPixelTexture]);
+  const grassTexture = useMemo(() => createNaturalTexture('120', ['115', '120', '125', '110']), [createNaturalTexture]);
+  const pathTexture = useMemo(() => createNaturalTexture('30', ['25', '30', '35', '40']), [createNaturalTexture]);
+  const mountainTexture = useMemo(() => createNaturalTexture('210', ['200', '210', '220', '215']), [createNaturalTexture]);
 
-  // Generate truly random tree positions for natural forest appearance
-  const treePositions = useMemo(() => {
-    const positions = [];
-    const minDistance = 6; // Reduced minimum distance for denser forest
-    const maxAttempts = 100;
+  // Generate natural, organic mountain positions with varied shapes and heights
+  const mountainFormations = useMemo(() => {
+    const formations = [];
     
-    // Create clusters of trees on each side
-    for (let cluster = 0; cluster < 8; cluster++) {
-      const clusterSide = cluster % 2 === 0 ? -1 : 1; // Alternate sides
-      const clusterCenterZ = -10 - (cluster * 15) + (Math.random() - 0.5) * 20;
-      const clusterCenterX = clusterSide * (12 + Math.random() * 15);
+    // Left mountain range - organic, staggered heights
+    for (let i = 0; i < 25; i++) {
+      const baseZ = -20 - (i * 35);
+      const variance = (Math.random() - 0.5) * 20;
       
-      // Add 3-5 trees per cluster
-      const treesInCluster = 3 + Math.floor(Math.random() * 3);
+      // Primary mountain
+      const height = 18 + Math.sin(i * 0.3) * 8 + Math.random() * 6;
+      const width = 12 + Math.cos(i * 0.4) * 4 + Math.random() * 3;
+      const depth = 10 + Math.random() * 4;
+      
+      formations.push({
+        position: [-45 + Math.random() * 10, height / 2, baseZ + variance],
+        scale: [width, height, depth],
+        type: 'primary',
+        side: 'left'
+      });
+      
+      // Secondary smaller peaks
+      if (Math.random() > 0.4) {
+        formations.push({
+          position: [-38 + Math.random() * 8, (height * 0.6) / 2, baseZ + variance + 15],
+          scale: [width * 0.7, height * 0.6, depth * 0.8],
+          type: 'secondary',
+          side: 'left'
+        });
+      }
+      
+      // Background layer (further mountains)
+      if (Math.random() > 0.6) {
+        formations.push({
+          position: [-65 + Math.random() * 15, (height * 0.8) / 2, baseZ + variance - 20],
+          scale: [width * 1.2, height * 0.8, depth * 1.5],
+          type: 'background',
+          side: 'left'
+        });
+      }
+    }
+    
+    // Right mountain range - organic, staggered heights
+    for (let i = 0; i < 25; i++) {
+      const baseZ = -25 - (i * 35);
+      const variance = (Math.random() - 0.5) * 20;
+      
+      // Primary mountain
+      const height = 16 + Math.cos(i * 0.4) * 7 + Math.random() * 5;
+      const width = 11 + Math.sin(i * 0.3) * 3 + Math.random() * 3;
+      const depth = 9 + Math.random() * 4;
+      
+      formations.push({
+        position: [45 + Math.random() * 10, height / 2, baseZ + variance],
+        scale: [width, height, depth],
+        type: 'primary',
+        side: 'right'
+      });
+      
+      // Secondary smaller peaks
+      if (Math.random() > 0.5) {
+        formations.push({
+          position: [38 + Math.random() * 8, (height * 0.7) / 2, baseZ + variance + 12],
+          scale: [width * 0.6, height * 0.7, depth * 0.7],
+          type: 'secondary',
+          side: 'right'
+        });
+      }
+      
+      // Background layer
+      if (Math.random() > 0.7) {
+        formations.push({
+          position: [65 + Math.random() * 15, (height * 0.9) / 2, baseZ + variance - 25],
+          scale: [width * 1.3, height * 0.9, depth * 1.6],
+          type: 'background',
+          side: 'right'
+        });
+      }
+    }
+    
+    return formations;
+  }, []);
+
+  // Generate natural forest with realistic clustering
+  const forestPositions = useMemo(() => {
+    const positions = [];
+    const minDistance = 8;
+    const maxAttempts = 150;
+    
+    // Create multiple forest clusters on both sides
+    for (let cluster = 0; cluster < 12; cluster++) {
+      const clusterSide = cluster % 2 === 0 ? -1 : 1;
+      const clusterCenterZ = -15 - (cluster * 25) + (Math.random() - 0.5) * 30;
+      const clusterCenterX = clusterSide * (18 + Math.random() * 15);
+      
+      // Trees per cluster varies naturally
+      const treesInCluster = 4 + Math.floor(Math.random() * 5);
       
       for (let t = 0; t < treesInCluster; t++) {
         let attempts = 0;
         let validPosition = false;
-        let x, z, scale;
+        let x, z, scale, type;
         
         while (!validPosition && attempts < maxAttempts) {
-          // Random offset from cluster center
-          const offsetX = (Math.random() - 0.5) * 25;
-          const offsetZ = (Math.random() - 0.5) * 30;
+          const offsetX = (Math.random() - 0.5) * 35;
+          const offsetZ = (Math.random() - 0.5) * 40;
           
           x = clusterCenterX + offsetX;
           z = clusterCenterZ + offsetZ;
           
-          // Ensure trees stay on their side and away from path
+          // Ensure trees stay away from path
           if (clusterSide > 0) {
-            x = Math.max(6, x); // Right side, minimum 6 units from center
+            x = Math.max(12, x);
           } else {
-            x = Math.min(-6, x); // Left side, minimum 6 units from center
+            x = Math.min(-12, x);
           }
           
-          // Random scale for variety
-          scale = 0.6 + Math.random() * 0.8;
+          scale = 0.7 + Math.random() * 0.9;
+          type = Math.random() > 0.7 ? 'pine' : 'oak';
           
           // Check distance from existing trees
           validPosition = true;
@@ -96,24 +179,24 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         }
         
         if (validPosition) {
-          positions.push({ x, z, scale });
+          positions.push({ x, z, scale, type });
         }
       }
     }
     
-    // Add some scattered individual trees for extra randomness
-    for (let i = 0; i < 12; i++) {
+    // Add scattered individual trees for natural randomness
+    for (let i = 0; i < 20; i++) {
       let attempts = 0;
       let validPosition = false;
-      let x, z, scale;
+      let x, z, scale, type;
       
       while (!validPosition && attempts < maxAttempts) {
         const side = Math.random() > 0.5 ? 1 : -1;
-        x = side * (8 + Math.random() * 20); // 8-28 units from center
-        z = -5 - Math.random() * 100; // Anywhere along the path
-        scale = 0.5 + Math.random() * 0.7;
+        x = side * (15 + Math.random() * 25);
+        z = -10 - Math.random() * 200;
+        scale = 0.6 + Math.random() * 0.8;
+        type = Math.random() > 0.6 ? 'pine' : 'oak';
         
-        // Check distance from existing trees
         validPosition = true;
         for (const existing of positions) {
           const distance = Math.sqrt(
@@ -129,7 +212,7 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
       }
       
       if (validPosition) {
-        positions.push({ x, z, scale });
+        positions.push({ x, z, scale, type });
       }
     }
     
@@ -138,9 +221,9 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
 
   return (
     <group>
-      {/* Main grass terrain */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, -50]} receiveShadow>
-        <planeGeometry args={[60, 120]} />
+      {/* Extended main grass terrain */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, -400]} receiveShadow>
+        <planeGeometry args={[120, 850]} />
         <meshLambertMaterial 
           map={grassTexture}
           transparent 
@@ -148,9 +231,9 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         />
       </mesh>
 
-      {/* Pixel-style dirt path */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.1, -50]} receiveShadow>
-        <planeGeometry args={[3, 120]} />
+      {/* Extended stone path */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.1, -400]} receiveShadow>
+        <planeGeometry args={[4, 850]} />
         <meshLambertMaterial 
           map={pathTexture}
           transparent 
@@ -158,87 +241,102 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         />
       </mesh>
 
-      {/* Left mountain range */}
-      {Array.from({ length: 8 }, (_, i) => {
-        const z = -10 - (i * 12);
-        const height = 15 + Math.sin(i * 0.5) * 5;
-        const width = 8 + Math.cos(i * 0.3) * 3;
+      {/* Natural, organic mountain formations with realistic colors */}
+      {mountainFormations.map((mountain, i) => {
+        const colorIntensity = mountain.type === 'background' ? 0.4 : 
+                             mountain.type === 'secondary' ? 0.6 : 0.8;
         
         return (
-          <group key={`left-mountain-${i}`}>
-            {/* Main mountain */}
-            <mesh position={[-25, height / 2, z]} castShadow>
-              <boxGeometry args={[width, height, width]} />
+          <group key={`mountain-${i}`}>
+            {/* Main mountain body - natural slate/gray colors */}
+            <mesh 
+              position={mountain.position} 
+              scale={mountain.scale}
+              castShadow
+              receiveShadow
+            >
+              <boxGeometry args={[1, 1, 1]} />
               <meshLambertMaterial 
-                map={rockTexture}
+                map={mountainTexture}
+                color={mountain.type === 'background' ? '#A8A9B0' : 
+                       mountain.type === 'secondary' ? '#9495A0' : '#7B7C85'}
                 transparent 
-                opacity={opacity}
+                opacity={opacity * colorIntensity}
               />
             </mesh>
             
-            {/* Mountain peak */}
-            <mesh position={[-25, height + 3, z]} castShadow>
-              <coneGeometry args={[width * 0.7, 6, 8]} />
-              <meshLambertMaterial 
-                color="#E5E7EB"
-                transparent 
-                opacity={opacity}
-              />
-            </mesh>
+            {/* Mountain peak with snow cap for primary mountains */}
+            {mountain.type === 'primary' && (
+              <mesh 
+                position={[mountain.position[0], mountain.position[1] + mountain.scale[1] * 0.7, mountain.position[2]]}
+                scale={[mountain.scale[0] * 0.7, mountain.scale[1] * 0.4, mountain.scale[2] * 0.7]}
+                castShadow
+              >
+                <coneGeometry args={[0.5, 1, 8]} />
+                <meshLambertMaterial 
+                  color="#F8F9FA"
+                  transparent 
+                  opacity={opacity * colorIntensity}
+                />
+              </mesh>
+            )}
+            
+            {/* Subtle mountain ridges for depth */}
+            {mountain.type !== 'background' && Math.random() > 0.6 && (
+              <mesh 
+                position={[mountain.position[0] + (Math.random() - 0.5) * 3, mountain.position[1] * 0.8, mountain.position[2]]}
+                scale={[mountain.scale[0] * 0.3, mountain.scale[1] * 0.8, mountain.scale[2] * 0.4]}
+                castShadow
+              >
+                <boxGeometry args={[1, 1, 1]} />
+                <meshLambertMaterial 
+                  color="#6B6C75"
+                  transparent 
+                  opacity={opacity * colorIntensity * 0.8}
+                />
+              </mesh>
+            )}
           </group>
         );
       })}
 
-      {/* Right mountain range */}
-      {Array.from({ length: 8 }, (_, i) => {
-        const z = -15 - (i * 12);
-        const height = 12 + Math.cos(i * 0.7) * 4;
-        const width = 7 + Math.sin(i * 0.4) * 2;
-        
-        return (
-          <group key={`right-mountain-${i}`}>
-            {/* Main mountain */}
-            <mesh position={[25, height / 2, z]} castShadow>
-              <boxGeometry args={[width, height, width]} />
-              <meshLambertMaterial 
-                map={rockTexture}
-                transparent 
-                opacity={opacity}
-              />
-            </mesh>
-            
-            {/* Mountain peak */}
-            <mesh position={[25, height + 2, z]} castShadow>
-              <coneGeometry args={[width * 0.6, 4, 8]} />
-              <meshLambertMaterial 
-                color="#D1D5DB"
-                transparent 
-                opacity={opacity}
-              />
-            </mesh>
-          </group>
-        );
-      })}
-
-      {/* Naturally scattered trees creating diverse forest clusters */}
-      {treePositions.map((pos, i) => (
+      {/* Natural forest with diverse tree types */}
+      {forestPositions.map((pos, i) => (
         <group key={`tree-${i}`} position={[pos.x, -1, pos.z]} scale={[pos.scale, pos.scale, pos.scale]}>
-          {/* Tree trunk */}
-          <mesh position={[0, 1.5, 0]} castShadow>
-            <cylinderGeometry args={[0.2, 0.3, 3]} />
-            <meshLambertMaterial color="#8B4513" transparent opacity={opacity} />
+          {/* Tree trunk - varied colors */}
+          <mesh position={[0, 1.8, 0]} castShadow>
+            <cylinderGeometry args={[0.25, 0.35, 3.6]} />
+            <meshLambertMaterial 
+              color={pos.type === 'pine' ? "#6B4423" : "#8B4513"} 
+              transparent 
+              opacity={opacity} 
+            />
           </mesh>
           
-          {/* Tree foliage */}
-          <mesh position={[0, 3, 0]} castShadow>
-            <sphereGeometry args={[1.5, 8, 8]} />
-            <meshLambertMaterial color="#228B22" transparent opacity={opacity} />
-          </mesh>
+          {/* Tree foliage - different shapes for variety */}
+          {pos.type === 'pine' ? (
+            // Pine tree - conical shape
+            <mesh position={[0, 3.5, 0]} castShadow>
+              <coneGeometry args={[1.8, 4, 8]} />
+              <meshLambertMaterial color="#1B5E20" transparent opacity={opacity} />
+            </mesh>
+          ) : (
+            // Oak tree - spherical shape
+            <mesh position={[0, 3.2, 0]} castShadow>
+              <sphereGeometry args={[1.6, 12, 8]} />
+              <meshLambertMaterial color="#2E7D32" transparent opacity={opacity} />
+            </mesh>
+          )}
+          
+          {/* Additional foliage layer for oak trees */}
+          {pos.type === 'oak' && (
+            <mesh position={[0, 4.5, 0]} castShadow>
+              <sphereGeometry args={[1.0, 12, 8]} />
+              <meshLambertMaterial color="#388E3C" transparent opacity={opacity * 0.8} />
+            </mesh>
+          )}
         </group>
       ))}
-
-      {/* REMOVED: Scattered crystals - these were the blue diamonds */}
-      {/* REMOVED: Rock formations - these were the black squares */}
     </group>
   );
 };
