@@ -18,7 +18,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   chunks,
   chunkSize
 }) => {
-  const { scene, error } = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
+  const { scene } = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
   
   // Memoize mountain instances to prevent re-creation on every render
   const mountainInstances = useMemo(() => {
@@ -77,12 +77,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
     return instances;
   }, [chunks, chunkSize, scene]);
 
-  // Handle loading states and errors
-  if (error) {
-    console.error('Error loading mountain model:', error);
-    return null;
-  }
-
+  // Handle loading state
   if (!scene) {
     console.log('Loading fantasy mountain model...');
     return null;
