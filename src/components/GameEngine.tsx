@@ -40,7 +40,15 @@ interface GameState {
   scifiJourneyDistance: number;
 }
 
-// ... keep existing code (Building interface and building data)
+interface Building {
+  id: string;
+  name: string;
+  cost: number;
+  production: number;
+  costMultiplier: number;
+  description: string;
+  icon: string;
+}
 
 const fantasyBuildings: Building[] = [
   { id: 'altar', name: 'Mana Altar', cost: 10, production: 1, costMultiplier: 1.15, description: 'Ancient stones that channel mystical energy', icon: '🔮' },
@@ -260,6 +268,13 @@ const GameEngine: React.FC = () => {
     };
   }, [gameState.weaponUpgrades]);
 
+  // Current journey distance calculation
+  const currentJourneyDistance = useMemo(() => {
+    return currentRealm === 'fantasy' 
+      ? gameState.fantasyJourneyDistance 
+      : gameState.scifiJourneyDistance;
+  }, [currentRealm, gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance]);
+
   // Calculate offline progress on mount
   useEffect(() => {
     const now = Date.now();
@@ -415,8 +430,11 @@ const GameEngine: React.FC = () => {
         lastSaveTime: Date.now(),
         combatUpgrades: gameState.combatUpgrades,
         weaponUpgrades: gameState.weaponUpgrades,
+        crossRealmUpgrades: gameState.crossRealmUpgrades,
         waveNumber: gameState.waveNumber,
         enemiesKilled: gameState.enemiesKilled,
+        fantasyJourneyDistance: gameState.fantasyJourneyDistance,
+        scifiJourneyDistance: gameState.scifiJourneyDistance,
       });
       setShowConvergence(false);
     }
@@ -566,7 +584,7 @@ const GameEngine: React.FC = () => {
   }, []);
 
   const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
-    const manaReward = Math.floor(8 + (actualJourneyDistance / 10));
+    const manaReward = Math.floor(8 + (currentJourneyDistance / 10));
     
     setGameState(prev => ({ 
       ...prev, 
@@ -604,7 +622,7 @@ const GameEngine: React.FC = () => {
         waveNumber: prev.waveNumber + 1
       }));
     }
-  }, [gameState.enemiesKilled, actualJourneyDistance]);
+  }, [gameState.enemiesKilled, currentJourneyDistance]);
 
   const handleEnemyHit = useCallback((enemyId: string, damage: number) => {
     if ((window as any).damageEnemy) {
@@ -632,10 +650,6 @@ const GameEngine: React.FC = () => {
 
   const canConverge = gameState.mana + gameState.energyCredits >= 1000;
   const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
-
-  const currentJourneyDistance = currentRealm === 'fantasy' 
-    ? gameState.fantasyJourneyDistance 
-    : gameState.scifiJourneyDistance;
 
   return (
     <div className={`h-[667px] w-full relative overflow-hidden bg-black ${playerTakingDamage ? 'animate-pulse bg-red-900/20' : ''}`}>
@@ -691,7 +705,7 @@ const GameEngine: React.FC = () => {
           onEnemyDestroyed={handleEnemyDestroyed}
           spawnRate={Math.max(1000, 2500 - (gameState.waveNumber * 100))}
           maxEnemies={Math.min(10, 4 + Math.floor(gameState.waveNumber / 2))}
-          journeyDistance={actualJourneyDistance}
+          journeyDistance={currentJourneyDistance}
           onEnemiesUpdate={setEnemies}
         />
 
