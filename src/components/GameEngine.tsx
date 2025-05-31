@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -76,6 +75,7 @@ const GameEngine: React.FC = () => {
 
   const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi'>('fantasy');
   const [showConvergence, setShowConvergence] = useState(false);
+  const [showSkillTree, setShowSkillTree] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showTapEffect, setShowTapEffect] = useState(false);
   const [showQuickHelp, setShowQuickHelp] = useState(() => {
@@ -83,15 +83,16 @@ const GameEngine: React.FC = () => {
   });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Memoize building data to prevent unnecessary recalculations
-  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings, [JSON.stringify(gameState.fantasyBuildings)]);
-  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings, [JSON.stringify(gameState.scifiBuildings)]);
-  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades, [JSON.stringify(gameState.purchasedUpgrades)]);
+  // Stable references to prevent re-renders
+  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
+  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
+  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
+  const purchasedUpgradesCount = stablePurchasedUpgrades.length;
 
   // Initialize buff system with stable dependencies
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
 
-  // Calculate offline progress on mount only
+  // Calculate offline progress on mount
   useEffect(() => {
     const now = Date.now();
     const offlineTime = Math.min((now - gameState.lastSaveTime) / 1000, 3600);
@@ -107,9 +108,9 @@ const GameEngine: React.FC = () => {
         lastSaveTime: now,
       }));
     }
-  }, []); // Run only on mount
+  }, []); // Only run on mount
 
-  // Game loop - separate from production calculations
+  // Game loop
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setGameState(prev => {
@@ -128,10 +129,10 @@ const GameEngine: React.FC = () => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []); // Run only on mount
+  }, []); // Only run on mount
 
-  // Production calculation - properly memoized
-  const { manaRate, energyRate } = useMemo(() => {
+  // Enhanced production calculation with stable dependencies
+  useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
 
@@ -169,20 +170,12 @@ const GameEngine: React.FC = () => {
     const fantasyBonus = 1 + (energyRate * 0.01);
     const scifiBonus = 1 + (manaRate * 0.01);
 
-    return {
-      manaRate: manaRate * fantasyBonus * globalMultiplier,
-      energyRate: energyRate * scifiBonus * globalMultiplier
-    };
-  }, [stableFantasyBuildings, stableScifiBuildings, stablePurchasedUpgrades, buffSystem]);
-
-  // Update production rates only when calculated values change
-  useEffect(() => {
     setGameState(prev => ({
       ...prev,
-      manaPerSecond: manaRate,
-      energyPerSecond: energyRate,
+      manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
+      energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [manaRate, energyRate]);
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem]); // Use stable dependencies
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -257,6 +250,12 @@ const GameEngine: React.FC = () => {
     }, 200);
   }, [currentRealm, isTransitioning]);
 
+  const handleNexusClick = useCallback(() => {
+    if (canConverge) {
+      setShowConvergence(true);
+    }
+  }, []);
+
   const handleShowHelp = useCallback(() => {
     setShowQuickHelp(true);
   }, []);
@@ -275,6 +274,12 @@ const GameEngine: React.FC = () => {
     setShowTapEffect(false);
   }, []);
 
+  const formatNumber = useCallback((num: number): string => {
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+    return Math.floor(num).toString();
+  }, []);
+
   const canConverge = gameState.mana + gameState.energyCredits >= 1000;
   const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
 
@@ -286,22 +291,20 @@ const GameEngine: React.FC = () => {
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Clean TopHUD with unified stats and drop shadow */}
-      <div className="absolute top-0 left-0 right-0 z-40" style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))' }}>
-        <TopHUD
-          realm={currentRealm}
-          mana={gameState.mana}
-          energyCredits={gameState.energyCredits}
-          nexusShards={gameState.nexusShards}
-          convergenceProgress={convergenceProgress}
-          manaPerSecond={gameState.manaPerSecond}
-          energyPerSecond={gameState.energyPerSecond}
-          onHelpClick={handleShowHelp}
-        />
-      </div>
+      {/* Clean TopHUD with unified stats */}
+      <TopHUD
+        realm={currentRealm}
+        mana={gameState.mana}
+        energyCredits={gameState.energyCredits}
+        nexusShards={gameState.nexusShards}
+        convergenceProgress={convergenceProgress}
+        manaPerSecond={gameState.manaPerSecond}
+        energyPerSecond={gameState.energyPerSecond}
+        onHelpClick={handleShowHelp}
+      />
 
       {/* Main Game Area - clean and uncluttered */}
-      <div className="absolute inset-0 pt-20 pb-20">
+      <div className="absolute inset-0 pt-24 pb-24">
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -323,11 +326,10 @@ const GameEngine: React.FC = () => {
 
         {/* Convergence Ready Button - only when needed */}
         {canConverge && (
-          <div className="absolute bottom-28 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
-              className="h-12 px-8 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold"
-              style={{ filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25))' }}
+              className="h-12 px-8 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
             >
               <span className="flex items-center gap-2">
                 🔁 Convergence Ready!
@@ -337,15 +339,13 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Clean Bottom Action Bar with drop shadow */}
-      <div className="absolute bottom-0 left-0 right-0 z-30" style={{ filter: 'drop-shadow(0 -4px 6px rgba(0, 0, 0, 0.1))' }}>
-        <BottomActionBar
-          currentRealm={currentRealm}
-          onRealmChange={switchRealm}
-          onTap={handleTapResource}
-          isTransitioning={isTransitioning}
-        />
-      </div>
+      {/* Clean Bottom Action Bar */}
+      <BottomActionBar
+        currentRealm={currentRealm}
+        onRealmChange={switchRealm}
+        onTap={handleTapResource}
+        isTransitioning={isTransitioning}
+      />
 
       {/* Quick Help Modal */}
       <QuickHelpModal
