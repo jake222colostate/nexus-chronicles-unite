@@ -14,11 +14,10 @@ import { EnhancedGrassSystem } from './EnhancedGrassSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
-// Import fantasy components directly - NO lazy loading
-import { FantasyRoadSystem } from './FantasyRoadSystem';
-import { FantasyMountainSystem } from './FantasyMountainSystem';
-import { FantasyPortalSystem } from './FantasyPortalSystem';
-import { FantasySkybox } from './FantasySkybox';
+// Conditionally import fantasy components only when needed
+const FantasyEnvironmentSystem = React.lazy(() => 
+  import('./FantasyEnvironmentSystem').then(module => ({ default: module.FantasyEnvironmentSystem }))
+);
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -120,7 +119,13 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           {/* Skybox - ONLY render fantasy skybox when realm is fantasy */}
           {realm === 'fantasy' ? (
-            <FantasySkybox realm={realm} />
+            <Suspense fallback={<color attach="background" args={['#87CEEB']} />}>
+              <FantasyEnvironmentSystem
+                chunks={[]}
+                chunkSize={50}
+                realm={realm}
+              />
+            </Suspense>
           ) : (
             <color attach="background" args={['#87CEEB']} />
           )}
@@ -140,25 +145,13 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               if (realm === 'fantasy') {
                 console.log('Rendering FANTASY components only');
                 return (
-                  <>
-                    <FantasyRoadSystem
+                  <Suspense fallback={null}>
+                    <FantasyEnvironmentSystem
                       chunks={chunks}
                       chunkSize={50}
                       realm={realm}
                     />
-                    
-                    <FantasyMountainSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
-                    
-                    <FantasyPortalSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
-                  </>
+                  </Suspense>
                 );
               } else {
                 console.log('Rendering SCIFI components only');
