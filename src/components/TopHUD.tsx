@@ -61,9 +61,9 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   return (
     <div className="absolute top-0 left-0 right-0 z-40 iphone-safe-top">
       <div className="px-4 py-2">
-        {/* Reduced height HUD with improved spacing */}
+        {/* Compacted HUD with improved spacing - 10% smaller height */}
         <div 
-          className="flex items-center bg-black/70 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/20 relative min-h-[48px]"
+          className="flex items-center bg-black/70 backdrop-blur-xl px-4 py-1.5 rounded-xl border border-white/20 relative min-h-[43px]"
           style={{
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.08)',
             borderRadius: '12px'
@@ -82,7 +82,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             <HelpCircle size={18} />
           </Button>
 
-          {/* Enemy Count Display */}
+          {/* Enemy Count Display - only show when enemies present */}
           {enemyCount > 0 && (
             <div className="flex items-center gap-2 flex-shrink-0 mr-4">
               <span className="text-2xl leading-none">👁️</span>
@@ -90,7 +90,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             </div>
           )}
 
-          {/* Resource icons with 20% larger size and 12px spacing */}
+          {/* Resource icons with 20% larger size and consistent 12px spacing */}
           <div className="flex items-center justify-between text-xl font-bold text-white relative z-10 flex-1 min-w-0 gap-3">
             {/* 🧠 Brain */}
             <div className="flex items-center gap-3 flex-shrink-0">
@@ -127,14 +127,16 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           </div>
 
           {/* Combat Upgrades Button */}
-          <Button
-            onClick={onCombatUpgradesClick}
-            size="sm"
-            variant="ghost"
-            className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-red-500/20 hover:scale-105 text-red-400 hover:text-red-300 transition-all duration-200 flex-shrink-0 ml-3"
-          >
-            <Sword size={18} />
-          </Button>
+          {onCombatUpgradesClick && (
+            <Button
+              onClick={onCombatUpgradesClick}
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-red-500/20 hover:scale-105 text-red-400 hover:text-red-300 transition-all duration-200 flex-shrink-0 ml-3"
+            >
+              <Sword size={18} />
+            </Button>
+          )}
         </div>
       </div>
     </div>

@@ -35,14 +35,16 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
 
   return (
     <div className="absolute bottom-0 left-0 right-0 z-30 iphone-safe-bottom">
-      {/* Single line footer text */}
+      {/* Clean single line journey text with dark background */}
       <div className="text-center pb-3 px-4">
-        <span className="text-white/70 text-sm font-medium">
-          Journey: 6m | Realm: {currentRealm === 'fantasy' ? 'Fantasy' : 'Sci-Fi'}
-        </span>
+        <div className="inline-block bg-black/60 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
+          <span className="text-white/90 text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+            Journey: 6m | Realm: {currentRealm === 'fantasy' ? 'Fantasy' : 'Sci-Fi'}
+          </span>
+        </div>
       </div>
 
-      {/* Centered 3-button layout with responsive spacing */}
+      {/* Clean 3-button layout with equal spacing */}
       <div className="flex items-center justify-center px-4 pb-4 pt-2">
         <div className="flex items-center justify-center w-full max-w-lg">
           {/* Fantasy Realm Button */}
@@ -68,7 +70,7 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
             </Button>
           </div>
 
-          {/* Enhanced Oval Tap Button - center */}
+          {/* Enhanced Oval Tap Button - perfectly centered */}
           <div className="flex-1 flex justify-center px-4">
             <Button 
               id="tap-button"
@@ -85,9 +87,9 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
               {/* Enhanced glassmorphism inner glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-black/10 pointer-events-none rounded-full" />
               
-              <span className="relative z-10 text-3xl animate-pulse">✨</span>
+              <span className="relative z-10 text-3xl">✨</span>
               
-              {/* Enhanced pulse animation */}
+              {/* Subtle pulse animation */}
               <div className={`absolute inset-0 rounded-full animate-pulse opacity-30 ${
                 currentRealm === 'fantasy' 
                   ? 'bg-purple-400/40' 

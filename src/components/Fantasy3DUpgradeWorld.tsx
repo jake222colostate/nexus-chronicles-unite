@@ -1,3 +1,4 @@
+
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -121,13 +122,13 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             onPositionChange={handlePositionChange}
           />
 
-          {/* Enhanced Environment System */}
+          {/* Clean Environment System - no random effects */}
           <EnvironmentSystem 
             upgradeCount={maxUnlockedUpgrade + 1}
             onEnvironmentChange={(tier) => console.log(`Environment tier: ${tier}`)}
           />
 
-          {/* Enhanced Lighting */}
+          {/* Stable lighting - no flickering */}
           <ambientLight intensity={0.7} color="#E6E6FA" />
           <directionalLight
             position={[20, 30, 20]}
@@ -174,7 +175,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             )}
           </ChunkSystem>
 
-          {/* Dynamic lighting that follows player */}
+          {/* Stable player lighting */}
           <pointLight 
             position={[cameraPosition.x, 8, cameraPosition.z - 5]} 
             intensity={0.8}
@@ -190,7 +191,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             far={15} 
           />
 
-          {/* Enhanced Upgrade Pedestals */}
+          {/* Clean Upgrade Pedestals - no unwanted effects */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
             if (distance > 100) return null; // Performance culling
@@ -211,22 +212,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </Suspense>
       </Canvas>
 
-      {/* Enhanced Progress indicator */}
-      <div className="absolute bottom-2 left-4 right-4 pointer-events-none">
-        <div className="bg-black/50 backdrop-blur-sm rounded-full h-3 overflow-hidden relative">
-          <div className="text-white text-sm text-center mb-2 font-semibold">
-            Journey: {Math.floor(Math.abs(cameraPosition.z))}m | Upgrades: {maxUnlockedUpgrade + 1} | Realm: Fantasy
-          </div>
-          <div 
-            className="bg-gradient-to-r from-purple-500 via-pink-500 to-violet-600 h-full transition-all duration-500"
-            style={{ 
-              width: `${Math.min(100, (Math.abs(cameraPosition.z) / 1000) * 100)}%`
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Enhanced Insufficient Mana Warning */}
+      {/* Clean, stable insufficient mana warning */}
       {showInsufficientMana && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
           <div className="bg-red-600/95 text-white px-8 py-4 rounded-xl border-2 border-red-400 animate-bounce shadow-2xl">
@@ -235,7 +221,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       )}
 
-      {/* Enhanced Upgrade Modal */}
+      {/* Clean upgrade modal */}
       {selectedUpgrade && (
         <div 
           className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
