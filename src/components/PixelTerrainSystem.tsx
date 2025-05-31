@@ -127,41 +127,64 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         );
       })}
 
-      {/* Scattered trees and crystals */}
-      {Array.from({ length: 15 }, (_, i) => {
-        const x = (Math.random() - 0.5) * 40;
-        const z = -20 - (i * 6);
-        const isTree = Math.random() > 0.3;
+      {/* Organized trees along the path sides */}
+      {Array.from({ length: 20 }, (_, i) => {
+        const z = -10 - (i * 4);
+        const side = i % 2 === 0 ? -1 : 1; // Alternate sides
+        const x = side * (6 + Math.random() * 3); // 6-9 units from center
         
-        if (isTree) {
-          return (
-            <group key={`tree-${i}`} position={[x, -1, z]}>
-              {/* Tree trunk */}
-              <mesh position={[0, 1.5, 0]}>
-                <cylinderGeometry args={[0.3, 0.4, 3]} />
-                <meshLambertMaterial color="#8B4513" transparent opacity={opacity} />
-              </mesh>
-              
-              {/* Tree foliage */}
-              <mesh position={[0, 3.5, 0]}>
-                <sphereGeometry args={[2, 8, 8]} />
-                <meshLambertMaterial color="#228B22" transparent opacity={opacity} />
-              </mesh>
-            </group>
-          );
-        } else {
-          // Glowing crystal
-          return (
-            <mesh key={`crystal-${i}`} position={[x, 0, z]}>
-              <octahedronGeometry args={[1.5]} />
-              <meshBasicMaterial 
-                color={tier >= 3 ? '#8B5CF6' : '#06B6D4'}
-                transparent 
-                opacity={opacity * 0.8}
-              />
+        return (
+          <group key={`tree-${i}`} position={[x, -1, z]}>
+            {/* Tree trunk */}
+            <mesh position={[0, 1.5, 0]} castShadow>
+              <cylinderGeometry args={[0.2, 0.3, 3]} />
+              <meshLambertMaterial color="#8B4513" transparent opacity={opacity} />
             </mesh>
-          );
-        }
+            
+            {/* Tree foliage - more compact and consistent */}
+            <mesh position={[0, 3, 0]} castShadow>
+              <sphereGeometry args={[1.5, 8, 8]} />
+              <meshLambertMaterial color="#228B22" transparent opacity={opacity} />
+            </mesh>
+          </group>
+        );
+      })}
+
+      {/* Scattered crystals for magical atmosphere */}
+      {Array.from({ length: 8 }, (_, i) => {
+        const angle = (i / 8) * Math.PI * 2;
+        const radius = 12 + Math.random() * 8;
+        const x = Math.cos(angle) * radius;
+        const z = -30 - (i * 8) + Math.sin(angle) * 5;
+        
+        return (
+          <mesh key={`crystal-${i}`} position={[x, 0.5, z]} castShadow>
+            <octahedronGeometry args={[1]} />
+            <meshBasicMaterial 
+              color={tier >= 3 ? '#8B5CF6' : '#06B6D4'}
+              transparent 
+              opacity={opacity * 0.8}
+            />
+          </mesh>
+        );
+      })}
+
+      {/* Rock formations near mountains */}
+      {Array.from({ length: 6 }, (_, i) => {
+        const side = i % 2 === 0 ? -1 : 1;
+        const x = side * (15 + Math.random() * 5);
+        const z = -20 - (i * 10);
+        
+        return (
+          <mesh key={`rock-${i}`} position={[x, 0, z]} castShadow>
+            <boxGeometry args={[2, 1 + Math.random(), 2]} />
+            <meshLambertMaterial 
+              color="#696969"
+              transparent 
+              opacity={opacity}
+            />
+          </mesh>
+        );
       })}
     </group>
   );
