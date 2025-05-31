@@ -11,7 +11,8 @@ interface GLBTreeSystemProps {
   realm: 'fantasy' | 'scifi';
 }
 
-const TREE_MODEL_URL = 'https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_tree.glb';
+// Using a known working GLB file from a reliable source
+const TREE_MODEL_URL = 'https://threejs.org/examples/models/gltf/Tree/tree.gltf';
 
 // Simple seeded random number generator
 const seededRandom = (seed: number) => {
@@ -19,42 +20,74 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Individual tree component with proper GLB handling
-const GLBTree: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
+// Fallback tree component using basic geometry
+const FallbackTree: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
   position,
   scale,
   rotation
 }) => {
-  const { scene, error } = useGLTF(TREE_MODEL_URL);
-  
-  console.log('GLB Tree render - Scene:', scene, 'Error:', error, 'Position:', position);
-  
-  if (error) {
-    console.error('Failed to load tree model:', error);
-    return null;
-  }
-  
-  if (!scene) {
-    console.warn('Tree scene not loaded yet');
-    return null;
-  }
-
-  // Clone the scene to avoid sharing geometry between instances
-  const clonedScene = scene.clone();
-  
   return (
     <group
       position={position}
       scale={[scale, scale, scale]}
       rotation={[0, rotation, 0]}
     >
-      <primitive 
-        object={clonedScene} 
-        castShadow 
-        receiveShadow 
-      />
+      {/* Tree trunk */}
+      <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.1, 0.15, 1]} />
+        <meshLambertMaterial color="#8B4513" />
+      </mesh>
+      {/* Tree foliage */}
+      <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
+        <coneGeometry args={[0.8, 1.5, 8]} />
+        <meshLambertMaterial color="#228B22" />
+      </mesh>
+      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
+        <coneGeometry args={[0.6, 1.2, 8]} />
+        <meshLambertMaterial color="#32CD32" />
+      </mesh>
     </group>
   );
+};
+
+// Individual tree component with proper GLB handling and fallback
+const GLBTree: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
+  position,
+  scale,
+  rotation
+}) => {
+  const [useGLB, setUseGLB] = useState(true);
+  
+  try {
+    const { scene } = useGLTF(TREE_MODEL_URL);
+    
+    console.log('GLB Tree loaded successfully - Position:', position);
+    
+    if (!scene) {
+      console.warn('Tree scene not loaded, using fallback');
+      return <FallbackTree position={position} scale={scale} rotation={rotation} />;
+    }
+
+    // Clone the scene to avoid sharing geometry between instances
+    const clonedScene = scene.clone();
+    
+    return (
+      <group
+        position={position}
+        scale={[scale, scale, scale]}
+        rotation={[0, rotation, 0]}
+      >
+        <primitive 
+          object={clonedScene} 
+          castShadow 
+          receiveShadow 
+        />
+      </group>
+    );
+  } catch (error) {
+    console.error('Failed to load GLB tree model, using fallback:', error);
+    return <FallbackTree position={position} scale={scale} rotation={rotation} />;
+  }
 };
 
 export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
@@ -149,6 +182,10 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
   );
 };
 
-// Preload the model for better performance
-console.log('Preloading GLB tree model:', TREE_MODEL_URL);
-useGLTF.preload(TREE_MODEL_URL);
+// Preload the model for better performance, but handle errors gracefully
+console.log('Attempting to preload GLB tree model:', TREE_MODEL_URL);
+try {
+  useGLTF.preload(TREE_MODEL_URL);
+} catch (error) {
+  console.warn('Failed to preload GLB model, will use fallback trees:', error);
+}
