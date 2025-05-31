@@ -10,11 +10,11 @@ import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
-import { EnemySystem, Enemy } from './EnemySystem';
+import { GroundEnemySystem, GroundEnemy } from './GroundEnemySystem';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
-import { ProjectileSystem } from './ProjectileSystem';
 import { MuzzleFlash } from './MuzzleFlash';
 import { WaveCompleteMessage } from './WaveCompleteMessage';
+import { JourneyTracker } from './JourneyTracker';
 
 interface GameState {
   mana: number;
@@ -149,11 +149,13 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
-  const [enemies, setEnemies] = useState<Enemy[]>([]);
+  const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
   const [playerDistance, setPlayerDistance] = useState(0);
+  const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.6, z: 0 });
+  const [actualJourneyDistance, setActualJourneyDistance] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Stable references to prevent re-renders
@@ -173,17 +175,18 @@ const GameEngine: React.FC = () => {
     }));
   }, [gameState.combatUpgrades]);
 
-  // Combat stats
+  // Combat stats with improved damage calculation
   const combatStats = useMemo(() => {
     const manaBlasterLevel = gameState.combatUpgrades.manaBlaster || 0;
     const fireRateLevel = gameState.combatUpgrades.fireRate || 0;
+    const autoAimLevel = gameState.combatUpgrades.autoAim || 0;
     
     return {
-      damage: 1 + manaBlasterLevel,
-      fireRate: Math.max(500, 1000 - (fireRateLevel * 80)), // Faster fire rate
+      damage: 1 + manaBlasterLevel * 2, // More impactful damage scaling
+      fireRate: Math.max(500, 1000 - (fireRateLevel * 80)),
       explosionRadius: 2 + (gameState.combatUpgrades.explosionRadius || 0) * 2,
       accuracy: 1 + (gameState.combatUpgrades.accuracy || 0) * 0.2,
-      autoAimRange: 5 + (gameState.combatUpgrades.autoAim || 0) * 5
+      autoAimRange: autoAimLevel > 0 ? 5 + autoAimLevel * 3 : 0
     };
   }, [gameState.combatUpgrades]);
 
@@ -205,7 +208,7 @@ const GameEngine: React.FC = () => {
     }
   }, []); // Only run on mount
 
-  // Game loop with distance tracking
+  // Game loop with proper journey tracking
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setGameState(prev => {
@@ -219,15 +222,22 @@ const GameEngine: React.FC = () => {
         localStorage.setItem('celestialNexusGame', JSON.stringify(newState));
         return newState;
       });
-      
-      // Increment player distance over time
-      setPlayerDistance(prev => prev + 0.5);
     }, 100);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, []); // Only run on mount
+  }, []);
+
+  // Handle player position updates from 3D world
+  const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
+    setPlayerPosition(position);
+  }, []);
+
+  // Handle journey distance updates (only forward progress)
+  const handleJourneyUpdate = useCallback((distance: number) => {
+    setActualJourneyDistance(distance);
+  }, []);
 
   // Enhanced production calculation with stable dependencies
   useEffect(() => {
@@ -419,25 +429,25 @@ const GameEngine: React.FC = () => {
   }, []);
 
   // Combat event handlers
-  const handleEnemyReachPlayer = useCallback((enemy: Enemy) => {
+  const handleEnemyReachPlayer = useCallback((enemy: GroundEnemy) => {
     setPlayerTakingDamage(true);
-    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 5) }));
+    setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
     setTimeout(() => setPlayerTakingDamage(false), 500);
   }, []);
 
-  const handleEnemyDestroyed = useCallback((enemy: Enemy) => {
+  const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
     setGameState(prev => ({ 
       ...prev, 
-      mana: prev.mana + 10,
+      mana: prev.mana + 8,
       enemiesKilled: prev.enemiesKilled + 1
     }));
 
     // Check for wave complete
-    if ((gameState.enemiesKilled + 1) % 10 === 0) {
+    if ((gameState.enemiesKilled + 1) % 15 === 0) {
       setShowWaveComplete(true);
       setGameState(prev => ({ 
         ...prev, 
-        mana: prev.mana + 100,
+        mana: prev.mana + 150,
         waveNumber: prev.waveNumber + 1
       }));
     }
@@ -472,7 +482,13 @@ const GameEngine: React.FC = () => {
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Clean TopHUD with unified stats and combat button */}
+      {/* Journey Tracker - invisible component that tracks real movement */}
+      <JourneyTracker 
+        playerPosition={playerPosition}
+        onJourneyUpdate={handleJourneyUpdate}
+      />
+
+      {/* Clean TopHUD with proper number formatting */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -486,7 +502,7 @@ const GameEngine: React.FC = () => {
         enemyCount={enemies.length}
       />
 
-      {/* Main Game Area - clean and uncluttered */}
+      {/* Main Game Area */}
       <div className="absolute inset-0 pt-16 pb-40">
         {/* Main game view without overlays */}
         <MapSkillTreeView
@@ -502,26 +518,18 @@ const GameEngine: React.FC = () => {
           isTransitioning={isTransitioning}
           showTapEffect={showTapEffect}
           onTapEffectComplete={handleTapEffectComplete}
+          onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* Enemy System */}
-        <EnemySystem
+        {/* Ground-based Enemy System */}
+        <GroundEnemySystem
           realm={currentRealm}
           onEnemyReachPlayer={handleEnemyReachPlayer}
           onEnemyDestroyed={handleEnemyDestroyed}
-          spawnRate={Math.max(1000, 3000 - (gameState.waveNumber * 100))}
-          maxEnemies={Math.min(12, 3 + gameState.waveNumber)}
+          spawnRate={Math.max(1500, 3000 - (gameState.waveNumber * 150))}
+          maxEnemies={Math.min(8, 3 + Math.floor(gameState.waveNumber / 2))}
+          combatStats={combatStats}
         />
-
-        {/* Projectile System */}
-        {combatStats.damage > 1 && (
-          <ProjectileSystem
-            enemies={enemies}
-            combatUpgrades={combatStats}
-            onProjectileHit={() => {}}
-            onMuzzleFlash={handleMuzzleFlash}
-          />
-        )}
 
         {/* Muzzle Flash Effect */}
         <MuzzleFlash
@@ -539,28 +547,26 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Convergence Ready Button - only when needed */}
+        {/* Convergence Ready Button */}
         {canConverge && (
           <div className="absolute bottom-40 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
               className="h-12 px-8 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
             >
-              <span className="flex items-center gap-2">
-                🔁 Convergence Ready!
-              </span>
+              🔁 Convergence Ready!
             </Button>
           </div>
         )}
       </div>
 
-      {/* Enhanced Bottom Action Bar with journey tracking */}
+      {/* Enhanced Bottom Action Bar with real journey progress */}
       <BottomActionBar
         currentRealm={currentRealm}
         onRealmChange={switchRealm}
         onTap={handleTapResource}
         isTransitioning={isTransitioning}
-        playerDistance={playerDistance}
+        playerDistance={actualJourneyDistance}
       />
 
       {/* Quick Help Modal */}

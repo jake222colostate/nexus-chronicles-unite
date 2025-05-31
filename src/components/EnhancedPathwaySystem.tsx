@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
 
@@ -21,23 +20,33 @@ export const EnhancedPathwaySystem: React.FC<EnhancedPathwaySystemProps> = ({
     const tiles = [];
     const { worldX, worldZ, seed } = chunk;
     
-    // Generate clean cobblestone tiles along the path
-    const tilesPerChunk = Math.floor(chunkSize / 4); // One tile every 4 units
+    // Generate evenly spaced cobblestone tiles
+    const tilesPerChunk = Math.floor(chunkSize / 6); // One tile every 6 units for better spacing
     
     for (let i = 0; i < tilesPerChunk; i++) {
-      const tileSeed = seed + i * 17;
-      const z = worldZ - (i * 4);
+      const tileSeed = seed + i * 23;
+      const z = worldZ - (i * 6) - 3; // Evenly spaced with offset
       
-      // Add slight randomness to tile positioning
-      const xOffset = (seededRandom(tileSeed) - 0.5) * 0.6;
-      const rotation = seededRandom(tileSeed + 1) * Math.PI / 12; // Slight rotation
+      // Minimal randomness for natural look while keeping alignment
+      const xOffset = (seededRandom(tileSeed) - 0.5) * 0.8;
+      const rotation = seededRandom(tileSeed + 1) * Math.PI / 16;
       const scale = 0.95 + seededRandom(tileSeed + 2) * 0.1;
       
+      // Main cobblestone tile
       tiles.push(
-        <group key={`tile_${chunk.id}_${i}`} position={[xOffset, -0.45, z]} rotation={[0, rotation, 0]}>
+        <group key={`tile_${chunk.id}_${i}`} position={[xOffset, -0.48, z]} rotation={[0, rotation, 0]}>
           <mesh receiveShadow castShadow>
-            <boxGeometry args={[3 * scale, 0.15, 3 * scale]} />
+            <boxGeometry args={[4 * scale, 0.2, 4 * scale]} />
             <meshLambertMaterial color="#8B7355" />
+          </mesh>
+          {/* Small detail stones around main tile */}
+          <mesh position={[1.5 * scale, 0.05, 1.5 * scale]} receiveShadow>
+            <boxGeometry args={[0.8, 0.1, 0.8]} />
+            <meshLambertMaterial color="#6B5B55" />
+          </mesh>
+          <mesh position={[-1.3 * scale, 0.05, -1.3 * scale]} receiveShadow>
+            <boxGeometry args={[0.9, 0.1, 0.9]} />
+            <meshLambertMaterial color="#7B6355" />
           </mesh>
         </group>
       );
@@ -48,13 +57,13 @@ export const EnhancedPathwaySystem: React.FC<EnhancedPathwaySystemProps> = ({
 
   return (
     <group>
-      {/* Main stone path base - wider and more visible */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -1000]} receiveShadow>
-        <planeGeometry args={[10, 4000]} />
+      {/* Main stone path base - perfectly centered and wider */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.52, -1000]} receiveShadow>
+        <planeGeometry args={[12, 4000]} />
         <meshLambertMaterial color="#6B5B73" />
       </mesh>
       
-      {/* Clean cobblestone tiles */}
+      {/* Enhanced cobblestone tiles with better alignment */}
       {chunks.map(chunk => (
         <group key={`path_${chunk.id}`}>
           {generatePathTiles(chunk)}
