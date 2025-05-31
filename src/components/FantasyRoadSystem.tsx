@@ -17,7 +17,7 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
 }) => {
   const [hasError, setHasError] = useState(false);
   
-  // Early return if not fantasy realm
+  // STRICT: Return null immediately if not fantasy realm
   if (realm !== 'fantasy') {
     return null;
   }
@@ -35,6 +35,7 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
   
   // Memoize road tile instances
   const roadInstances = useMemo(() => {
+    // STRICT: Double-check realm before creating instances
     if (!scene || hasError || realm !== 'fantasy') return [];
     
     const instances = [];
@@ -59,6 +60,7 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
     return instances;
   }, [chunks, chunkSize, scene, hasError, realm]);
 
+  // STRICT: Final realm check before rendering
   if (!scene || hasError || realm !== 'fantasy') {
     return null;
   }
@@ -90,7 +92,7 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
 };
 
 export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
-  // Early return if not fantasy realm
+  // STRICT: Return null immediately if not fantasy realm
   if (props.realm !== 'fantasy') {
     return null;
   }
@@ -102,4 +104,4 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
   );
 };
 
-// Remove preloading - only load when component is actually used
+// NO preloading - only load when component is actually used

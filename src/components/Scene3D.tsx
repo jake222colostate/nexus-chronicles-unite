@@ -14,7 +14,7 @@ import { EnhancedGrassSystem } from './EnhancedGrassSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
-// Lazy load fantasy components only when needed
+// Lazy load fantasy components ONLY when explicitly needed
 const FantasyRoadSystem = React.lazy(() => import('./FantasyRoadSystem').then(module => ({ default: module.FantasyRoadSystem })));
 const FantasyMountainSystem = React.lazy(() => import('./FantasyMountainSystem').then(module => ({ default: module.FantasyMountainSystem })));
 const FantasyPortalSystem = React.lazy(() => import('./FantasyPortalSystem').then(module => ({ default: module.FantasyPortalSystem })));
@@ -116,7 +116,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Fantasy skybox or bright blue sky color */}
+          {/* Skybox - Only load fantasy skybox in fantasy realm */}
           {realm === 'fantasy' ? (
             <Suspense fallback={<color attach="background" args={['#87CEEB']} />}>
               <FantasySkybox realm={realm} />
@@ -128,7 +128,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* Enhanced Environment System */}
+          {/* Environment System - Strictly separated by realm */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
@@ -136,7 +136,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Fantasy Environment - Only load when in fantasy realm */}
+                {/* ONLY render fantasy environment when realm is explicitly 'fantasy' */}
                 {realm === 'fantasy' && (
                   <Suspense fallback={null}>
                     <FantasyRoadSystem
@@ -159,7 +159,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                   </Suspense>
                 )}
                 
-                {/* Sci-Fi Environment - Original Systems */}
+                {/* ONLY render sci-fi environment when realm is explicitly 'scifi' */}
                 {realm === 'scifi' && (
                   <>
                     <EnhancedGrassSystem
