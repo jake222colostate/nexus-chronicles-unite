@@ -98,15 +98,6 @@ export const TopHUD: React.FC<TopHUDProps> = ({
               <span className="text-orange-300 font-semibold text-[11px]">0</span>
             </div>
             
-            {/* 🌟 Mana with rate below - cleaner layout */}
-            <div className="flex flex-col items-end gap-0 flex-shrink-0">
-              <div className="flex items-center gap-0.5">
-                <span className="text-[10px]">🌟</span>
-                <span className="text-purple-300 font-semibold text-[11px]">{formatNumber(mana)}</span>
-              </div>
-              <span className="text-[9px] text-gray-400 leading-tight">+{formatRate(manaPerSecond)}/s</span>
-            </div>
-            
             {/* 🔄 Progress */}
             <div className="flex items-center gap-0.5 flex-shrink-0">
               <span className="text-[10px]">🔄</span>
