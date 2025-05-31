@@ -1,7 +1,7 @@
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
-import { Vector3, Fog } from 'three';
+import { Vector3 } from 'three';
 import { GLBModel } from './GLBModelLoader';
 import { FirstPersonController } from './FirstPersonController';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
@@ -184,18 +184,18 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             canMoveForward={canMoveForward}
           />
 
-          {/* Dynamic Environment System */}
+          {/* Simplified Environment System */}
           <EnvironmentSystem 
             upgradeCount={unlockedUpgradeCount}
             onEnvironmentChange={handleEnvironmentChange}
           />
 
-          {/* Enhanced fantasy lighting setup unified with environment */}
-          <ambientLight intensity={0.3 + (currentEnvironmentTier * 0.1)} color="#1a1a2e" />
+          {/* Bright lighting setup for visibility */}
+          <ambientLight intensity={0.8} color="#ffffff" />
           <directionalLight
-            position={[8, 15, 8]}
-            intensity={0.7 + (currentEnvironmentTier * 0.1)}
-            color="#e6e6fa"
+            position={[10, 20, 10]}
+            intensity={1.2}
+            color="#ffffff"
             castShadow
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
@@ -206,52 +206,53 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             shadow-camera-bottom={-30}
           />
           
-          {/* Progressive lighting along the path - intensity based on environment tier with new tier 3 */}
-          {Array.from({ length: 8 }, (_, i) => {
-            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9', '#f0abfc']; // Added tier 3 color
-            return (
-              <pointLight 
-                key={i}
-                position={[(i % 2 === 0 ? -6 : 6), 8, -12 - (i * 12)]} 
-                intensity={0.6 + (currentEnvironmentTier * 0.15)} // Slightly reduced increment for 4 tiers
-                color={tierColors[currentEnvironmentTier]} 
-                distance={25} 
-              />
-            );
-          })}
+          {/* Additional bright fill light */}
+          <directionalLight
+            position={[-10, 15, 5]}
+            intensity={0.6}
+            color="#ffffff"
+          />
 
-          <Environment preset="dawn" />
+          {/* Point lights for path illumination */}
+          {Array.from({ length: 8 }, (_, i) => (
+            <pointLight 
+              key={i}
+              position={[(i % 2 === 0 ? -6 : 6), 8, -12 - (i * 12)]} 
+              intensity={0.8}
+              color="#ffffff" 
+              distance={25} 
+            />
+          ))}
 
-          {/* Mystical ground plane */}
+          <Environment preset="sunset" />
+
+          {/* Simple ground plane with green grass color */}
           <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -50]} receiveShadow>
             <planeGeometry args={[40, 120]} />
-            <meshLambertMaterial color="#1a1a2e" />
+            <meshLambertMaterial color="#22c55e" />
           </mesh>
 
-          {/* Mystical path markers - style based on environment tier with new tier 3 */}
-          {Array.from({ length: 20 }, (_, i) => {
-            const tierColors = ['#8b5cf6', '#c084fc', '#e879f9', '#f0abfc']; // Added tier 3 color
-            return (
-              <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
-                <circleGeometry args={[0.4]} />
-                <meshBasicMaterial 
-                  color={tierColors[currentEnvironmentTier]} 
-                  transparent 
-                  opacity={0.4 + (currentEnvironmentTier * 0.1)} 
-                />
-              </mesh>
-            );
-          })}
+          {/* Simple path markers */}
+          {Array.from({ length: 20 }, (_, i) => (
+            <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.4]} />
+              <meshBasicMaterial 
+                color="#fbbf24" 
+                transparent 
+                opacity={0.6} 
+              />
+            </mesh>
+          ))}
 
           <ContactShadows 
             position={[0, -0.4, -50]} 
-            opacity={0.4 + (currentEnvironmentTier * 0.1)} 
+            opacity={0.3} 
             scale={40} 
             blur={2.5} 
             far={10} 
           />
 
-          {/* Load GLB upgrade models with working URLs only */}
+          {/* Load GLB upgrade models */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
             if (distance > 40) return null;
@@ -270,23 +271,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
                 cost={upgrade.cost}
                 canAfford={currentMana >= upgrade.cost}
               />
-            );
-          })}
-
-          {/* Enhanced atmospheric particles */}
-          {Array.from({ length: 40 }, (_, i) => {
-            const x = (Math.random() - 0.5) * 35;
-            const y = Math.random() * 15 + 2;
-            const z = Math.random() * -100 - 5;
-            return (
-              <mesh key={i} position={[x, y, z]}>
-                <sphereGeometry args={[0.03]} />
-                <meshBasicMaterial 
-                  color="#c084fc" 
-                  transparent 
-                  opacity={Math.random() * 0.5 + 0.3} 
-                />
-              </mesh>
             );
           })}
         </Suspense>
