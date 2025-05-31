@@ -183,6 +183,12 @@
     }
   }
 
+  @keyframes button-tap {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.95); }
+    100% { transform: scale(1); }
+  }
+
   .animate-scale-in {
     animation: scale-in 0.3s ease-out;
   }
@@ -197,6 +203,10 @@
 
   .animate-resource-flow {
     animation: resource-flow 2s ease-out infinite;
+  }
+
+  .animate-button-tap {
+    animation: button-tap 0.15s ease-out;
   }
 
   .bg-gradient-radial {
@@ -216,14 +226,29 @@
   }
 
   .iphone-safe-top {
-    padding-top: max(12px, env(safe-area-inset-top));
+    padding-top: max(16px, env(safe-area-inset-top));
   }
   
   .iphone-safe-bottom {
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 
   .border-3 {
     border-width: 3px;
+  }
+
+  /* Enhanced button hover effects */
+  .button-hover-enhance {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .button-hover-enhance:hover {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+
+  .button-hover-enhance:active {
+    transform: scale(0.95);
+    transition-duration: 0.1s;
   }
 }

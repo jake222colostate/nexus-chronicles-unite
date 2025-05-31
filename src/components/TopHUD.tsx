@@ -43,10 +43,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
   return (
     <div className="absolute top-0 left-0 right-0 z-40 iphone-safe-top">
-      <div className="px-3 py-1">
-        {/* Compact unified stats bar - reduced height */}
+      <div className="px-3 py-2">
+        {/* Enhanced unified stats bar with better spacing and larger icons */}
         <div 
-          className="flex items-center bg-black/70 backdrop-blur-xl px-2.5 py-1 rounded-lg border border-white/20 relative"
+          className="flex items-center bg-black/70 backdrop-blur-xl px-3 py-2 rounded-lg border border-white/20 relative min-h-[48px]"
           style={{
             boxShadow: '0 3px 8px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 255, 255, 0.1)'
           }}
@@ -54,55 +54,55 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           {/* Enhanced glassmorphism effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-lg" />
           
-          {/* Help Button - compact */}
+          {/* Help Button - enhanced with hover animation */}
           <Button
             onClick={onHelpClick}
             size="sm"
             variant="ghost"
-            className="h-4 w-4 p-0 rounded-md bg-transparent hover:bg-white/10 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-2"
+            className="h-6 w-6 p-0 rounded-md bg-transparent hover:bg-white/20 hover:scale-110 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-3"
           >
-            <HelpCircle size={8} />
+            <HelpCircle size={12} />
           </Button>
 
-          {/* Evenly spaced stats layout */}
+          {/* Evenly spaced stats layout with larger icons and better vertical centering */}
           <div className="flex items-center justify-between text-xs font-medium text-white relative z-10 flex-1 min-w-0">
-            {/* 🧠 Brain */}
-            <div className="flex items-center gap-0.5 flex-shrink-0">
-              <span className="text-[10px]">🧠</span>
-              <span className="text-purple-300 font-semibold text-[10px]">{formatNumber(mana)}</span>
+            {/* 🧠 Brain - increased icon size */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-sm leading-none">🧠</span>
+              <span className="text-purple-300 font-semibold text-xs">{formatNumber(mana)}</span>
             </div>
             
-            {/* ⚡ Energy */}
-            <div className="flex items-center gap-0.5 flex-shrink-0">
-              <span className="text-[10px]">⚡</span>
-              <span className="text-cyan-300 font-semibold text-[10px]">{formatNumber(energyCredits)}</span>
+            {/* ⚡ Energy - increased icon size */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-sm leading-none">⚡</span>
+              <span className="text-cyan-300 font-semibold text-xs">{formatNumber(energyCredits)}</span>
             </div>
             
-            {/* 💎 Crystals */}
-            <div className="flex items-center gap-0.5 flex-shrink-0">
-              <span className="text-[10px]">💎</span>
-              <span className="text-yellow-300 font-semibold text-[10px]">{formatNumber(nexusShards)}</span>
+            {/* 💎 Crystals - increased icon size */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-sm leading-none">💎</span>
+              <span className="text-yellow-300 font-semibold text-xs">{formatNumber(nexusShards)}</span>
             </div>
             
-            {/* 🧱 Stone */}
-            <div className="flex items-center gap-0.5 flex-shrink-0">
-              <span className="text-[10px]">🧱</span>
-              <span className="text-orange-300 font-semibold text-[10px]">0</span>
+            {/* 🧱 Stone - increased icon size */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-sm leading-none">🧱</span>
+              <span className="text-orange-300 font-semibold text-xs">0</span>
             </div>
             
-            {/* ✨ Mana with rate below */}
-            <div className="flex flex-col items-end gap-0 flex-shrink-0">
-              <div className="flex items-center gap-0.5">
-                <span className="text-[10px]">✨</span>
-                <span className="text-purple-300 font-semibold text-[10px]">{formatNumber(mana)}</span>
+            {/* ✨ Mana with rate below - increased icon size and better alignment */}
+            <div className="flex flex-col items-end gap-0 flex-shrink-0 min-w-[60px]">
+              <div className="flex items-center gap-1">
+                <span className="text-sm leading-none">✨</span>
+                <span className="text-purple-300 font-semibold text-xs">{formatNumber(mana)}</span>
               </div>
-              <span className="text-[8px] text-gray-400 leading-tight">+{formatRate(manaPerSecond)}/s</span>
+              <span className="text-[10px] text-gray-400 leading-tight">+{formatRate(manaPerSecond)}/s</span>
             </div>
             
-            {/* 🔄 Progress */}
-            <div className="flex items-center gap-0.5 flex-shrink-0">
-              <span className="text-[10px]">🔄</span>
-              <span className="text-orange-300 font-semibold text-[10px]">{Math.floor(convergenceProgress)}%</span>
+            {/* 🔄 Progress - increased icon size */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <span className="text-sm leading-none">🔄</span>
+              <span className="text-orange-300 font-semibold text-xs">{Math.floor(convergenceProgress)}%</span>
             </div>
           </div>
         </div>
