@@ -1,5 +1,5 @@
 
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
@@ -19,18 +19,17 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Simplified tree loading component
-const TreeModel: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
+// Safe tree component with proper error handling
+const FantasyTree: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
   position,
   scale,
   rotation
 }) => {
-  const [loadError, setLoadError] = useState(false);
-  
   try {
     const { scene } = useGLTF(TREE_MODEL_URL);
     
-    if (!scene || loadError) {
+    if (!scene) {
+      console.warn('GLB tree model: Scene not available');
       return null;
     }
 
@@ -45,9 +44,6 @@ const TreeModel: React.FC<{ position: [number, number, number]; scale: number; r
     );
   } catch (error) {
     console.warn('Failed to load GLB tree model:', error);
-    if (!loadError) {
-      setLoadError(true);
-    }
     return null;
   }
 };
@@ -58,24 +54,14 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
   realm
 }) => {
   const groupRef = useRef();
-  const [systemEnabled, setSystemEnabled] = useState(false);
 
-  // Only enable for fantasy realm
-  useEffect(() => {
-    if (realm === 'fantasy') {
-      setSystemEnabled(true);
-      console.log('GLB tree system: Enabled for fantasy realm');
-    } else {
-      setSystemEnabled(false);
-    }
-  }, [realm]);
+  // Only render for fantasy realm
+  if (realm !== 'fantasy') {
+    return null;
+  }
 
   // Generate tree positions for each chunk
   const treePositions = useMemo(() => {
-    if (!systemEnabled) {
-      return [];
-    }
-
     const positions = [];
     const minDistance = 8;
     const maxAttempts = 50;
@@ -125,26 +111,23 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
     });
     
     return positions;
-  }, [chunks, chunkSize, systemEnabled]);
-
-  // Don't render if not fantasy realm
-  if (!systemEnabled) {
-    return null;
-  }
+  }, [chunks, chunkSize]);
 
   return (
     <group ref={groupRef}>
-      {treePositions.map((pos, index) => (
-        <TreeModel
-          key={`glb-tree-${pos.chunkId}-${index}`}
-          position={[pos.x, -1, pos.z]}
-          scale={pos.scale}
-          rotation={pos.rotation}
-        />
-      ))}
+      <Suspense fallback={null}>
+        {treePositions.map((pos, index) => (
+          <FantasyTree
+            key={`glb-tree-${pos.chunkId}-${index}`}
+            position={[pos.x, -1, pos.z]}
+            scale={pos.scale}
+            rotation={pos.rotation}
+          />
+        ))}
+      </Suspense>
     </group>
   );
 };
 
-// Preload the model
+// Preload the model for better performance
 useGLTF.preload(TREE_MODEL_URL);
