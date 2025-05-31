@@ -1,4 +1,3 @@
-
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -13,6 +12,10 @@ import { TreeSystem } from './TreeSystem';
 import { EnhancedGrassSystem } from './EnhancedGrassSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
+import { FantasyRoadSystem } from './FantasyRoadSystem';
+import { FantasyMountainSystem } from './FantasyMountainSystem';
+import { FantasyPortalSystem } from './FantasyPortalSystem';
+import { FantasySkybox } from './FantasySkybox';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -110,16 +113,12 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Enhanced lighting for the colorful environment */}
-          <ambientLight intensity={0.8} />
-          <directionalLight
-            position={[10, 10, 5]}
-            intensity={1.0}
-            castShadow={false}
-          />
-
-          {/* Bright blue sky color matching the image */}
-          <color attach="background" args={['#87CEEB']} />
+          {/* Fantasy skybox or bright blue sky color */}
+          {realm === 'fantasy' ? (
+            <FantasySkybox />
+          ) : (
+            <color attach="background" args={['#87CEEB']} />
+          )}
 
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
@@ -132,24 +131,40 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Green grass system like in the image - render for fantasy */}
+                {/* Fantasy road system - replaces grass system */}
                 {realm === 'fantasy' && (
+                  <FantasyRoadSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                  />
+                )}
+                
+                {/* Fantasy Mountains - replaces GLB mountain system */}
+                {realm === 'fantasy' && (
+                  <FantasyMountainSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                  />
+                )}
+                
+                {/* Fantasy Portals - checkpoint system */}
+                {realm === 'fantasy' && (
+                  <FantasyPortalSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                  />
+                )}
+                
+                {/* Keep existing grass system for sci-fi or fallback */}
+                {realm === 'scifi' && (
                   <EnhancedGrassSystem
                     chunks={chunks}
                     chunkSize={50}
                   />
                 )}
                 
-                {/* GLB Mountains in the background - render for fantasy */}
-                {realm === 'fantasy' && (
-                  <GLBMountainSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                  />
-                )}
-                
-                {/* Tree system for the green trees - render for fantasy */}
-                {realm === 'fantasy' && (
+                {/* Keep existing tree system for sci-fi or fallback */}
+                {realm === 'scifi' && (
                   <TreeSystem
                     chunks={chunks}
                     chunkSize={50}
