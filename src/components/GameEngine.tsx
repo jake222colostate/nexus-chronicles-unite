@@ -84,11 +84,10 @@ const GameEngine: React.FC = () => {
   });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Stable references to prevent re-renders
-  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
-  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
-  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
-  const purchasedUpgradesCount = stablePurchasedUpgrades.length;
+  // Create stable references to prevent infinite re-renders
+  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [JSON.stringify(gameState.fantasyBuildings)]);
+  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [JSON.stringify(gameState.scifiBuildings)]);
+  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [JSON.stringify(gameState.purchasedUpgrades)]);
 
   // Initialize buff system with stable dependencies
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
@@ -132,7 +131,7 @@ const GameEngine: React.FC = () => {
     };
   }, []); // Only run on mount
 
-  // Enhanced production calculation with stable dependencies
+  // Enhanced production calculation with fixed dependencies
   useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
@@ -176,7 +175,7 @@ const GameEngine: React.FC = () => {
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem]); // Use stable dependencies
+  }, [stableFantasyBuildings, stableScifiBuildings, stablePurchasedUpgrades]); // Fixed stable dependencies
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -292,20 +291,22 @@ const GameEngine: React.FC = () => {
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Enhanced TopHUD */}
-      <TopHUD
-        realm={currentRealm}
-        mana={gameState.mana}
-        energyCredits={gameState.energyCredits}
-        nexusShards={gameState.nexusShards}
-        convergenceProgress={convergenceProgress}
-        manaPerSecond={gameState.manaPerSecond}
-        energyPerSecond={gameState.energyPerSecond}
-        onHelpClick={handleShowHelp}
-      />
+      {/* Enhanced TopHUD with fixed positioning */}
+      <div className="absolute top-0 left-0 right-0 z-40">
+        <TopHUD
+          realm={currentRealm}
+          mana={gameState.mana}
+          energyCredits={gameState.energyCredits}
+          nexusShards={gameState.nexusShards}
+          convergenceProgress={convergenceProgress}
+          manaPerSecond={gameState.manaPerSecond}
+          energyPerSecond={gameState.energyPerSecond}
+          onHelpClick={handleShowHelp}
+        />
+      </div>
 
-      {/* Main Game Area with integrated skill tree */}
-      <div className="absolute inset-0 pt-16">
+      {/* Main Game Area with proper spacing */}
+      <div className="absolute inset-0 pt-20 pb-32">
         {/* Integrated Map and Skill Tree View */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -324,23 +325,13 @@ const GameEngine: React.FC = () => {
 
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
+      </div>
 
-        {/* Enhanced Tap Button */}
-        <EnhancedTapButton
-          realm={currentRealm}
-          onTap={handleTapResource}
-        />
-
-        {/* Enhanced Bottom Action Bar */}
-        <BottomActionBar
-          currentRealm={currentRealm}
-          onRealmChange={switchRealm}
-          isTransitioning={isTransitioning}
-        />
-
-        {/* Convergence Ready Button */}
-        {canConverge && (
-          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
+      {/* Fixed Bottom UI Layout with proper spacing */}
+      <div className="absolute bottom-0 left-0 right-0 z-30 p-4">
+        <div className="flex flex-col gap-4 items-center">
+          {/* Convergence Ready Button */}
+          {canConverge && (
             <Button 
               onClick={() => setShowConvergence(true)}
               className="h-11 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
@@ -349,8 +340,21 @@ const GameEngine: React.FC = () => {
                 🔁 Convergence Ready!
               </span>
             </Button>
-          </div>
-        )}
+          )}
+
+          {/* Enhanced Tap Button - Centered */}
+          <EnhancedTapButton
+            realm={currentRealm}
+            onTap={handleTapResource}
+          />
+
+          {/* Enhanced Bottom Action Bar */}
+          <BottomActionBar
+            currentRealm={currentRealm}
+            onRealmChange={switchRealm}
+            isTransitioning={isTransitioning}
+          />
+        </div>
       </div>
 
       {/* Quick Help Modal */}
