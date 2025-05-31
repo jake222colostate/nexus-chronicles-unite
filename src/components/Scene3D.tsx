@@ -9,6 +9,8 @@ import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
 import { GLBMountainSystem } from './GLBMountainSystem';
+import { TreeSystem } from './TreeSystem';
+import { EnhancedGrassSystem } from './EnhancedGrassSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
@@ -108,18 +110,21 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Optimized lighting */}
-          <ambientLight intensity={0.6} />
+          {/* Enhanced lighting for the colorful environment */}
+          <ambientLight intensity={0.8} />
           <directionalLight
             position={[10, 10, 5]}
-            intensity={0.8}
+            intensity={1.0}
             castShadow={false}
           />
+
+          {/* Bright blue sky color matching the image */}
+          <color attach="background" args={['#87CEEB']} />
 
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* Enhanced GLB Mountain System for Fantasy Realm */}
+          {/* Enhanced Environment System for Fantasy Realm */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
@@ -127,10 +132,25 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               renderDistance={200}
             >
               {(chunks) => (
-                <GLBMountainSystem
-                  chunks={chunks}
-                  chunkSize={50}
-                />
+                <>
+                  {/* Green grass system like in the image */}
+                  <EnhancedGrassSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                  />
+                  
+                  {/* GLB Mountains in the background */}
+                  <GLBMountainSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                  />
+                  
+                  {/* Tree system for the green trees */}
+                  <TreeSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                  />
+                </>
               )}
             </ChunkSystem>
           )}
