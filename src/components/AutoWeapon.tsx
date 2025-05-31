@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { GroundEnemy } from './GroundEnemy3DSystem';
+import { GroundEnemy } from './GroundEnemySystem';
 
 interface Projectile {
   id: string;
@@ -11,7 +10,6 @@ interface Projectile {
   targetId: string;
   speed: number;
   damage: number;
-  startTime: number;
 }
 
 interface AutoWeaponProps {
@@ -25,48 +23,6 @@ interface AutoWeaponProps {
   onMuzzleFlash: () => void;
 }
 
-const Projectile3D: React.FC<{ projectile: Projectile }> = ({ projectile }) => {
-  const projectileRef = useRef<any>(null);
-
-  React.useEffect(() => {
-    if (projectileRef.current) {
-      const elapsed = Date.now() - projectile.startTime;
-      const pulseIntensity = 1 + Math.sin(elapsed * 0.01) * 0.3;
-      projectileRef.current.scale.setScalar(pulseIntensity);
-    }
-  });
-
-  return (
-    <group position={[projectile.x, projectile.y, projectile.z]}>
-      <mesh ref={projectileRef}>
-        <sphereGeometry args={[0.15, 8, 8]} />
-        <meshStandardMaterial 
-          color="#fbbf24" 
-          emissive="#f59e0b"
-          emissiveIntensity={0.5}
-        />
-      </mesh>
-      
-      {/* Trail effect */}
-      <mesh position={[0, 0, -0.3]} scale={[0.8, 0.8, 1.5]}>
-        <sphereGeometry args={[0.1, 6, 6]} />
-        <meshBasicMaterial 
-          color="#fbbf24" 
-          transparent 
-          opacity={0.4}
-        />
-      </mesh>
-      
-      {/* Energy glow */}
-      <pointLight 
-        color="#fbbf24" 
-        intensity={1.5} 
-        distance={3} 
-      />
-    </group>
-  );
-};
-
 export const AutoWeapon: React.FC<AutoWeaponProps> = ({
   enemies,
   combatStats,
@@ -76,7 +32,7 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const lastFireTime = useRef(0);
 
-  // Auto-fire at nearest enemy within range
+  // Auto-fire at nearest enemy
   useEffect(() => {
     const fireInterval = setInterval(() => {
       const now = Date.now();
@@ -96,12 +52,11 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
           const newProjectile: Projectile = {
             id: `proj_${Date.now()}_${Math.random()}`,
             x: 0,
-            y: 2,
+            y: 1.5,
             z: 0,
             targetId: nearestEnemy.id,
-            speed: 0.8,
-            damage: combatStats.damage,
-            startTime: now
+            speed: 0.5,
+            damage: combatStats.damage
           };
 
           setProjectiles(prev => [...prev, newProjectile]);
@@ -114,7 +69,7 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
     return () => clearInterval(fireInterval);
   }, [enemies, combatStats, onMuzzleFlash]);
 
-  // Move projectiles towards targets
+  // Move projectiles
   useEffect(() => {
     const moveInterval = setInterval(() => {
       setProjectiles(prev => {
@@ -127,8 +82,8 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
           const dz = target.z - projectile.z;
           const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-          // Check for hit
-          if (distance < 1.2) {
+          if (distance < 1) {
+            // Hit target
             onEnemyHit(target.id, projectile.damage);
             return null;
           }
@@ -151,51 +106,34 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
     return () => clearInterval(moveInterval);
   }, [enemies, onEnemyHit]);
 
-  // Clean up old projectiles
-  useEffect(() => {
-    const cleanupInterval = setInterval(() => {
-      setProjectiles(prev => {
-        const now = Date.now();
-        return prev.filter(projectile => now - projectile.startTime < 5000);
-      });
-    }, 1000);
-
-    return () => clearInterval(cleanupInterval);
-  }, []);
-
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Enhanced Weapon Visual */}
+      {/* Weapon Visual - positioned at player location */}
       <div className="absolute bottom-1/2 left-1/2 transform -translate-x-1/2 translate-y-8 z-30">
-        <div className="relative">
-          <div className="text-3xl animate-pulse">🏹</div>
-          <div className="absolute inset-0 bg-yellow-400/20 rounded-full animate-ping"></div>
-        </div>
+        <div className="text-2xl animate-pulse">🏹</div>
       </div>
 
-      {/* 3D Projectiles Canvas */}
-      <Canvas
-        dpr={[1, 1.5]}
-        camera={{ 
-          position: [0, 8, 8], 
-          fov: 60,
-          near: 0.1,
-          far: 100
-        }}
-        gl={{ antialias: false, alpha: true }}
-        style={{ pointerEvents: 'none' }}
-      >
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[5, 10, 5]} intensity={0.5} />
-        
-        {/* Enhanced 3D Projectiles */}
-        {projectiles.map(projectile => (
-          <Projectile3D
+      {/* Projectiles */}
+      {projectiles.map(projectile => {
+        const screenX = 50 + (projectile.x / 15) * 25;
+        const screenY = 70 - ((projectile.z / 40) * 30);
+        const scale = Math.max(0.5, Math.min(1.2, (40 - projectile.z) / 40));
+
+        return (
+          <div
             key={projectile.id}
-            projectile={projectile}
-          />
-        ))}
-      </Canvas>
+            className="absolute transition-all duration-100"
+            style={{
+              left: `${screenX}%`,
+              top: `${screenY}%`,
+              transform: `translate(-50%, -50%) scale(${scale})`,
+              zIndex: Math.floor(50 - projectile.z)
+            }}
+          >
+            <div className="text-lg text-yellow-400 drop-shadow-lg animate-pulse">✨</div>
+          </div>
+        );
+      })}
     </div>
   );
 };
