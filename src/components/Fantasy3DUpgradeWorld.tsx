@@ -30,25 +30,25 @@ interface UpgradeData {
   scale: number;
 }
 
-// Updated upgrades with only working model URLs
+// Updated upgrades with much more spacing for a journey feel
 const createUpgradeData = (): UpgradeData[] => {
   const baseUpgrades = [
-    { name: 'Mystic Fountain', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-3, 0, -6] as [number, number, number], scale: 1.0 },
-    { name: 'Crystal Grove', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [3, 0, -12] as [number, number, number], scale: 1.1 },
-    { name: 'Arcane Sanctum', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-4, 0, -18] as [number, number, number], scale: 1.2 },
-    { name: 'Nexus Gateway', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [4, 0, -24] as [number, number, number], scale: 1.3 },
-    { name: 'Temporal Altar', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-4.5, 0, -30] as [number, number, number], scale: 1.4 },
-    { name: 'Phoenix Roost', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [4.5, 0, -36] as [number, number, number], scale: 1.5 },
-    { name: 'Ethereal Nexus', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-5, 0, -42] as [number, number, number], scale: 1.6 },
-    { name: 'Infinity Well', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [5, 0, -48] as [number, number, number], scale: 1.7 },
-    { name: 'Reality Prism', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-5.5, 0, -54] as [number, number, number], scale: 1.8 },
-    { name: 'Astral Crown', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [5.5, 0, -60] as [number, number, number], scale: 1.9 },
-    { name: 'Omni Core', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-6, 0, -66] as [number, number, number], scale: 2.0 },
-    { name: 'Eternal Beacon', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [6, 0, -72] as [number, number, number], scale: 2.1 },
-    { name: 'Transcendent Gate', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-6.5, 0, -78] as [number, number, number], scale: 2.2 },
-    { name: 'Primordial Engine', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [6.5, 0, -84] as [number, number, number], scale: 2.3 },
-    { name: 'Universal Codex', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-7, 0, -90] as [number, number, number], scale: 2.4 },
-    { name: 'Omega Singularity', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [0, 0, -96] as [number, number, number], scale: 2.5 }
+    { name: 'Mystic Fountain', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-3, 0, -15] as [number, number, number], scale: 1.0 },
+    { name: 'Crystal Grove', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [3, 0, -35] as [number, number, number], scale: 1.1 },
+    { name: 'Arcane Sanctum', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-4, 0, -55] as [number, number, number], scale: 1.2 },
+    { name: 'Nexus Gateway', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [4, 0, -75] as [number, number, number], scale: 1.3 },
+    { name: 'Temporal Altar', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-4.5, 0, -95] as [number, number, number], scale: 1.4 },
+    { name: 'Phoenix Roost', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [4.5, 0, -115] as [number, number, number], scale: 1.5 },
+    { name: 'Ethereal Nexus', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-5, 0, -135] as [number, number, number], scale: 1.6 },
+    { name: 'Infinity Well', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [5, 0, -155] as [number, number, number], scale: 1.7 },
+    { name: 'Reality Prism', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-5.5, 0, -175] as [number, number, number], scale: 1.8 },
+    { name: 'Astral Crown', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [5.5, 0, -195] as [number, number, number], scale: 1.9 },
+    { name: 'Omni Core', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-6, 0, -215] as [number, number, number], scale: 2.0 },
+    { name: 'Eternal Beacon', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [6, 0, -235] as [number, number, number], scale: 2.1 },
+    { name: 'Transcendent Gate', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-6.5, 0, -255] as [number, number, number], scale: 2.2 },
+    { name: 'Primordial Engine', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_02.glb', position: [6.5, 0, -275] as [number, number, number], scale: 2.3 },
+    { name: 'Universal Codex', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_01.glb', position: [-7, 0, -295] as [number, number, number], scale: 2.4 },
+    { name: 'Omega Singularity', modelUrl: 'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb', position: [0, 0, -315] as [number, number, number], scale: 2.5 }
   ];
 
   // Apply exponential scaling: cost = 50 * 2^n, manaPerSecond = 10 * 2^n
@@ -111,16 +111,16 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     console.log(`Camera position:`, cameraPosition);
     console.log(`Upgrade position:`, upgrade.position);
     
-    // Check if player is within interaction range (much more generous range)
+    // Check if player is within interaction range (generous range)
     const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
     console.log(`Distance to ${upgrade.name}: ${distance.toFixed(2)}`);
     
-    if (distance > 15) { // Increased range significantly
+    if (distance > 20) { // Generous interaction range
       console.log("Move closer to interact with this upgrade!");
       return;
     }
     
-    // Always open the modal when clicking (removed previous restriction)
+    // Always open the modal when clicking
     console.log(`Opening modal for ${upgrade.name}`);
     setSelectedUpgrade(upgrade);
   }, [cameraPosition]);
@@ -152,14 +152,30 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     }
   }, [currentMana]);
 
-  // Check if player is within interaction range of upgrade (much more generous)
+  // Check if player is within interaction range of upgrade
   const isWithinRange = (upgradePosition: [number, number, number]): boolean => {
     const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
-    return distance <= 15; // Much more generous range
+    return distance <= 20; // Generous range
+  };
+
+  // Enhanced fade-in animation based on approach distance
+  const getUpgradeOpacity = (upgradePosition: [number, number, number]): number => {
+    const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
+    if (distance > 50) return 0; // Invisible when very far
+    if (distance > 30) return 0.3; // Faint when far
+    if (distance > 20) return 0.6; // Visible when medium distance
+    return 1; // Fully visible when close
+  };
+
+  const getUpgradeScale = (upgradePosition: [number, number, number], baseScale: number): number => {
+    const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
+    if (distance > 30) return baseScale * 0.8; // Smaller when far
+    if (distance > 20) return baseScale * 0.9; // Slightly smaller when medium
+    return baseScale; // Full size when close
   };
 
   // Player can move forward unless they've reached the very end
-  const canMoveForward = cameraPosition.z > -110;
+  const canMoveForward = cameraPosition.z > -350;
 
   // Passive mana generation
   useEffect(() => {
@@ -185,7 +201,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           position: [0, 1.6, 0], 
           fov: 75,
           near: 0.1,
-          far: 200
+          far: 400
         }}
         shadows
         gl={{ antialias: true, alpha: true }}
@@ -197,13 +213,13 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             canMoveForward={canMoveForward}
           />
 
-          {/* Clean Environment System without floating indicators */}
+          {/* Clean Environment System */}
           <EnvironmentSystem 
             upgradeCount={unlockedUpgradeCount}
             onEnvironmentChange={handleEnvironmentChange}
           />
 
-          {/* Bright lighting setup for visibility */}
+          {/* Enhanced lighting setup for better visibility */}
           <ambientLight intensity={0.8} color="#ffffff" />
           <directionalLight
             position={[10, 20, 10]}
@@ -212,11 +228,11 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             castShadow
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
-            shadow-camera-far={200}
-            shadow-camera-left={-30}
-            shadow-camera-right={30}
-            shadow-camera-top={30}
-            shadow-camera-bottom={-30}
+            shadow-camera-far={400}
+            shadow-camera-left={-50}
+            shadow-camera-right={50}
+            shadow-camera-top={50}
+            shadow-camera-bottom={-50}
           />
           
           {/* Additional bright fill light */}
@@ -226,29 +242,29 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             color="#ffffff"
           />
 
-          {/* Point lights for path illumination */}
-          {Array.from({ length: 8 }, (_, i) => (
+          {/* Enhanced point lights for extended path illumination */}
+          {Array.from({ length: 16 }, (_, i) => (
             <pointLight 
               key={i}
-              position={[(i % 2 === 0 ? -6 : 6), 8, -12 - (i * 12)]} 
+              position={[(i % 2 === 0 ? -8 : 8), 10, -20 - (i * 20)]} 
               intensity={0.8}
               color="#ffffff" 
-              distance={25} 
+              distance={40} 
             />
           ))}
 
           <Environment preset="sunset" />
 
-          {/* Stone path instead of wooden floor */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -50]} receiveShadow>
-            <planeGeometry args={[40, 120]} />
+          {/* Extended stone path for longer journey */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -160]} receiveShadow>
+            <planeGeometry args={[50, 350]} />
             <meshLambertMaterial color="#8B7355" />
           </mesh>
 
-          {/* Stone path markers */}
-          {Array.from({ length: 20 }, (_, i) => (
-            <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
-              <circleGeometry args={[0.6]} />
+          {/* Enhanced stone path markers with more spacing */}
+          {Array.from({ length: 32 }, (_, i) => (
+            <mesh key={i} position={[0, -0.4, -10 - (i * 10)]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.8]} />
               <meshBasicMaterial 
                 color="#A0A0A0" 
                 transparent 
@@ -258,44 +274,48 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           ))}
 
           <ContactShadows 
-            position={[0, -0.4, -50]} 
+            position={[0, -0.4, -160]} 
             opacity={0.3} 
-            scale={40} 
+            scale={50} 
             blur={2.5} 
-            far={10} 
+            far={15} 
           />
 
-          {/* Load GLB upgrade models */}
+          {/* Load GLB upgrade models with enhanced fade-in animation */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-            if (distance > 40) return null;
+            if (distance > 60) return null; // Don't render if too far
+            
+            const opacity = getUpgradeOpacity(upgrade.position);
+            const scale = getUpgradeScale(upgrade.position, upgrade.scale);
             
             return (
-              <GLBModel
-                key={upgrade.id}
-                modelUrl={upgrade.modelUrl}
-                name={upgrade.name}
-                position={upgrade.position}
-                scale={upgrade.scale}
-                onClick={() => handleUpgradeClick(upgrade)}
-                isUnlocked={upgrade.unlocked}
-                isPurchased={upgrade.unlocked}
-                isWithinRange={isWithinRange(upgrade.position)}
-                cost={upgrade.cost}
-                canAfford={currentMana >= upgrade.cost}
-              />
+              <group key={upgrade.id} opacity={opacity}>
+                <GLBModel
+                  modelUrl={upgrade.modelUrl}
+                  name={upgrade.name}
+                  position={upgrade.position}
+                  scale={scale}
+                  onClick={() => handleUpgradeClick(upgrade)}
+                  isUnlocked={upgrade.unlocked}
+                  isPurchased={upgrade.unlocked}
+                  isWithinRange={isWithinRange(upgrade.position)}
+                  cost={upgrade.cost}
+                  canAfford={currentMana >= upgrade.cost}
+                />
+              </group>
             );
           })}
         </Suspense>
       </Canvas>
 
-      {/* Clean progress indicator */}
+      {/* Enhanced progress indicator for longer journey */}
       <div className="absolute bottom-2 left-4 right-4 pointer-events-none">
         <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
           <div 
             className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
             style={{ 
-              width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 100) * 100)))}%` 
+              width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 320) * 100)))}%` 
             }}
           />
         </div>
@@ -310,7 +330,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       )}
 
-      {/* Enhanced Upgrade Modal with proper positioning */}
+      {/* Enhanced Upgrade Modal */}
       {selectedUpgrade && (
         <div 
           className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
