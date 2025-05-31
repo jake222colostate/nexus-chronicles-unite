@@ -15,6 +15,7 @@ interface GLBModelProps {
   isPurchased?: boolean;
   cost: number;
   canAfford: boolean;
+  opacity?: number;
 }
 
 // Clean GLB Model component with no visual artifacts
@@ -28,7 +29,8 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   isWithinRange,
   isPurchased = false,
   cost,
-  canAfford
+  canAfford,
+  opacity = 1
 }) => {
   const groupRef = useRef<Group>(null);
   const glowRef = useRef<Mesh>(null);
@@ -113,7 +115,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
               "#c084fc"
             } 
             transparent 
-            opacity={0.8} 
+            opacity={0.8 * opacity} 
           />
         </mesh>
         
@@ -123,7 +125,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
           <meshBasicMaterial
             color="#a855f7"
             transparent
-            opacity={0.3}
+            opacity={0.3 * opacity}
           />
         </mesh>
       </group>
@@ -154,21 +156,29 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
             "#a855f7"
           }
           transparent
-          opacity={0.4}
+          opacity={0.4 * opacity}
         />
       </mesh>
 
-      {/* Main 3D model */}
-      <primitive 
-        object={gltfScene.clone()} 
-        scale={scale * (isPurchased ? 1.1 : canAfford ? 1 : 0.8)}
-      />
+      {/* Main 3D model with opacity applied */}
+      <group>
+        <primitive 
+          object={gltfScene.clone()} 
+          scale={scale * (isPurchased ? 1.1 : canAfford ? 1 : 0.8)}
+        />
+        {gltfScene.clone().traverse((child: any) => {
+          if (child.isMesh && child.material) {
+            child.material.transparent = true;
+            child.material.opacity = opacity;
+          }
+        })}
+      </group>
       
       {/* Simple purchase indicator */}
       {isPurchased && (
         <mesh position={[0, scale * 2.5, 0]}>
           <sphereGeometry args={[0.15]} />
-          <meshBasicMaterial color="#10b981" />
+          <meshBasicMaterial color="#10b981" transparent opacity={opacity} />
         </mesh>
       )}
       
@@ -179,7 +189,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
           <meshBasicMaterial 
             color={canAfford ? "#ffffff" : "#ff6b6b"} 
             transparent 
-            opacity={0.8} 
+            opacity={0.8 * opacity} 
           />
         </mesh>
       )}
