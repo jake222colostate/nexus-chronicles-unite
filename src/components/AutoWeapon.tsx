@@ -11,6 +11,7 @@ interface Projectile {
   targetId: string;
   speed: number;
   damage: number;
+  startTime: number;
 }
 
 interface AutoWeaponProps {
@@ -25,16 +26,44 @@ interface AutoWeaponProps {
 }
 
 const Projectile3D: React.FC<{ projectile: Projectile }> = ({ projectile }) => {
+  const projectileRef = useRef<any>(null);
+
+  React.useEffect(() => {
+    if (projectileRef.current) {
+      const elapsed = Date.now() - projectile.startTime;
+      const pulseIntensity = 1 + Math.sin(elapsed * 0.01) * 0.3;
+      projectileRef.current.scale.setScalar(pulseIntensity);
+    }
+  });
+
   return (
-    <mesh position={[projectile.x, projectile.y, projectile.z]}>
-      <sphereGeometry args={[0.1, 8, 8]} />
-      <meshBasicMaterial color="#fbbf24" />
+    <group position={[projectile.x, projectile.y, projectile.z]}>
+      <mesh ref={projectileRef}>
+        <sphereGeometry args={[0.15, 8, 8]} />
+        <meshStandardMaterial 
+          color="#fbbf24" 
+          emissive="#f59e0b"
+          emissiveIntensity={0.5}
+        />
+      </mesh>
+      
+      {/* Trail effect */}
+      <mesh position={[0, 0, -0.3]} scale={[0.8, 0.8, 1.5]}>
+        <sphereGeometry args={[0.1, 6, 6]} />
+        <meshBasicMaterial 
+          color="#fbbf24" 
+          transparent 
+          opacity={0.4}
+        />
+      </mesh>
+      
+      {/* Energy glow */}
       <pointLight 
         color="#fbbf24" 
-        intensity={0.5} 
-        distance={2} 
+        intensity={1.5} 
+        distance={3} 
       />
-    </mesh>
+    </group>
   );
 };
 
@@ -47,7 +76,7 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const lastFireTime = useRef(0);
 
-  // Auto-fire at nearest enemy
+  // Auto-fire at nearest enemy within range
   useEffect(() => {
     const fireInterval = setInterval(() => {
       const now = Date.now();
@@ -67,11 +96,12 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
           const newProjectile: Projectile = {
             id: `proj_${Date.now()}_${Math.random()}`,
             x: 0,
-            y: 1.5,
+            y: 2,
             z: 0,
             targetId: nearestEnemy.id,
-            speed: 0.5,
-            damage: combatStats.damage
+            speed: 0.8,
+            damage: combatStats.damage,
+            startTime: now
           };
 
           setProjectiles(prev => [...prev, newProjectile]);
@@ -84,7 +114,7 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
     return () => clearInterval(fireInterval);
   }, [enemies, combatStats, onMuzzleFlash]);
 
-  // Move projectiles
+  // Move projectiles towards targets
   useEffect(() => {
     const moveInterval = setInterval(() => {
       setProjectiles(prev => {
@@ -97,8 +127,8 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
           const dz = target.z - projectile.z;
           const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-          if (distance < 1) {
-            // Hit target
+          // Check for hit
+          if (distance < 1.2) {
             onEnemyHit(target.id, projectile.damage);
             return null;
           }
@@ -121,11 +151,26 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
     return () => clearInterval(moveInterval);
   }, [enemies, onEnemyHit]);
 
+  // Clean up old projectiles
+  useEffect(() => {
+    const cleanupInterval = setInterval(() => {
+      setProjectiles(prev => {
+        const now = Date.now();
+        return prev.filter(projectile => now - projectile.startTime < 5000);
+      });
+    }, 1000);
+
+    return () => clearInterval(cleanupInterval);
+  }, []);
+
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Weapon Visual - positioned at player location */}
+      {/* Enhanced Weapon Visual */}
       <div className="absolute bottom-1/2 left-1/2 transform -translate-x-1/2 translate-y-8 z-30">
-        <div className="text-2xl animate-pulse">🏹</div>
+        <div className="relative">
+          <div className="text-3xl animate-pulse">🏹</div>
+          <div className="absolute inset-0 bg-yellow-400/20 rounded-full animate-ping"></div>
+        </div>
       </div>
 
       {/* 3D Projectiles Canvas */}
@@ -141,8 +186,9 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
         style={{ pointerEvents: 'none' }}
       >
         <ambientLight intensity={0.4} />
+        <directionalLight position={[5, 10, 5]} intensity={0.5} />
         
-        {/* 3D Projectiles */}
+        {/* Enhanced 3D Projectiles */}
         {projectiles.map(projectile => (
           <Projectile3D
             key={projectile.id}

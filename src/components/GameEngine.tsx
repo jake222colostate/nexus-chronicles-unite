@@ -698,7 +698,7 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* 3D Ground-based Enemy System with scaling - REPLACED 2D SYSTEM */}
+        {/* ONLY 3D Ground-based Enemy System - NO 2D ENEMIES */}
         <GroundEnemy3DSystem
           realm={currentRealm}
           onEnemyReachPlayer={handleEnemyReachPlayer}
@@ -709,7 +709,7 @@ const GameEngine: React.FC = () => {
           onEnemiesUpdate={setEnemies}
         />
 
-        {/* Auto Weapon System */}
+        {/* Enhanced Auto Weapon System */}
         <AutoWeapon
           enemies={enemies}
           combatStats={weaponStats}
