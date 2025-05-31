@@ -10,12 +10,12 @@ import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
-import { GroundEnemySystem, GroundEnemy } from './GroundEnemySystem';
+import { GroundEnemySystem3D, GroundEnemy } from './GroundEnemySystem3D';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
 import { MuzzleFlash } from './MuzzleFlash';
 import { WaveCompleteMessage } from './WaveCompleteMessage';
 import { JourneyTracker } from './JourneyTracker';
-import { AutoWeapon } from './AutoWeapon';
+import { AutoWeapon3D } from './AutoWeapon3D';
 import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem, CrossRealmUpgrade } from './CrossRealmUpgradeSystem';
 import { crossRealmUpgrades } from '../data/CrossRealmUpgrades';
@@ -698,8 +698,8 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* Ground-based Enemy System with scaling */}
-        <GroundEnemySystem
+        {/* 3D Ground-based Enemy System with scaling */}
+        <GroundEnemySystem3D
           realm={currentRealm}
           onEnemyReachPlayer={handleEnemyReachPlayer}
           onEnemyDestroyed={handleEnemyDestroyed}
@@ -709,8 +709,8 @@ const GameEngine: React.FC = () => {
           onEnemiesUpdate={setEnemies}
         />
 
-        {/* Auto Weapon System */}
-        <AutoWeapon
+        {/* 3D Auto Weapon System */}
+        <AutoWeapon3D
           enemies={enemies}
           combatStats={weaponStats}
           onEnemyHit={handleEnemyHit}
