@@ -12,7 +12,7 @@ export const EnhancedTapButton: React.FC<EnhancedTapButtonProps> = ({
   onTap
 }) => {
   return (
-    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
+    <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30 mb-6">
       <Button 
         onClick={onTap}
         className={`h-12 px-6 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm backdrop-blur-xl border relative overflow-hidden ${

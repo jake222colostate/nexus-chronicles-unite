@@ -22,7 +22,7 @@ export const RealmToggleButtons: React.FC<RealmToggleButtonsProps> = ({
   };
 
   return (
-    <div className="absolute bottom-20 right-8 z-30 mb-4">
+    <div className="absolute bottom-32 right-8 z-30 mb-6">
       <div className="flex gap-2 bg-black/60 backdrop-blur-md p-1.5 rounded-full border border-white/30">
         {/* Fantasy Realm Button */}
         <Button
