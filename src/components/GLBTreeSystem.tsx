@@ -19,33 +19,42 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Safe tree component with proper error handling
-const FantasyTree: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
+// Individual tree component with proper GLB handling
+const GLBTree: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
   position,
   scale,
   rotation
 }) => {
-  try {
-    const { scene } = useGLTF(TREE_MODEL_URL);
-    
-    if (!scene) {
-      console.warn('GLB tree model: Scene not available');
-      return null;
-    }
-
-    return (
-      <group
-        position={position}
-        scale={[scale, scale, scale]}
-        rotation={[0, rotation, 0]}
-      >
-        <primitive object={scene.clone()} castShadow receiveShadow />
-      </group>
-    );
-  } catch (error) {
-    console.warn('Failed to load GLB tree model:', error);
+  const { scene, error } = useGLTF(TREE_MODEL_URL);
+  
+  console.log('GLB Tree render - Scene:', scene, 'Error:', error, 'Position:', position);
+  
+  if (error) {
+    console.error('Failed to load tree model:', error);
     return null;
   }
+  
+  if (!scene) {
+    console.warn('Tree scene not loaded yet');
+    return null;
+  }
+
+  // Clone the scene to avoid sharing geometry between instances
+  const clonedScene = scene.clone();
+  
+  return (
+    <group
+      position={position}
+      scale={[scale, scale, scale]}
+      rotation={[0, rotation, 0]}
+    >
+      <primitive 
+        object={clonedScene} 
+        castShadow 
+        receiveShadow 
+      />
+    </group>
+  );
 };
 
 export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
@@ -55,22 +64,27 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
 }) => {
   const groupRef = useRef();
 
+  console.log('GLBTreeSystem render - Realm:', realm, 'Chunks:', chunks.length);
+
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
+    console.log('GLBTreeSystem: Not fantasy realm, skipping');
     return null;
   }
 
   // Generate tree positions for each chunk
   const treePositions = useMemo(() => {
+    console.log('Generating tree positions for', chunks.length, 'chunks');
     const positions = [];
-    const minDistance = 8;
-    const maxAttempts = 50;
+    const minDistance = 5; // Reduced for better coverage
+    const maxAttempts = 30;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 3-5 trees per chunk for natural forest density
-      const treeCount = 3 + Math.floor(seededRandom(seed) * 3);
+      // Generate 2-4 trees per chunk for better density
+      const treeCount = 2 + Math.floor(seededRandom(seed) * 3);
+      console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -80,14 +94,13 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 67;
           
-          // Position trees on either side of the road (avoiding center path)
-          const side = seededRandom(treeSeed) > 0.5 ? 1 : -1;
-          x = worldX + side * (15 + seededRandom(treeSeed + 1) * 25); // Stay away from road
-          z = worldZ - seededRandom(treeSeed + 2) * chunkSize;
+          // Spread trees more broadly across the chunk
+          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8;
+          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
           // Varied scale and rotation for natural look
-          scale = 0.8 + seededRandom(treeSeed + 3) * 0.6;
-          rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
+          scale = 0.5 + seededRandom(treeSeed + 2) * 0.8; // Smaller scale range
+          rotation = seededRandom(treeSeed + 3) * Math.PI * 2;
           
           // Check distance from existing trees
           validPosition = true;
@@ -105,29 +118,37 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
         }
         
         if (validPosition) {
-          positions.push({ x, z: z, scale, rotation, chunkId: chunk.id });
+          positions.push({ x, z, scale, rotation, chunkId: chunk.id });
+          console.log(`Tree ${i} placed at (${x.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
+        } else {
+          console.warn(`Failed to place tree ${i} in chunk ${chunk.id} after ${maxAttempts} attempts`);
         }
       }
     });
     
+    console.log(`Total trees generated: ${positions.length}`);
     return positions;
   }, [chunks, chunkSize]);
 
   return (
     <group ref={groupRef}>
       <Suspense fallback={null}>
-        {treePositions.map((pos, index) => (
-          <FantasyTree
-            key={`glb-tree-${pos.chunkId}-${index}`}
-            position={[pos.x, -1, pos.z]}
-            scale={pos.scale}
-            rotation={pos.rotation}
-          />
-        ))}
+        {treePositions.map((pos, index) => {
+          console.log(`Rendering tree ${index} at position:`, [pos.x, 0, pos.z]);
+          return (
+            <GLBTree
+              key={`glb-tree-${pos.chunkId}-${index}`}
+              position={[pos.x, 0, pos.z]} // Changed Y to 0 instead of -1
+              scale={pos.scale}
+              rotation={pos.rotation}
+            />
+          );
+        })}
       </Suspense>
     </group>
   );
 };
 
 // Preload the model for better performance
+console.log('Preloading GLB tree model:', TREE_MODEL_URL);
 useGLTF.preload(TREE_MODEL_URL);
