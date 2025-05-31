@@ -1,11 +1,12 @@
 
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
 import { WizardStaff } from './WizardStaff';
+import { VerticalCameraController } from './VerticalCameraController';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 
 interface Scene3DProps {
@@ -93,18 +94,12 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             <WizardStaff />
           </PerspectiveCamera>
 
-          {/* Optimized controls */}
-          <OrbitControls
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={false}
-            panSpeed={0.5}
-            zoomSpeed={0.5}
-            minDistance={4}
-            maxDistance={15}
-            minPolarAngle={Math.PI / 4}
-            maxPolarAngle={3 * Math.PI / 4}
-            enableDamping={false} // Disable damping for better performance
+          {/* Vertical Camera Controller for both realms */}
+          <VerticalCameraController 
+            camera={cameraRef.current}
+            minY={-5}
+            maxY={15}
+            sensitivity={0.8}
           />
 
           {/* Optimized lighting */}
