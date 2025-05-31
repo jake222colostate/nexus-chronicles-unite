@@ -1,5 +1,5 @@
 
-import React, { Suspense, useState, useCallback, useEffect } from 'react';
+import React, { Suspense, useState, useCallback, useEffect, useMemo } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
 import { Vector3 } from 'three';
@@ -30,8 +30,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   onPlayerPositionUpdate
 }) => {
   const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 1.6, 0));
-  const [currentMana, setCurrentMana] = useState(gameState?.mana || 100);
-  const [totalManaPerSecond, setTotalManaPerSecond] = useState(gameState?.manaPerSecond || 0);
   const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
   const [maxUnlockedUpgrade, setMaxUnlockedUpgrade] = useState(-1);
@@ -41,6 +39,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   const RENDER_DISTANCE = 200;
   const UPGRADE_SPACING = 35;
 
+  // Stable gameState values to prevent infinite re-renders
+  const currentMana = useMemo(() => gameState?.mana || 100, [gameState?.mana]);
+  const totalManaPerSecond = useMemo(() => gameState?.manaPerSecond || 0, [gameState?.manaPerSecond]);
+
   // Get dynamic upgrades based on player position
   const upgrades = useInfiniteUpgrades({
     maxUnlockedUpgrade,
@@ -48,14 +50,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     upgradeSpacing: UPGRADE_SPACING,
     renderDistance: RENDER_DISTANCE
   });
-
-  // Update internal state when gameState changes
-  useEffect(() => {
-    if (gameState) {
-      setCurrentMana(gameState.mana);
-      setTotalManaPerSecond(gameState.manaPerSecond);
-    }
-  }, [gameState]);
 
   const handlePositionChange = useCallback((position: Vector3) => {
     setCameraPosition(position);
@@ -86,25 +80,20 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     console.log(`Attempting to purchase ${upgrade.name} for ${upgrade.cost} mana. Current mana: ${currentMana}`);
     
     if (currentMana >= upgrade.cost) {
-      setCurrentMana(prev => prev - upgrade.cost);
-      setTotalManaPerSecond(prev => prev + upgrade.manaPerSecond);
       setMaxUnlockedUpgrade(prev => Math.max(prev, upgrade.id - 1));
       setSelectedUpgrade(null);
       console.log(`Unlocked ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
+      
+      // Call the parent's upgrade handler
+      if (onUpgradeClick) {
+        onUpgradeClick(upgrade.name);
+      }
     } else {
       setShowInsufficientMana(true);
       setTimeout(() => setShowInsufficientMana(false), 2000);
       console.log("Not enough mana!");
     }
-  }, [currentMana]);
-
-  // Passive mana generation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentMana(prev => prev + totalManaPerSecond / 10);
-    }, 100);
-    return () => clearInterval(interval);
-  }, [totalManaPerSecond]);
+  }, [currentMana, onUpgradeClick]);
 
   return (
     <div className="absolute inset-0 w-full h-full pointer-events-auto">
