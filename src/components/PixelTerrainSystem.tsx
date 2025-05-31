@@ -40,7 +40,138 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
 
   const grassTexture = useMemo(() => createPixelTexture('120'), [createPixelTexture]);
   const pathTexture = useMemo(() => createPixelTexture('30'), [createPixelTexture]);
-  const rockTexture = useMemo(() => createPixelTexture('0'), [createPixelTexture]);
+
+  // Create polygon mountain geometries
+  const createPolygonMountain = useMemo(() => {
+    return (width: number, height: number, depth: number, complexity: number = 8) => {
+      const geometry = new THREE.BufferGeometry();
+      const vertices = [];
+      const faces = [];
+      
+      // Base vertices (bottom)
+      const baseRadius = Math.max(width, depth) * 0.5;
+      for (let i = 0; i < complexity; i++) {
+        const angle = (i / complexity) * Math.PI * 2;
+        const x = Math.cos(angle) * baseRadius * (0.8 + Math.random() * 0.4);
+        const z = Math.sin(angle) * baseRadius * (0.8 + Math.random() * 0.4);
+        vertices.push(x, -height * 0.1, z);
+      }
+      
+      // Middle ring vertices
+      const midRadius = baseRadius * 0.6;
+      const midHeight = height * 0.4;
+      for (let i = 0; i < complexity; i++) {
+        const angle = (i / complexity) * Math.PI * 2;
+        const x = Math.cos(angle) * midRadius * (0.7 + Math.random() * 0.6);
+        const z = Math.sin(angle) * midRadius * (0.7 + Math.random() * 0.6);
+        vertices.push(x, midHeight, z);
+      }
+      
+      // Peak vertices (multiple peaks for more natural look)
+      const peakCount = 2 + Math.floor(Math.random() * 3);
+      for (let p = 0; p < peakCount; p++) {
+        const peakAngle = (p / peakCount) * Math.PI * 2 + Math.random() * 0.5;
+        const peakRadius = baseRadius * (0.2 + Math.random() * 0.3);
+        const x = Math.cos(peakAngle) * peakRadius;
+        const z = Math.sin(peakAngle) * peakRadius;
+        const y = height * (0.8 + Math.random() * 0.4);
+        vertices.push(x, y, z);
+      }
+      
+      // Create faces connecting base to middle
+      for (let i = 0; i < complexity; i++) {
+        const next = (i + 1) % complexity;
+        faces.push(i, next, i + complexity);
+        faces.push(next, next + complexity, i + complexity);
+      }
+      
+      // Create faces connecting middle to peaks
+      const peakStartIndex = complexity * 2;
+      for (let i = 0; i < complexity; i++) {
+        const next = (i + 1) % complexity;
+        const midIndex = i + complexity;
+        const nextMidIndex = next + complexity;
+        
+        // Connect to nearest peak
+        const peakIndex = peakStartIndex + (i % peakCount);
+        faces.push(midIndex, nextMidIndex, peakIndex);
+      }
+      
+      // Create faces between peaks
+      for (let p = 0; p < peakCount; p++) {
+        const nextPeak = (p + 1) % peakCount;
+        const peakIndex = peakStartIndex + p;
+        const nextPeakIndex = peakStartIndex + nextPeak;
+        
+        // Connect peaks to middle ring
+        const midIndex = complexity + (p * Math.floor(complexity / peakCount)) % complexity;
+        faces.push(peakIndex, nextPeakIndex, midIndex);
+      }
+      
+      // Convert to flat arrays
+      const verticesArray = new Float32Array(vertices);
+      const indicesArray = new Uint16Array(faces);
+      
+      geometry.setAttribute('position', new THREE.BufferAttribute(verticesArray, 3));
+      geometry.setIndex(new THREE.BufferAttribute(indicesArray, 1));
+      geometry.computeVertexNormals();
+      
+      return geometry;
+    };
+  }, []);
+
+  // Generate mountain data with varied polygon shapes
+  const mountainData = useMemo(() => {
+    const mountains = [];
+    
+    // Left mountain range - larger, more prominent
+    for (let i = 0; i < 6; i++) {
+      const z = -15 - (i * 18);
+      const baseWidth = 12 + Math.sin(i * 0.7) * 4;
+      const height = 18 + Math.cos(i * 0.5) * 6;
+      const depth = 10 + Math.sin(i * 0.3) * 3;
+      
+      mountains.push({
+        position: [-28, 0, z],
+        geometry: createPolygonMountain(baseWidth, height, depth, 8 + i % 3),
+        color: tier <= 2 ? '#6B7280' : tier <= 3 ? '#7C3AED' : '#1E1B4B',
+        scale: 1 + (i * 0.1)
+      });
+    }
+    
+    // Right mountain range - smaller, more numerous
+    for (let i = 0; i < 8; i++) {
+      const z = -10 - (i * 14);
+      const baseWidth = 8 + Math.cos(i * 0.6) * 3;
+      const height = 12 + Math.sin(i * 0.8) * 4;
+      const depth = 8 + Math.cos(i * 0.4) * 2;
+      
+      mountains.push({
+        position: [25, 0, z],
+        geometry: createPolygonMountain(baseWidth, height, depth, 6 + i % 2),
+        color: tier <= 2 ? '#9CA3AF' : tier <= 3 ? '#8B5CF6' : '#312E81',
+        scale: 0.8 + (i * 0.08)
+      });
+    }
+    
+    // Background distant mountains
+    for (let i = 0; i < 4; i++) {
+      const z = -120 - (i * 25);
+      const baseWidth = 20 + Math.random() * 10;
+      const height = 25 + Math.random() * 10;
+      const depth = 15 + Math.random() * 5;
+      const side = i % 2 === 0 ? -1 : 1;
+      
+      mountains.push({
+        position: [side * (40 + Math.random() * 20), -5, z],
+        geometry: createPolygonMountain(baseWidth, height, depth, 10),
+        color: tier <= 2 ? '#D1D5DB' : tier <= 3 ? '#A855F7' : '#4C1D95',
+        scale: 1.5 + Math.random() * 0.5
+      });
+    }
+    
+    return mountains;
+  }, [createPolygonMountain, tier]);
 
   // Generate truly random tree positions for natural forest appearance
   const treePositions = useMemo(() => {
@@ -158,67 +289,39 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         />
       </mesh>
 
-      {/* Left mountain range */}
-      {Array.from({ length: 8 }, (_, i) => {
-        const z = -10 - (i * 12);
-        const height = 15 + Math.sin(i * 0.5) * 5;
-        const width = 8 + Math.cos(i * 0.3) * 3;
-        
-        return (
-          <group key={`left-mountain-${i}`}>
-            {/* Main mountain */}
-            <mesh position={[-25, height / 2, z]} castShadow>
-              <boxGeometry args={[width, height, width]} />
+      {/* Polygon-shaped mountain ranges */}
+      {mountainData.map((mountain, index) => (
+        <group key={`mountain-${index}`} position={mountain.position} scale={[mountain.scale, mountain.scale, mountain.scale]}>
+          {/* Main mountain body */}
+          <mesh geometry={mountain.geometry} castShadow receiveShadow>
+            <meshLambertMaterial 
+              color={mountain.color}
+              transparent 
+              opacity={opacity}
+            />
+          </mesh>
+          
+          {/* Snow cap for higher mountains */}
+          {mountain.position[1] + mountain.scale * 15 > 10 && (
+            <mesh 
+              geometry={createPolygonMountain(
+                mountain.scale * 3, 
+                mountain.scale * 4, 
+                mountain.scale * 3, 
+                6
+              )} 
+              position={[0, mountain.scale * 12, 0]}
+              castShadow
+            >
               <meshLambertMaterial 
-                map={rockTexture}
+                color="#F9FAFB"
                 transparent 
-                opacity={opacity}
+                opacity={opacity * 0.9}
               />
             </mesh>
-            
-            {/* Mountain peak */}
-            <mesh position={[-25, height + 3, z]} castShadow>
-              <coneGeometry args={[width * 0.7, 6, 8]} />
-              <meshLambertMaterial 
-                color="#E5E7EB"
-                transparent 
-                opacity={opacity}
-              />
-            </mesh>
-          </group>
-        );
-      })}
-
-      {/* Right mountain range */}
-      {Array.from({ length: 8 }, (_, i) => {
-        const z = -15 - (i * 12);
-        const height = 12 + Math.cos(i * 0.7) * 4;
-        const width = 7 + Math.sin(i * 0.4) * 2;
-        
-        return (
-          <group key={`right-mountain-${i}`}>
-            {/* Main mountain */}
-            <mesh position={[25, height / 2, z]} castShadow>
-              <boxGeometry args={[width, height, width]} />
-              <meshLambertMaterial 
-                map={rockTexture}
-                transparent 
-                opacity={opacity}
-              />
-            </mesh>
-            
-            {/* Mountain peak */}
-            <mesh position={[25, height + 2, z]} castShadow>
-              <coneGeometry args={[width * 0.6, 4, 8]} />
-              <meshLambertMaterial 
-                color="#D1D5DB"
-                transparent 
-                opacity={opacity}
-              />
-            </mesh>
-          </group>
-        );
-      })}
+          )}
+        </group>
+      ))}
 
       {/* Naturally scattered trees creating diverse forest clusters */}
       {treePositions.map((pos, i) => (
@@ -236,9 +339,6 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
           </mesh>
         </group>
       ))}
-
-      {/* REMOVED: Scattered crystals - these were the blue diamonds */}
-      {/* REMOVED: Rock formations - these were the black squares */}
     </group>
   );
 };
