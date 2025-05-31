@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
@@ -166,42 +167,8 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         </group>
       ))}
 
-      {/* Scattered crystals for magical atmosphere */}
-      {Array.from({ length: 8 }, (_, i) => {
-        const angle = (i / 8) * Math.PI * 2;
-        const radius = 12 + Math.random() * 8;
-        const x = Math.cos(angle) * radius;
-        const z = -30 - (i * 8) + Math.sin(angle) * 5;
-        
-        return (
-          <mesh key={`crystal-${i}`} position={[x, 0.5, z]} castShadow>
-            <octahedronGeometry args={[1]} />
-            <meshBasicMaterial 
-              color={tier >= 3 ? '#8B5CF6' : '#06B6D4'}
-              transparent 
-              opacity={opacity * 0.8}
-            />
-          </mesh>
-        );
-      })}
-
-      {/* Rock formations near mountains */}
-      {Array.from({ length: 6 }, (_, i) => {
-        const side = i % 2 === 0 ? -1 : 1;
-        const x = side * (15 + Math.random() * 5);
-        const z = -20 - (i * 10);
-        
-        return (
-          <mesh key={`rock-${i}`} position={[x, 0, z]} castShadow>
-            <boxGeometry args={[2, 1 + Math.random(), 2]} />
-            <meshLambertMaterial 
-              color="#696969"
-              transparent 
-              opacity={opacity}
-            />
-          </mesh>
-        );
-      })}
+      {/* REMOVED: Scattered crystals - these were the blue diamonds */}
+      {/* REMOVED: Rock formations - these were the black squares */}
     </group>
   );
 };
