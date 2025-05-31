@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -11,55 +12,63 @@ const FantasySkyboxContent: React.FC<FantasySkyboxProps> = ({
   opacity = 1,
   realm
 }) => {
-  const [hasError, setHasError] = useState(false);
+  console.log('FantasySkyboxContent: Checking realm before any operations:', realm);
   
-  // Early return if not fantasy realm
+  // CRITICAL: Absolutely no operations if not fantasy realm
   if (realm !== 'fantasy') {
+    console.log('FantasySkyboxContent: EARLY EXIT - not fantasy realm');
     return null;
   }
   
+  console.log('FantasySkyboxContent: Proceeding with FANTASY realm only');
+  
+  const [hasError, setHasError] = useState(false);
+  
+  // Only call useGLTF hook if we're definitely in fantasy realm
   let model;
   try {
+    console.log('FantasySkyboxContent: Loading GLTF model for fantasy realm');
     model = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_skybox.glb');
+    console.log('FantasySkyboxContent: GLTF model loaded successfully');
   } catch (error) {
-    console.error("Failed to load skybox model:", error);
+    console.error("FantasySkyboxContent: Failed to load skybox model:", error);
     setHasError(true);
   }
   
-  if (!model?.scene || hasError || realm !== 'fantasy') {
-    // Fallback to existing gradient skybox only for fantasy realm
-    if (realm === 'fantasy') {
-      return (
-        <mesh>
-          <sphereGeometry args={[100, 32, 32]} />
-          <meshBasicMaterial 
-            transparent
-            opacity={opacity}
-            side={THREE.BackSide}
-          >
-            <primitive 
-              object={new THREE.CanvasTexture((() => {
-                const canvas = document.createElement('canvas');
-                canvas.width = 512;
-                canvas.height = 512;
-                const ctx = canvas.getContext('2d')!;
-                
-                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-                gradient.addColorStop(0, '#87CEEB');
-                gradient.addColorStop(1, '#E0F6FF');
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                return canvas;
-              })())}
-            />
-          </meshBasicMaterial>
-        </mesh>
-      );
-    }
-    return null;
+  if (!model?.scene || hasError) {
+    console.log('FantasySkyboxContent: Using fallback skybox for fantasy realm');
+    // Fallback to gradient skybox for fantasy realm
+    return (
+      <mesh>
+        <sphereGeometry args={[100, 32, 32]} />
+        <meshBasicMaterial 
+          transparent
+          opacity={opacity}
+          side={THREE.BackSide}
+        >
+          <primitive 
+            object={new THREE.CanvasTexture((() => {
+              const canvas = document.createElement('canvas');
+              canvas.width = 512;
+              canvas.height = 512;
+              const ctx = canvas.getContext('2d')!;
+              
+              const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+              gradient.addColorStop(0, '#87CEEB');
+              gradient.addColorStop(1, '#E0F6FF');
+              
+              ctx.fillStyle = gradient;
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              
+              return canvas;
+            })())}
+          />
+        </meshBasicMaterial>
+      </mesh>
+    );
   }
+
+  console.log('FantasySkyboxContent: Rendering GLTF skybox');
 
   const clonedScene = model.scene.clone();
   
@@ -92,10 +101,15 @@ const FantasySkyboxContent: React.FC<FantasySkyboxProps> = ({
 };
 
 export const FantasySkybox: React.FC<FantasySkyboxProps> = (props) => {
-  // Early return if not fantasy realm
+  console.log('FantasySkybox: Called with realm:', props.realm);
+  
+  // CRITICAL: Absolutely no rendering if not fantasy realm
   if (props.realm !== 'fantasy') {
+    console.log('FantasySkybox: REJECTING - not fantasy realm');
     return null;
   }
+
+  console.log('FantasySkybox: PROCEEDING with fantasy realm');
 
   return (
     <React.Suspense fallback={
@@ -113,5 +127,3 @@ export const FantasySkybox: React.FC<FantasySkyboxProps> = (props) => {
     </React.Suspense>
   );
 };
-
-// Remove preloading - only load when component is actually used

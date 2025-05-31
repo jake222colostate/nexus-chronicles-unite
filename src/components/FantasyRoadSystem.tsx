@@ -15,24 +15,26 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyRoadContent: Attempting to render with realm:', realm);
+  console.log('FantasyRoadContent: Checking realm before any operations:', realm);
   
-  // CRITICAL: Immediate return if not fantasy realm - before any hooks
+  // CRITICAL: Absolutely no operations if not fantasy realm
   if (realm !== 'fantasy') {
-    console.log('FantasyRoadContent: REJECTING render for realm:', realm);
+    console.log('FantasyRoadContent: EARLY EXIT - not fantasy realm');
     return null;
   }
   
-  console.log('FantasyRoadContent: PROCEEDING with fantasy realm loading');
+  console.log('FantasyRoadContent: Proceeding with FANTASY realm only');
   
   const [hasError, setHasError] = useState(false);
   
+  // Only call useGLTF hook if we're definitely in fantasy realm
   let model;
   try {
+    console.log('FantasyRoadContent: Loading GLTF model for fantasy realm');
     model = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_road_tile.glb');
-    console.log('FantasyRoadContent: Model loaded successfully');
+    console.log('FantasyRoadContent: GLTF model loaded successfully');
   } catch (error) {
-    console.error("Failed to load road model:", error);
+    console.error("FantasyRoadContent: Failed to load road model:", error);
     setHasError(true);
     return null;
   }
@@ -41,13 +43,12 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
   
   // Memoize road tile instances
   const roadInstances = useMemo(() => {
-    // CRITICAL: Triple-check realm before creating instances
-    if (!scene || hasError || realm !== 'fantasy') {
-      console.log('FantasyRoadContent: Skipping instance creation for realm:', realm);
+    if (!scene || hasError) {
+      console.log('FantasyRoadContent: Skipping instance creation - missing scene or error');
       return [];
     }
     
-    console.log('FantasyRoadContent: Creating road instances for fantasy realm');
+    console.log('FantasyRoadContent: Creating road instances');
     const instances = [];
     
     chunks.forEach(chunk => {
@@ -69,11 +70,10 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
     
     console.log('FantasyRoadContent: Created', instances.length, 'road instances');
     return instances;
-  }, [chunks, chunkSize, scene, hasError, realm]);
+  }, [chunks, chunkSize, scene, hasError]);
 
-  // CRITICAL: Final realm check before rendering
-  if (!scene || hasError || realm !== 'fantasy') {
-    console.log('FantasyRoadContent: Final check failed for realm:', realm);
+  if (!scene || hasError) {
+    console.log('FantasyRoadContent: Final check failed - no rendering');
     return null;
   }
 
@@ -108,13 +108,13 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
 export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
   console.log('FantasyRoadSystem: Called with realm:', props.realm);
   
-  // CRITICAL: Immediate return if not fantasy realm
+  // CRITICAL: Absolutely no rendering if not fantasy realm
   if (props.realm !== 'fantasy') {
-    console.log('FantasyRoadSystem: REJECTING render for realm:', props.realm);
+    console.log('FantasyRoadSystem: REJECTING - not fantasy realm');
     return null;
   }
 
-  console.log('FantasyRoadSystem: PROCEEDING to render for FANTASY realm');
+  console.log('FantasyRoadSystem: PROCEEDING with fantasy realm');
 
   return (
     <React.Suspense fallback={null}>
@@ -122,5 +122,3 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
     </React.Suspense>
   );
 };
-
-// CRITICAL: NO preloading - only load when component is actually used

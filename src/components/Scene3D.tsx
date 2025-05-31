@@ -14,27 +14,11 @@ import { EnhancedGrassSystem } from './EnhancedGrassSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
-// CRITICAL: Only import fantasy components when explicitly in fantasy realm
-// These will ONLY be loaded if realm === 'fantasy'
-const FantasyRoadSystem = React.lazy(() => {
-  console.log('LOADING FantasyRoadSystem component');
-  return import('./FantasyRoadSystem').then(module => ({ default: module.FantasyRoadSystem }));
-});
-
-const FantasyMountainSystem = React.lazy(() => {
-  console.log('LOADING FantasyMountainSystem component');
-  return import('./FantasyMountainSystem').then(module => ({ default: module.FantasyMountainSystem }));
-});
-
-const FantasyPortalSystem = React.lazy(() => {
-  console.log('LOADING FantasyPortalSystem component');
-  return import('./FantasyPortalSystem').then(module => ({ default: module.FantasyPortalSystem }));
-});
-
-const FantasySkybox = React.lazy(() => {
-  console.log('LOADING FantasySkybox component');
-  return import('./FantasySkybox').then(module => ({ default: module.FantasySkybox }));
-});
+// Import fantasy components directly - NO lazy loading
+import { FantasyRoadSystem } from './FantasyRoadSystem';
+import { FantasyMountainSystem } from './FantasyMountainSystem';
+import { FantasyPortalSystem } from './FantasyPortalSystem';
+import { FantasySkybox } from './FantasySkybox';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -67,7 +51,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 }) => {
   const cameraRef = useRef();
 
-  // Add debugging
   console.log('Scene3D rendering with realm:', realm);
 
   // Stable player position for chunk system
@@ -135,11 +118,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Skybox - CRITICAL: Only load fantasy skybox when realm is fantasy */}
+          {/* Skybox - ONLY render fantasy skybox when realm is fantasy */}
           {realm === 'fantasy' ? (
-            <Suspense fallback={<color attach="background" args={['#87CEEB']} />}>
-              <FantasySkybox realm={realm} />
-            </Suspense>
+            <FantasySkybox realm={realm} />
           ) : (
             <color attach="background" args={['#87CEEB']} />
           )}
@@ -147,7 +128,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* Environment System - CRITICAL: Completely separated by realm */}
+          {/* Environment System - COMPLETELY separated by realm */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
@@ -157,36 +138,30 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               console.log('ChunkSystem rendering with realm:', realm, 'chunks:', chunks.length);
               
               if (realm === 'fantasy') {
-                console.log('Rendering FANTASY components');
+                console.log('Rendering FANTASY components only');
                 return (
-                  <Suspense fallback={null}>
-                    {realm === 'fantasy' && (
-                      <FantasyRoadSystem
-                        chunks={chunks}
-                        chunkSize={50}
-                        realm={realm}
-                      />
-                    )}
+                  <>
+                    <FantasyRoadSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                      realm={realm}
+                    />
                     
-                    {realm === 'fantasy' && (
-                      <FantasyMountainSystem
-                        chunks={chunks}
-                        chunkSize={50}
-                        realm={realm}
-                      />
-                    )}
+                    <FantasyMountainSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                      realm={realm}
+                    />
                     
-                    {realm === 'fantasy' && (
-                      <FantasyPortalSystem
-                        chunks={chunks}
-                        chunkSize={50}
-                        realm={realm}
-                      />
-                    )}
-                  </Suspense>
+                    <FantasyPortalSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                      realm={realm}
+                    />
+                  </>
                 );
               } else {
-                console.log('Rendering SCIFI components');
+                console.log('Rendering SCIFI components only');
                 return (
                   <>
                     <EnhancedGrassSystem
@@ -218,15 +193,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           )}
         </Suspense>
       </Canvas>
-
-      {/* Loading fallback */}
-      <Suspense fallback={
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-white text-sm">Loading environment...</div>
-        </div>
-      }>
-        <div />
-      </Suspense>
     </div>
   );
 });

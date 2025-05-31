@@ -20,39 +20,40 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyMountainContent: Attempting to render with realm:', realm);
+  console.log('FantasyMountainContent: Checking realm before any operations:', realm);
   
-  // CRITICAL: Immediate return if not fantasy realm - before any hooks
+  // CRITICAL: Absolutely no operations if not fantasy realm
   if (realm !== 'fantasy') {
-    console.log('FantasyMountainContent: REJECTING render for realm:', realm);
+    console.log('FantasyMountainContent: EARLY EXIT - not fantasy realm');
     return null;
   }
   
-  console.log('FantasyMountainContent: PROCEEDING with fantasy realm loading');
+  console.log('FantasyMountainContent: Proceeding with FANTASY realm only');
   
   const [hasError, setHasError] = useState(false);
   
+  // Only call useGLTF hooks if we're definitely in fantasy realm
   let leftMountain, rightMountain;
   
   try {
+    console.log('FantasyMountainContent: Loading GLTF models for fantasy realm');
     leftMountain = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_left.glb');
     rightMountain = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_right.glb');
-    console.log('FantasyMountainContent: Models loaded successfully');
+    console.log('FantasyMountainContent: GLTF models loaded successfully');
   } catch (error) {
-    console.error("Failed to load mountain models:", error);
+    console.error("FantasyMountainContent: Failed to load mountain models:", error);
     setHasError(true);
     return null;
   }
   
   // Memoize mountain instances
   const mountainInstances = useMemo(() => {
-    // CRITICAL: Double-check realm before creating instances
-    if (!leftMountain.scene || !rightMountain.scene || hasError || realm !== 'fantasy') {
-      console.log('FantasyMountainContent: Skipping instance creation for realm:', realm);
+    if (!leftMountain.scene || !rightMountain.scene || hasError) {
+      console.log('FantasyMountainContent: Skipping instance creation - missing scenes or error');
       return [];
     }
     
-    console.log('FantasyMountainContent: Creating mountain instances for fantasy realm');
+    console.log('FantasyMountainContent: Creating mountain instances');
     const instances = [];
     
     chunks.forEach(chunk => {
@@ -101,11 +102,10 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
     
     console.log('FantasyMountainContent: Created', instances.length, 'mountain instances');
     return instances;
-  }, [chunks, chunkSize, leftMountain?.scene, rightMountain?.scene, hasError, realm]);
+  }, [chunks, chunkSize, leftMountain?.scene, rightMountain?.scene, hasError]);
 
-  // CRITICAL: Final realm check before rendering
-  if (!leftMountain?.scene || !rightMountain?.scene || hasError || realm !== 'fantasy') {
-    console.log('FantasyMountainContent: Final check failed for realm:', realm);
+  if (!leftMountain?.scene || !rightMountain?.scene || hasError) {
+    console.log('FantasyMountainContent: Final check failed - no rendering');
     return null;
   }
 
@@ -141,13 +141,13 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
 export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = (props) => {
   console.log('FantasyMountainSystem: Called with realm:', props.realm);
   
-  // CRITICAL: Immediate return if not fantasy realm
+  // CRITICAL: Absolutely no rendering if not fantasy realm
   if (props.realm !== 'fantasy') {
-    console.log('FantasyMountainSystem: REJECTING render for realm:', props.realm);
+    console.log('FantasyMountainSystem: REJECTING - not fantasy realm');
     return null;
   }
 
-  console.log('FantasyMountainSystem: PROCEEDING to render for FANTASY realm');
+  console.log('FantasyMountainSystem: PROCEEDING with fantasy realm');
 
   return (
     <React.Suspense fallback={null}>
@@ -155,5 +155,3 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = (prop
     </React.Suspense>
   );
 };
-
-// CRITICAL: NO preloading - only load when component is actually used
