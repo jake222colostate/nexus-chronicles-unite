@@ -1,14 +1,14 @@
-
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
 import { Vector3 } from 'three';
-import { GLBModel } from './GLBModelLoader';
-import { FirstPersonController } from './FirstPersonController';
+import { Enhanced360Controller } from './Enhanced360Controller';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { EnvironmentSystem } from './EnvironmentSystem';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
-import { ProceduralTerrain } from './ProceduralTerrain';
+import { EnhancedPathwaySystem } from './EnhancedPathwaySystem';
+import { NaturalMountainSystem } from './NaturalMountainSystem';
+import { EnhancedUpgradePedestal } from './EnhancedUpgradePedestal';
 import { useInfiniteUpgrades } from './InfiniteUpgradeSystem';
 
 interface Fantasy3DUpgradeWorldProps {
@@ -33,10 +33,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
   const [maxUnlockedUpgrade, setMaxUnlockedUpgrade] = useState(-1);
 
-  // Infinite world parameters
-  const CHUNK_SIZE = 100;
-  const RENDER_DISTANCE = 200;
-  const UPGRADE_SPACING = 50;
+  // Enhanced infinite world parameters
+  const CHUNK_SIZE = 80;
+  const RENDER_DISTANCE = 160;
+  const UPGRADE_SPACING = 28; // Every 28 meters as requested
 
   // Get dynamic upgrades based on player position
   const upgrades = useInfiniteUpgrades({
@@ -61,11 +61,10 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   const handleUpgradeClick = useCallback((upgrade: any) => {
     console.log(`Clicked upgrade: ${upgrade.name}`);
     
-    // Check if player is within interaction range
     const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
     console.log(`Distance to ${upgrade.name}: ${distance.toFixed(2)}`);
     
-    if (distance > 25) {
+    if (distance > 15) {
       console.log("Move closer to interact with this upgrade!");
       return;
     }
@@ -77,49 +76,22 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     console.log(`Attempting to purchase ${upgrade.name} for ${upgrade.cost} mana. Current mana: ${currentMana}`);
     
     if (currentMana >= upgrade.cost) {
-      // Purchase successful
       setCurrentMana(prev => prev - upgrade.cost);
       setTotalManaPerSecond(prev => prev + upgrade.manaPerSecond);
-      
-      // Update max unlocked upgrade for infinite system
       setMaxUnlockedUpgrade(prev => Math.max(prev, upgrade.id - 1));
-      
       setSelectedUpgrade(null);
       console.log(`Unlocked ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
     } else {
-      // Insufficient mana
       setShowInsufficientMana(true);
       setTimeout(() => setShowInsufficientMana(false), 2000);
       console.log("Not enough mana!");
     }
   }, [currentMana]);
 
-  // Check if player is within interaction range of upgrade
   const isWithinRange = (upgradePosition: [number, number, number]): boolean => {
     const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
-    return distance <= 25;
+    return distance <= 15;
   };
-
-  // Enhanced fade-in animation based on approach distance
-  const getUpgradeOpacity = (upgradePosition: [number, number, number]): number => {
-    const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
-    if (distance > 80) return 0;
-    if (distance > 60) return 0.2;
-    if (distance > 40) return 0.5;
-    if (distance > 25) return 0.8;
-    return 1;
-  };
-
-  const getUpgradeScale = (upgradePosition: [number, number, number], baseScale: number): number => {
-    const distance = cameraPosition.distanceTo(new Vector3(...upgradePosition));
-    if (distance > 60) return baseScale * 0.6;
-    if (distance > 40) return baseScale * 0.8;
-    if (distance > 25) return baseScale * 0.9;
-    return baseScale;
-  };
-
-  // No movement restrictions - infinite movement enabled
-  const canMoveForward = true;
 
   // Passive mana generation
   useEffect(() => {
@@ -128,14 +100,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     }, 100);
     return () => clearInterval(interval);
   }, [totalManaPerSecond]);
-
-  const formatNumber = (num: number): string => {
-    if (num >= 1e12) return (num / 1e12).toFixed(1) + 'T';
-    if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
-    return Math.floor(num).toString();
-  };
 
   return (
     <div className="absolute inset-0 w-full h-full">
@@ -151,24 +115,24 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         gl={{ antialias: true, alpha: true }}
       >
         <Suspense fallback={null}>
-          <FirstPersonController
+          {/* Enhanced 360° Movement Controller */}
+          <Enhanced360Controller
             position={[0, 1.6, 0]}
             onPositionChange={handlePositionChange}
-            canMoveForward={canMoveForward}
           />
 
-          {/* Environment System */}
+          {/* Enhanced Environment System */}
           <EnvironmentSystem 
             upgradeCount={maxUnlockedUpgrade + 1}
             onEnvironmentChange={(tier) => console.log(`Environment tier: ${tier}`)}
           />
 
-          {/* Lighting setup */}
-          <ambientLight intensity={0.8} color="#ffffff" />
+          {/* Enhanced Lighting */}
+          <ambientLight intensity={0.7} color="#E6E6FA" />
           <directionalLight
-            position={[10, 20, 10]}
-            intensity={1.2}
-            color="#ffffff"
+            position={[20, 30, 20]}
+            intensity={1.0}
+            color="#FFFFFF"
             castShadow
             shadow-mapSize-width={2048}
             shadow-mapSize-height={2048}
@@ -180,14 +144,14 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           />
           
           <directionalLight
-            position={[-10, 15, 5]}
-            intensity={0.6}
-            color="#ffffff"
+            position={[-15, 20, 10]}
+            intensity={0.5}
+            color="#DDA0DD"
           />
 
           <Environment preset="sunset" />
 
-          {/* Infinite Chunked Terrain System */}
+          {/* Enhanced Chunked World System */}
           <ChunkSystem
             playerPosition={cameraPosition}
             chunkSize={CHUNK_SIZE}
@@ -195,77 +159,66 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           >
             {(chunks: ChunkData[]) => (
               <>
-                {chunks.map(chunk => (
-                  <ProceduralTerrain
-                    key={chunk.id}
-                    chunk={chunk}
-                    chunkSize={CHUNK_SIZE}
-                  />
-                ))}
+                {/* Enhanced Cobblestone Pathway */}
+                <EnhancedPathwaySystem
+                  chunks={chunks}
+                  chunkSize={CHUNK_SIZE}
+                />
+                
+                {/* Natural Mountain System */}
+                <NaturalMountainSystem
+                  chunks={chunks}
+                  chunkSize={CHUNK_SIZE}
+                />
               </>
             )}
           </ChunkSystem>
 
-          {/* Main stone path extending infinitely */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -500]} receiveShadow>
-            <planeGeometry args={[60, 2000]} />
-            <meshLambertMaterial color="#8B7355" />
-          </mesh>
-
-          {/* Dynamic lighting that follows the player */}
+          {/* Dynamic lighting that follows player */}
           <pointLight 
-            position={[cameraPosition.x, 12, cameraPosition.z - 10]} 
-            intensity={1.0}
-            color="#ffffff" 
-            distance={60} 
+            position={[cameraPosition.x, 8, cameraPosition.z - 5]} 
+            intensity={0.8}
+            color="#DDA0DD" 
+            distance={40} 
           />
 
           <ContactShadows 
             position={[0, -0.4, cameraPosition.z]} 
-            opacity={0.3} 
-            scale={80} 
-            blur={2.5} 
-            far={20} 
+            opacity={0.4} 
+            scale={60} 
+            blur={2.0} 
+            far={15} 
           />
 
-          {/* Infinite Dynamic Upgrades */}
+          {/* Enhanced Upgrade Pedestals */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-            if (distance > 120) return null; // Culling for performance
-            
-            const opacity = getUpgradeOpacity(upgrade.position);
-            const scale = getUpgradeScale(upgrade.position, upgrade.scale);
-            
-            if (opacity <= 0) return null;
+            if (distance > 100) return null; // Performance culling
             
             return (
-              <group key={upgrade.id}>
-                <GLBModel
-                  modelUrl={upgrade.modelUrl}
-                  name={upgrade.name}
-                  position={upgrade.position}
-                  scale={scale}
-                  onClick={() => handleUpgradeClick(upgrade)}
-                  isUnlocked={upgrade.unlocked}
-                  isPurchased={upgrade.unlocked}
-                  isWithinRange={isWithinRange(upgrade.position)}
-                  cost={upgrade.cost}
-                  canAfford={currentMana >= upgrade.cost}
-                />
-              </group>
+              <EnhancedUpgradePedestal
+                key={upgrade.id}
+                position={upgrade.position}
+                upgrade={upgrade}
+                isUnlocked={upgrade.unlocked}
+                isPurchased={upgrade.unlocked}
+                canAfford={currentMana >= upgrade.cost}
+                onInteract={() => handleUpgradeClick(upgrade)}
+                tier={upgrade.tier + 1}
+              />
             );
           })}
         </Suspense>
       </Canvas>
 
-      {/* Progress indicator - now shows infinite progress */}
+      {/* Enhanced Progress indicator */}
       <div className="absolute bottom-2 left-4 right-4 pointer-events-none">
-        <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
-          <div className="text-white text-xs text-center mb-1">
-            Distance: {Math.floor(Math.abs(cameraPosition.z))}m | Upgrades: {maxUnlockedUpgrade + 1}
+        <div className="bg-black/50 backdrop-blur-sm rounded-full h-3 overflow-hidden relative">
+          <div className="text-white text-sm text-center mb-2 font-semibold">
+            Journey: {Math.floor(Math.abs(cameraPosition.z))}m | Upgrades: {maxUnlockedUpgrade + 1} | Realm: Fantasy
           </div>
           <div 
-            className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
+            className="bg-gradient-to-r from-purple-500 via-pink-500 to-violet-600 h-full transition-all duration-500"
             style={{ 
               width: `${Math.min(100, (Math.abs(cameraPosition.z) / 1000) * 100)}%`
             }}
@@ -273,11 +226,11 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       </div>
 
-      {/* Insufficient Mana Warning */}
+      {/* Enhanced Insufficient Mana Warning */}
       {showInsufficientMana && (
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 pointer-events-none">
-          <div className="bg-red-600/90 text-white px-6 py-3 rounded-lg border border-red-400 animate-bounce">
-            <p className="font-bold">Not enough mana!</p>
+          <div className="bg-red-600/95 text-white px-8 py-4 rounded-xl border-2 border-red-400 animate-bounce shadow-2xl">
+            <p className="font-bold text-lg">✨ Not enough mana! ✨</p>
           </div>
         </div>
       )}
@@ -285,7 +238,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
       {/* Enhanced Upgrade Modal */}
       {selectedUpgrade && (
         <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setSelectedUpgrade(null);

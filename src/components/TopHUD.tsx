@@ -25,6 +25,16 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   onHelpClick
 }) => {
   const formatNumber = (num: number): string => {
+    if (num >= 1e63) return (num / 1e63).toFixed(1) + 'Vi';
+    if (num >= 1e60) return (num / 1e60).toFixed(1) + 'Ud';
+    if (num >= 1e57) return (num / 1e57).toFixed(1) + 'Td';
+    if (num >= 1e54) return (num / 1e54).toFixed(1) + 'Sd';
+    if (num >= 1e51) return (num / 1e51).toFixed(1) + 'Qd';
+    if (num >= 1e48) return (num / 1e48).toFixed(1) + 'Qad';
+    if (num >= 1e45) return (num / 1e45).toFixed(1) + 'Trd';
+    if (num >= 1e42) return (num / 1e42).toFixed(1) + 'Dd';
+    if (num >= 1e39) return (num / 1e39).toFixed(1) + 'Ud';
+    if (num >= 1e36) return (num / 1e36).toFixed(1) + 'Und';
     if (num >= 1e33) return (num / 1e33).toFixed(1) + 'Dc';
     if (num >= 1e30) return (num / 1e30).toFixed(1) + 'No';
     if (num >= 1e27) return (num / 1e27).toFixed(1) + 'Oc';
@@ -46,66 +56,66 @@ export const TopHUD: React.FC<TopHUDProps> = ({
 
   return (
     <div className="absolute top-0 left-0 right-0 z-40 iphone-safe-top">
-      <div className="px-3 py-2">
-        {/* Enhanced unified stats bar with larger icons and better spacing */}
+      <div className="px-4 py-3">
+        {/* Enhanced unified stats bar with much larger icons and better spacing */}
         <div 
-          className="flex items-center bg-black/70 backdrop-blur-xl px-5 py-4 rounded-lg border border-white/20 relative min-h-[64px]"
+          className="flex items-center bg-black/80 backdrop-blur-xl px-6 py-5 rounded-2xl border-2 border-white/30 relative min-h-[80px]"
           style={{
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.15)'
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6), 0 0 40px rgba(255, 255, 255, 0.15)'
           }}
         >
           {/* Enhanced glassmorphism effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-lg" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/20 pointer-events-none rounded-2xl" />
           
-          {/* Help Button - enhanced with larger size */}
+          {/* Help Button - larger size */}
           <Button
             onClick={onHelpClick}
             size="sm"
             variant="ghost"
-            className="h-9 w-9 p-0 rounded-md bg-transparent hover:bg-white/20 hover:scale-110 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-5"
+            className="h-12 w-12 p-0 rounded-xl bg-transparent hover:bg-white/20 hover:scale-110 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 mr-6"
           >
-            <HelpCircle size={18} />
+            <HelpCircle size={24} />
           </Button>
 
-          {/* Larger icons and numbers with consistent spacing */}
-          <div className="flex items-center justify-between text-base font-medium text-white relative z-10 flex-1 min-w-0 gap-6">
-            {/* 🧠 Brain - increased icon and text size */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-2xl leading-none">🧠</span>
-              <span className="text-purple-300 font-semibold text-base">{formatNumber(mana)}</span>
+          {/* Much larger icons and numbers with generous spacing */}
+          <div className="flex items-center justify-between text-xl font-bold text-white relative z-10 flex-1 min-w-0 gap-8">
+            {/* 🧠 Brain - much larger icon and text */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-4xl leading-none">🧠</span>
+              <span className="text-purple-300 font-bold text-xl">{formatNumber(mana)}</span>
             </div>
             
-            {/* ⚡ Energy - increased icon and text size */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-2xl leading-none">⚡</span>
-              <span className="text-cyan-300 font-semibold text-base">{formatNumber(energyCredits)}</span>
+            {/* ⚡ Energy - much larger icon and text */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-4xl leading-none">⚡</span>
+              <span className="text-cyan-300 font-bold text-xl">{formatNumber(energyCredits)}</span>
             </div>
             
-            {/* 💎 Crystals - increased icon and text size */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-2xl leading-none">💎</span>
-              <span className="text-yellow-300 font-semibold text-base">{formatNumber(nexusShards)}</span>
+            {/* 💎 Crystals - much larger icon and text */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-4xl leading-none">💎</span>
+              <span className="text-yellow-300 font-bold text-xl">{formatNumber(nexusShards)}</span>
             </div>
             
-            {/* 🧱 Stone - increased icon and text size */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-2xl leading-none">🧱</span>
-              <span className="text-orange-300 font-semibold text-base">0</span>
+            {/* 🧱 Stone - much larger icon and text */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-4xl leading-none">🧱</span>
+              <span className="text-orange-300 font-bold text-xl">0</span>
             </div>
             
-            {/* ✨ Mana with rate - increased icon and text size with better alignment */}
-            <div className="flex flex-col items-end gap-0 flex-shrink-0 min-w-[80px]">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl leading-none">✨</span>
-                <span className="text-purple-300 font-semibold text-base">{formatNumber(mana)}</span>
+            {/* ✨ Mana with rate - much larger with better alignment */}
+            <div className="flex flex-col items-end gap-1 flex-shrink-0 min-w-[120px]">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl leading-none">✨</span>
+                <span className="text-purple-300 font-bold text-xl">{formatNumber(mana)}</span>
               </div>
-              <span className="text-sm text-gray-400 leading-tight">+{formatRate(manaPerSecond)}/s</span>
+              <span className="text-base text-purple-400 leading-tight font-semibold">+{formatRate(manaPerSecond)}/s</span>
             </div>
             
-            {/* 🔄 Progress - increased icon and text size */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-2xl leading-none">🔄</span>
-              <span className="text-orange-300 font-semibold text-base">{Math.floor(convergenceProgress)}%</span>
+            {/* 🔄 Progress - much larger icon and text */}
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <span className="text-4xl leading-none">🔄</span>
+              <span className="text-orange-300 font-bold text-xl">{Math.floor(convergenceProgress)}%</span>
             </div>
           </div>
         </div>
