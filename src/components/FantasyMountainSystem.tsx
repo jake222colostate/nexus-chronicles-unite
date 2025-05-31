@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -14,16 +14,26 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
+const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
   chunks,
   chunkSize
 }) => {
-  const leftMountain = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_left.glb');
-  const rightMountain = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_right.glb');
+  const [hasError, setHasError] = useState(false);
+  
+  let leftMountain, rightMountain;
+  
+  try {
+    leftMountain = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_left.glb');
+    rightMountain = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_right.glb');
+  } catch (error) {
+    console.error("Failed to load mountain models:", error);
+    setHasError(true);
+    return null;
+  }
   
   // Memoize mountain instances
   const mountainInstances = useMemo(() => {
-    if (!leftMountain.scene || !rightMountain.scene) return [];
+    if (!leftMountain.scene || !rightMountain.scene || hasError) return [];
     
     const instances = [];
     
@@ -35,8 +45,8 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
       for (let i = 0; i < leftMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 1000;
         const z = worldZ - (i * 25) - seededRandom(mountainSeed) * 5;
-        const x = -30 - seededRandom(mountainSeed + 1) * 10; // Left side positioning
-        const y = seededRandom(mountainSeed + 2) * 2; // Slight height variation
+        const x = -30 - seededRandom(mountainSeed + 1) * 10;
+        const y = seededRandom(mountainSeed + 2) * 2;
         
         const rotationY = seededRandom(mountainSeed + 3) * Math.PI * 0.5;
         const scale = 0.8 + seededRandom(mountainSeed + 4) * 0.4;
@@ -55,8 +65,8 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
       for (let i = 0; i < rightMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 2000;
         const z = worldZ - (i * 25) - seededRandom(mountainSeed) * 5;
-        const x = 30 + seededRandom(mountainSeed + 1) * 10; // Right side positioning
-        const y = seededRandom(mountainSeed + 2) * 2; // Slight height variation
+        const x = 30 + seededRandom(mountainSeed + 1) * 10;
+        const y = seededRandom(mountainSeed + 2) * 2;
         
         const rotationY = seededRandom(mountainSeed + 3) * Math.PI * 0.5;
         const scale = 0.8 + seededRandom(mountainSeed + 4) * 0.4;
@@ -72,9 +82,9 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize, leftMountain.scene, rightMountain.scene]);
+  }, [chunks, chunkSize, leftMountain.scene, rightMountain.scene, hasError]);
 
-  if (!leftMountain.scene || !rightMountain.scene) {
+  if (!leftMountain.scene || !rightMountain.scene || hasError) {
     return null;
   }
 
@@ -105,5 +115,17 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   );
 };
 
-useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_left.glb');
-useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_right.glb');
+export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = (props) => {
+  return (
+    <React.Suspense fallback={null}>
+      <FantasyMountainContent {...props} />
+    </React.Suspense>
+  );
+};
+
+try {
+  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_left.glb');
+  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_right.glb');
+} catch (error) {
+  console.warn('Failed to preload mountain models:', error);
+}

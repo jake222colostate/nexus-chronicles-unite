@@ -43,7 +43,8 @@ const GLBMountainContent: React.FC<GLBMountainSystemProps & { onError: () => voi
   let gltf;
   
   try {
-    gltf = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
+    // Updated to use the correct CORS-compatible raw GitHub URL
+    gltf = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/low_poly_fantasy_mountain.glb');
   } catch (error) {
     console.error('Failed to load GLB mountain model:', error);
     onError();
@@ -215,7 +216,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = (props) => {
 
 // Only attempt to preload if the URL is accessible
 try {
-  useGLTF.preload('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
+  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/low_poly_fantasy_mountain.glb');
 } catch (error) {
   console.warn('Failed to preload GLB mountain model, will use fallback:', error);
 }

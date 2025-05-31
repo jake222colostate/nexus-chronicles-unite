@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -7,12 +7,20 @@ interface FantasySkyboxProps {
   opacity?: number;
 }
 
-export const FantasySkybox: React.FC<FantasySkyboxProps> = ({ 
+const FantasySkyboxContent: React.FC<FantasySkyboxProps> = ({ 
   opacity = 1 
 }) => {
-  const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_skybox.glb');
+  const [hasError, setHasError] = useState(false);
   
-  if (!scene) {
+  let model;
+  try {
+    model = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_skybox.glb');
+  } catch (error) {
+    console.error("Failed to load skybox model:", error);
+    setHasError(true);
+  }
+  
+  if (!model?.scene || hasError) {
     // Fallback to existing gradient skybox
     return (
       <mesh>
@@ -44,7 +52,7 @@ export const FantasySkybox: React.FC<FantasySkyboxProps> = ({
     );
   }
 
-  const clonedScene = scene.clone();
+  const clonedScene = model.scene.clone();
   
   // Ensure skybox materials are optimized and face inward
   clonedScene.traverse((child) => {
@@ -74,4 +82,26 @@ export const FantasySkybox: React.FC<FantasySkyboxProps> = ({
   );
 };
 
-useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_skybox.glb');
+export const FantasySkybox: React.FC<FantasySkyboxProps> = (props) => {
+  return (
+    <React.Suspense fallback={
+      <mesh>
+        <sphereGeometry args={[100, 32, 32]} />
+        <meshBasicMaterial 
+          transparent
+          opacity={props.opacity || 1}
+          side={THREE.BackSide}
+          color="#87CEEB"
+        />
+      </mesh>
+    }>
+      <FantasySkyboxContent {...props} />
+    </React.Suspense>
+  );
+};
+
+try {
+  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_skybox.glb');
+} catch (error) {
+  console.warn('Failed to preload skybox model:', error);
+}

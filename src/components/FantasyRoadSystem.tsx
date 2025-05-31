@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -9,15 +9,26 @@ interface FantasyRoadSystemProps {
   chunkSize: number;
 }
 
-export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = ({
+const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
   chunks,
   chunkSize
 }) => {
-  const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_road_tile.glb');
+  const [hasError, setHasError] = useState(false);
+  
+  let model;
+  try {
+    model = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_road_tile.glb');
+  } catch (error) {
+    console.error("Failed to load road model:", error);
+    setHasError(true);
+    return null;
+  }
+
+  const { scene } = model;
   
   // Memoize road tile instances
   const roadInstances = useMemo(() => {
-    if (!scene) return [];
+    if (!scene || hasError) return [];
     
     const instances = [];
     
@@ -39,9 +50,9 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize, scene]);
+  }, [chunks, chunkSize, scene, hasError]);
 
-  if (!scene) {
+  if (!scene || hasError) {
     return null;
   }
 
@@ -71,4 +82,16 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = ({
   );
 };
 
-useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_road_tile.glb');
+export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
+  return (
+    <React.Suspense fallback={null}>
+      <FantasyRoadContent {...props} />
+    </React.Suspense>
+  );
+};
+
+try {
+  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_road_tile.glb');
+} catch (error) {
+  console.warn('Failed to preload road model:', error);
+}

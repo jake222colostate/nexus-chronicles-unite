@@ -1,5 +1,5 @@
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { ChunkData } from './ChunkSystem';
@@ -10,16 +10,27 @@ interface FantasyPortalSystemProps {
   chunkSize: number;
 }
 
-export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = ({
+const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
   chunks,
   chunkSize
 }) => {
-  const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_portal.glb');
+  const [hasError, setHasError] = useState(false);
   const portalRefs = useRef<THREE.Group[]>([]);
+  
+  let model;
+  try {
+    model = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_portal.glb');
+  } catch (error) {
+    console.error("Failed to load portal model:", error);
+    setHasError(true);
+    return null;
+  }
+
+  const { scene } = model;
   
   // Memoize portal instances - every 500 units (approximately 10 chunks)
   const portalInstances = useMemo(() => {
-    if (!scene) return [];
+    if (!scene || hasError) return [];
     
     const instances = [];
     
@@ -38,7 +49,7 @@ export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize, scene]);
+  }, [chunks, chunkSize, scene, hasError]);
 
   // Animate portals
   useFrame((state) => {
@@ -52,7 +63,7 @@ export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = ({
     });
   });
 
-  if (!scene) {
+  if (!scene || hasError) {
     return null;
   }
 
@@ -96,4 +107,16 @@ export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = ({
   );
 };
 
-useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_portal.glb');
+export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = (props) => {
+  return (
+    <React.Suspense fallback={null}>
+      <FantasyPortalContent {...props} />
+    </React.Suspense>
+  );
+};
+
+try {
+  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_portal.glb');
+} catch (error) {
+  console.warn('Failed to preload portal model:', error);
+}
