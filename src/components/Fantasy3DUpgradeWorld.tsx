@@ -193,6 +193,40 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     return Math.floor(num).toString();
   };
 
+  // Generate staggered stepping stone positions
+  const generateSteppingStones = () => {
+    const stones = [];
+    let currentX = 0;
+    let currentZ = -5;
+    
+    // Create 64 stepping stones with staggered pattern
+    for (let i = 0; i < 64; i++) {
+      // Stagger left and right with some randomness
+      const staggerDirection = (i % 3 === 0) ? 0 : (i % 2 === 0 ? -1 : 1);
+      const staggerAmount = 0.8 + (Math.random() * 0.6); // 0.8 to 1.4 units
+      
+      currentX = staggerDirection * staggerAmount + (Math.random() - 0.5) * 0.4;
+      currentZ -= 4.5 + (Math.random() * 1.5); // 4.5-6 units apart
+      
+      // Random rotation for each stone
+      const rotation = Math.random() * Math.PI * 2;
+      
+      // Slight random scale variation
+      const scale = 0.9 + (Math.random() * 0.2); // 0.9 to 1.1
+      
+      stones.push({
+        x: currentX,
+        z: currentZ,
+        rotation,
+        scale
+      });
+    }
+    
+    return stones;
+  };
+
+  const steppingStones = generateSteppingStones();
+
   return (
     <div className="absolute inset-0 w-full h-full">
       <Canvas
@@ -255,20 +289,20 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
           <Environment preset="sunset" />
 
-          {/* Extended stone path for longer journey */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -160]} receiveShadow>
-            <planeGeometry args={[50, 350]} />
-            <meshLambertMaterial color="#8B7355" />
-          </mesh>
-
-          {/* Enhanced stone path markers with more spacing */}
-          {Array.from({ length: 32 }, (_, i) => (
-            <mesh key={i} position={[0, -0.4, -10 - (i * 10)]} rotation={[-Math.PI / 2, 0, 0]}>
-              <circleGeometry args={[0.8]} />
-              <meshBasicMaterial 
-                color="#A0A0A0" 
-                transparent 
-                opacity={0.8} 
+          {/* Individual staggered stepping stones */}
+          {steppingStones.map((stone, i) => (
+            <mesh 
+              key={i} 
+              position={[stone.x, -0.45, stone.z]} 
+              rotation={[-Math.PI / 2, 0, stone.rotation]}
+              scale={[stone.scale, stone.scale, stone.scale]}
+              receiveShadow
+              castShadow
+            >
+              <cylinderGeometry args={[1.2, 1.0, 0.3, 8]} />
+              <meshLambertMaterial 
+                color="#6B5B73" 
+                roughness={0.8}
               />
             </mesh>
           ))}
