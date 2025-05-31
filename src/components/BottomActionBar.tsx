@@ -20,7 +20,7 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   };
 
   return (
-    <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 z-30">
+    <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40">
       <div className="flex items-center gap-3 bg-black/50 backdrop-blur-xl p-2 rounded-full border border-white/30 shadow-lg">
         {/* Enhanced glassmorphism */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-full" />

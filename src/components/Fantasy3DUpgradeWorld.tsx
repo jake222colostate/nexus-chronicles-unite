@@ -1,4 +1,3 @@
-
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -185,7 +184,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             canMoveForward={canMoveForward}
           />
 
-          {/* Simplified Environment System */}
           <EnvironmentSystem 
             upgradeCount={unlockedUpgradeCount}
             onEnvironmentChange={handleEnvironmentChange}
@@ -207,7 +205,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             shadow-camera-bottom={-30}
           />
           
-          {/* Additional bright fill light */}
           <directionalLight
             position={[-10, 15, 5]}
             intensity={0.6}
@@ -278,7 +275,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
       </Canvas>
 
       {/* Enhanced Resource Display with environment tier indicator */}
-      <div className="absolute top-4 right-4 pointer-events-none">
+      <div className="absolute top-4 right-4 pointer-events-none z-50">
         <div className="bg-purple-900/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-400/40">
           <div className="text-yellow-400 text-lg font-bold">{formatNumber(currentMana)} Mana</div>
           <div className="text-purple-300 text-sm">{formatNumber(totalManaPerSecond)}/sec</div>
@@ -288,8 +285,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       </div>
 
-      {/* Progress indicator positioned underneath all interactable buttons */}
-      <div className="absolute bottom-2 left-4 right-4 pointer-events-none">
+      {/* Progress indicator positioned with proper spacing */}
+      <div className="absolute bottom-8 left-4 right-4 pointer-events-none z-10">
         <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
           <div 
             className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
@@ -297,7 +294,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 100) * 100)))}%` 
             }}
           />
-          {/* Environment tier markers - updated for 4 tiers */}
           <div className="absolute top-0 left-1/4 w-0.5 h-full bg-yellow-400 opacity-60" />
           <div className="absolute top-0 left-1/2 w-0.5 h-full bg-yellow-400 opacity-60" />
           <div className="absolute top-0 left-3/4 w-0.5 h-full bg-yellow-400 opacity-60" />
@@ -308,7 +304,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
       </div>
 
       {/* Movement instructions */}
-      <div className="absolute top-20 left-4 right-4 text-center pointer-events-none">
+      <div className="absolute top-20 left-4 right-4 text-center pointer-events-none z-40">
         <p className="text-white/70 text-sm font-medium">
           Use WASD to move around, click and drag or A/D to look around (180° range), get close and click upgrades to unlock
         </p>
