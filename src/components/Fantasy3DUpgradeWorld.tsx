@@ -1,3 +1,4 @@
+
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -6,7 +7,6 @@ import { GLBModel } from './GLBModelLoader';
 import { FirstPersonController } from './FirstPersonController';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { EnvironmentSystem } from './EnvironmentSystem';
-import { ManaDisplayBox } from './UI/ManaDisplayBox';
 
 interface Fantasy3DUpgradeWorldProps {
   onUpgradeClick: (upgradeName: string) => void;
@@ -179,13 +179,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
   return (
     <div className="absolute inset-0 w-full h-full">
-      {/* Mana Display Box */}
-      <ManaDisplayBox 
-        mana={currentMana}
-        manaPerSecond={totalManaPerSecond}
-        realm={realm}
-      />
-
       <Canvas
         dpr={[1, 2]}
         camera={{ 

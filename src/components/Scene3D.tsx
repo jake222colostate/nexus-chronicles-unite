@@ -5,7 +5,6 @@ import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
-import { ManaDisplayBox } from './UI/ManaDisplayBox';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 
 interface Scene3DProps {
@@ -52,13 +51,6 @@ export const Scene3D: React.FC<Scene3DProps> = ({
 
   return (
     <div className="w-full h-full relative">
-      {/* Mana Display Box */}
-      <ManaDisplayBox 
-        mana={gameState.mana}
-        manaPerSecond={gameState.manaPerSecond}
-        realm={realm}
-      />
-
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
         dpr={[1, 2]}
