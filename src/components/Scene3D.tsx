@@ -1,5 +1,5 @@
 
-import React, { Suspense, useRef } from 'react';
+import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
@@ -17,8 +17,8 @@ interface Scene3DProps {
   onTapEffectComplete?: () => void;
 }
 
-// 3D positioning for upgrade nodes in vertical tree layout
-const upgradePositions = [
+// Memoized upgrade positions - no need to recalculate every render
+const UPGRADE_POSITIONS = [
   { id: 'arcane_ai', x: 0, y: 4, z: 0, tier: 1 },
   { id: 'mana_fountain', x: -2, y: 2.5, z: -1, tier: 2 },
   { id: 'quantum_drive', x: 2, y: 2.5, z: -1, tier: 2 },
@@ -29,7 +29,7 @@ const upgradePositions = [
   { id: 'reality_engine', x: 0, y: -2, z: -4, tier: 4 }
 ];
 
-export const Scene3D: React.FC<Scene3DProps> = ({
+export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   realm,
   gameState,
   onUpgradeClick,
@@ -39,7 +39,8 @@ export const Scene3D: React.FC<Scene3DProps> = ({
 }) => {
   const cameraRef = useRef();
 
-  const checkUpgradeUnlocked = (upgrade: any): boolean => {
+  // Memoize upgrade unlock checking to prevent recalculation
+  const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
     const { requirements } = upgrade;
     
     if (requirements.mana && gameState.mana < requirements.mana) return false;
@@ -48,14 +49,36 @@ export const Scene3D: React.FC<Scene3DProps> = ({
     if (requirements.convergenceCount && gameState.convergenceCount < requirements.convergenceCount) return false;
     
     return true;
-  };
+  }, [gameState.mana, gameState.energyCredits, gameState.nexusShards, gameState.convergenceCount]);
+
+  // Memoize upgrade nodes to prevent unnecessary re-renders
+  const upgradeNodes = useMemo(() => {
+    return UPGRADE_POSITIONS.map((position) => {
+      const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
+      if (!upgrade) return null;
+
+      return (
+        <UpgradeNode3D
+          key={upgrade.id}
+          upgrade={upgrade}
+          position={[position.x, position.y, position.z]}
+          isUnlocked={checkUpgradeUnlocked(upgrade)}
+          isPurchased={gameState.purchasedUpgrades?.includes(upgrade.id) || false}
+          canAfford={gameState.nexusShards >= upgrade.cost}
+          onClick={() => onUpgradeClick(upgrade.id)}
+          realm={realm}
+        />
+      );
+    }).filter(Boolean);
+  }, [gameState.purchasedUpgrades, gameState.nexusShards, checkUpgradeUnlocked, onUpgradeClick, realm]);
 
   return (
     <div className="w-full h-full relative">
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
-        dpr={[1, 2]}
-        performance={{ min: 0.5 }}
+        dpr={[1, 1.5]} // Reduced max DPR for better performance
+        performance={{ min: 0.6 }} // Slightly higher min performance threshold
+        gl={{ antialias: false, alpha: false }} // Disable expensive rendering options
       >
         <Suspense fallback={null}>
           {/* Camera with attached wizard staff */}
@@ -67,11 +90,10 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             near={0.1}
             far={100}
           >
-            {/* Wizard Staff attached to camera */}
             <WizardStaff />
           </PerspectiveCamera>
 
-          {/* Controls - limited to vertical movement */}
+          {/* Optimized controls */}
           <OrbitControls
             enablePan={true}
             enableZoom={true}
@@ -82,55 +104,40 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             maxDistance={15}
             minPolarAngle={Math.PI / 4}
             maxPolarAngle={3 * Math.PI / 4}
+            enableDamping={false} // Disable damping for better performance
           />
 
-          {/* Clean, simple lighting */}
+          {/* Optimized lighting */}
           <ambientLight intensity={0.6} />
           <directionalLight
             position={[5, 5, 5]}
             intensity={0.8}
-            castShadow
-            shadow-mapSize-width={1024}
-            shadow-mapSize-height={1024}
+            castShadow={false} // Disable shadows for better performance
           />
 
-          {/* Floating Island Base - NO PARTICLES */}
+          {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* 3D Upgrade Nodes - NO PARTICLES */}
-          {upgradePositions.map((position) => {
-            const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
-            if (!upgrade) return null;
+          {/* Memoized upgrade nodes */}
+          {upgradeNodes}
 
-            return (
-              <UpgradeNode3D
-                key={upgrade.id}
-                upgrade={upgrade}
-                position={[position.x, position.y, position.z]}
-                isUnlocked={checkUpgradeUnlocked(upgrade)}
-                isPurchased={gameState.purchasedUpgrades?.includes(upgrade.id) || false}
-                canAfford={gameState.nexusShards >= upgrade.cost}
-                onClick={() => onUpgradeClick(upgrade.id)}
-                realm={realm}
-              />
-            );
-          })}
-
-          {/* Tap Effect - Simple geometry only */}
+          {/* Tap Effect */}
           {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
           )}
         </Suspense>
       </Canvas>
 
-      {/* Loading fallback */}
+      {/* Simplified loading fallback */}
       <Suspense fallback={
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-white text-sm">Loading 3D Scene...</div>
+          <div className="text-white text-sm">Loading...</div>
         </div>
       }>
         <div />
       </Suspense>
     </div>
   );
-};
+});
+
+Scene3D.displayName = 'Scene3D';

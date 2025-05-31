@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Crown, Sparkles, Zap } from 'lucide-react';
@@ -10,11 +10,12 @@ interface ConvergenceSystemProps {
   onPerformConvergence: () => void;
 }
 
-export const ConvergenceSystem: React.FC<ConvergenceSystemProps> = ({
+export const ConvergenceSystem: React.FC<ConvergenceSystemProps> = React.memo(({
   gameState,
   onPerformConvergence
 }) => {
-  const calculateConvergenceData = (): ConvergenceData => {
+  // Memoize convergence data calculation to prevent unnecessary recalculations
+  const convergenceData: ConvergenceData = useMemo(() => {
     const totalValue = gameState.mana + gameState.energyCredits;
     const baseThreshold = 1000;
     const threshold = Math.floor(baseThreshold * Math.pow(2, gameState.convergenceCount));
@@ -28,17 +29,20 @@ export const ConvergenceSystem: React.FC<ConvergenceSystemProps> = ({
       shardsToGain,
       multiplier
     };
-  };
+  }, [gameState.mana, gameState.energyCredits, gameState.convergenceCount, gameState.nexusShards]);
 
-  const convergenceData = calculateConvergenceData();
+  // Memoize format number function
+  const formatNumber = useMemo(() => {
+    return (num: number): string => {
+      if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+      if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+      return Math.floor(num).toString();
+    };
+  }, []);
 
-  const formatNumber = (num: number): string => {
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-    return Math.floor(num).toString();
-  };
-
-  const progressPercentage = Math.min((convergenceData.currentProgress / convergenceData.threshold) * 100, 100);
+  const progressPercentage = useMemo(() => {
+    return Math.min((convergenceData.currentProgress / convergenceData.threshold) * 100, 100);
+  }, [convergenceData.currentProgress, convergenceData.threshold]);
 
   return (
     <Card className="p-6 bg-gradient-to-br from-purple-900/80 to-cyan-900/80 border-2 border-yellow-400">
@@ -114,4 +118,6 @@ export const ConvergenceSystem: React.FC<ConvergenceSystemProps> = ({
       </div>
     </Card>
   );
-};
+});
+
+ConvergenceSystem.displayName = 'ConvergenceSystem';
