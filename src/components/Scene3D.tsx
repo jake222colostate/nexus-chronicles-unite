@@ -4,7 +4,6 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
-import { ResourceParticles } from './ResourceParticles';
 import { TapEffect3D } from './TapEffect3D';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 
@@ -105,13 +104,6 @@ export const Scene3D: React.FC<Scene3DProps> = ({
 
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
-
-          {/* Resource Particles */}
-          <ResourceParticles
-            realm={realm}
-            manaPerSecond={gameState.manaPerSecond}
-            energyPerSecond={gameState.energyPerSecond}
-          />
 
           {/* 3D Upgrade Nodes */}
           {upgradePositions.map((position) => {

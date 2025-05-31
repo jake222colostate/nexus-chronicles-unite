@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -16,7 +17,7 @@ interface GLBModelProps {
   canAfford: boolean;
 }
 
-// Simplified GLB Model component with minimal fallbacks
+// Simplified GLB Model component with no black/grey fallbacks
 const SafeGLBModel: React.FC<GLBModelProps> = ({ 
   modelUrl, 
   position, 
@@ -95,7 +96,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
     }
   });
 
-  // Minimal fallback - no grey/black boxes
+  // Bright colorful fallback - no black/grey elements
   if (loadError || !gltfScene) {
     return (
       <group
@@ -111,25 +112,25 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
           <meshBasicMaterial transparent opacity={0} />
         </mesh>
 
-        {/* Simple crystal instead of box - no grey/black elements */}
+        {/* Bright crystal instead of any dark elements */}
         <mesh>
           <octahedronGeometry args={[scale * 1.2]} />
           <meshLambertMaterial 
             color={
               isPurchased ? "#10b981" : 
-              canAfford ? "#8b5cf6" : 
-              "#8b5cf6"
+              canAfford ? "#a855f7" : 
+              "#c084fc"
             } 
             transparent 
-            opacity={isPurchased ? 0.9 : canAfford ? 0.7 : 0.3} 
+            opacity={0.8} 
           />
         </mesh>
         
-        {/* Simple glow */}
+        {/* Bright glow */}
         <mesh ref={glowRef} position={[0, -0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[scale * 2]} />
           <meshBasicMaterial
-            color="#8b5cf6"
+            color="#a855f7"
             transparent
             opacity={glowIntensity * 0.3}
           />
@@ -159,7 +160,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
           color={
             isPurchased ? "#10b981" : 
             canAfford ? "#c084fc" : 
-            "#8b5cf6"
+            "#a855f7"
           }
           transparent
           opacity={glowIntensity * 0.4}
@@ -232,7 +233,7 @@ export const GLBModel: React.FC<GLBModelProps> = (props) => {
       <mesh>
         <octahedronGeometry args={[props.scale || 1]} />
         <meshLambertMaterial 
-          color="#8b5cf6"
+          color="#a855f7"
           transparent 
           opacity={0.7} 
         />
