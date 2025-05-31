@@ -7,13 +7,20 @@ import * as THREE from 'three';
 interface FantasyRoadSystemProps {
   chunks: ChunkData[];
   chunkSize: number;
+  realm: 'fantasy' | 'scifi';
 }
 
 const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
   chunks,
-  chunkSize
+  chunkSize,
+  realm
 }) => {
   const [hasError, setHasError] = useState(false);
+  
+  // Early return if not fantasy realm
+  if (realm !== 'fantasy') {
+    return null;
+  }
   
   let model;
   try {
@@ -28,7 +35,7 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
   
   // Memoize road tile instances
   const roadInstances = useMemo(() => {
-    if (!scene || hasError) return [];
+    if (!scene || hasError || realm !== 'fantasy') return [];
     
     const instances = [];
     
@@ -50,9 +57,9 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize, scene, hasError]);
+  }, [chunks, chunkSize, scene, hasError, realm]);
 
-  if (!scene || hasError) {
+  if (!scene || hasError || realm !== 'fantasy') {
     return null;
   }
 
@@ -83,6 +90,11 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
 };
 
 export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
+  // Early return if not fantasy realm
+  if (props.realm !== 'fantasy') {
+    return null;
+  }
+
   return (
     <React.Suspense fallback={null}>
       <FantasyRoadContent {...props} />
@@ -90,6 +102,7 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
   );
 };
 
+// Only preload if we might need it for fantasy realm
 try {
   useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_road_tile.glb');
 } catch (error) {

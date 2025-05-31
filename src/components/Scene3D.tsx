@@ -116,7 +116,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           {/* Fantasy skybox or bright blue sky color */}
           {realm === 'fantasy' ? (
-            <FantasySkybox />
+            <FantasySkybox realm={realm} />
           ) : (
             <color attach="background" args={['#87CEEB']} />
           )}
@@ -138,16 +138,19 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                     <FantasyRoadSystem
                       chunks={chunks}
                       chunkSize={50}
+                      realm={realm}
                     />
                     
                     <FantasyMountainSystem
                       chunks={chunks}
                       chunkSize={50}
+                      realm={realm}
                     />
                     
                     <FantasyPortalSystem
                       chunks={chunks}
                       chunkSize={50}
+                      realm={realm}
                     />
                   </>
                 )}

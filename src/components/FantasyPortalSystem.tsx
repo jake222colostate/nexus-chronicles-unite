@@ -8,14 +8,21 @@ import * as THREE from 'three';
 interface FantasyPortalSystemProps {
   chunks: ChunkData[];
   chunkSize: number;
+  realm: 'fantasy' | 'scifi';
 }
 
 const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
   chunks,
-  chunkSize
+  chunkSize,
+  realm
 }) => {
   const [hasError, setHasError] = useState(false);
   const portalRefs = useRef<THREE.Group[]>([]);
+  
+  // Early return if not fantasy realm
+  if (realm !== 'fantasy') {
+    return null;
+  }
   
   let model;
   try {
@@ -30,7 +37,7 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
   
   // Memoize portal instances - every 500 units (approximately 10 chunks)
   const portalInstances = useMemo(() => {
-    if (!scene || hasError) return [];
+    if (!scene || hasError || realm !== 'fantasy') return [];
     
     const instances = [];
     
@@ -49,10 +56,12 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize, scene, hasError]);
+  }, [chunks, chunkSize, scene, hasError, realm]);
 
   // Animate portals
   useFrame((state) => {
+    if (realm !== 'fantasy') return;
+    
     portalRefs.current.forEach((portal, index) => {
       if (portal) {
         // Gentle floating animation
@@ -63,7 +72,7 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
     });
   });
 
-  if (!scene || hasError) {
+  if (!scene || hasError || realm !== 'fantasy') {
     return null;
   }
 
@@ -108,6 +117,11 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
 };
 
 export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = (props) => {
+  // Early return if not fantasy realm
+  if (props.realm !== 'fantasy') {
+    return null;
+  }
+
   return (
     <React.Suspense fallback={null}>
       <FantasyPortalContent {...props} />
@@ -115,6 +129,7 @@ export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = (props) =
   );
 };
 
+// Only preload if we might need it for fantasy realm
 try {
   useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_portal.glb');
 } catch (error) {

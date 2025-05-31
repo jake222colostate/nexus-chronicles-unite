@@ -5,12 +5,19 @@ import * as THREE from 'three';
 
 interface FantasySkyboxProps {
   opacity?: number;
+  realm: 'fantasy' | 'scifi';
 }
 
 const FantasySkyboxContent: React.FC<FantasySkyboxProps> = ({ 
-  opacity = 1 
+  opacity = 1,
+  realm
 }) => {
   const [hasError, setHasError] = useState(false);
+  
+  // Early return if not fantasy realm
+  if (realm !== 'fantasy') {
+    return null;
+  }
   
   let model;
   try {
@@ -20,36 +27,39 @@ const FantasySkyboxContent: React.FC<FantasySkyboxProps> = ({
     setHasError(true);
   }
   
-  if (!model?.scene || hasError) {
-    // Fallback to existing gradient skybox
-    return (
-      <mesh>
-        <sphereGeometry args={[100, 32, 32]} />
-        <meshBasicMaterial 
-          transparent
-          opacity={opacity}
-          side={THREE.BackSide}
-        >
-          <primitive 
-            object={new THREE.CanvasTexture((() => {
-              const canvas = document.createElement('canvas');
-              canvas.width = 512;
-              canvas.height = 512;
-              const ctx = canvas.getContext('2d')!;
-              
-              const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-              gradient.addColorStop(0, '#87CEEB');
-              gradient.addColorStop(1, '#E0F6FF');
-              
-              ctx.fillStyle = gradient;
-              ctx.fillRect(0, 0, canvas.width, canvas.height);
-              
-              return canvas;
-            })())}
-          />
-        </meshBasicMaterial>
-      </mesh>
-    );
+  if (!model?.scene || hasError || realm !== 'fantasy') {
+    // Fallback to existing gradient skybox only for fantasy realm
+    if (realm === 'fantasy') {
+      return (
+        <mesh>
+          <sphereGeometry args={[100, 32, 32]} />
+          <meshBasicMaterial 
+            transparent
+            opacity={opacity}
+            side={THREE.BackSide}
+          >
+            <primitive 
+              object={new THREE.CanvasTexture((() => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext('2d')!;
+                
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#E0F6FF');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                return canvas;
+              })())}
+            />
+          </meshBasicMaterial>
+        </mesh>
+      );
+    }
+    return null;
   }
 
   const clonedScene = model.scene.clone();
@@ -83,6 +93,11 @@ const FantasySkyboxContent: React.FC<FantasySkyboxProps> = ({
 };
 
 export const FantasySkybox: React.FC<FantasySkyboxProps> = (props) => {
+  // Early return if not fantasy realm
+  if (props.realm !== 'fantasy') {
+    return null;
+  }
+
   return (
     <React.Suspense fallback={
       <mesh>
@@ -100,6 +115,7 @@ export const FantasySkybox: React.FC<FantasySkyboxProps> = (props) => {
   );
 };
 
+// Only preload if we might need it for fantasy realm
 try {
   useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_skybox.glb');
 } catch (error) {

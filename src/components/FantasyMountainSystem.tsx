@@ -7,6 +7,7 @@ import * as THREE from 'three';
 interface FantasyMountainSystemProps {
   chunks: ChunkData[];
   chunkSize: number;
+  realm: 'fantasy' | 'scifi';
 }
 
 const seededRandom = (seed: number) => {
@@ -16,9 +17,15 @@ const seededRandom = (seed: number) => {
 
 const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
   chunks,
-  chunkSize
+  chunkSize,
+  realm
 }) => {
   const [hasError, setHasError] = useState(false);
+  
+  // Early return if not fantasy realm
+  if (realm !== 'fantasy') {
+    return null;
+  }
   
   let leftMountain, rightMountain;
   
@@ -33,7 +40,7 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
   
   // Memoize mountain instances
   const mountainInstances = useMemo(() => {
-    if (!leftMountain.scene || !rightMountain.scene || hasError) return [];
+    if (!leftMountain.scene || !rightMountain.scene || hasError || realm !== 'fantasy') return [];
     
     const instances = [];
     
@@ -82,9 +89,9 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize, leftMountain.scene, rightMountain.scene, hasError]);
+  }, [chunks, chunkSize, leftMountain.scene, rightMountain.scene, hasError, realm]);
 
-  if (!leftMountain.scene || !rightMountain.scene || hasError) {
+  if (!leftMountain.scene || !rightMountain.scene || hasError || realm !== 'fantasy') {
     return null;
   }
 
@@ -116,6 +123,11 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
 };
 
 export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = (props) => {
+  // Early return if not fantasy realm
+  if (props.realm !== 'fantasy') {
+    return null;
+  }
+
   return (
     <React.Suspense fallback={null}>
       <FantasyMountainContent {...props} />
@@ -123,6 +135,7 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = (prop
   );
 };
 
+// Only preload if we might need it for fantasy realm
 try {
   useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_left.glb');
   useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_right.glb');
