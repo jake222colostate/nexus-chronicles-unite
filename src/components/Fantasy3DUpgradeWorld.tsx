@@ -185,13 +185,13 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             canMoveForward={canMoveForward}
           />
 
-          {/* Dynamic Environment System - replaces all floating objects and black squares */}
+          {/* Simplified Environment System */}
           <EnvironmentSystem 
             upgradeCount={unlockedUpgradeCount}
             onEnvironmentChange={handleEnvironmentChange}
           />
 
-          {/* Enhanced lighting setup for clean visibility */}
+          {/* Bright lighting setup for visibility */}
           <ambientLight intensity={0.8} color="#ffffff" />
           <directionalLight
             position={[10, 20, 10]}
@@ -207,27 +207,33 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             shadow-camera-bottom={-30}
           />
           
-          {/* Additional fill light */}
+          {/* Additional bright fill light */}
           <directionalLight
             position={[-10, 15, 5]}
             intensity={0.6}
             color="#ffffff"
           />
 
-          {/* Subtle point lights for upgrade areas only */}
+          {/* Point lights for path illumination */}
           {Array.from({ length: 8 }, (_, i) => (
             <pointLight 
               key={i}
-              position={[(i % 2 === 0 ? -6 : 6), 4, -12 - (i * 12)]} 
-              intensity={0.4}
+              position={[(i % 2 === 0 ? -6 : 6), 8, -12 - (i * 12)]} 
+              intensity={0.8}
               color="#ffffff" 
-              distance={15} 
+              distance={25} 
             />
           ))}
 
           <Environment preset="sunset" />
 
-          {/* Simple path markers only */}
+          {/* Simple ground plane with green grass color */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -50]} receiveShadow>
+            <planeGeometry args={[40, 120]} />
+            <meshLambertMaterial color="#22c55e" />
+          </mesh>
+
+          {/* Simple path markers */}
           {Array.from({ length: 20 }, (_, i) => (
             <mesh key={i} position={[0, -0.4, -5 - (i * 5)]} rotation={[-Math.PI / 2, 0, 0]}>
               <circleGeometry args={[0.4]} />
@@ -247,7 +253,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             far={10} 
           />
 
-          {/* Load GLB upgrade models only */}
+          {/* Load GLB upgrade models */}
           {upgrades.map((upgrade) => {
             const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
             if (distance > 40) return null;
@@ -282,8 +288,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         </div>
       </div>
 
-      {/* Progress indicator positioned with proper spacing */}
-      <div className="absolute bottom-8 left-4 right-4 pointer-events-none">
+      {/* Progress indicator positioned underneath all interactable buttons */}
+      <div className="absolute bottom-2 left-4 right-4 pointer-events-none">
         <div className="bg-black/40 backdrop-blur-sm rounded-full h-2 overflow-hidden relative">
           <div 
             className="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300"
@@ -291,7 +297,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               width: `${Math.max(0, Math.min(100, ((Math.abs(cameraPosition.z) / 100) * 100)))}%` 
             }}
           />
-          {/* Environment tier markers */}
+          {/* Environment tier markers - updated for 4 tiers */}
           <div className="absolute top-0 left-1/4 w-0.5 h-full bg-yellow-400 opacity-60" />
           <div className="absolute top-0 left-1/2 w-0.5 h-full bg-yellow-400 opacity-60" />
           <div className="absolute top-0 left-3/4 w-0.5 h-full bg-yellow-400 opacity-60" />

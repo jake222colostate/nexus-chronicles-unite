@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
@@ -11,44 +10,20 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
   tier, 
   opacity = 1 
 }) => {
-  // Create pixel-style textures with tier variations
+  // Create pixel-style textures
   const createPixelTexture = useMemo(() => {
-    return (color: string, size: number = 64, tierVariation: boolean = false) => {
+    return (color: string, size: number = 64) => {
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
       const ctx = canvas.getContext('2d')!;
       
-      // Create pixelated pattern with tier-based variations
+      // Create pixelated pattern
       const pixelSize = 4;
       for (let x = 0; x < size; x += pixelSize) {
         for (let y = 0; y < size; y += pixelSize) {
-          let brightness = 0.8 + Math.random() * 0.4;
-          let hue = color;
-          
-          // Tier-based color variations
-          if (tierVariation) {
-            switch (tier) {
-              case 2:
-                hue = '140'; // Brighter green
-                brightness *= 1.1;
-                break;
-              case 3:
-                hue = '160'; // Blue-green
-                brightness *= 0.9;
-                break;
-              case 4:
-                hue = '180'; // Darker blue-green
-                brightness *= 0.8;
-                break;
-              case 5:
-                hue = '200'; // Deep blue
-                brightness *= 0.7;
-                break;
-            }
-          }
-          
-          const pixelColor = `hsl(${hue}, 60%, ${brightness * 50}%)`;
+          const brightness = 0.8 + Math.random() * 0.4;
+          const pixelColor = `hsl(${color}, 60%, ${brightness * 50}%)`;
           ctx.fillStyle = pixelColor;
           ctx.fillRect(x, y, pixelSize, pixelSize);
         }
@@ -61,58 +36,38 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
       texture.wrapT = THREE.RepeatWrapping;
       return texture;
     };
-  }, [tier]);
+  }, []);
 
-  const grassTexture = useMemo(() => createPixelTexture('120', 64, true), [createPixelTexture]);
+  const grassTexture = useMemo(() => createPixelTexture('120'), [createPixelTexture]);
   const pathTexture = useMemo(() => createPixelTexture('30'), [createPixelTexture]);
   const rockTexture = useMemo(() => createPixelTexture('0'), [createPixelTexture]);
 
-  // Generate tier-based tree positions and colors
+  // Generate stable random positions for trees using seeded random - spread out individually
   const treePositions = useMemo(() => {
     const positions = [];
-    for (let i = 0; i < 18; i++) {
+    for (let i = 0; i < 20; i++) {
       // Use a simple seeded random function to ensure consistent positioning
       const seed = i * 12345;
       const random1 = ((seed * 9301 + 49297) % 233280) / 233280;
       const random2 = (((seed + 1) * 9301 + 49297) % 233280) / 233280;
       const random3 = (((seed + 2) * 9301 + 49297) % 233280) / 233280;
       
-      // Spread trees across the terrain with better distribution
-      const x = (random1 - 0.5) * 45; // Spread across terrain width
-      const z = -8 - (random2 * 100); // Spread along the path length
-      const scale = 0.7 + random3 * 0.4; // Vary tree sizes
+      // Spread trees across the entire terrain width and length individually
+      const x = (random1 - 0.5) * 50; // Spread across full terrain width (60 units)
+      const z = -5 - (random2 * 110); // Spread along the entire path length
+      const scale = 0.6 + random3 * 0.5; // Vary tree sizes
       
-      // Ensure trees aren't too close to the path center
-      const adjustedX = Math.abs(x) < 5 ? (x > 0 ? 8 : -8) : x;
+      // Ensure trees aren't too close to the path (middle section)
+      const adjustedX = Math.abs(x) < 4 ? (x > 0 ? 8 : -8) : x;
       
       positions.push({ x: adjustedX, z, scale });
     }
     return positions;
   }, []);
 
-  // Tier-based tree colors
-  const getTreeColors = () => {
-    switch (tier) {
-      case 1:
-        return { trunk: '#8B4513', foliage: '#228B22' };
-      case 2:
-        return { trunk: '#A0522D', foliage: '#32CD32' };
-      case 3:
-        return { trunk: '#654321', foliage: '#006400' };
-      case 4:
-        return { trunk: '#2F1B14', foliage: '#2F4F2F' };
-      case 5:
-        return { trunk: '#1C1C1C', foliage: '#191970' };
-      default:
-        return { trunk: '#8B4513', foliage: '#228B22' };
-    }
-  };
-
-  const treeColors = getTreeColors();
-
   return (
     <group>
-      {/* Main grass terrain - properly grounded */}
+      {/* Main grass terrain */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, -50]} receiveShadow>
         <planeGeometry args={[60, 120]} />
         <meshLambertMaterial 
@@ -132,11 +87,10 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         />
       </mesh>
 
-      {/* Left mountain range with tier-based variations */}
+      {/* Left mountain range */}
       {Array.from({ length: 8 }, (_, i) => {
         const z = -10 - (i * 12);
-        const baseHeight = 15 + Math.sin(i * 0.5) * 5;
-        const height = tier >= 3 ? baseHeight * 1.2 : baseHeight;
+        const height = 15 + Math.sin(i * 0.5) * 5;
         const width = 8 + Math.cos(i * 0.3) * 3;
         
         return (
@@ -151,11 +105,11 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
               />
             </mesh>
             
-            {/* Mountain peak with tier-based colors */}
+            {/* Mountain peak */}
             <mesh position={[-25, height + 3, z]} castShadow>
               <coneGeometry args={[width * 0.7, 6, 8]} />
               <meshLambertMaterial 
-                color={tier >= 4 ? '#B0C4DE' : tier >= 3 ? '#D3D3D3' : '#E5E7EB'}
+                color="#E5E7EB"
                 transparent 
                 opacity={opacity}
               />
@@ -164,11 +118,10 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         );
       })}
 
-      {/* Right mountain range with tier-based variations */}
+      {/* Right mountain range */}
       {Array.from({ length: 8 }, (_, i) => {
         const z = -15 - (i * 12);
-        const baseHeight = 12 + Math.cos(i * 0.7) * 4;
-        const height = tier >= 3 ? baseHeight * 1.15 : baseHeight;
+        const height = 12 + Math.cos(i * 0.7) * 4;
         const width = 7 + Math.sin(i * 0.4) * 2;
         
         return (
@@ -183,11 +136,11 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
               />
             </mesh>
             
-            {/* Mountain peak with tier-based colors */}
+            {/* Mountain peak */}
             <mesh position={[25, height + 2, z]} castShadow>
               <coneGeometry args={[width * 0.6, 4, 8]} />
               <meshLambertMaterial 
-                color={tier >= 4 ? '#A9A9A9' : tier >= 3 ? '#C0C0C0' : '#D1D5DB'}
+                color="#D1D5DB"
                 transparent 
                 opacity={opacity}
               />
@@ -196,31 +149,50 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         );
       })}
 
-      {/* Tier-based trees with color variations - properly grounded */}
+      {/* Individually scattered trees across the landscape */}
       {treePositions.map((pos, i) => (
         <group key={`tree-${i}`} position={[pos.x, -1, pos.z]} scale={[pos.scale, pos.scale, pos.scale]}>
           {/* Tree trunk */}
           <mesh position={[0, 1.5, 0]} castShadow>
             <cylinderGeometry args={[0.2, 0.3, 3]} />
-            <meshLambertMaterial color={treeColors.trunk} transparent opacity={opacity} />
+            <meshLambertMaterial color="#8B4513" transparent opacity={opacity} />
           </mesh>
           
-          {/* Tree foliage with tier-based colors */}
+          {/* Tree foliage */}
           <mesh position={[0, 3, 0]} castShadow>
             <sphereGeometry args={[1.5, 8, 8]} />
-            <meshLambertMaterial color={treeColors.foliage} transparent opacity={opacity} />
+            <meshLambertMaterial color="#228B22" transparent opacity={opacity} />
           </mesh>
         </group>
       ))}
 
-      {/* Rock formations near mountains - properly grounded */}
+      {/* Scattered crystals for magical atmosphere */}
+      {Array.from({ length: 8 }, (_, i) => {
+        const angle = (i / 8) * Math.PI * 2;
+        const radius = 12 + Math.random() * 8;
+        const x = Math.cos(angle) * radius;
+        const z = -30 - (i * 8) + Math.sin(angle) * 5;
+        
+        return (
+          <mesh key={`crystal-${i}`} position={[x, 0.5, z]} castShadow>
+            <octahedronGeometry args={[1]} />
+            <meshBasicMaterial 
+              color={tier >= 3 ? '#8B5CF6' : '#06B6D4'}
+              transparent 
+              opacity={opacity * 0.8}
+            />
+          </mesh>
+        );
+      })}
+
+      {/* Rock formations near mountains */}
       {Array.from({ length: 6 }, (_, i) => {
         const side = i % 2 === 0 ? -1 : 1;
         const x = side * (15 + Math.random() * 5);
         const z = -20 - (i * 10);
         
         return (
-          <mesh key={`rock-${i}`} position={[x, -0.5, z]} castShadow>
+          <mesh key={`rock-${i}`} position={[x, 0, z]} castShadow>
             <boxGeometry args={[2, 1 + Math.random(), 2]} />
             <meshLambertMaterial 
               color="#696969"

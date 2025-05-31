@@ -11,7 +11,7 @@ export const DynamicSkybox: React.FC<DynamicSkyboxProps> = ({
   tier, 
   opacity = 1 
 }) => {
-  // Define skybox colors for each tier - improved progression
+  // Define skybox colors for each tier
   const skyboxData = useMemo(() => {
     switch (tier) {
       case 1:
@@ -24,19 +24,19 @@ export const DynamicSkybox: React.FC<DynamicSkyboxProps> = ({
         return {
           topColor: '#FF6B9D', // Pink
           bottomColor: '#FFB347', // Orange
-          description: 'Magical Sunset'
+          description: 'Magical Sunrise'
         };
       case 3:
         return {
           topColor: '#8B5CF6', // Purple
           bottomColor: '#4C1D95', // Dark purple
-          description: 'Mystical Twilight'
+          description: 'Storm Clouds'
         };
       case 4:
         return {
           topColor: '#1E1B4B', // Dark indigo
           bottomColor: '#0F0C29', // Very dark purple
-          description: 'Starry Night'
+          description: 'Starry Nebula'
         };
       case 5:
       default:
@@ -50,7 +50,7 @@ export const DynamicSkybox: React.FC<DynamicSkyboxProps> = ({
 
   return (
     <group>
-      {/* Dynamic gradient skybox sphere */}
+      {/* Gradient skybox sphere */}
       <mesh>
         <sphereGeometry args={[100, 32, 32]} />
         <meshBasicMaterial 
@@ -76,24 +76,12 @@ export const DynamicSkybox: React.FC<DynamicSkyboxProps> = ({
               // Add stars for higher tiers
               if (tier >= 3) {
                 ctx.fillStyle = '#FFFFFF';
-                for (let i = 0; i < 150; i++) {
+                for (let i = 0; i < 200; i++) {
                   const x = Math.random() * canvas.width;
                   const y = Math.random() * canvas.height * 0.6; // Stars in upper portion
-                  const size = Math.random() * 2 + 0.5;
+                  const size = Math.random() * 2;
                   ctx.fillRect(x, y, size, size);
                 }
-              }
-              
-              // Add nebula effects for tier 5
-              if (tier >= 5) {
-                ctx.globalAlpha = 0.3;
-                const nebulaGradient = ctx.createRadialGradient(256, 128, 0, 256, 128, 200);
-                nebulaGradient.addColorStop(0, '#8B5CF6');
-                nebulaGradient.addColorStop(0.5, '#EC4899');
-                nebulaGradient.addColorStop(1, 'transparent');
-                ctx.fillStyle = nebulaGradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height * 0.6);
-                ctx.globalAlpha = 1;
               }
               
               return canvas;
@@ -105,14 +93,14 @@ export const DynamicSkybox: React.FC<DynamicSkyboxProps> = ({
       {/* Additional atmospheric effects for higher tiers */}
       {tier >= 4 && (
         <group>
-          {/* Aurora effects for tier 4 and 5 */}
-          {Array.from({ length: 2 }, (_, i) => (
-            <mesh key={i} position={[0, 35 + i * 8, -50]} rotation={[0, i * 0.8, 0]}>
-              <planeGeometry args={[60, 8]} />
+          {/* Aurora effects */}
+          {Array.from({ length: 3 }, (_, i) => (
+            <mesh key={i} position={[0, 40 + i * 5, -60]} rotation={[0, i * 0.5, 0]}>
+              <planeGeometry args={[80, 10]} />
               <meshBasicMaterial 
-                color={tier >= 5 ? '#00FF88' : '#8B5CF6'}
+                color={i % 2 === 0 ? '#00FF88' : '#FF0088'}
                 transparent
-                opacity={opacity * 0.25}
+                opacity={opacity * 0.3}
                 side={THREE.DoubleSide}
               />
             </mesh>
