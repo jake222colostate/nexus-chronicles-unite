@@ -6,11 +6,14 @@ import { GLBModel } from './GLBModelLoader';
 import { FirstPersonController } from './FirstPersonController';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { EnvironmentSystem } from './EnvironmentSystem';
+import { ManaDisplayBox } from './UI/ManaDisplayBox';
 
 interface Fantasy3DUpgradeWorldProps {
   onUpgradeClick: (upgradeName: string) => void;
   showTapEffect?: boolean;
   onTapEffectComplete?: () => void;
+  gameState?: any;
+  realm?: 'fantasy' | 'scifi';
 }
 
 // Enhanced upgrade structure with exponential scaling
@@ -71,15 +74,25 @@ const createUpgradeData = (): UpgradeData[] => {
 export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   onUpgradeClick,
   showTapEffect,
-  onTapEffectComplete
+  onTapEffectComplete,
+  gameState,
+  realm = 'fantasy'
 }) => {
   const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 1.6, 0));
   const [upgrades, setUpgrades] = useState<UpgradeData[]>(createUpgradeData());
-  const [currentMana, setCurrentMana] = useState(100);
-  const [totalManaPerSecond, setTotalManaPerSecond] = useState(0);
+  const [currentMana, setCurrentMana] = useState(gameState?.mana || 100);
+  const [totalManaPerSecond, setTotalManaPerSecond] = useState(gameState?.manaPerSecond || 0);
   const [selectedUpgrade, setSelectedUpgrade] = useState<UpgradeData | null>(null);
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
   const [currentEnvironmentTier, setCurrentEnvironmentTier] = useState(0);
+
+  // Update internal state when gameState changes
+  useEffect(() => {
+    if (gameState) {
+      setCurrentMana(gameState.mana);
+      setTotalManaPerSecond(gameState.manaPerSecond);
+    }
+  }, [gameState]);
 
   // Calculate total unlocked upgrades for environment progression
   const unlockedUpgradeCount = upgrades.filter(upgrade => upgrade.unlocked).length;
@@ -166,6 +179,13 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
   return (
     <div className="absolute inset-0 w-full h-full">
+      {/* Mana Display Box */}
+      <ManaDisplayBox 
+        mana={currentMana}
+        manaPerSecond={totalManaPerSecond}
+        realm={realm}
+      />
+
       <Canvas
         dpr={[1, 2]}
         camera={{ 
@@ -275,14 +295,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           })}
         </Suspense>
       </Canvas>
-
-      {/* Clean Resource Display - no environment tier */}
-      <div className="absolute top-4 right-4 pointer-events-none">
-        <div className="bg-purple-900/90 backdrop-blur-sm rounded-lg px-4 py-3 border border-purple-400/40">
-          <div className="text-yellow-400 text-lg font-bold">{formatNumber(currentMana)} Mana</div>
-          <div className="text-purple-300 text-sm">{formatNumber(totalManaPerSecond)}/sec</div>
-        </div>
-      </div>
 
       {/* Clean progress indicator */}
       <div className="absolute bottom-2 left-4 right-4 pointer-events-none">

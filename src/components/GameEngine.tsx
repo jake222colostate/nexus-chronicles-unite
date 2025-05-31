@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -260,15 +261,37 @@ const GameEngine: React.FC = () => {
     setShowQuickHelp(true);
   }, []);
 
-  // Handle tap resource generation with effect
+  // Enhanced tap resource generation with effect and +1 animation
   const handleTapResource = useCallback(() => {
     setShowTapEffect(true);
     setGameState(prev => ({
       ...prev,
-      mana: currentRealm === 'fantasy' ? prev.mana + 1 : prev.mana,
-      energyCredits: currentRealm === 'scifi' ? prev.energyCredits + 1 : prev.energyCredits,
+      mana: prev.mana + 1, // Always add mana regardless of realm
     }));
-  }, [currentRealm]);
+    
+    // Show +1 mana animation
+    const tapButton = document.getElementById('tap-button');
+    if (tapButton) {
+      const rect = tapButton.getBoundingClientRect();
+      const popup = document.createElement('div');
+      popup.textContent = '+1 Mana';
+      popup.className = 'fixed text-yellow-400 font-bold text-lg pointer-events-none z-50 animate-fade-in';
+      popup.style.left = `${rect.left + rect.width / 2}px`;
+      popup.style.top = `${rect.top - 20}px`;
+      popup.style.transform = 'translateX(-50%)';
+      document.body.appendChild(popup);
+      
+      setTimeout(() => {
+        popup.style.transform = 'translateX(-50%) translateY(-20px)';
+        popup.style.opacity = '0';
+        popup.style.transition = 'all 0.5s ease-out';
+      }, 100);
+      
+      setTimeout(() => {
+        document.body.removeChild(popup);
+      }, 600);
+    }
+  }, []);
 
   const handleTapEffectComplete = useCallback(() => {
     setShowTapEffect(false);
@@ -304,7 +327,7 @@ const GameEngine: React.FC = () => {
       />
 
       {/* Main Game Area - clean and uncluttered */}
-      <div className="absolute inset-0 pt-24 pb-24">
+      <div className="absolute inset-0 pt-16 pb-24">
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
