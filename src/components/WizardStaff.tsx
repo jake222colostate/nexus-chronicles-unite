@@ -58,27 +58,23 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
           child.castShadow = false;
           child.receiveShadow = false;
           
-          console.log('WizardStaff: Processing mesh:', child.name, 'Material:', child.material);
-          
           // Ensure materials are visible and bright
           if (child.material) {
             if (Array.isArray(child.material)) {
-              child.material.forEach((mat, index) => {
-                console.log(`WizardStaff: Material ${index}:`, mat.type, mat);
+              child.material.forEach((mat) => {
                 mat.transparent = false;
                 mat.opacity = 1;
                 if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshLambertMaterial) {
-                  mat.emissive = new THREE.Color(0x444444); // Brighter emissive
-                  mat.emissiveIntensity = 0.3;
+                  mat.emissive = new THREE.Color(0x333333);
+                  mat.emissiveIntensity = 0.2;
                 }
               });
             } else {
-              console.log('WizardStaff: Single material:', child.material.type, child.material);
               child.material.transparent = false;
               child.material.opacity = 1;
               if (child.material instanceof THREE.MeshStandardMaterial || child.material instanceof THREE.MeshLambertMaterial) {
-                child.material.emissive = new THREE.Color(0x444444); // Brighter emissive
-                child.material.emissiveIntensity = 0.3;
+                child.material.emissive = new THREE.Color(0x333333);
+                child.material.emissiveIntensity = 0.2;
               }
             }
           }
@@ -86,7 +82,6 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
       });
       
       setModelLoaded(true);
-      console.log('WizardStaff: Model successfully processed, children count:', clone.children.length);
       return clone;
     } catch (error) {
       console.error('WizardStaff: Error processing model:', error);
@@ -95,30 +90,15 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
     }
   }, [gltfResult.scene]);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('WizardStaff: Component mounted');
-    console.log('WizardStaff: GLTF result:', gltfResult);
-    console.log('WizardStaff: Model loaded:', modelLoaded);
-    console.log('WizardStaff: Load error:', loadError);
-    console.log('WizardStaff: Position:', position || [2.2, -1.8, -3]);
-  }, [gltfResult, modelLoaded, loadError, position]);
-
   return (
     <group>
-      {/* Bright local lighting for the staff */}
+      {/* Local lighting for the staff */}
       <pointLight 
         position={[2, -1, -2]} 
-        intensity={2.0} 
+        intensity={1.5} 
         color="#ffffff"
         distance={5}
       />
-      
-      {/* Fallback cube for debugging - always visible */}
-      <mesh position={[2.5, -1.5, -3]}>
-        <boxGeometry args={[0.1, 0.1, 0.1]} />
-        <meshBasicMaterial color="#ff0000" />
-      </mesh>
       
       {/* The actual staff model */}
       {clonedScene ? (
@@ -130,22 +110,12 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
           {...validThreeProps}
         />
       ) : (
-        /* Fallback if model fails to load */
+        /* Simple fallback if model fails to load */
         <mesh position={position || [2.2, -1.8, -3]}>
           <cylinderGeometry args={[0.02, 0.02, 1, 8]} />
           <meshBasicMaterial color="#8B4513" />
         </mesh>
       )}
-      
-      {/* Debug text mesh to show status */}
-      <mesh position={[2.0, -2.2, -3]}>
-        <planeGeometry args={[0.5, 0.1]} />
-        <meshBasicMaterial 
-          color={modelLoaded ? "#00ff00" : "#ff0000"} 
-          transparent 
-          opacity={0.7}
-        />
-      </mesh>
     </group>
   );
 });

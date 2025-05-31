@@ -141,11 +141,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
         </Suspense>
       </Canvas>
 
-      {/* Debug info overlay */}
-      <div className="absolute top-2 left-2 text-white text-xs bg-black/50 p-2 rounded">
-        Staff Debug: Check console for logs
-      </div>
-
       {/* Simplified loading fallback */}
       <Suspense fallback={
         <div className="absolute inset-0 flex items-center justify-center bg-black/50">
