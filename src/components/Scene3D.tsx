@@ -9,15 +9,8 @@ import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
 import { GLBMountainSystem } from './GLBMountainSystem';
-import { TreeSystem } from './TreeSystem';
-import { EnhancedGrassSystem } from './EnhancedGrassSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
-
-// Conditionally import fantasy components only when needed
-const FantasyEnvironmentSystem = React.lazy(() => 
-  import('./FantasyEnvironmentSystem').then(module => ({ default: module.FantasyEnvironmentSystem }))
-);
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -49,8 +42,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   onTapEffectComplete
 }) => {
   const cameraRef = useRef();
-
-  console.log('Scene3D rendering with realm:', realm);
 
   // Stable player position for chunk system
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
@@ -117,65 +108,32 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Skybox - ONLY render fantasy skybox when realm is fantasy */}
-          {realm === 'fantasy' ? (
-            <Suspense fallback={<color attach="background" args={['#87CEEB']} />}>
-              <FantasyEnvironmentSystem
-                chunks={[]}
-                chunkSize={50}
-                realm={realm}
-              />
-            </Suspense>
-          ) : (
-            <color attach="background" args={['#87CEEB']} />
-          )}
+          {/* Optimized lighting */}
+          <ambientLight intensity={0.6} />
+          <directionalLight
+            position={[10, 10, 5]}
+            intensity={0.8}
+            castShadow={false}
+          />
 
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* Environment System - COMPLETELY separated by realm */}
-          <ChunkSystem
-            playerPosition={playerPosition}
-            chunkSize={50}
-            renderDistance={200}
-          >
-            {(chunks) => {
-              console.log('ChunkSystem rendering with realm:', realm, 'chunks:', chunks.length);
-              
-              if (realm === 'fantasy') {
-                console.log('Rendering FANTASY components only');
-                return (
-                  <Suspense fallback={null}>
-                    <FantasyEnvironmentSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
-                  </Suspense>
-                );
-              } else {
-                console.log('Rendering SCIFI components only');
-                return (
-                  <>
-                    <EnhancedGrassSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                    />
-                    
-                    <TreeSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                    />
-                    
-                    <GLBMountainSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                    />
-                  </>
-                );
-              }
-            }}
-          </ChunkSystem>
+          {/* Enhanced GLB Mountain System for Fantasy Realm */}
+          {realm === 'fantasy' && (
+            <ChunkSystem
+              playerPosition={playerPosition}
+              chunkSize={50}
+              renderDistance={200}
+            >
+              {(chunks) => (
+                <GLBMountainSystem
+                  chunks={chunks}
+                  chunkSize={50}
+                />
+              )}
+            </ChunkSystem>
+          )}
 
           {/* Memoized upgrade nodes */}
           {upgradeNodes}
@@ -186,6 +144,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           )}
         </Suspense>
       </Canvas>
+
+      {/* Loading fallback */}
+      <Suspense fallback={
+        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+          <div className="text-white text-sm">Loading environment...</div>
+        </div>
+      }>
+        <div />
+      </Suspense>
     </div>
   );
 });
