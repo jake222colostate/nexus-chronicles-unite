@@ -10,12 +10,12 @@ import { EnhancedParticleBackground } from './EnhancedParticleBackground';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
-import { GroundEnemySystem3D, GroundEnemy } from './GroundEnemySystem3D';
+import { GroundEnemySystem, GroundEnemy } from './GroundEnemySystem';
 import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
 import { MuzzleFlash } from './MuzzleFlash';
 import { WaveCompleteMessage } from './WaveCompleteMessage';
-import { CompactJourneyTracker } from './CompactJourneyTracker';
-import { AutoWeapon3D } from './AutoWeapon3D';
+import { JourneyTracker } from './JourneyTracker';
+import { AutoWeapon } from './AutoWeapon';
 import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem, CrossRealmUpgrade } from './CrossRealmUpgradeSystem';
 import { crossRealmUpgrades } from '../data/CrossRealmUpgrades';
@@ -50,14 +50,14 @@ interface Building {
   icon: string;
 }
 
-const fantasyBuildingDefinitions: Building[] = [
+const fantasyBuildings: Building[] = [
   { id: 'altar', name: 'Mana Altar', cost: 10, production: 1, costMultiplier: 1.15, description: 'Ancient stones that channel mystical energy', icon: '🔮' },
   { id: 'tower', name: 'Wizard Tower', cost: 100, production: 8, costMultiplier: 1.2, description: 'Towering spires where mages conduct research', icon: '🗼' },
   { id: 'grove', name: 'Enchanted Grove', cost: 1000, production: 47, costMultiplier: 1.25, description: 'Sacred forests pulsing with natural magic', icon: '🌳' },
   { id: 'temple', name: 'Arcane Temple', cost: 11000, production: 260, costMultiplier: 1.3, description: 'Massive structures devoted to magical arts', icon: '🏛️' },
 ];
 
-const scifiBuildingDefinitions: Building[] = [
+const scifiBuildings: Building[] = [
   { id: 'generator', name: 'Solar Panel', cost: 15, production: 1, costMultiplier: 1.15, description: 'Basic renewable energy collection', icon: '☀️' },
   { id: 'reactor', name: 'Fusion Reactor', cost: 150, production: 10, costMultiplier: 1.2, description: 'Advanced nuclear fusion technology', icon: '⚡' },
   { id: 'station', name: 'Space Station', cost: 1500, production: 64, costMultiplier: 1.25, description: 'Orbital platforms generating massive energy', icon: '🛰️' },
@@ -200,33 +200,21 @@ const GameEngine: React.FC = () => {
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
-  const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
+  const [enemies, setEnemies] = useState<any[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
   const [playerTakingDamage, setPlayerTakingDamage] = useState(false);
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.6, z: 0 });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Stable references to prevent re-renders - using JSON.stringify for deep comparison
-  const stableFantasyBuildings = useMemo(() => {
-    return JSON.stringify(gameState.fantasyBuildings || {});
-  }, [gameState.fantasyBuildings]);
-  
-  const stableScifiBuildings = useMemo(() => {
-    return JSON.stringify(gameState.scifiBuildings || {});
-  }, [gameState.scifiBuildings]);
-  
-  const stablePurchasedUpgrades = useMemo(() => {
-    return JSON.stringify(gameState.purchasedUpgrades || []);
-  }, [gameState.purchasedUpgrades]);
-
-  // Parse stable references back to objects - fix naming to avoid conflicts
-  const fantasyBuildingCounts = useMemo(() => JSON.parse(stableFantasyBuildings), [stableFantasyBuildings]);
-  const scifiBuildingCounts = useMemo(() => JSON.parse(stableScifiBuildings), [stableScifiBuildings]);
-  const purchasedUpgrades = useMemo(() => JSON.parse(stablePurchasedUpgrades), [stablePurchasedUpgrades]);
+  // Stable references to prevent re-renders
+  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
+  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
+  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
+  const purchasedUpgradesCount = stablePurchasedUpgrades.length;
 
   // Initialize buff system with stable dependencies
-  const buffSystem = useBuffSystem(fantasyBuildingCounts, scifiBuildingCounts);
+  const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
 
   // Cross-realm upgrades with current levels
   const crossRealmUpgradesWithLevels = useMemo(() => {
@@ -287,7 +275,7 @@ const GameEngine: React.FC = () => {
       : gameState.scifiJourneyDistance;
   }, [currentRealm, gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance]);
 
-  // Calculate offline progress on mount - run only once
+  // Calculate offline progress on mount
   useEffect(() => {
     const now = Date.now();
     const offlineTime = Math.min((now - gameState.lastSaveTime) / 1000, 3600);
@@ -303,7 +291,7 @@ const GameEngine: React.FC = () => {
         lastSaveTime: now,
       }));
     }
-  }, []); // Empty dependency array - run only once
+  }, []);
 
   // Game loop with proper journey tracking
   useEffect(() => {
@@ -339,20 +327,20 @@ const GameEngine: React.FC = () => {
     }));
   }, [currentRealm]);
 
-  // Enhanced production calculation with cross-realm upgrades - use stable string keys for comparison
+  // Enhanced production calculation with cross-realm upgrades
   useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
 
-    // Base production from buildings - use building definitions arrays, not counts
-    fantasyBuildingDefinitions.forEach(building => {
-      const count = fantasyBuildingCounts[building.id] || 0;
+    // Base production from buildings
+    fantasyBuildings.forEach(building => {
+      const count = stableFantasyBuildings[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'fantasy');
       manaRate += (count * building.production * multiplier) + flatBonus;
     });
 
-    scifiBuildingDefinitions.forEach(building => {
-      const count = scifiBuildingCounts[building.id] || 0;
+    scifiBuildings.forEach(building => {
+      const count = stableScifiBuildings[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'scifi');
       energyRate += (count * building.production * multiplier) + flatBonus;
     });
@@ -371,7 +359,7 @@ const GameEngine: React.FC = () => {
 
     // Apply hybrid upgrade bonuses
     let globalMultiplier = 1;
-    purchasedUpgrades.forEach(upgradeId => {
+    stablePurchasedUpgrades.forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
@@ -395,11 +383,11 @@ const GameEngine: React.FC = () => {
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, stablePurchasedUpgrades, buffSystem, crossRealmUpgradesWithLevels, fantasyBuildingDefinitions, scifiBuildingDefinitions, purchasedUpgrades]);
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels]);
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
-    const buildingDefinitions = isFantasy ? fantasyBuildingDefinitions : scifiBuildingDefinitions;
-    const building = buildingDefinitions.find(b => b.id === buildingId);
+    const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
+    const building = buildings.find(b => b.id === buildingId);
     if (!building) return;
 
     const currentCount = isFantasy 
@@ -589,13 +577,13 @@ const GameEngine: React.FC = () => {
   }, []);
 
   // Combat event handlers with scaling rewards
-  const handleEnemyReachPlayer = useCallback((enemy: GroundEnemy) => {
+  const handleEnemyReachPlayer = useCallback((enemy: any) => {
     setPlayerTakingDamage(true);
     setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
     setTimeout(() => setPlayerTakingDamage(false), 500);
   }, []);
 
-  const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
+  const handleEnemyDestroyed = useCallback((enemy: any) => {
     const manaReward = Math.floor(8 + (currentJourneyDistance / 10));
     
     setGameState(prev => ({ 
@@ -625,7 +613,6 @@ const GameEngine: React.FC = () => {
       }
     }, 900);
 
-    // Check for wave complete
     if ((gameState.enemiesKilled + 1) % 15 === 0) {
       setShowWaveComplete(true);
       setGameState(prev => ({ 
@@ -671,14 +658,13 @@ const GameEngine: React.FC = () => {
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Compact Journey Tracker - Clean progress bar */}
-      <CompactJourneyTracker 
+      {/* Journey Tracker - invisible component that tracks real movement */}
+      <JourneyTracker 
         playerPosition={playerPosition}
-        realm={currentRealm}
         onJourneyUpdate={handleJourneyUpdate}
       />
 
-      {/* Clean TopHUD */}
+      {/* Clean TopHUD with cross-realm upgrade button */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -693,7 +679,7 @@ const GameEngine: React.FC = () => {
       />
 
       {/* Main Game Area */}
-      <div className="absolute inset-0 pt-16 pb-40">
+      <div className="absolute inset-0 pt-12 pb-32">
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -701,7 +687,7 @@ const GameEngine: React.FC = () => {
           manaPerSecond={gameState.manaPerSecond}
           energyPerSecond={gameState.energyPerSecond}
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
-          buildingData={currentRealm === 'fantasy' ? fantasyBuildingDefinitions : scifiBuildingDefinitions}
+          buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
           currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
           gameState={gameState}
           onPurchaseUpgrade={purchaseUpgrade}
@@ -711,8 +697,8 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* 3D Ground-based Enemy System with scaling */}
-        <GroundEnemySystem3D
+        {/* Ground-based Enemy System with scaling */}
+        <GroundEnemySystem
           realm={currentRealm}
           onEnemyReachPlayer={handleEnemyReachPlayer}
           onEnemyDestroyed={handleEnemyDestroyed}
@@ -722,42 +708,45 @@ const GameEngine: React.FC = () => {
           onEnemiesUpdate={setEnemies}
         />
 
-        {/* 3D Auto Weapon System */}
-        <AutoWeapon3D
+        {/* Auto Weapon System */}
+        <AutoWeapon
           enemies={enemies}
           combatStats={weaponStats}
           onEnemyHit={handleEnemyHit}
           onMuzzleFlash={handleMuzzleFlash}
         />
 
-        {/* Visual Effects */}
+        {/* Muzzle Flash Effect */}
         <MuzzleFlash
           isVisible={showMuzzleFlash}
           onComplete={handleMuzzleFlashComplete}
         />
 
+        {/* Wave Complete Message */}
         <WaveCompleteMessage
           isVisible={showWaveComplete}
           waveNumber={gameState.waveNumber}
           onComplete={handleWaveCompleteComplete}
         />
 
+        {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Clean UI Buttons */}
-        <div className="absolute top-20 right-4 z-30">
+        {/* Weapon Upgrade Button */}
+        <div className="absolute top-16 right-4 z-30">
           <Button 
             onClick={handleShowWeaponUpgrades}
-            className="h-12 w-12 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0"
+            className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0"
           >
             🏹
           </Button>
         </div>
 
-        <div className="absolute top-20 left-4 z-30">
+        {/* Cross-Realm Upgrades Button */}
+        <div className="absolute top-16 left-4 z-30">
           <Button 
             onClick={handleShowCrossRealmUpgrades}
-            className="h-12 w-12 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
+            className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
           >
             🏰
           </Button>
@@ -765,10 +754,10 @@ const GameEngine: React.FC = () => {
 
         {/* Convergence Ready Button */}
         {canConverge && (
-          <div className="absolute bottom-40 left-1/2 transform -translate-x-1/2 z-30">
+          <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
-              className="h-12 px-8 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
+              className="h-10 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
             >
               🔁 Convergence Ready!
             </Button>
@@ -776,7 +765,7 @@ const GameEngine: React.FC = () => {
         )}
       </div>
 
-      {/* Clean Bottom Action Bar */}
+      {/* Enhanced Bottom Action Bar with realm-specific journey progress */}
       <BottomActionBar
         currentRealm={currentRealm}
         onRealmChange={switchRealm}
@@ -785,12 +774,13 @@ const GameEngine: React.FC = () => {
         playerDistance={currentJourneyDistance}
       />
 
-      {/* Modals */}
+      {/* Quick Help Modal */}
       <QuickHelpModal
         isOpen={showQuickHelp}
         onClose={() => setShowQuickHelp(false)}
       />
 
+      {/* Combat Upgrades Modal */}
       {showCombatUpgrades && (
         <CombatUpgradeSystem
           upgrades={combatUpgrades}
@@ -800,6 +790,7 @@ const GameEngine: React.FC = () => {
         />
       )}
 
+      {/* Weapon Upgrades Modal */}
       {showWeaponUpgrades && (
         <WeaponUpgradeSystem
           upgrades={weaponUpgrades}
@@ -809,6 +800,7 @@ const GameEngine: React.FC = () => {
         />
       )}
 
+      {/* Cross-Realm Upgrades Modal */}
       {showCrossRealmUpgrades && (
         <CrossRealmUpgradeSystem
           upgrades={crossRealmUpgradesWithLevels}
@@ -822,6 +814,7 @@ const GameEngine: React.FC = () => {
         />
       )}
 
+      {/* Convergence Modal */}
       {showConvergence && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
