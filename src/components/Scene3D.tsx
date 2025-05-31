@@ -160,23 +160,29 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 console.log('Rendering FANTASY components');
                 return (
                   <Suspense fallback={null}>
-                    <FantasyRoadSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
+                    {realm === 'fantasy' && (
+                      <FantasyRoadSystem
+                        chunks={chunks}
+                        chunkSize={50}
+                        realm={realm}
+                      />
+                    )}
                     
-                    <FantasyMountainSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
+                    {realm === 'fantasy' && (
+                      <FantasyMountainSystem
+                        chunks={chunks}
+                        chunkSize={50}
+                        realm={realm}
+                      />
+                    )}
                     
-                    <FantasyPortalSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
+                    {realm === 'fantasy' && (
+                      <FantasyPortalSystem
+                        chunks={chunks}
+                        chunkSize={50}
+                        realm={realm}
+                      />
+                    )}
                   </Suspense>
                 );
               } else {

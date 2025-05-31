@@ -101,10 +101,10 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
     
     console.log('FantasyMountainContent: Created', instances.length, 'mountain instances');
     return instances;
-  }, [chunks, chunkSize, leftMountain.scene, rightMountain.scene, hasError, realm]);
+  }, [chunks, chunkSize, leftMountain?.scene, rightMountain?.scene, hasError, realm]);
 
   // CRITICAL: Final realm check before rendering
-  if (!leftMountain.scene || !rightMountain.scene || hasError || realm !== 'fantasy') {
+  if (!leftMountain?.scene || !rightMountain?.scene || hasError || realm !== 'fantasy') {
     console.log('FantasyMountainContent: Final check failed for realm:', realm);
     return null;
   }
