@@ -1,7 +1,7 @@
 
 import React, { Suspense, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stars, PerspectiveCamera } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
@@ -80,26 +80,14 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             maxPolarAngle={3 * Math.PI / 4}
           />
 
-          {/* Lighting */}
-          <ambientLight intensity={0.4} />
+          {/* Clean, simple lighting */}
+          <ambientLight intensity={0.6} />
           <directionalLight
             position={[5, 5, 5]}
             intensity={0.8}
             castShadow
             shadow-mapSize-width={1024}
             shadow-mapSize-height={1024}
-          />
-          <pointLight position={[0, 10, 0]} intensity={0.3} color={realm === 'fantasy' ? '#8b5cf6' : '#06b6d4'} />
-
-          {/* Animated starfield background */}
-          <Stars
-            radius={50}
-            depth={50}
-            count={2000}
-            factor={4}
-            saturation={0}
-            fade
-            speed={0.5}
           />
 
           {/* Floating Island Base */}

@@ -17,7 +17,7 @@ interface GLBModelProps {
   canAfford: boolean;
 }
 
-// Simplified GLB Model component with no black/grey fallbacks
+// Clean GLB Model component with no visual artifacts
 const SafeGLBModel: React.FC<GLBModelProps> = ({ 
   modelUrl, 
   position, 
@@ -33,7 +33,6 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   const groupRef = useRef<Group>(null);
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
-  const [glowIntensity, setGlowIntensity] = useState(1);
   const [loadError, setLoadError] = useState(false);
   
   // Load GLB model with proper error handling
@@ -55,7 +54,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   
   useFrame((state) => {
     if (groupRef.current) {
-      // Enhanced floating animation based on unlock state
+      // Simple floating animation
       if (isPurchased) {
         groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.8 + position[0]) * 0.1;
         groupRef.current.rotation.y += 0.002;
@@ -64,7 +63,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         groupRef.current.rotation.y += 0.005;
       }
       
-      // Enhanced hover effects
+      // Simple hover effects
       if (hovered && isWithinRange) {
         const hoverScale = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.05;
         groupRef.current.scale.setScalar(scale * hoverScale);
@@ -73,30 +72,22 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
       }
     }
 
-    // Enhanced pulsing glow effect based on state
+    // Simple glow effect
     if (glowRef.current) {
       if (isPurchased) {
         const purchasedGlow = Math.sin(state.clock.elapsedTime * 2) * 0.2 + 0.8;
         glowRef.current.scale.setScalar(purchasedGlow * 1.2);
-        setGlowIntensity(0.6);
       } else if (canAfford && isWithinRange) {
         const activeGlow = Math.sin(state.clock.elapsedTime * 3) * 0.4 + 1;
         glowRef.current.scale.setScalar(activeGlow);
-        setGlowIntensity(0.8);
-      } else if (!canAfford) {
-        // Locked state - dim and slow pulse
-        const lockedGlow = Math.sin(state.clock.elapsedTime * 1) * 0.2 + 0.4;
-        glowRef.current.scale.setScalar(lockedGlow);
-        setGlowIntensity(0.2);
       } else {
         const defaultGlow = Math.sin(state.clock.elapsedTime * 2) * 0.3 + 0.7;
         glowRef.current.scale.setScalar(defaultGlow);
-        setGlowIntensity(0.4);
       }
     }
   });
 
-  // Bright colorful fallback - no black/grey elements
+  // Clean bright fallback - no black/grey elements
   if (loadError || !gltfScene) {
     return (
       <group
@@ -112,7 +103,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
           <meshBasicMaterial transparent opacity={0} />
         </mesh>
 
-        {/* Bright crystal instead of any dark elements */}
+        {/* Bright crystal - no dark elements */}
         <mesh>
           <octahedronGeometry args={[scale * 1.2]} />
           <meshLambertMaterial 
@@ -126,13 +117,13 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
           />
         </mesh>
         
-        {/* Bright glow */}
+        {/* Simple bright glow */}
         <mesh ref={glowRef} position={[0, -0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[scale * 2]} />
           <meshBasicMaterial
             color="#a855f7"
             transparent
-            opacity={glowIntensity * 0.3}
+            opacity={0.3}
           />
         </mesh>
       </group>
@@ -153,7 +144,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Glow beneath model */}
+      {/* Clean glow beneath model */}
       <mesh ref={glowRef} position={[0, -0.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[scale * 2.5]} />
         <meshBasicMaterial
@@ -163,7 +154,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
             "#a855f7"
           }
           transparent
-          opacity={glowIntensity * 0.4}
+          opacity={0.4}
         />
       </mesh>
 
@@ -173,7 +164,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         scale={scale * (isPurchased ? 1.1 : canAfford ? 1 : 0.8)}
       />
       
-      {/* Purchase success indicator */}
+      {/* Simple purchase indicator */}
       {isPurchased && (
         <mesh position={[0, scale * 2.5, 0]}>
           <sphereGeometry args={[0.15]} />
@@ -181,7 +172,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         </mesh>
       )}
       
-      {/* Interaction range indicator */}
+      {/* Simple interaction indicator */}
       {isWithinRange && !isPurchased && (
         <mesh position={[0, scale * 2.2, 0]}>
           <ringGeometry args={[0.3, 0.4]} />

@@ -5,18 +5,12 @@ interface EnhancedParticleBackgroundProps {
   realm: 'fantasy' | 'scifi';
 }
 
-// Simplified particle background - removing all floating particles that cause visual noise
+// Completely clean background - no particles, no visual noise
 export const EnhancedParticleBackground: React.FC<EnhancedParticleBackgroundProps> = ({ realm }) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Simple gradient overlay instead of particles */}
-      <div 
-        className={`absolute inset-0 opacity-10 ${
-          realm === 'fantasy' 
-            ? 'bg-gradient-to-b from-purple-900/20 to-transparent' 
-            : 'bg-gradient-to-b from-cyan-900/20 to-transparent'
-        }`}
-      />
+      {/* Clean transparent background only */}
+      <div className="absolute inset-0 bg-transparent" />
     </div>
   );
 };
