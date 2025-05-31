@@ -90,10 +90,10 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             shadow-mapSize-height={1024}
           />
 
-          {/* Floating Island Base */}
+          {/* Floating Island Base - NO PARTICLES */}
           <FloatingIsland realm={realm} />
 
-          {/* 3D Upgrade Nodes */}
+          {/* 3D Upgrade Nodes - NO PARTICLES */}
           {upgradePositions.map((position) => {
             const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
             if (!upgrade) return null;
@@ -112,7 +112,7 @@ export const Scene3D: React.FC<Scene3DProps> = ({
             );
           })}
 
-          {/* Tap Effect */}
+          {/* Tap Effect - Simple geometry only */}
           {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
           )}

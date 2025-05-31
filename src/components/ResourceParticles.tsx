@@ -7,11 +7,7 @@ interface ResourceParticlesProps {
   energyPerSecond: number;
 }
 
-// Disabled Three.js particles to eliminate blue diamonds
-export const ResourceParticles: React.FC<ResourceParticlesProps> = ({
-  realm,
-  manaPerSecond,
-  energyPerSecond
-}) => {
-  return null; // No particles at all
+// Completely removed - no rendering at all
+export const ResourceParticles: React.FC<ResourceParticlesProps> = () => {
+  return null;
 };
