@@ -43,16 +43,32 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
     
-    // Optimize the scene only once
+    // Ensure the staff is visible and properly lit
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.visible = true;
-        child.castShadow = true;
-        child.receiveShadow = true;
+        child.castShadow = false; // Disable shadows for HUD element
+        child.receiveShadow = false;
         
-        // Optimize material if needed
+        // Ensure materials are visible
         if (child.material) {
-          child.material.needsUpdate = false;
+          if (Array.isArray(child.material)) {
+            child.material.forEach(mat => {
+              mat.transparent = false;
+              mat.opacity = 1;
+              // Add emissive light to make it more visible
+              if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshLambertMaterial) {
+                mat.emissive = new THREE.Color(0x222222);
+              }
+            });
+          } else {
+            child.material.transparent = false;
+            child.material.opacity = 1;
+            // Add emissive light to make it more visible
+            if (child.material instanceof THREE.MeshStandardMaterial || child.material instanceof THREE.MeshLambertMaterial) {
+              child.material.emissive = new THREE.Color(0x222222);
+            }
+          }
         }
       }
     });
@@ -60,19 +76,30 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
     return clone;
   }, [scene]);
 
-  // Simplified debug logging - only run once
+  // Debug logging
   useEffect(() => {
-    console.log('WizardStaff optimized and ready');
-  }, []);
+    console.log('WizardStaff: Model loaded and positioned at:', position || [0.8, -0.8, -1.2]);
+    console.log('WizardStaff: Scene children count:', clonedScene.children.length);
+  }, [clonedScene, position]);
 
   return (
-    <primitive 
-      object={clonedScene} 
-      position={position || [0.5, -1.0, -0.8]} 
-      rotation={rotation || [0.1, Math.PI / 6, 0.1]}
-      scale={scale || [1.0, 1.0, 1.0]}
-      {...validThreeProps}
-    />
+    <group>
+      {/* Add a local light to ensure the staff is well-lit */}
+      <pointLight 
+        position={[0.5, 0, 0]} 
+        intensity={0.8} 
+        color="#ffffff"
+        distance={3}
+      />
+      
+      <primitive 
+        object={clonedScene} 
+        position={position || [0.8, -0.8, -1.2]} 
+        rotation={rotation || [0.2, Math.PI / 4, 0.1]}
+        scale={scale || [0.8, 0.8, 0.8]}
+        {...validThreeProps}
+      />
+    </group>
   );
 });
 

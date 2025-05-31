@@ -76,12 +76,12 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     <div className="w-full h-full relative">
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
-        dpr={[1, 1.5]} // Reduced max DPR for better performance
-        performance={{ min: 0.6 }} // Slightly higher min performance threshold
-        gl={{ antialias: false, alpha: false }} // Disable expensive rendering options
+        dpr={[1, 1.5]}
+        performance={{ min: 0.6 }}
+        gl={{ antialias: false, alpha: false }}
       >
         <Suspense fallback={null}>
-          {/* Camera with attached wizard staff */}
+          {/* Camera setup */}
           <PerspectiveCamera
             ref={cameraRef}
             makeDefault
@@ -89,9 +89,17 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             fov={60}
             near={0.1}
             far={100}
-          >
-            <WizardStaff />
-          </PerspectiveCamera>
+          />
+
+          {/* Wizard staff as HUD element - positioned relative to camera */}
+          <group>
+            <WizardStaff 
+              position={[2.2, -1.8, -3]} 
+              rotation={[0.3, -Math.PI / 6, 0.2]}
+              scale={[1.2, 1.2, 1.2]}
+              visible={true}
+            />
+          </group>
 
           {/* Optimized controls */}
           <OrbitControls
@@ -104,15 +112,23 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             maxDistance={15}
             minPolarAngle={Math.PI / 4}
             maxPolarAngle={3 * Math.PI / 4}
-            enableDamping={false} // Disable damping for better performance
+            enableDamping={false}
           />
 
-          {/* Optimized lighting */}
-          <ambientLight intensity={0.6} />
+          {/* Enhanced lighting to ensure staff visibility */}
+          <ambientLight intensity={0.8} />
           <directionalLight
             position={[5, 5, 5]}
-            intensity={0.8}
-            castShadow={false} // Disable shadows for better performance
+            intensity={1.0}
+            castShadow={false}
+          />
+          
+          {/* Additional light specifically for the staff area */}
+          <pointLight
+            position={[3, -1, -2]}
+            intensity={0.6}
+            color="#ffffff"
+            distance={5}
           />
 
           {/* Floating Island Base */}
