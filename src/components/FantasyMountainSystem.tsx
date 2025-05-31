@@ -15,23 +15,41 @@ interface RightMountainProps {
 }
 
 function LeftMountain({ position }: LeftMountainProps) {
-  try {
-    const { scene } = useGLTF(LEFT_MOUNTAIN_URL);
-    return <primitive object={scene.clone()} position={position} scale={[1.5, 1.5, 1.5]} />;
-  } catch (e) {
-    console.warn('Failed to load fantasy mountain left:', e);
+  console.log('LeftMountain: Attempting to load', LEFT_MOUNTAIN_URL);
+  
+  const { scene, error } = useGLTF(LEFT_MOUNTAIN_URL);
+  
+  if (error) {
+    console.error('Failed to load left mountain:', error);
     return null;
   }
+  
+  if (!scene) {
+    console.warn('Left mountain scene is null');
+    return null;
+  }
+  
+  console.log('LeftMountain: Successfully loaded, rendering at position:', position);
+  return <primitive object={scene.clone()} position={position} scale={[1.5, 1.5, 1.5]} />;
 }
 
 function RightMountain({ position }: RightMountainProps) {
-  try {
-    const { scene } = useGLTF(RIGHT_MOUNTAIN_URL);
-    return <primitive object={scene.clone()} position={position} scale={[1.5, 1.5, 1.5]} />;
-  } catch (e) {
-    console.warn('Failed to load fantasy mountain right:', e);
+  console.log('RightMountain: Attempting to load', RIGHT_MOUNTAIN_URL);
+  
+  const { scene, error } = useGLTF(RIGHT_MOUNTAIN_URL);
+  
+  if (error) {
+    console.error('Failed to load right mountain:', error);
     return null;
   }
+  
+  if (!scene) {
+    console.warn('Right mountain scene is null');
+    return null;
+  }
+  
+  console.log('RightMountain: Successfully loaded, rendering at position:', position);
+  return <primitive object={scene.clone()} position={position} scale={[1.5, 1.5, 1.5]} />;
 }
 
 interface FantasyMountainSystemProps {
@@ -46,14 +64,19 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   realm
 }) => {
   const mountainInstances = useMemo(() => {
+    console.log('FantasyMountainSystem render - Realm:', realm, 'Chunks:', chunks.length);
+    
     // Only render in fantasy realm
     if (realm !== 'fantasy') {
+      console.log('FantasyMountainSystem: Not fantasy realm, skipping');
       return [];
     }
 
     const instances: React.ReactNode[] = [];
     
-    chunks.forEach((chunk) => {
+    chunks.forEach((chunk, chunkIndex) => {
+      console.log(`Processing chunk ${chunkIndex}: worldZ=${chunk.worldZ}`);
+      
       // Position mountains at far left and right of each chunk
       const leftMountainZ = chunk.worldZ;
       const rightMountainZ = chunk.worldZ;
@@ -61,6 +84,8 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
       // Create multiple mountain instances along the Z-axis for seamless coverage
       for (let zOffset = 0; zOffset < chunkSize; zOffset += 20) {
         const finalZ = leftMountainZ - zOffset;
+        
+        console.log(`Creating mountains for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
         
         instances.push(
           <LeftMountain 
@@ -78,6 +103,7 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
       }
     });
     
+    console.log(`FantasyMountainSystem: Created ${instances.length} mountain instances`);
     return instances;
   }, [chunks, chunkSize, realm]);
 
@@ -85,5 +111,6 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
 };
 
 // Preload the models
+console.log('Preloading fantasy mountain models...');
 useGLTF.preload(LEFT_MOUNTAIN_URL);
 useGLTF.preload(RIGHT_MOUNTAIN_URL);
