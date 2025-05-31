@@ -25,13 +25,13 @@ export const Projectile3D: React.FC<Projectile3DProps> = ({ position, realm }) =
         <>
           {/* Magic orb */}
           <sphereGeometry args={[0.1, 8, 6]} />
-          <meshBasicMaterial color="#ffff00" emissive="#ffaa00" />
+          <meshLambertMaterial color="#ffff00" emissive="#ffaa00" />
         </>
       ) : (
         <>
           {/* Laser bolt */}
           <cylinderGeometry args={[0.05, 0.05, 0.3, 6]} />
-          <meshBasicMaterial color="#00ffff" emissive="#0088ff" />
+          <meshLambertMaterial color="#00ffff" emissive="#0088ff" />
         </>
       )}
       
