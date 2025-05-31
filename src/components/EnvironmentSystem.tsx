@@ -63,11 +63,11 @@ const DetailedLandscapeFeature: React.FC<{
   const getGeometry = () => {
     switch (type) {
       case 'crystal':
-        return <octahedronGeometry args={scale} />;
+        return <octahedronGeometry args={[scale[0]]} />;
       case 'tree':
         return <coneGeometry args={[scale[0], scale[1], 8]} />;
       case 'rock':
-        return <dodecahedronGeometry args={scale} />;
+        return <dodecahedronGeometry args={[scale[0]]} />;
       case 'rune_stone':
         return <cylinderGeometry args={[scale[0], scale[0] * 1.2, scale[1], 6]} />;
       case 'magical_spring':
@@ -259,7 +259,7 @@ const DynamicSkybox: React.FC<{
       {tier >= 3 && (
         <mesh position={[30, 25, -60]}>
           <sphereGeometry args={[3]} />
-          <meshBasicMaterial 
+          <meshStandardMaterial 
             color="#fbbf24"
             emissive="#fbbf24"
             emissiveIntensity={0.5}
@@ -272,7 +272,7 @@ const DynamicSkybox: React.FC<{
       {tier >= 4 && (
         <mesh position={[-25, 20, -50]}>
           <sphereGeometry args={[1.5]} />
-          <meshBasicMaterial 
+          <meshStandardMaterial 
             color="#e879f9"
             emissive="#e879f9"
             emissiveIntensity={0.3}
@@ -502,7 +502,7 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
         return (
           <mesh key={i} position={[x, y, z]}>
             <octahedronGeometry args={[0.03 + Math.random() * 0.05]} />
-            <meshBasicMaterial 
+            <meshStandardMaterial 
               color={particleColor} 
               emissive={particleColor}
               emissiveIntensity={0.3}
@@ -524,7 +524,7 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
         return (
           <mesh key={`orb-${i}`} position={[x, y, z]}>
             <sphereGeometry args={[0.2]} />
-            <meshBasicMaterial 
+            <meshStandardMaterial 
               color={currentTier >= 4 ? '#fbbf24' : currentTier >= 3 ? '#e879f9' : '#c084fc'}
               emissive={currentTier >= 4 ? '#fbbf24' : currentTier >= 3 ? '#e879f9' : '#c084fc'}
               emissiveIntensity={0.5}
