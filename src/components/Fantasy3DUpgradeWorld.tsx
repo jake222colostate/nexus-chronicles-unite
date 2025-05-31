@@ -10,6 +10,7 @@ import { EnhancedPathwaySystem } from './EnhancedPathwaySystem';
 import { FantasyMountainSystem } from './FantasyMountainSystem';
 import { FantasyTreeSystem } from './FantasyTreeSystem';
 import { FantasyRoadSystem } from './FantasyRoadSystem';
+import { FantasyPathSystem } from './FantasyPathSystem';
 import { FantasyPortalSystem } from './FantasyPortalSystem';
 import { FantasySkyboxSystem } from './FantasySkyboxSystem';
 import { EnhancedUpgradePedestal } from './EnhancedUpgradePedestal';
@@ -171,10 +172,11 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
                   realm={realm}
                 />
                 
-                {/* Enhanced Pathway System */}
-                <EnhancedPathwaySystem
+                {/* Fantasy Path System */}
+                <FantasyPathSystem
                   chunks={chunks}
                   chunkSize={CHUNK_SIZE}
+                  realm={realm}
                 />
                 
                 {/* Fantasy Mountains - High poly models */}

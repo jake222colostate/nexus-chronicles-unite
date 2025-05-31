@@ -4,7 +4,7 @@ import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const FANTASY_PORTAL_URL = 'https://github.com/jake222colostate/HIGHPOLY/raw/main/fantasy_portal.glb';
+const FANTASY_PORTAL_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_portal.glb';
 
 // Individual portal component
 const FantasyPortal: React.FC<{ 

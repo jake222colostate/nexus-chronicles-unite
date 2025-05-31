@@ -3,7 +3,7 @@ import React, { Suspense } from 'react';
 import { useGLTF, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 
-const FANTASY_SKYBOX_URL = 'https://github.com/jake222colostate/HIGHPOLY/raw/main/fantasy_skybox.glb';
+const FANTASY_SKYBOX_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_skybox.glb';
 
 // GLB Skybox component
 const GLBSkybox: React.FC = () => {

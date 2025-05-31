@@ -1,11 +1,11 @@
 
-import React, { useMemo, useRef, useEffect, useState, Suspense } from 'react';
+import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-const FANTASY_MOUNTAIN_LEFT_URL = 'https://github.com/jake222colostate/HIGHPOLY/raw/main/fantasy_mountain_left.glb';
-const FANTASY_MOUNTAIN_RIGHT_URL = 'https://github.com/jake222colostate/HIGHPOLY/raw/main/fantasy_mountain_right.glb';
+const FANTASY_MOUNTAIN_LEFT_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_mountain_left.glb';
+const FANTASY_MOUNTAIN_RIGHT_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_mountain_right.glb';
 
 interface MountainProps {
   url: string;

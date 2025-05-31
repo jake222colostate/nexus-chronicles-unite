@@ -4,7 +4,7 @@ import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-const FANTASY_TREE_URL = 'https://github.com/jake222colostate/HIGHPOLY/raw/main/fantasy_tree.glb';
+const FANTASY_TREE_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_tree.glb';
 
 // Simple seeded random number generator
 const seededRandom = (seed: number) => {
