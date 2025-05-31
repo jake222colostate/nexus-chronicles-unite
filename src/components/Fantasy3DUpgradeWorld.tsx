@@ -1,4 +1,3 @@
-
 import React, { Suspense, useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Environment, ContactShadows } from '@react-three/drei';
@@ -301,8 +300,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             >
               <cylinderGeometry args={[1.2, 1.0, 0.3, 8]} />
               <meshLambertMaterial 
-                color="#6B5B73" 
-                roughness={0.8}
+                color="#6B5B73"
               />
             </mesh>
           ))}
