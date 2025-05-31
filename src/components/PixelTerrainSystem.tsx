@@ -42,33 +42,78 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
   const pathTexture = useMemo(() => createPixelTexture('30'), [createPixelTexture]);
   const rockTexture = useMemo(() => createPixelTexture('0'), [createPixelTexture]);
 
-  // Generate better distributed tree positions with anti-clustering
+  // Generate truly random tree positions for natural forest appearance
   const treePositions = useMemo(() => {
     const positions = [];
-    const minDistance = 8; // Minimum distance between trees
+    const minDistance = 6; // Reduced minimum distance for denser forest
+    const maxAttempts = 100;
     
-    for (let i = 0; i < 25; i++) {
+    // Create clusters of trees on each side
+    for (let cluster = 0; cluster < 8; cluster++) {
+      const clusterSide = cluster % 2 === 0 ? -1 : 1; // Alternate sides
+      const clusterCenterZ = -10 - (cluster * 15) + (Math.random() - 0.5) * 20;
+      const clusterCenterX = clusterSide * (12 + Math.random() * 15);
+      
+      // Add 3-5 trees per cluster
+      const treesInCluster = 3 + Math.floor(Math.random() * 3);
+      
+      for (let t = 0; t < treesInCluster; t++) {
+        let attempts = 0;
+        let validPosition = false;
+        let x, z, scale;
+        
+        while (!validPosition && attempts < maxAttempts) {
+          // Random offset from cluster center
+          const offsetX = (Math.random() - 0.5) * 25;
+          const offsetZ = (Math.random() - 0.5) * 30;
+          
+          x = clusterCenterX + offsetX;
+          z = clusterCenterZ + offsetZ;
+          
+          // Ensure trees stay on their side and away from path
+          if (clusterSide > 0) {
+            x = Math.max(6, x); // Right side, minimum 6 units from center
+          } else {
+            x = Math.min(-6, x); // Left side, minimum 6 units from center
+          }
+          
+          // Random scale for variety
+          scale = 0.6 + Math.random() * 0.8;
+          
+          // Check distance from existing trees
+          validPosition = true;
+          for (const existing of positions) {
+            const distance = Math.sqrt(
+              Math.pow(x - existing.x, 2) + Math.pow(z - existing.z, 2)
+            );
+            if (distance < minDistance) {
+              validPosition = false;
+              break;
+            }
+          }
+          
+          attempts++;
+        }
+        
+        if (validPosition) {
+          positions.push({ x, z, scale });
+        }
+      }
+    }
+    
+    // Add some scattered individual trees for extra randomness
+    for (let i = 0; i < 12; i++) {
       let attempts = 0;
       let validPosition = false;
       let x, z, scale;
       
-      while (!validPosition && attempts < 50) {
-        // Use seeded random for consistency
-        const seed = i * 12345 + attempts * 678;
-        const random1 = ((seed * 9301 + 49297) % 233280) / 233280;
-        const random2 = (((seed + 1) * 9301 + 49297) % 233280) / 233280;
-        const random3 = (((seed + 2) * 9301 + 49297) % 233280) / 233280;
-        const random4 = (((seed + 3) * 9301 + 49297) % 233280) / 233280;
+      while (!validPosition && attempts < maxAttempts) {
+        const side = Math.random() > 0.5 ? 1 : -1;
+        x = side * (8 + Math.random() * 20); // 8-28 units from center
+        z = -5 - Math.random() * 100; // Anywhere along the path
+        scale = 0.5 + Math.random() * 0.7;
         
-        // Decide which side of the trail (left or right)
-        const side = random4 > 0.5 ? 1 : -1;
-        
-        // Place trees further from the trail center (6+ units away)
-        x = side * (8 + random1 * 20); // 8-28 units from center
-        z = -5 - (random2 * 100); // Along the entire path length
-        scale = 0.7 + random3 * 0.6; // Vary tree sizes more
-        
-        // Check if this position is far enough from existing trees
+        // Check distance from existing trees
         validPosition = true;
         for (const existing of positions) {
           const distance = Math.sqrt(
@@ -175,7 +220,7 @@ export const PixelTerrainSystem: React.FC<PixelTerrainSystemProps> = ({
         );
       })}
 
-      {/* Better distributed trees along the trail sides */}
+      {/* Naturally scattered trees creating diverse forest clusters */}
       {treePositions.map((pos, i) => (
         <group key={`tree-${i}`} position={[pos.x, -1, pos.z]} scale={[pos.scale, pos.scale, pos.scale]}>
           {/* Tree trunk */}
