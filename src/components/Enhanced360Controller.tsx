@@ -33,6 +33,12 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevent default for game controls only
+      const gameKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+      if (gameKeys.includes(event.key.toLowerCase())) {
+        event.preventDefault();
+      }
+
       switch (event.key.toLowerCase()) {
         case 'w':
         case 'arrowup':
@@ -74,19 +80,21 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 
-  // Mouse look controls
+  // Mouse look controls - only on Canvas
   useEffect(() => {
     const handleMouseDown = (event: MouseEvent) => {
-      if (event.button === 0) {
+      // Only handle mouse events on the canvas
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'CANVAS' && event.button === 0) {
         isMouseDown.current = true;
         lastMouse.current = { x: event.clientX, y: event.clientY };
         event.preventDefault();
@@ -107,32 +115,39 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     };
 
     const handleMouseUp = (event: MouseEvent) => {
+      if (event.button === 0) {
+        isMouseDown.current = false;
+        event.preventDefault();
+      }
+    };
+
+    const handleMouseLeave = () => {
       isMouseDown.current = false;
-      event.preventDefault();
     };
 
     document.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('mouseleave', handleMouseUp);
+    document.addEventListener('mouseleave', handleMouseLeave);
 
     return () => {
       document.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('mouseleave', handleMouseUp);
+      document.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, []);
 
-  // Touch controls for mobile
+  // Touch controls for mobile - only on Canvas
   useEffect(() => {
     const handleTouchStart = (event: TouchEvent) => {
-      if (event.touches.length === 1) {
+      const target = event.target as HTMLElement;
+      if (target.tagName === 'CANVAS' && event.touches.length === 1) {
         const touch = event.touches[0];
         lastMouse.current = { x: touch.clientX, y: touch.clientY };
         isMouseDown.current = true;
+        event.preventDefault();
       }
-      event.preventDefault();
     };
 
     const handleTouchMove = (event: TouchEvent) => {
@@ -145,8 +160,8 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         pitchAngle.current = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, pitchAngle.current - deltaY * 0.003));
         
         lastMouse.current = { x: touch.clientX, y: touch.clientY };
+        event.preventDefault();
       }
-      event.preventDefault();
     };
 
     const handleTouchEnd = (event: TouchEvent) => {

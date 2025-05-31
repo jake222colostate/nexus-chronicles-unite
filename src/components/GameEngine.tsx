@@ -207,14 +207,26 @@ const GameEngine: React.FC = () => {
   const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.6, z: 0 });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Stable references to prevent re-renders
-  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
-  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
-  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
-  const purchasedUpgradesCount = stablePurchasedUpgrades.length;
+  // Stable references to prevent re-renders - using JSON.stringify for deep comparison
+  const stableFantasyBuildings = useMemo(() => {
+    return JSON.stringify(gameState.fantasyBuildings || {});
+  }, [gameState.fantasyBuildings]);
+  
+  const stableScifiBuildings = useMemo(() => {
+    return JSON.stringify(gameState.scifiBuildings || {});
+  }, [gameState.scifiBuildings]);
+  
+  const stablePurchasedUpgrades = useMemo(() => {
+    return JSON.stringify(gameState.purchasedUpgrades || []);
+  }, [gameState.purchasedUpgrades]);
+
+  // Parse stable references back to objects
+  const fantasyBuildings = useMemo(() => JSON.parse(stableFantasyBuildings), [stableFantasyBuildings]);
+  const scifiBuildings = useMemo(() => JSON.parse(stableScifiBuildings), [stableScifiBuildings]);
+  const purchasedUpgrades = useMemo(() => JSON.parse(stablePurchasedUpgrades), [stablePurchasedUpgrades]);
 
   // Initialize buff system with stable dependencies
-  const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
+  const buffSystem = useBuffSystem(fantasyBuildings, scifiBuildings);
 
   // Cross-realm upgrades with current levels
   const crossRealmUpgradesWithLevels = useMemo(() => {
@@ -275,7 +287,7 @@ const GameEngine: React.FC = () => {
       : gameState.scifiJourneyDistance;
   }, [currentRealm, gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance]);
 
-  // Calculate offline progress on mount
+  // Calculate offline progress on mount - run only once
   useEffect(() => {
     const now = Date.now();
     const offlineTime = Math.min((now - gameState.lastSaveTime) / 1000, 3600);
@@ -291,7 +303,7 @@ const GameEngine: React.FC = () => {
         lastSaveTime: now,
       }));
     }
-  }, []);
+  }, []); // Empty dependency array - run only once
 
   // Game loop with proper journey tracking
   useEffect(() => {
@@ -327,20 +339,20 @@ const GameEngine: React.FC = () => {
     }));
   }, [currentRealm]);
 
-  // Enhanced production calculation with cross-realm upgrades
+  // Enhanced production calculation with cross-realm upgrades - use stable string keys for comparison
   useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
-      const count = stableFantasyBuildings[building.id] || 0;
+      const count = fantasyBuildings[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'fantasy');
       manaRate += (count * building.production * multiplier) + flatBonus;
     });
 
     scifiBuildings.forEach(building => {
-      const count = stableScifiBuildings[building.id] || 0;
+      const count = scifiBuildings[building.id] || 0;
       const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'scifi');
       energyRate += (count * building.production * multiplier) + flatBonus;
     });
@@ -359,7 +371,7 @@ const GameEngine: React.FC = () => {
 
     // Apply hybrid upgrade bonuses
     let globalMultiplier = 1;
-    stablePurchasedUpgrades.forEach(upgradeId => {
+    purchasedUpgrades.forEach(upgradeId => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
       if (upgrade) {
         if (upgrade.effects.globalProductionBonus) {
@@ -383,7 +395,7 @@ const GameEngine: React.FC = () => {
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels]);
+  }, [stableFantasyBuildings, stableScifiBuildings, stablePurchasedUpgrades, buffSystem, crossRealmUpgradesWithLevels]);
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
