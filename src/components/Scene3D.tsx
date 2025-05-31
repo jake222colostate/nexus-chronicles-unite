@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -123,7 +124,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
 
-          {/* Enhanced Environment System - ALWAYS render for fantasy realm */}
+          {/* Enhanced Environment System */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
@@ -131,44 +132,44 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Fantasy road system - replaces grass system */}
+                {/* Fantasy Environment - New GLB Models */}
                 {realm === 'fantasy' && (
-                  <FantasyRoadSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                  />
+                  <>
+                    <FantasyRoadSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                    />
+                    
+                    <FantasyMountainSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                    />
+                    
+                    <FantasyPortalSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                    />
+                  </>
                 )}
                 
-                {/* Fantasy Mountains - replaces GLB mountain system */}
-                {realm === 'fantasy' && (
-                  <FantasyMountainSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                  />
-                )}
-                
-                {/* Fantasy Portals - checkpoint system */}
-                {realm === 'fantasy' && (
-                  <FantasyPortalSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                  />
-                )}
-                
-                {/* Keep existing grass system for sci-fi or fallback */}
+                {/* Sci-Fi Environment - Original Systems */}
                 {realm === 'scifi' && (
-                  <EnhancedGrassSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                  />
-                )}
-                
-                {/* Keep existing tree system for sci-fi or fallback */}
-                {realm === 'scifi' && (
-                  <TreeSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                  />
+                  <>
+                    <EnhancedGrassSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                    />
+                    
+                    <TreeSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                    />
+                    
+                    <GLBMountainSystem
+                      chunks={chunks}
+                      chunkSize={50}
+                    />
+                  </>
                 )}
               </>
             )}
