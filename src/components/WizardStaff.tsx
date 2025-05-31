@@ -4,11 +4,29 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 interface WizardStaffProps {
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: [number, number, number];
   [key: string]: any;
 }
 
 export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
   const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/weapons_enemies/main/wizard_staff.glb');
+  
+  // Extract only valid Three.js props and filter out React props
+  const { position, rotation, scale, ...otherProps } = props;
+  
+  // Filter out React-specific props that might cause issues
+  const validThreeProps = useMemo(() => {
+    const filtered: any = {};
+    Object.keys(otherProps).forEach(key => {
+      // Only allow known Three.js properties
+      if (!key.startsWith('on') && !key.includes('ref') && key !== 'children' && key !== 'key') {
+        filtered[key] = otherProps[key];
+      }
+    });
+    return filtered;
+  }, [otherProps]);
   
   // Memoize the cloned scene to prevent unnecessary re-cloning
   const clonedScene = useMemo(() => {
@@ -39,10 +57,10 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
   return (
     <primitive 
       object={clonedScene} 
-      {...props} 
-      position={[0.5, -1.0, -0.8]} 
-      rotation={[0.1, Math.PI / 6, 0.1]}
-      scale={[1.0, 1.0, 1.0]}
+      position={position || [0.5, -1.0, -0.8]} 
+      rotation={rotation || [0.1, Math.PI / 6, 0.1]}
+      scale={scale || [1.0, 1.0, 1.0]}
+      {...validThreeProps}
     />
   );
 });
