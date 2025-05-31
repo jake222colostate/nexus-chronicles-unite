@@ -19,10 +19,8 @@ interface GroundEnemySystemProps {
   onEnemyDestroyed: (enemy: GroundEnemy) => void;
   spawnRate?: number;
   maxEnemies?: number;
-  combatStats?: {
-    damage: number;
-    autoAimRange: number;
-  };
+  journeyDistance?: number;
+  onEnemiesUpdate?: (enemies: GroundEnemy[]) => void;
 }
 
 export const GroundEnemySystem: React.FC<GroundEnemySystemProps> = ({
@@ -31,7 +29,8 @@ export const GroundEnemySystem: React.FC<GroundEnemySystemProps> = ({
   onEnemyDestroyed,
   spawnRate = 2000,
   maxEnemies = 6,
-  combatStats = { damage: 1, autoAimRange: 0 }
+  journeyDistance = 0,
+  onEnemiesUpdate
 }) => {
   const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
 
@@ -48,31 +47,50 @@ export const GroundEnemySystem: React.FC<GroundEnemySystemProps> = ({
     ]
   }), []);
 
-  // Spawn enemies
+  // Difficulty scaling based on journey distance
+  const getScaledStats = useCallback((baseHealth: number, baseSpeed: number) => {
+    const distanceMultiplier = 1 + (journeyDistance / 100) * 0.5; // Increase by 50% every 100 distance
+    return {
+      health: Math.floor(baseHealth * distanceMultiplier),
+      speed: baseSpeed * (1 + (journeyDistance / 200) * 0.3) // Speed increases more slowly
+    };
+  }, [journeyDistance]);
+
+  // Spawn enemies with scaled difficulty
   useEffect(() => {
+    const adjustedSpawnRate = Math.max(800, spawnRate - (journeyDistance * 2)); // Faster spawning with distance
+    
     const spawnInterval = setInterval(() => {
       if (enemies.length < maxEnemies) {
         const types = enemyTypes[realm];
         const randomType = types[Math.floor(Math.random() * types.length)];
+        const scaledStats = getScaledStats(randomType.health, randomType.speed);
         
         const newEnemy: GroundEnemy = {
           id: `enemy_${Date.now()}_${Math.random()}`,
-          x: (Math.random() - 0.5) * 12, // Spawn within path width
-          y: 0, // Ground level
-          z: 30 + Math.random() * 10, // Spawn ahead of player
-          health: randomType.health,
-          maxHealth: randomType.health,
+          x: (Math.random() - 0.5) * 12,
+          y: 0,
+          z: 30 + Math.random() * 10,
+          health: scaledStats.health,
+          maxHealth: scaledStats.health,
           type: randomType.type,
-          speed: randomType.speed + (Math.random() - 0.5) * 0.2,
+          speed: scaledStats.speed + (Math.random() - 0.5) * 0.2,
           size: randomType.size
         };
         
         setEnemies(prev => [...prev, newEnemy]);
       }
-    }, spawnRate);
+    }, adjustedSpawnRate);
 
     return () => clearInterval(spawnInterval);
-  }, [enemies.length, maxEnemies, spawnRate, realm, enemyTypes]);
+  }, [enemies.length, maxEnemies, spawnRate, realm, enemyTypes, journeyDistance, getScaledStats]);
+
+  // Update parent component with enemy list
+  useEffect(() => {
+    if (onEnemiesUpdate) {
+      onEnemiesUpdate(enemies);
+    }
+  }, [enemies, onEnemiesUpdate]);
 
   // Move enemies toward player
   useEffect(() => {
@@ -98,53 +116,34 @@ export const GroundEnemySystem: React.FC<GroundEnemySystemProps> = ({
     return () => clearInterval(moveInterval);
   }, [onEnemyReachPlayer]);
 
-  // Auto-attack system
-  useEffect(() => {
-    if (combatStats.autoAimRange > 0) {
-      const attackInterval = setInterval(() => {
-        setEnemies(prev => {
-          const updatedEnemies = [...prev];
-          let enemyHit = false;
-
-          for (let i = 0; i < updatedEnemies.length && !enemyHit; i++) {
-            const enemy = updatedEnemies[i];
-            const distance = Math.sqrt(enemy.x * enemy.x + enemy.z * enemy.z);
-            
-            if (distance <= combatStats.autoAimRange) {
-              enemy.health -= combatStats.damage;
-              
-              if (enemy.health <= 0) {
-                onEnemyDestroyed(enemy);
-                updatedEnemies.splice(i, 1);
-              }
-              
-              enemyHit = true;
-            }
-          }
-
-          return updatedEnemies;
-        });
-      }, 1000);
-
-      return () => clearInterval(attackInterval);
-    }
-  }, [combatStats, onEnemyDestroyed]);
-
-  const handleEnemyClick = useCallback((enemy: GroundEnemy) => {
+  // Handle enemy taking damage
+  const handleEnemyDamage = useCallback((enemyId: string, damage: number) => {
     setEnemies(prev => {
-      return prev.map(e => {
-        if (e.id === enemy.id) {
-          const newHealth = e.health - combatStats.damage;
+      return prev.map(enemy => {
+        if (enemy.id === enemyId) {
+          const newHealth = enemy.health - damage;
           if (newHealth <= 0) {
-            onEnemyDestroyed(e);
+            onEnemyDestroyed(enemy);
             return null;
           }
-          return { ...e, health: newHealth };
+          return { ...enemy, health: newHealth };
         }
-        return e;
+        return enemy;
       }).filter(Boolean) as GroundEnemy[];
     });
-  }, [combatStats.damage, onEnemyDestroyed]);
+  }, [onEnemyDestroyed]);
+
+  // Expose damage function to parent
+  useEffect(() => {
+    (window as any).damageEnemy = handleEnemyDamage;
+    return () => {
+      delete (window as any).damageEnemy;
+    };
+  }, [handleEnemyDamage]);
+
+  const handleEnemyClick = useCallback((enemy: GroundEnemy) => {
+    handleEnemyDamage(enemy.id, 1);
+  }, [handleEnemyDamage]);
 
   const getEnemyEmoji = useCallback((enemy: GroundEnemy) => {
     const types = enemyTypes[realm];
@@ -155,9 +154,8 @@ export const GroundEnemySystem: React.FC<GroundEnemySystemProps> = ({
   return (
     <div className="absolute inset-0 pointer-events-none">
       {enemies.map(enemy => {
-        // Convert 3D position to 2D screen position (ground level)
-        const screenX = 50 + (enemy.x / 15) * 25; // Center with lateral movement
-        const screenY = 70 - ((enemy.z / 40) * 30); // Ground level positioning
+        const screenX = 50 + (enemy.x / 15) * 25;
+        const screenY = 70 - ((enemy.z / 40) * 30);
         const scale = Math.max(0.8, Math.min(1.5, (40 - enemy.z) / 40));
         
         return (

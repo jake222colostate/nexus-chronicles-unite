@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -15,6 +16,8 @@ import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
 import { MuzzleFlash } from './MuzzleFlash';
 import { WaveCompleteMessage } from './WaveCompleteMessage';
 import { JourneyTracker } from './JourneyTracker';
+import { AutoWeapon } from './AutoWeapon';
+import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
 
 interface GameState {
   mana: number;
@@ -28,6 +31,7 @@ interface GameState {
   purchasedUpgrades: string[];
   lastSaveTime: number;
   combatUpgrades: { [key: string]: number };
+  weaponUpgrades?: { [key: string]: number };
   waveNumber: number;
   enemiesKilled: number;
 }
@@ -109,6 +113,39 @@ const defaultCombatUpgrades: CombatUpgrade[] = [
   }
 ];
 
+const defaultWeaponUpgrades: WeaponUpgrade[] = [
+  {
+    id: 'damage',
+    name: 'Damage',
+    description: 'Increases projectile damage',
+    icon: '💥',
+    level: 0,
+    maxLevel: 20,
+    baseCost: 25,
+    effect: { damage: 1 }
+  },
+  {
+    id: 'fireRate',
+    name: 'Fire Rate',
+    description: 'Decreases time between shots',
+    icon: '⚡',
+    level: 0,
+    maxLevel: 15,
+    baseCost: 40,
+    effect: { fireRate: 200 }
+  },
+  {
+    id: 'range',
+    name: 'Range',
+    description: 'Increases weapon targeting range',
+    icon: '🎯',
+    level: 0,
+    maxLevel: 10,
+    baseCost: 60,
+    effect: { range: 5 }
+  }
+];
+
 const GameEngine: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(() => {
     const saved = localStorage.getItem('celestialNexusGame');
@@ -119,6 +156,7 @@ const GameEngine: React.FC = () => {
         purchasedUpgrades: parsedState.purchasedUpgrades || [],
         lastSaveTime: parsedState.lastSaveTime || Date.now(),
         combatUpgrades: parsedState.combatUpgrades || {},
+        weaponUpgrades: parsedState.weaponUpgrades || {},
         waveNumber: parsedState.waveNumber || 1,
         enemiesKilled: parsedState.enemiesKilled || 0,
       };
@@ -135,6 +173,7 @@ const GameEngine: React.FC = () => {
       purchasedUpgrades: [],
       lastSaveTime: Date.now(),
       combatUpgrades: {},
+      weaponUpgrades: {},
       waveNumber: 1,
       enemiesKilled: 0,
     };
@@ -149,6 +188,7 @@ const GameEngine: React.FC = () => {
     return !localStorage.getItem('celestialNexusHelpDismissed');
   });
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
+  const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [enemies, setEnemies] = useState<GroundEnemy[]>([]);
   const [showMuzzleFlash, setShowMuzzleFlash] = useState(false);
   const [showWaveComplete, setShowWaveComplete] = useState(false);
@@ -175,6 +215,14 @@ const GameEngine: React.FC = () => {
     }));
   }, [gameState.combatUpgrades]);
 
+  // Weapon upgrades with current levels
+  const weaponUpgrades = useMemo(() => {
+    return defaultWeaponUpgrades.map(upgrade => ({
+      ...upgrade,
+      level: gameState.weaponUpgrades?.[upgrade.id] || 0
+    }));
+  }, [gameState.weaponUpgrades]);
+
   // Combat stats with improved damage calculation
   const combatStats = useMemo(() => {
     const manaBlasterLevel = gameState.combatUpgrades.manaBlaster || 0;
@@ -182,13 +230,26 @@ const GameEngine: React.FC = () => {
     const autoAimLevel = gameState.combatUpgrades.autoAim || 0;
     
     return {
-      damage: 1 + manaBlasterLevel * 2, // More impactful damage scaling
+      damage: 1 + manaBlasterLevel * 2,
       fireRate: Math.max(500, 1000 - (fireRateLevel * 80)),
       explosionRadius: 2 + (gameState.combatUpgrades.explosionRadius || 0) * 2,
       accuracy: 1 + (gameState.combatUpgrades.accuracy || 0) * 0.2,
       autoAimRange: autoAimLevel > 0 ? 5 + autoAimLevel * 3 : 0
     };
   }, [gameState.combatUpgrades]);
+
+  // Weapon stats calculation
+  const weaponStats = useMemo(() => {
+    const damageLevel = gameState.weaponUpgrades?.damage || 0;
+    const fireRateLevel = gameState.weaponUpgrades?.fireRate || 0;
+    const rangeLevel = gameState.weaponUpgrades?.range || 0;
+    
+    return {
+      damage: 1 + damageLevel,
+      fireRate: Math.max(500, 2000 - (fireRateLevel * 200)),
+      range: 10 + (rangeLevel * 5)
+    };
+  }, [gameState.weaponUpgrades]);
 
   // Calculate offline progress on mount
   useEffect(() => {
@@ -206,7 +267,7 @@ const GameEngine: React.FC = () => {
         lastSaveTime: now,
       }));
     }
-  }, []); // Only run on mount
+  }, []);
 
   // Game loop with proper journey tracking
   useEffect(() => {
@@ -283,7 +344,7 @@ const GameEngine: React.FC = () => {
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem]); // Use stable dependencies
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem]);
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -329,6 +390,7 @@ const GameEngine: React.FC = () => {
         purchasedUpgrades: gameState.purchasedUpgrades,
         lastSaveTime: Date.now(),
         combatUpgrades: gameState.combatUpgrades,
+        weaponUpgrades: gameState.weaponUpgrades,
         waveNumber: gameState.waveNumber,
         enemiesKilled: gameState.enemiesKilled,
       });
@@ -364,6 +426,23 @@ const GameEngine: React.FC = () => {
     }
   }, [gameState.mana, combatUpgrades]);
 
+  const purchaseWeaponUpgrade = useCallback((upgradeId: string) => {
+    const upgrade = weaponUpgrades.find(u => u.id === upgradeId);
+    if (!upgrade) return;
+
+    const cost = Math.floor(upgrade.baseCost * Math.pow(1.8, upgrade.level));
+    if (gameState.mana >= cost && upgrade.level < upgrade.maxLevel) {
+      setGameState(prev => ({
+        ...prev,
+        mana: prev.mana - cost,
+        weaponUpgrades: {
+          ...prev.weaponUpgrades,
+          [upgradeId]: (prev.weaponUpgrades?.[upgradeId] || 0) + 1
+        }
+      }));
+    }
+  }, [gameState.mana, weaponUpgrades]);
+
   // Enhanced realm switching with proper visual feedback
   const switchRealm = useCallback((newRealm: 'fantasy' | 'scifi') => {
     if (newRealm === currentRealm || isTransitioning) return;
@@ -392,12 +471,16 @@ const GameEngine: React.FC = () => {
     setShowCombatUpgrades(true);
   }, []);
 
+  const handleShowWeaponUpgrades = useCallback(() => {
+    setShowWeaponUpgrades(true);
+  }, []);
+
   // Enhanced tap resource generation with effect and +1 animation
   const handleTapResource = useCallback(() => {
     setShowTapEffect(true);
     setGameState(prev => ({
       ...prev,
-      mana: prev.mana + 1, // Always add mana regardless of realm
+      mana: prev.mana + 1,
     }));
     
     // Show +1 mana animation
@@ -428,7 +511,7 @@ const GameEngine: React.FC = () => {
     setShowTapEffect(false);
   }, []);
 
-  // Combat event handlers
+  // Combat event handlers with scaling rewards
   const handleEnemyReachPlayer = useCallback((enemy: GroundEnemy) => {
     setPlayerTakingDamage(true);
     setGameState(prev => ({ ...prev, mana: Math.max(0, prev.mana - 3) }));
@@ -436,11 +519,34 @@ const GameEngine: React.FC = () => {
   }, []);
 
   const handleEnemyDestroyed = useCallback((enemy: GroundEnemy) => {
+    const manaReward = Math.floor(8 + (actualJourneyDistance / 10));
+    
     setGameState(prev => ({ 
       ...prev, 
-      mana: prev.mana + 8,
+      mana: prev.mana + manaReward,
       enemiesKilled: prev.enemiesKilled + 1
     }));
+
+    // Show floating reward
+    const floatingReward = document.createElement('div');
+    floatingReward.textContent = `+${manaReward} Mana`;
+    floatingReward.className = 'fixed text-yellow-400 font-bold text-lg pointer-events-none z-50 animate-fade-in';
+    floatingReward.style.left = '50%';
+    floatingReward.style.top = '40%';
+    floatingReward.style.transform = 'translateX(-50%)';
+    document.body.appendChild(floatingReward);
+    
+    setTimeout(() => {
+      floatingReward.style.transform = 'translateX(-50%) translateY(-30px)';
+      floatingReward.style.opacity = '0';
+      floatingReward.style.transition = 'all 0.8s ease-out';
+    }, 100);
+    
+    setTimeout(() => {
+      if (floatingReward.parentNode) {
+        document.body.removeChild(floatingReward);
+      }
+    }, 900);
 
     // Check for wave complete
     if ((gameState.enemiesKilled + 1) % 15 === 0) {
@@ -451,7 +557,13 @@ const GameEngine: React.FC = () => {
         waveNumber: prev.waveNumber + 1
       }));
     }
-  }, [gameState.enemiesKilled]);
+  }, [gameState.enemiesKilled, actualJourneyDistance]);
+
+  const handleEnemyHit = useCallback((enemyId: string, damage: number) => {
+    if ((window as any).damageEnemy) {
+      (window as any).damageEnemy(enemyId, damage);
+    }
+  }, []);
 
   const handleMuzzleFlash = useCallback(() => {
     setShowMuzzleFlash(true);
@@ -488,7 +600,7 @@ const GameEngine: React.FC = () => {
         onJourneyUpdate={handleJourneyUpdate}
       />
 
-      {/* Clean TopHUD with proper number formatting */}
+      {/* Clean TopHUD with weapon upgrade button */}
       <TopHUD
         realm={currentRealm}
         mana={gameState.mana}
@@ -521,14 +633,23 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
         />
 
-        {/* Ground-based Enemy System */}
+        {/* Ground-based Enemy System with scaling */}
         <GroundEnemySystem
           realm={currentRealm}
           onEnemyReachPlayer={handleEnemyReachPlayer}
           onEnemyDestroyed={handleEnemyDestroyed}
-          spawnRate={Math.max(1500, 3000 - (gameState.waveNumber * 150))}
-          maxEnemies={Math.min(8, 3 + Math.floor(gameState.waveNumber / 2))}
-          combatStats={combatStats}
+          spawnRate={Math.max(1000, 2500 - (gameState.waveNumber * 100))}
+          maxEnemies={Math.min(10, 4 + Math.floor(gameState.waveNumber / 2))}
+          journeyDistance={actualJourneyDistance}
+          onEnemiesUpdate={setEnemies}
+        />
+
+        {/* Auto Weapon System */}
+        <AutoWeapon
+          enemies={enemies}
+          combatStats={weaponStats}
+          onEnemyHit={handleEnemyHit}
+          onMuzzleFlash={handleMuzzleFlash}
         />
 
         {/* Muzzle Flash Effect */}
@@ -546,6 +667,16 @@ const GameEngine: React.FC = () => {
 
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
+
+        {/* Weapon Upgrade Button */}
+        <div className="absolute top-20 right-4 z-30">
+          <Button 
+            onClick={handleShowWeaponUpgrades}
+            className="h-12 w-12 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0"
+          >
+            🏹
+          </Button>
+        </div>
 
         {/* Convergence Ready Button */}
         {canConverge && (
@@ -582,6 +713,16 @@ const GameEngine: React.FC = () => {
           mana={gameState.mana}
           onUpgrade={purchaseCombatUpgrade}
           onClose={() => setShowCombatUpgrades(false)}
+        />
+      )}
+
+      {/* Weapon Upgrades Modal */}
+      {showWeaponUpgrades && (
+        <WeaponUpgradeSystem
+          upgrades={weaponUpgrades}
+          mana={gameState.mana}
+          onUpgrade={purchaseWeaponUpgrade}
+          onClose={() => setShowWeaponUpgrades(false)}
         />
       )}
 
