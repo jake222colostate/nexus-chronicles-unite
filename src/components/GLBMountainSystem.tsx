@@ -1,5 +1,5 @@
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -18,22 +18,13 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   chunks,
   chunkSize
 }) => {
-  const [loadingError, setLoadingError] = useState<string | null>(null);
-  
-  // Try to load the GLB with error handling
-  let gltfResult;
-  try {
-    gltfResult = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
-  } catch (error) {
-    console.error('Failed to load GLB mountain model:', error);
-    setLoadingError('Failed to load mountain model');
-  }
-
-  const { scene } = gltfResult || { scene: null };
+  // Use useGLTF hook properly - it handles loading states internally
+  const gltf = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
+  const { scene } = gltf;
   
   // Memoize mountain instances to prevent re-creation on every render
   const mountainInstances = useMemo(() => {
-    if (!scene || loadingError) return [];
+    if (!scene) return [];
     
     const instances = [];
     
@@ -86,35 +77,16 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize, scene, loadingError]);
+  }, [chunks, chunkSize, scene]);
 
-  // Create fallback mountain instances with basic geometry if GLB fails
-  const fallbackMountainInstances = useMemo(() => {
-    if (scene && !loadingError) return [];
-    
-    return mountainInstances.map(instance => ({
-      ...instance,
-      fallback: true
-    }));
-  }, [mountainInstances, scene, loadingError]);
-
-  // Log loading state for debugging
-  useEffect(() => {
-    if (loadingError) {
-      console.log('GLB Mountain loading failed, using fallback geometry');
-    } else if (scene) {
-      console.log('GLB Mountain loaded successfully');
-    }
-  }, [scene, loadingError]);
-
-  // Handle loading state and errors
-  if (loadingError || !scene) {
-    console.log('Rendering fallback mountains due to GLB loading failure');
+  // Handle loading state - if scene is not loaded yet, render fallback
+  if (!scene) {
+    console.log('GLB Mountain loading, using fallback geometry');
     
     // Render fallback geometric mountains
     return (
       <group>
-        {fallbackMountainInstances.map((instance) => (
+        {mountainInstances.map((instance) => (
           <mesh
             key={instance.key}
             position={instance.position}
@@ -162,9 +134,5 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   );
 };
 
-// Preload the model for better performance but handle errors
-try {
-  useGLTF.preload('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
-} catch (error) {
-  console.warn('Failed to preload GLB mountain model:', error);
-}
+// Preload the model for better performance
+useGLTF.preload('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
