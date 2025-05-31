@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
@@ -15,17 +16,23 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  const [hasError, setHasError] = useState(false);
-  const portalRefs = useRef<THREE.Group[]>([]);
+  console.log('FantasyPortalContent: Attempting to render with realm:', realm);
   
-  // Early return if not fantasy realm
+  // CRITICAL: Immediate return if not fantasy realm - before any hooks
   if (realm !== 'fantasy') {
+    console.log('FantasyPortalContent: REJECTING render for realm:', realm);
     return null;
   }
+  
+  console.log('FantasyPortalContent: PROCEEDING with fantasy realm loading');
+  
+  const [hasError, setHasError] = useState(false);
+  const portalRefs = useRef<THREE.Group[]>([]);
   
   let model;
   try {
     model = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_portal.glb');
+    console.log('FantasyPortalContent: Model loaded successfully');
   } catch (error) {
     console.error("Failed to load portal model:", error);
     setHasError(true);
@@ -36,8 +43,13 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
   
   // Memoize portal instances - every 500 units (approximately 10 chunks)
   const portalInstances = useMemo(() => {
-    if (!scene || hasError || realm !== 'fantasy') return [];
+    // CRITICAL: Triple-check realm before creating instances
+    if (!scene || hasError || realm !== 'fantasy') {
+      console.log('FantasyPortalContent: Skipping instance creation for realm:', realm);
+      return [];
+    }
     
+    console.log('FantasyPortalContent: Creating portal instances for fantasy realm');
     const instances = [];
     
     chunks.forEach(chunk => {
@@ -54,11 +66,13 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
       }
     });
     
+    console.log('FantasyPortalContent: Created', instances.length, 'portal instances');
     return instances;
   }, [chunks, chunkSize, scene, hasError, realm]);
 
   // Animate portals
   useFrame((state) => {
+    // CRITICAL: Early return if not fantasy realm
     if (realm !== 'fantasy') return;
     
     portalRefs.current.forEach((portal, index) => {
@@ -71,9 +85,13 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
     });
   });
 
+  // CRITICAL: Final realm check before rendering
   if (!scene || hasError || realm !== 'fantasy') {
+    console.log('FantasyPortalContent: Final check failed for realm:', realm);
     return null;
   }
+
+  console.log('FantasyPortalContent: Rendering', portalInstances.length, 'portal instances');
 
   return (
     <group>
@@ -116,10 +134,15 @@ const FantasyPortalContent: React.FC<FantasyPortalSystemProps> = ({
 };
 
 export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = (props) => {
-  // Early return if not fantasy realm
+  console.log('FantasyPortalSystem: Called with realm:', props.realm);
+  
+  // CRITICAL: Immediate return if not fantasy realm
   if (props.realm !== 'fantasy') {
+    console.log('FantasyPortalSystem: REJECTING render for realm:', props.realm);
     return null;
   }
+
+  console.log('FantasyPortalSystem: PROCEEDING to render for FANTASY realm');
 
   return (
     <React.Suspense fallback={null}>
@@ -128,4 +151,4 @@ export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = (props) =
   );
 };
 
-// Remove preloading - only load when component is actually used
+// CRITICAL: NO preloading - only load when component is actually used

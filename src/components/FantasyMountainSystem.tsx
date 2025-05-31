@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -19,18 +20,24 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  const [hasError, setHasError] = useState(false);
+  console.log('FantasyMountainContent: Attempting to render with realm:', realm);
   
-  // Early return if not fantasy realm
+  // CRITICAL: Immediate return if not fantasy realm - before any hooks
   if (realm !== 'fantasy') {
+    console.log('FantasyMountainContent: REJECTING render for realm:', realm);
     return null;
   }
+  
+  console.log('FantasyMountainContent: PROCEEDING with fantasy realm loading');
+  
+  const [hasError, setHasError] = useState(false);
   
   let leftMountain, rightMountain;
   
   try {
     leftMountain = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_left.glb');
     rightMountain = useGLTF('https://raw.githubusercontent.com/jake222colostate/enviornment/main/fantasy_mountain_right.glb');
+    console.log('FantasyMountainContent: Models loaded successfully');
   } catch (error) {
     console.error("Failed to load mountain models:", error);
     setHasError(true);
@@ -39,8 +46,13 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
   
   // Memoize mountain instances
   const mountainInstances = useMemo(() => {
-    if (!leftMountain.scene || !rightMountain.scene || hasError || realm !== 'fantasy') return [];
+    // CRITICAL: Double-check realm before creating instances
+    if (!leftMountain.scene || !rightMountain.scene || hasError || realm !== 'fantasy') {
+      console.log('FantasyMountainContent: Skipping instance creation for realm:', realm);
+      return [];
+    }
     
+    console.log('FantasyMountainContent: Creating mountain instances for fantasy realm');
     const instances = [];
     
     chunks.forEach(chunk => {
@@ -87,12 +99,17 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
       }
     });
     
+    console.log('FantasyMountainContent: Created', instances.length, 'mountain instances');
     return instances;
   }, [chunks, chunkSize, leftMountain.scene, rightMountain.scene, hasError, realm]);
 
+  // CRITICAL: Final realm check before rendering
   if (!leftMountain.scene || !rightMountain.scene || hasError || realm !== 'fantasy') {
+    console.log('FantasyMountainContent: Final check failed for realm:', realm);
     return null;
   }
+
+  console.log('FantasyMountainContent: Rendering', mountainInstances.length, 'mountain instances');
 
   return (
     <group>
@@ -122,10 +139,15 @@ const FantasyMountainContent: React.FC<FantasyMountainSystemProps> = ({
 };
 
 export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = (props) => {
-  // Early return if not fantasy realm
+  console.log('FantasyMountainSystem: Called with realm:', props.realm);
+  
+  // CRITICAL: Immediate return if not fantasy realm
   if (props.realm !== 'fantasy') {
+    console.log('FantasyMountainSystem: REJECTING render for realm:', props.realm);
     return null;
   }
+
+  console.log('FantasyMountainSystem: PROCEEDING to render for FANTASY realm');
 
   return (
     <React.Suspense fallback={null}>
@@ -134,4 +156,4 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = (prop
   );
 };
 
-// Remove preloading - only load when component is actually used
+// CRITICAL: NO preloading - only load when component is actually used

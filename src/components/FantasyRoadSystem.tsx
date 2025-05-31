@@ -15,15 +15,17 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  const [hasError, setHasError] = useState(false);
+  console.log('FantasyRoadContent: Attempting to render with realm:', realm);
   
-  // CRITICAL: Immediate return if not fantasy realm
+  // CRITICAL: Immediate return if not fantasy realm - before any hooks
   if (realm !== 'fantasy') {
-    console.log('FantasyRoadContent: Rejecting render for realm:', realm);
+    console.log('FantasyRoadContent: REJECTING render for realm:', realm);
     return null;
   }
   
-  console.log('FantasyRoadContent: Loading for FANTASY realm');
+  console.log('FantasyRoadContent: PROCEEDING with fantasy realm loading');
+  
+  const [hasError, setHasError] = useState(false);
   
   let model;
   try {
@@ -104,13 +106,15 @@ const FantasyRoadContent: React.FC<FantasyRoadSystemProps> = ({
 };
 
 export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = (props) => {
+  console.log('FantasyRoadSystem: Called with realm:', props.realm);
+  
   // CRITICAL: Immediate return if not fantasy realm
   if (props.realm !== 'fantasy') {
-    console.log('FantasyRoadSystem: Rejecting render for realm:', props.realm);
+    console.log('FantasyRoadSystem: REJECTING render for realm:', props.realm);
     return null;
   }
 
-  console.log('FantasyRoadSystem: Rendering for FANTASY realm');
+  console.log('FantasyRoadSystem: PROCEEDING to render for FANTASY realm');
 
   return (
     <React.Suspense fallback={null}>
