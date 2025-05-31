@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -14,12 +14,9 @@ interface WizardStaffProps {
 }
 
 export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
-  const [modelLoaded, setModelLoaded] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/weapons_enemies/main/wizard_staff.glb');
   
-  // Load the model with error handling
-  const gltfResult = useGLTF('https://raw.githubusercontent.com/jake222colostate/weapons_enemies/main/wizard_staff.glb', true);
-  
+  // Extract only explicitly allowed Three.js props
   const { 
     position, 
     rotation, 
@@ -34,6 +31,7 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
   const validThreeProps = useMemo(() => {
     const allowed: any = {};
     
+    // Only include properties that Three.js Object3D actually supports
     if (visible !== undefined) allowed.visible = visible;
     if (castShadow !== undefined) allowed.castShadow = castShadow;
     if (receiveShadow !== undefined) allowed.receiveShadow = receiveShadow;
@@ -41,86 +39,44 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
     return allowed;
   }, [visible, castShadow, receiveShadow]);
   
-  // Memoize the cloned scene with better material setup
+  // Memoize the cloned scene to prevent unnecessary re-cloning
   const clonedScene = useMemo(() => {
-    if (!gltfResult.scene) {
-      console.error('WizardStaff: No scene found in GLTF');
-      return null;
-    }
-
-    try {
-      const clone = gltfResult.scene.clone();
-      
-      // Ensure the staff is visible and properly configured
-      clone.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.visible = true;
-          child.castShadow = false;
-          child.receiveShadow = false;
-          
-          // Ensure materials are visible and bright
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach((mat) => {
-                mat.transparent = false;
-                mat.opacity = 1;
-                if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshLambertMaterial) {
-                  mat.emissive = new THREE.Color(0x333333);
-                  mat.emissiveIntensity = 0.2;
-                }
-              });
-            } else {
-              child.material.transparent = false;
-              child.material.opacity = 1;
-              if (child.material instanceof THREE.MeshStandardMaterial || child.material instanceof THREE.MeshLambertMaterial) {
-                child.material.emissive = new THREE.Color(0x333333);
-                child.material.emissiveIntensity = 0.2;
-              }
-            }
-          }
+    const clone = scene.clone();
+    
+    // Optimize the scene only once
+    clone.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.visible = true;
+        child.castShadow = true;
+        child.receiveShadow = true;
+        
+        // Optimize material if needed
+        if (child.material) {
+          child.material.needsUpdate = false;
         }
-      });
-      
-      setModelLoaded(true);
-      return clone;
-    } catch (error) {
-      console.error('WizardStaff: Error processing model:', error);
-      setLoadError(error instanceof Error ? error.message : 'Unknown error');
-      return null;
-    }
-  }, [gltfResult.scene]);
+      }
+    });
+    
+    return clone;
+  }, [scene]);
+
+  // Simplified debug logging - only run once
+  useEffect(() => {
+    console.log('WizardStaff optimized and ready');
+  }, []);
 
   return (
-    <group>
-      {/* Local lighting for the staff */}
-      <pointLight 
-        position={[2, -1, -2]} 
-        intensity={1.5} 
-        color="#ffffff"
-        distance={5}
-      />
-      
-      {/* The actual staff model */}
-      {clonedScene ? (
-        <primitive 
-          object={clonedScene} 
-          position={position || [2.2, -1.8, -3]} 
-          rotation={rotation || [0.3, -Math.PI / 6, 0.2]}
-          scale={scale || [2.0, 2.0, 2.0]}
-          {...validThreeProps}
-        />
-      ) : (
-        /* Simple fallback if model fails to load */
-        <mesh position={position || [2.2, -1.8, -3]}>
-          <cylinderGeometry args={[0.02, 0.02, 1, 8]} />
-          <meshBasicMaterial color="#8B4513" />
-        </mesh>
-      )}
-    </group>
+    <primitive 
+      object={clonedScene} 
+      position={position || [0.5, -1.0, -0.8]} 
+      rotation={rotation || [0.1, Math.PI / 6, 0.1]}
+      scale={scale || [1.0, 1.0, 1.0]}
+      {...validThreeProps}
+    />
   );
 });
 
 WizardStaff.displayName = 'WizardStaff';
 
-// Preload the model
+// Preload the model for better performance
 useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/weapons_enemies/main/wizard_staff.glb');
