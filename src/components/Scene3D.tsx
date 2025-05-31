@@ -7,7 +7,10 @@ import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
 import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
+import { ChunkSystem } from './ChunkSystem';
+import { GLBMountainSystem } from './GLBMountainSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
+import { Vector3 } from 'three';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -39,6 +42,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   onTapEffectComplete
 }) => {
   const cameraRef = useRef();
+
+  // Player position for chunk system (simulated forward movement)
+  const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
 
   // Memoize upgrade unlock checking to prevent recalculation
   const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
@@ -112,6 +118,22 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           {/* Floating Island Base */}
           <FloatingIsland realm={realm} />
+
+          {/* GLB Mountain System for Fantasy Realm */}
+          {realm === 'fantasy' && (
+            <ChunkSystem
+              playerPosition={playerPosition}
+              chunkSize={50}
+              renderDistance={200}
+            >
+              {(chunks) => (
+                <GLBMountainSystem
+                  chunks={chunks}
+                  chunkSize={50}
+                />
+              )}
+            </ChunkSystem>
+          )}
 
           {/* Memoized upgrade nodes */}
           {upgradeNodes}
