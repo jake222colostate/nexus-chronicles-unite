@@ -7,7 +7,6 @@ import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { EnvironmentSystem } from './EnvironmentSystem';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { EnhancedPathwaySystem } from './EnhancedPathwaySystem';
-import { NaturalMountainSystem } from './NaturalMountainSystem';
 import { GLBTreeSystem } from './GLBTreeSystem';
 import { EnhancedUpgradePedestal } from './EnhancedUpgradePedestal';
 import { useInfiniteUpgrades } from './InfiniteUpgradeSystem';
@@ -142,6 +141,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             upgradeCount={maxUnlockedUpgrade + 1}
             onEnvironmentChange={(tier) => console.log(`Environment tier: ${tier}`)}
             excludeTrees={true}
+            realm={realm}
           />
 
           <ambientLight intensity={0.8} color="#E6E6FA" />
@@ -179,12 +179,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
                   chunkSize={CHUNK_SIZE}
                 />
                 
-                {/* NaturalMountainSystem without trees for Fantasy realm */}
-                <NaturalMountainSystem
-                  chunks={chunks}
-                  chunkSize={CHUNK_SIZE}
-                  excludeTrees={realm === 'fantasy'}
-                />
+                {/* Removed NaturalMountainSystem completely for Fantasy realm */}
 
                 {/* New GLB Tree System for Fantasy realm only */}
                 <GLBTreeSystem

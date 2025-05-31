@@ -1,4 +1,3 @@
-
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -132,12 +131,14 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Mountains without trees for all realms */}
-                <GLBMountainSystem
-                  chunks={chunks}
-                  chunkSize={50}
-                  realm={realm}
-                />
+                {/* Only render mountains in sci-fi realm */}
+                {realm === 'scifi' && (
+                  <GLBMountainSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                    realm={realm}
+                  />
+                )}
                 {/* Custom GLB Tree System - Only for Fantasy realm */}
                 <GLBTreeSystem
                   chunks={chunks}
