@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
 import { ConvergenceSystem } from './ConvergenceSystem';
+import { BottomActionBar } from './BottomActionBar';
 import { TopHUD } from './TopHUD';
 import { EnhancedTapButton } from './EnhancedTapButton';
 import { EnhancedParticleBackground } from './EnhancedParticleBackground';
@@ -83,10 +84,11 @@ const GameEngine: React.FC = () => {
   });
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Create stable references to prevent infinite re-renders
-  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [JSON.stringify(gameState.fantasyBuildings)]);
-  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [JSON.stringify(gameState.scifiBuildings)]);
-  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [JSON.stringify(gameState.purchasedUpgrades)]);
+  // Stable references to prevent re-renders
+  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
+  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
+  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
+  const purchasedUpgradesCount = stablePurchasedUpgrades.length;
 
   // Initialize buff system with stable dependencies
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
@@ -130,7 +132,7 @@ const GameEngine: React.FC = () => {
     };
   }, []); // Only run on mount
 
-  // Enhanced production calculation with fixed dependencies
+  // Enhanced production calculation with stable dependencies
   useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
@@ -174,7 +176,7 @@ const GameEngine: React.FC = () => {
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, stablePurchasedUpgrades]); // Fixed stable dependencies
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem]); // Use stable dependencies
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -290,22 +292,21 @@ const GameEngine: React.FC = () => {
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Enhanced TopHUD with fixed positioning */}
-      <div className="absolute top-0 left-0 right-0 z-40">
-        <TopHUD
-          realm={currentRealm}
-          mana={gameState.mana}
-          energyCredits={gameState.energyCredits}
-          nexusShards={gameState.nexusShards}
-          convergenceProgress={convergenceProgress}
-          manaPerSecond={gameState.manaPerSecond}
-          energyPerSecond={gameState.energyPerSecond}
-          onHelpClick={handleShowHelp}
-        />
-      </div>
+      {/* Enhanced TopHUD */}
+      <TopHUD
+        realm={currentRealm}
+        mana={gameState.mana}
+        energyCredits={gameState.energyCredits}
+        nexusShards={gameState.nexusShards}
+        convergenceProgress={convergenceProgress}
+        manaPerSecond={gameState.manaPerSecond}
+        energyPerSecond={gameState.energyPerSecond}
+        onHelpClick={handleShowHelp}
+      />
 
-      {/* Main Game Area with proper spacing */}
-      <div className="absolute inset-0 pt-20 pb-40">
+      {/* Main Game Area with integrated skill tree */}
+      <div className="absolute inset-0 pt-16">
+        {/* Integrated Map and Skill Tree View */}
         <MapSkillTreeView
           realm={currentRealm}
           buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
@@ -321,71 +322,35 @@ const GameEngine: React.FC = () => {
           onTapEffectComplete={handleTapEffectComplete}
         />
 
+        {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
-      </div>
 
-      {/* Fixed Bottom UI Layout with improved spacing */}
-      <div className="absolute bottom-0 left-0 right-0 z-30 p-6">
-        <div className="flex flex-col gap-6 items-center">
-          {/* Convergence Ready Button */}
-          {canConverge && (
+        {/* Enhanced Tap Button */}
+        <EnhancedTapButton
+          realm={currentRealm}
+          onTap={handleTapResource}
+        />
+
+        {/* Enhanced Bottom Action Bar */}
+        <BottomActionBar
+          currentRealm={currentRealm}
+          onRealmChange={switchRealm}
+          isTransitioning={isTransitioning}
+        />
+
+        {/* Convergence Ready Button */}
+        {canConverge && (
+          <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-30">
             <Button 
               onClick={() => setShowConvergence(true)}
-              className="h-12 px-8 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
+              className="h-11 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
             >
               <span className="text-sm flex items-center gap-2">
                 🔁 Convergence Ready!
               </span>
             </Button>
-          )}
-
-          {/* Enhanced Tap Button - Centered and prominent */}
-          <div className="flex justify-center">
-            <EnhancedTapButton
-              realm={currentRealm}
-              onTap={handleTapResource}
-            />
           </div>
-
-          {/* Realm Toggle Buttons - Positioned horizontally above tap button */}
-          <div className="flex items-center gap-4 bg-black/50 backdrop-blur-xl p-2 rounded-full border border-white/20 shadow-lg">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/5 pointer-events-none rounded-full" />
-            
-            <Button
-              onClick={() => switchRealm('fantasy')}
-              disabled={isTransitioning}
-              className={`h-10 px-6 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
-                currentRealm === 'fantasy'
-                  ? 'bg-purple-600/80 hover:bg-purple-700/80 shadow-md shadow-purple-500/20 scale-105 border border-purple-400/60'
-                  : 'bg-transparent border border-purple-400/50 text-purple-300 hover:bg-purple-900/30 hover:border-purple-400'
-              } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                🏰 Fantasy
-              </span>
-              {currentRealm === 'fantasy' && (
-                <div className="absolute inset-0 bg-purple-400/15 animate-pulse rounded-full" />
-              )}
-            </Button>
-
-            <Button
-              onClick={() => switchRealm('scifi')}
-              disabled={isTransitioning}
-              className={`h-10 px-6 rounded-full transition-all duration-500 hover:scale-105 active:scale-95 relative overflow-hidden font-medium text-sm ${
-                currentRealm === 'scifi'
-                  ? 'bg-cyan-600/80 hover:bg-cyan-700/80 shadow-md shadow-cyan-500/20 scale-105 border border-cyan-400/60'
-                  : 'bg-transparent border border-cyan-400/50 text-cyan-300 hover:bg-cyan-900/30 hover:border-cyan-400'
-              } ${isTransitioning ? 'opacity-50' : 'opacity-100'}`}
-            >
-              <span className="relative z-10 flex items-center gap-2">
-                🚀 Sci-Fi
-              </span>
-              {currentRealm === 'scifi' && (
-                <div className="absolute inset-0 bg-cyan-400/15 animate-pulse rounded-full" />
-              )}
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Quick Help Modal */}

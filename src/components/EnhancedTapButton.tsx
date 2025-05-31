@@ -12,30 +12,31 @@ export const EnhancedTapButton: React.FC<EnhancedTapButtonProps> = ({
   onTap
 }) => {
   return (
-    <div className="flex justify-center">
+    <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 z-30">
       <Button 
         onClick={onTap}
-        className={`h-16 w-16 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 font-bold text-lg backdrop-blur-xl border-2 relative overflow-hidden shadow-2xl ${
+        className={`h-12 px-6 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 font-medium text-sm backdrop-blur-xl border relative overflow-hidden ${
           realm === 'fantasy'
-            ? 'bg-gradient-to-br from-purple-500/90 to-violet-600/90 hover:from-purple-400/90 hover:to-violet-500/90 border-purple-300/60 text-white'
-            : 'bg-gradient-to-br from-cyan-500/90 to-blue-600/90 hover:from-cyan-400/90 hover:to-blue-500/90 border-cyan-300/60 text-white'
+            ? 'bg-gradient-to-r from-purple-600/80 to-violet-700/80 hover:from-purple-500/80 hover:to-violet-600/80 border-purple-400/50 text-purple-100'
+            : 'bg-gradient-to-r from-cyan-600/80 to-blue-700/80 hover:from-cyan-500/80 hover:to-blue-600/80 border-cyan-400/50 text-cyan-100'
         }`}
         style={{
-          boxShadow: `0 0 20px ${realm === 'fantasy' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(34, 211, 238, 0.4)'}, 0 8px 24px rgba(0,0,0,0.3)`
+          boxShadow: `0 0 15px ${realm === 'fantasy' ? 'rgba(168, 85, 247, 0.25)' : 'rgba(34, 211, 238, 0.25)'}, 0 4px 16px rgba(0,0,0,0.3)`
         }}
       >
         {/* Enhanced glassmorphism inner glow */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10 pointer-events-none rounded-full" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-black/10 pointer-events-none rounded-full" />
         
-        <span className="relative z-10 text-2xl">
+        <span className="flex items-center gap-2 relative z-10">
           {realm === 'fantasy' ? '✨' : '⚡'}
+          Tap for {realm === 'fantasy' ? 'Mana' : 'Energy'}
         </span>
         
-        {/* Enhanced pulse animation */}
-        <div className={`absolute inset-0 rounded-full animate-pulse opacity-20 ${
+        {/* Reduced pulse animation */}
+        <div className={`absolute inset-0 rounded-full animate-pulse opacity-15 ${
           realm === 'fantasy' 
-            ? 'bg-purple-300' 
-            : 'bg-cyan-300'
+            ? 'bg-purple-400/20' 
+            : 'bg-cyan-400/20'
         }`} />
       </Button>
     </div>

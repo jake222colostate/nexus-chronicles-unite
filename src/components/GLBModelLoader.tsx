@@ -17,7 +17,7 @@ interface GLBModelProps {
   canAfford: boolean;
 }
 
-// Completely remove all fallbacks - only show actual models
+// Simplified GLB Model component with no black/grey fallbacks
 const SafeGLBModel: React.FC<GLBModelProps> = ({ 
   modelUrl, 
   position, 
@@ -46,6 +46,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
     setLoadError(true);
   }
   
+  // Enhanced click handler with better debugging
   const handleClick = (event: any) => {
     event.stopPropagation();
     console.log(`Clicked on ${name}. Within range: ${isWithinRange}, Can afford: ${canAfford}`);
@@ -54,6 +55,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   
   useFrame((state) => {
     if (groupRef.current) {
+      // Enhanced floating animation based on unlock state
       if (isPurchased) {
         groupRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.8 + position[0]) * 0.1;
         groupRef.current.rotation.y += 0.002;
@@ -62,6 +64,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         groupRef.current.rotation.y += 0.005;
       }
       
+      // Enhanced hover effects
       if (hovered && isWithinRange) {
         const hoverScale = 1 + Math.sin(state.clock.elapsedTime * 4) * 0.05;
         groupRef.current.scale.setScalar(scale * hoverScale);
@@ -70,6 +73,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
       }
     }
 
+    // Enhanced pulsing glow effect based on state
     if (glowRef.current) {
       if (isPurchased) {
         const purchasedGlow = Math.sin(state.clock.elapsedTime * 2) * 0.2 + 0.8;
@@ -80,6 +84,7 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
         glowRef.current.scale.setScalar(activeGlow);
         setGlowIntensity(0.8);
       } else if (!canAfford) {
+        // Locked state - dim and slow pulse
         const lockedGlow = Math.sin(state.clock.elapsedTime * 1) * 0.2 + 0.4;
         glowRef.current.scale.setScalar(lockedGlow);
         setGlowIntensity(0.2);
@@ -91,9 +96,47 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
     }
   });
 
-  // Return nothing if model fails to load - no fallbacks
+  // Bright colorful fallback - no black/grey elements
   if (loadError || !gltfScene) {
-    return null;
+    return (
+      <group
+        ref={groupRef}
+        position={position}
+        onClick={handleClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+      >
+        {/* Invisible interaction sphere */}
+        <mesh>
+          <sphereGeometry args={[scale * 6]} />
+          <meshBasicMaterial transparent opacity={0} />
+        </mesh>
+
+        {/* Bright crystal instead of any dark elements */}
+        <mesh>
+          <octahedronGeometry args={[scale * 1.2]} />
+          <meshLambertMaterial 
+            color={
+              isPurchased ? "#10b981" : 
+              canAfford ? "#a855f7" : 
+              "#c084fc"
+            } 
+            transparent 
+            opacity={0.8} 
+          />
+        </mesh>
+        
+        {/* Bright glow */}
+        <mesh ref={glowRef} position={[0, -0.3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[scale * 2]} />
+          <meshBasicMaterial
+            color="#a855f7"
+            transparent
+            opacity={glowIntensity * 0.3}
+          />
+        </mesh>
+      </group>
+    );
   }
 
   return (
@@ -173,7 +216,7 @@ class GLBModelErrorBoundary extends React.Component<
 
   render() {
     if (this.state.hasError) {
-      return null;
+      return this.props.fallback;
     }
 
     return this.props.children;
@@ -182,8 +225,24 @@ class GLBModelErrorBoundary extends React.Component<
 
 // Main export component with error boundary
 export const GLBModel: React.FC<GLBModelProps> = (props) => {
+  const fallbackComponent = (
+    <group
+      position={props.position}
+      onClick={props.onClick}
+    >
+      <mesh>
+        <octahedronGeometry args={[props.scale || 1]} />
+        <meshLambertMaterial 
+          color="#a855f7"
+          transparent 
+          opacity={0.7} 
+        />
+      </mesh>
+    </group>
+  );
+
   return (
-    <GLBModelErrorBoundary fallback={null}>
+    <GLBModelErrorBoundary fallback={fallbackComponent}>
       <SafeGLBModel {...props} />
     </GLBModelErrorBoundary>
   );
