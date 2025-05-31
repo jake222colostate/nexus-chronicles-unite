@@ -7,26 +7,37 @@ interface WizardStaffProps {
   position?: [number, number, number];
   rotation?: [number, number, number];
   scale?: [number, number, number];
+  visible?: boolean;
+  castShadow?: boolean;
+  receiveShadow?: boolean;
   [key: string]: any;
 }
 
 export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
   const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/weapons_enemies/main/wizard_staff.glb');
   
-  // Extract only valid Three.js props and filter out React props
-  const { position, rotation, scale, ...otherProps } = props;
+  // Extract only explicitly allowed Three.js props
+  const { 
+    position, 
+    rotation, 
+    scale, 
+    visible, 
+    castShadow, 
+    receiveShadow,
+    ...otherProps 
+  } = props;
   
-  // Filter out React-specific props that might cause issues
+  // Only pass explicitly known Three.js properties
   const validThreeProps = useMemo(() => {
-    const filtered: any = {};
-    Object.keys(otherProps).forEach(key => {
-      // Only allow known Three.js properties
-      if (!key.startsWith('on') && !key.includes('ref') && key !== 'children' && key !== 'key') {
-        filtered[key] = otherProps[key];
-      }
-    });
-    return filtered;
-  }, [otherProps]);
+    const allowed: any = {};
+    
+    // Only include properties that Three.js Object3D actually supports
+    if (visible !== undefined) allowed.visible = visible;
+    if (castShadow !== undefined) allowed.castShadow = castShadow;
+    if (receiveShadow !== undefined) allowed.receiveShadow = receiveShadow;
+    
+    return allowed;
+  }, [visible, castShadow, receiveShadow]);
   
   // Memoize the cloned scene to prevent unnecessary re-cloning
   const clonedScene = useMemo(() => {
