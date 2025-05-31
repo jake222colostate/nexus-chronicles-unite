@@ -13,9 +13,9 @@ export const WizardStaff: React.FC<WizardStaffProps> = (props) => {
     <primitive 
       object={scene} 
       {...props} 
-      scale={[0.4, 0.4, 0.4]} 
-      position={[0.5, -1.2, -1.5]}
-      rotation={[0, 0, 0]}
+      position={[0.4, -1.2, -1.5]} 
+      rotation={[0, Math.PI / 6, 0]}
+      scale={[0.4, 0.4, 0.4]}
     />
   );
 };
