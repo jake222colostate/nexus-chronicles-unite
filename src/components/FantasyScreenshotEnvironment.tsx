@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { FantasyTerrainSystem } from './FantasyTerrainSystem';
-import { FantasyMagicalTreeSystem } from './FantasyMagicalTreeSystem';
-import { FantasyPolygonalMountainSystem } from './FantasyPolygonalMountainSystem';
-import { FantasyAtmosphereSystem } from './FantasyAtmosphereSystem';
+import { GradientPathTerrain } from './GradientPathTerrain';
+import { GradientGlowTrees } from './GradientGlowTrees';
+import { FantasyMountains } from './FantasyMountains';
+import { MagicParticles } from './MagicParticles';
 
 interface FantasyScreenshotEnvironmentProps {
   chunks: ChunkData[];
@@ -27,33 +27,20 @@ const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> 
 
   return (
     <group>
-      {/* Terrain Module - Optimized hexagonal tiles */}
-      <FantasyTerrainSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-      />
+      {/* New Gradient Path Terrain */}
+      <GradientPathTerrain />
 
-      {/* Tree Module - Reduced density for better performance */}
-      <FantasyMagicalTreeSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-      />
+      {/* New Gradient Glow Trees */}
+      <GradientGlowTrees />
 
-      {/* Mountain Module - Optimized polygonal mountains */}
-      <FantasyPolygonalMountainSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-      />
+      {/* New Fantasy Mountains */}
+      <FantasyMountains />
 
-      {/* Atmosphere Module - Reduced particle count */}
-      <FantasyAtmosphereSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-      />
+      {/* New Magic Particles */}
+      <MagicParticles />
+
+      {/* Enhanced fog for atmosphere */}
+      <fog attach="fog" args={['#2d1b69', 30, 120]} />
     </group>
   );
 });

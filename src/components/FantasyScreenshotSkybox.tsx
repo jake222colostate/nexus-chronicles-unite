@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FantasyMagicalSkybox } from './FantasyMagicalSkybox';
+import { FantasySkybox } from './FantasySkybox';
 
 interface FantasyScreenshotSkyboxProps {
   realm: 'fantasy' | 'scifi';
@@ -17,7 +17,7 @@ const FantasyScreenshotSkybox: React.FC<FantasyScreenshotSkyboxProps> = ({
     return null;
   }
 
-  return <FantasyMagicalSkybox realm={realm} />;
+  return <FantasySkybox />;
 };
 
 export { FantasyScreenshotSkybox };
