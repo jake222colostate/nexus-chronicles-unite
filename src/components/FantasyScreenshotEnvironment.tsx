@@ -163,7 +163,7 @@ export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironment
             scale={[scale, scale, scale]}
           >
             <sphereGeometry args={[1, 6, 4]} />
-            <meshBasicMaterial 
+            <meshPhongMaterial 
               color="#FFFFFF" 
               emissive="#FFFFFF"
               emissiveIntensity={0.8}
