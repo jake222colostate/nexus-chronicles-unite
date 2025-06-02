@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { FantasyGround } from './FantasyGround';
-import { FantasyTreesWithGlow } from './FantasyTreesWithGlow';
-import { FantasyMagicalMountains } from './FantasyMagicalMountains';
-import { FantasyPortalGateway } from './FantasyPortalGateway';
+import { RealisticMountainSystem } from './RealisticMountainSystem';
+import { RealisticTreeSystem } from './RealisticTreeSystem';
+import { RealisticPathSystem } from './RealisticPathSystem';
 
 interface FantasyScreenshotEnvironmentProps {
   chunks: ChunkData[];
@@ -12,68 +11,44 @@ interface FantasyScreenshotEnvironmentProps {
   realm: 'fantasy' | 'scifi';
 }
 
-const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> = React.memo(({
+export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> = ({
   chunks,
   chunkSize,
   realm
 }) => {
-  console.log('FantasyScreenshotEnvironment render - Realm:', realm);
-
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
-    console.log('FantasyScreenshotEnvironment: Not fantasy realm, skipping');
     return null;
   }
 
   return (
     <group>
-      {/* Magical ground with stepping stone pathway */}
-      <FantasyGround />
-
-      {/* Lush magical trees */}
-      <FantasyTreesWithGlow />
-
-      {/* Pink/purple crystalline mountains with cyan crystals */}
-      <FantasyMagicalMountains />
-
-      {/* Portal gateway in the distance */}
-      <FantasyPortalGateway />
-
-      {/* Enhanced atmospheric lighting to match reference */}
-      <ambientLight intensity={0.6} color="#E6E6FA" />
-      <directionalLight
-        position={[10, 30, 10]}
-        intensity={1.0}
-        color="#ffffff"
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-far={200}
-        shadow-camera-left={-100}
-        shadow-camera-right={100}
-        shadow-camera-top={100}
-        shadow-camera-bottom={-100}
+      {/* Ground plane */}
+      <mesh position={[0, -1.5, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[400, 400]} />
+        <meshLambertMaterial color="#2d4a2b" />
+      </mesh>
+      
+      {/* Realistic mountains with varied shapes */}
+      <RealisticMountainSystem 
+        chunks={chunks} 
+        chunkSize={chunkSize} 
+        realm={realm} 
       />
       
-      {/* Magical cyan accent lighting */}
-      <pointLight 
-        position={[0, 15, -50]}
-        color="#00FFFF"
-        intensity={0.4}
-        distance={100}
+      {/* Realistic trees with different types */}
+      <RealisticTreeSystem 
+        chunks={chunks} 
+        chunkSize={chunkSize} 
+        realm={realm} 
       />
       
-      {/* Warm orange lighting from the pathway */}
-      <pointLight 
-        position={[0, 2, -20]}
-        color="#FF8C00"
-        intensity={0.3}
-        distance={40}
+      {/* Detailed cobblestone path */}
+      <RealisticPathSystem 
+        chunks={chunks} 
+        chunkSize={chunkSize} 
+        realm={realm} 
       />
     </group>
   );
-});
-
-FantasyScreenshotEnvironment.displayName = 'FantasyScreenshotEnvironment';
-
-export { FantasyScreenshotEnvironment };
+};
