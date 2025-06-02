@@ -2,9 +2,7 @@
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
 import { FantasyInfiniteTileSystem } from './FantasyInfiniteTileSystem';
-import { FantasyDuskSkybox } from './FantasyDuskSkybox';
 import { FantasyDuskLighting } from './FantasyDuskLighting';
-import { FantasyPostProcessing } from './FantasyPostProcessing';
 import { Vector3 } from 'three';
 
 interface FantasyEnvironmentOrchestratorProps {
@@ -27,20 +25,17 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
 
   return (
     <group>
-      {/* Infinite tiling system with GLB models */}
+      {/* Infinite tiling system with individual GLB components */}
       <FantasyInfiniteTileSystem
         playerPosition={playerPosition}
         renderDistance={120}
       />
       
-      {/* Fantasy dusk skybox */}
-      <FantasyDuskSkybox />
-      
       {/* Specialized lighting for dusk atmosphere */}
       <FantasyDuskLighting />
       
-      {/* Post-processing effects */}
-      <FantasyPostProcessing />
+      {/* Background color for fantasy dusk */}
+      <color attach="background" args={['#2d1b4e']} />
     </group>
   );
 };
