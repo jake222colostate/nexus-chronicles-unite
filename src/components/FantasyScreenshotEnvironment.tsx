@@ -12,13 +12,16 @@ interface FantasyScreenshotEnvironmentProps {
   realm: 'fantasy' | 'scifi';
 }
 
-export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> = React.memo(({
+const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> = React.memo(({
   chunks,
   chunkSize,
   realm
 }) => {
+  console.log('FantasyScreenshotEnvironment render - Realm:', realm);
+
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
+    console.log('FantasyScreenshotEnvironment: Not fantasy realm, skipping');
     return null;
   }
 
@@ -56,3 +59,5 @@ export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironment
 });
 
 FantasyScreenshotEnvironment.displayName = 'FantasyScreenshotEnvironment';
+
+export { FantasyScreenshotEnvironment };

@@ -13,17 +13,21 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = React.memo(({
+const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = React.memo(({
   chunks,
   chunkSize,
   realm
 }) => {
+  console.log('FantasyTerrainSystem render - Realm:', realm);
+
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
+    console.log('FantasyTerrainSystem: Not fantasy realm, skipping');
     return null;
   }
 
   const terrainElements = useMemo(() => {
+    console.log('FantasyTerrainSystem: Generating terrain elements for', chunks.length, 'chunks');
     const elements = [];
     
     chunks.forEach(chunk => {
@@ -89,6 +93,7 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = React.m
       }
     });
     
+    console.log('FantasyTerrainSystem: Generated', elements.length, 'terrain elements');
     return elements;
   }, [chunks, chunkSize]);
 
@@ -96,3 +101,5 @@ export const FantasyTerrainSystem: React.FC<FantasyTerrainSystemProps> = React.m
 });
 
 FantasyTerrainSystem.displayName = 'FantasyTerrainSystem';
+
+export { FantasyTerrainSystem };
