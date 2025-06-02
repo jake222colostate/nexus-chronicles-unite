@@ -6,7 +6,30 @@ import * as THREE from 'three';
 
 const FANTASY_PATH_TILE_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_path_tile.glb';
 
-// Individual path tile component
+// Fallback path tile component using basic geometry
+const FallbackPathTile: React.FC<{ 
+  position: [number, number, number]; 
+}> = ({ position }) => {
+  return (
+    <group position={position}>
+      <mesh receiveShadow>
+        <boxGeometry args={[4, 0.05, 4]} />
+        <meshLambertMaterial color="#DEB887" />
+      </mesh>
+      {/* Add decorative stones */}
+      <mesh position={[1.5, 0.025, 1.5]} receiveShadow>
+        <sphereGeometry args={[0.1]} />
+        <meshLambertMaterial color="#A0522D" />
+      </mesh>
+      <mesh position={[-1.5, 0.025, -1.5]} receiveShadow>
+        <sphereGeometry args={[0.08]} />
+        <meshLambertMaterial color="#A0522D" />
+      </mesh>
+    </group>
+  );
+};
+
+// Individual path tile component with fallback
 const FantasyPathTile: React.FC<{ 
   position: [number, number, number]; 
 }> = ({ position }) => {
@@ -15,8 +38,8 @@ const FantasyPathTile: React.FC<{
     const { scene } = useGLTF(FANTASY_PATH_TILE_URL);
     
     if (!scene) {
-      console.error('Fantasy path tile scene not loaded');
-      return null;
+      console.warn('Fantasy path tile scene not loaded, using fallback');
+      return <FallbackPathTile position={position} />;
     }
 
     console.log('Fantasy path tile loaded successfully - Position:', position);
@@ -42,8 +65,8 @@ const FantasyPathTile: React.FC<{
       />
     );
   } catch (error) {
-    console.error('Failed to load fantasy path tile model:', error);
-    return null;
+    console.error('Failed to load fantasy path tile model, using fallback:', error);
+    return <FallbackPathTile position={position} />;
   }
 };
 
@@ -109,10 +132,5 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
   );
 };
 
-// Preload the model for better performance
-console.log('Attempting to preload fantasy path tile model:', FANTASY_PATH_TILE_URL);
-try {
-  useGLTF.preload(FANTASY_PATH_TILE_URL);
-} catch (error) {
-  console.error('Failed to preload fantasy path tile model:', error);
-}
+// Don't preload the broken model
+console.log('FantasyPathSystem: Using fallback geometry for path tiles');

@@ -7,21 +7,49 @@ import * as THREE from 'three';
 const FANTASY_MOUNTAIN_LEFT_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_mountain_left.glb';
 const FANTASY_MOUNTAIN_RIGHT_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_mountain_right.glb';
 
+// Fallback mountain component using basic geometry
+const FallbackMountain: React.FC<{ 
+  position: [number, number, number]; 
+  scale: [number, number, number];
+  side: 'left' | 'right';
+}> = ({ position, scale, side }) => {
+  return (
+    <group position={position} scale={scale}>
+      {/* Main mountain peak */}
+      <mesh castShadow receiveShadow>
+        <coneGeometry args={[3, 6, 8]} />
+        <meshLambertMaterial color="#8B7355" />
+      </mesh>
+      {/* Secondary peak */}
+      <mesh position={[side === 'left' ? -2 : 2, -1, 1]} castShadow receiveShadow>
+        <coneGeometry args={[2, 4, 6]} />
+        <meshLambertMaterial color="#A0522D" />
+      </mesh>
+      {/* Rock formations */}
+      <mesh position={[side === 'left' ? 1 : -1, -2, -1]} castShadow receiveShadow>
+        <dodecahedronGeometry args={[1]} />
+        <meshLambertMaterial color="#696969" />
+      </mesh>
+    </group>
+  );
+};
+
 interface MountainProps {
   url: string;
   position: [number, number, number];
   scale: [number, number, number];
+  side: 'left' | 'right';
 }
 
-function Mountain({ url, position, scale }: MountainProps) {
+function Mountain({ url, position, scale, side }: MountainProps) {
   console.log('Mountain: Loading from', url, 'at position:', position);
   
   try {
     const { scene } = useGLTF(url);
     
     if (!scene) {
-      console.error('Mountain: Scene is null for URL:', url);
-      return null;
+      console.warn('Mountain: Scene is null for URL:', url, 'using fallback');
+      return <FallbackMountain position={position} scale={scale} side={side} />;
     }
     
     console.log('Mountain: Successfully loaded GLB, rendering at position:', position, 'scale:', scale);
@@ -40,8 +68,8 @@ function Mountain({ url, position, scale }: MountainProps) {
     
     return <primitive object={clonedScene} position={position} scale={scale} />;
   } catch (error) {
-    console.error(`Mountain: Failed to load mountain model: ${url}`, error);
-    return null;
+    console.error(`Mountain: Failed to load mountain model: ${url}, using fallback`, error);
+    return <FallbackMountain position={position} scale={scale} side={side} />;
   }
 }
 
@@ -92,6 +120,7 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
               url={FANTASY_MOUNTAIN_LEFT_URL}
               position={[-40, 0, finalZ]}
               scale={[2, 2, 2]}
+              side="left"
             />
           </Suspense>
         );
@@ -103,6 +132,7 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
               url={FANTASY_MOUNTAIN_RIGHT_URL}
               position={[40, 0, finalZ]}
               scale={[2, 2, 2]}
+              side="right"
             />
           </Suspense>
         );
@@ -118,13 +148,5 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   return <>{mountainInstances}</>;
 };
 
-// Preload the models for better performance
-if (typeof window !== 'undefined') {
-  try {
-    useGLTF.preload(FANTASY_MOUNTAIN_LEFT_URL);
-    useGLTF.preload(FANTASY_MOUNTAIN_RIGHT_URL);
-    console.log('FantasyMountainSystem: High poly fantasy mountains preloading started');
-  } catch (error) {
-    console.error('FantasyMountainSystem: Failed to preload models:', error);
-  }
-}
+// Don't preload the broken models
+console.log('FantasyMountainSystem: Using fallback geometry for mountains');

@@ -6,7 +6,59 @@ import * as THREE from 'three';
 
 const FANTASY_PORTAL_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_portal.glb';
 
-// Individual portal component
+// Fallback portal component using basic geometry
+const FallbackPortal: React.FC<{ 
+  position: [number, number, number]; 
+  onTierProgression?: () => void;
+}> = ({ position, onTierProgression }) => {
+  const portalRef = useRef<THREE.Group>(null);
+  
+  // Rotate the portal continuously
+  useFrame((state, delta) => {
+    if (portalRef.current) {
+      portalRef.current.rotation.y += delta * 0.5;
+    }
+  });
+
+  return (
+    <group ref={portalRef} position={position}>
+      {/* Portal ring */}
+      <mesh castShadow receiveShadow>
+        <torusGeometry args={[2, 0.3, 16, 100]} />
+        <meshStandardMaterial 
+          color="#8B5CF6" 
+          emissive="#4C1D95" 
+          emissiveIntensity={0.3}
+        />
+      </mesh>
+      {/* Inner energy field */}
+      <mesh>
+        <circleGeometry args={[1.8]} />
+        <meshBasicMaterial 
+          color="#DDA0DD" 
+          transparent 
+          opacity={0.6}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      {/* Portal base */}
+      <mesh position={[0, -2.5, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[1.5, 2, 1]} />
+        <meshStandardMaterial color="#696969" />
+      </mesh>
+      {/* Click/interaction area */}
+      <mesh 
+        visible={false}
+        onClick={onTierProgression}
+      >
+        <sphereGeometry args={[4]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+    </group>
+  );
+};
+
+// Individual portal component with fallback
 const FantasyPortal: React.FC<{ 
   position: [number, number, number]; 
   onTierProgression?: () => void;
@@ -24,8 +76,8 @@ const FantasyPortal: React.FC<{
     const { scene } = useGLTF(FANTASY_PORTAL_URL);
     
     if (!scene) {
-      console.error('Fantasy portal scene not loaded');
-      return null;
+      console.warn('Fantasy portal scene not loaded, using fallback');
+      return <FallbackPortal position={position} onTierProgression={onTierProgression} />;
     }
 
     console.log('Fantasy portal loaded successfully - Position:', position);
@@ -62,8 +114,8 @@ const FantasyPortal: React.FC<{
       </group>
     );
   } catch (error) {
-    console.error('Failed to load fantasy portal model:', error);
-    return null;
+    console.error('Failed to load fantasy portal model, using fallback:', error);
+    return <FallbackPortal position={position} onTierProgression={onTierProgression} />;
   }
 };
 
@@ -135,10 +187,5 @@ export const FantasyPortalSystem: React.FC<FantasyPortalSystemProps> = ({
   );
 };
 
-// Preload the model for better performance
-console.log('Attempting to preload fantasy portal model:', FANTASY_PORTAL_URL);
-try {
-  useGLTF.preload(FANTASY_PORTAL_URL);
-} catch (error) {
-  console.error('Failed to preload fantasy portal model:', error);
-}
+// Don't preload the broken model
+console.log('FantasyPortalSystem: Using fallback geometry for portals');

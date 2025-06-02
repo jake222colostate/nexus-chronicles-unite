@@ -12,7 +12,41 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Individual tree component with proper GLB handling
+// Fallback tree component using basic geometry
+const FallbackTree: React.FC<{ 
+  position: [number, number, number]; 
+  scale: number; 
+  rotation: number;
+}> = ({ position, scale, rotation }) => {
+  return (
+    <group
+      position={position}
+      scale={[scale, scale, scale]}
+      rotation={[0, rotation, 0]}
+    >
+      {/* Tree trunk */}
+      <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.15, 0.2, 1.6]} />
+        <meshLambertMaterial color="#8B4513" />
+      </mesh>
+      {/* Tree foliage - multiple layers for depth */}
+      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
+        <coneGeometry args={[1.2, 2, 8]} />
+        <meshLambertMaterial color="#228B22" />
+      </mesh>
+      <mesh position={[0, 2.4, 0]} castShadow receiveShadow>
+        <coneGeometry args={[0.9, 1.5, 8]} />
+        <meshLambertMaterial color="#32CD32" />
+      </mesh>
+      <mesh position={[0, 2.8, 0]} castShadow receiveShadow>
+        <coneGeometry args={[0.6, 1, 8]} />
+        <meshLambertMaterial color="#90EE90" />
+      </mesh>
+    </group>
+  );
+};
+
+// Individual tree component with proper GLB handling and fallback
 const FantasyTree: React.FC<{ 
   position: [number, number, number]; 
   scale: number; 
@@ -23,8 +57,8 @@ const FantasyTree: React.FC<{
     const { scene } = useGLTF(FANTASY_TREE_URL);
     
     if (!scene) {
-      console.error('Fantasy tree scene not loaded');
-      return null;
+      console.warn('Fantasy tree scene not loaded, using fallback');
+      return <FallbackTree position={position} scale={scale} rotation={rotation} />;
     }
 
     console.log('Fantasy tree loaded successfully - Position:', position);
@@ -57,8 +91,8 @@ const FantasyTree: React.FC<{
       </group>
     );
   } catch (error) {
-    console.error('Failed to load fantasy tree model:', error);
-    return null;
+    console.error('Failed to load fantasy tree model, using fallback:', error);
+    return <FallbackTree position={position} scale={scale} rotation={rotation} />;
   }
 };
 
@@ -157,10 +191,5 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
   );
 };
 
-// Preload the model for better performance
-console.log('Attempting to preload fantasy tree model:', FANTASY_TREE_URL);
-try {
-  useGLTF.preload(FANTASY_TREE_URL);
-} catch (error) {
-  console.error('Failed to preload fantasy tree model:', error);
-}
+// Don't preload the broken model
+console.log('FantasyTreeSystem: Using fallback geometry for trees');

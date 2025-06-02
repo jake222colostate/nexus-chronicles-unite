@@ -6,7 +6,30 @@ import * as THREE from 'three';
 
 const FANTASY_ROAD_TILE_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_road_tile.glb';
 
-// Individual road tile component
+// Fallback road tile component using basic geometry
+const FallbackRoadTile: React.FC<{ 
+  position: [number, number, number]; 
+}> = ({ position }) => {
+  return (
+    <group position={position}>
+      <mesh receiveShadow>
+        <boxGeometry args={[6, 0.1, 6]} />
+        <meshLambertMaterial color="#8B4513" />
+      </mesh>
+      {/* Add stone border details */}
+      <mesh position={[-2.8, 0.05, 0]} receiveShadow>
+        <boxGeometry args={[0.4, 0.1, 6]} />
+        <meshLambertMaterial color="#696969" />
+      </mesh>
+      <mesh position={[2.8, 0.05, 0]} receiveShadow>
+        <boxGeometry args={[0.4, 0.1, 6]} />
+        <meshLambertMaterial color="#696969" />
+      </mesh>
+    </group>
+  );
+};
+
+// Individual road tile component with fallback
 const FantasyRoadTile: React.FC<{ 
   position: [number, number, number]; 
 }> = ({ position }) => {
@@ -15,8 +38,8 @@ const FantasyRoadTile: React.FC<{
     const { scene } = useGLTF(FANTASY_ROAD_TILE_URL);
     
     if (!scene) {
-      console.error('Fantasy road tile scene not loaded');
-      return null;
+      console.warn('Fantasy road tile scene not loaded, using fallback');
+      return <FallbackRoadTile position={position} />;
     }
 
     console.log('Fantasy road tile loaded successfully - Position:', position);
@@ -42,8 +65,8 @@ const FantasyRoadTile: React.FC<{
       />
     );
   } catch (error) {
-    console.error('Failed to load fantasy road tile model:', error);
-    return null;
+    console.error('Failed to load fantasy road tile model, using fallback:', error);
+    return <FallbackRoadTile position={position} />;
   }
 };
 
@@ -70,7 +93,7 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = ({
   const roadTilePositions = useMemo(() => {
     console.log('Generating road tile positions for', chunks.length, 'chunks');
     const positions = [];
-    const tileSize = 6; // Assuming each tile is 6 units long
+    const tileSize = 6; // Each tile is 6 units long
 
     chunks.forEach(chunk => {
       const { worldZ } = chunk;
@@ -109,10 +132,5 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = ({
   );
 };
 
-// Preload the model for better performance
-console.log('Attempting to preload fantasy road tile model:', FANTASY_ROAD_TILE_URL);
-try {
-  useGLTF.preload(FANTASY_ROAD_TILE_URL);
-} catch (error) {
-  console.error('Failed to preload fantasy road tile model:', error);
-}
+// Don't preload the broken model
+console.log('FantasyRoadSystem: Using fallback geometry for road tiles');
