@@ -6,7 +6,6 @@ import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { FantasyScreenshotEnvironment } from './FantasyScreenshotEnvironment';
 import { FantasyScreenshotSkybox } from './FantasyScreenshotSkybox';
-import { FantasyPortalSystem } from './FantasyPortalSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -19,13 +18,10 @@ interface Fantasy3DSceneProps {
   renderDistance: number;
 }
 
-export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
+export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   cameraPosition,
   onPositionChange,
   realm,
-  maxUnlockedUpgrade,
-  upgradeSpacing,
-  onTierProgression,
   chunkSize,
   renderDistance
 }) => {
@@ -39,35 +35,23 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
       {/* Fantasy Screenshot Skybox */}
       <FantasyScreenshotSkybox realm={realm} />
 
-      {/* Enhanced magical lighting */}
-      <ambientLight intensity={0.6} color="#E6E6FA" />
+      {/* Optimized lighting setup */}
+      <ambientLight intensity={0.5} color="#E6E6FA" />
       <directionalLight
         position={[20, 40, 20]}
-        intensity={1.0}
+        intensity={0.8}
         color="#FFFFFF"
         castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-far={1200}
-        shadow-camera-left={-120}
-        shadow-camera-right={120}
-        shadow-camera-top={120}
-        shadow-camera-bottom={-120}
-      />
-      
-      {/* Magical colored lights */}
-      <directionalLight
-        position={[-15, 25, 15]}
-        intensity={0.4}
-        color="#FF69B4"
-      />
-      
-      <directionalLight
-        position={[10, 30, -10]}
-        intensity={0.3}
-        color="#00FFFF"
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-far={800}
+        shadow-camera-left={-80}
+        shadow-camera-right={80}
+        shadow-camera-top={80}
+        shadow-camera-bottom={-80}
       />
 
+      {/* Optimized chunk system with larger chunks for better performance */}
       <ChunkSystem
         playerPosition={cameraPosition}
         chunkSize={chunkSize}
@@ -82,30 +66,24 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
         )}
       </ChunkSystem>
 
-      {/* Fantasy Portal System */}
-      <FantasyPortalSystem
-        playerPosition={[cameraPosition.x, cameraPosition.y, cameraPosition.z]}
-        maxUnlockedUpgrade={maxUnlockedUpgrade}
-        upgradeSpacing={upgradeSpacing}
-        realm={realm}
-        onTierProgression={onTierProgression}
-      />
-
-      {/* Dynamic player light */}
+      {/* Simplified dynamic player light */}
       <pointLight 
-        position={[cameraPosition.x, 10, cameraPosition.z - 8]} 
-        intensity={0.8}
+        position={[cameraPosition.x, 8, cameraPosition.z - 5]} 
+        intensity={0.6}
         color="#DDA0DD" 
-        distance={40} 
+        distance={30} 
       />
 
+      {/* Optimized contact shadows */}
       <ContactShadows 
         position={[0, -0.45, cameraPosition.z]} 
-        opacity={0.3} 
-        scale={100} 
-        blur={3} 
-        far={25} 
+        opacity={0.2} 
+        scale={60} 
+        blur={2} 
+        far={15} 
       />
     </Suspense>
   );
-};
+});
+
+Fantasy3DScene.displayName = 'Fantasy3DScene';

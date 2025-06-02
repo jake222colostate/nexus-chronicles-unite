@@ -18,7 +18,7 @@ export interface ChunkData {
   seed: number;
 }
 
-export const ChunkSystem: React.FC<ChunkSystemProps> = ({
+export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
   playerPosition,
   chunkSize,
   renderDistance,
@@ -29,32 +29,49 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = ({
     const playerChunkX = Math.floor(playerPosition.x / chunkSize);
     const playerChunkZ = Math.floor(Math.abs(playerPosition.z) / chunkSize);
     
+    // Optimized chunk radius calculation
     const chunkRadius = Math.ceil(renderDistance / chunkSize);
     
+    // Generate chunks in a more efficient pattern
     for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius; x++) {
-      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + chunkRadius; z++) {
-        // Only generate chunks in front of and around the player
-        if (z >= 0) {
+      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + chunkRadius + 2; z++) {
+        // Always generate chunks ahead of player for seamless movement
+        if (z >= -1) {
           const worldX = x * chunkSize;
-          const worldZ = -z * chunkSize; // Negative because we move forward in negative Z
+          const worldZ = -z * chunkSize;
           
-          // Simple deterministic seed based on chunk coordinates
-          const seed = (x * 1000 + z) % 10000;
+          // Distance-based culling for better performance
+          const distanceToPlayer = Math.sqrt(
+            Math.pow(worldX - playerPosition.x, 2) + 
+            Math.pow(worldZ - playerPosition.z, 2)
+          );
           
-          chunks.push({
-            id: `chunk_${x}_${z}`,
-            x,
-            z,
-            worldX,
-            worldZ,
-            seed
-          });
+          if (distanceToPlayer <= renderDistance + chunkSize) {
+            // Optimized deterministic seed
+            const seed = ((x & 0xFFFF) << 16) | (z & 0xFFFF);
+            
+            chunks.push({
+              id: `chunk_${x}_${z}`,
+              x,
+              z,
+              worldX,
+              worldZ,
+              seed: Math.abs(seed) % 10000
+            });
+          }
         }
       }
     }
     
     return chunks;
-  }, [playerPosition.x, playerPosition.z, chunkSize, renderDistance]);
+  }, [
+    Math.floor(playerPosition.x / chunkSize), 
+    Math.floor(Math.abs(playerPosition.z) / chunkSize), 
+    chunkSize, 
+    renderDistance
+  ]);
 
   return <>{children(activeChunks)}</>;
-};
+});
+
+ChunkSystem.displayName = 'ChunkSystem';

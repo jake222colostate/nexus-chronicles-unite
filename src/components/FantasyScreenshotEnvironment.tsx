@@ -4,21 +4,18 @@ import { ChunkData } from './ChunkSystem';
 import { FantasyTerrainSystem } from './FantasyTerrainSystem';
 import { FantasyMagicalTreeSystem } from './FantasyMagicalTreeSystem';
 import { FantasyPolygonalMountainSystem } from './FantasyPolygonalMountainSystem';
-import { FantasyStonePortalSystem } from './FantasyStonePortalSystem';
 import { FantasyAtmosphereSystem } from './FantasyAtmosphereSystem';
 
 interface FantasyScreenshotEnvironmentProps {
   chunks: ChunkData[];
   chunkSize: number;
   realm: 'fantasy' | 'scifi';
-  onTierProgression?: () => void;
 }
 
-export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> = ({
+export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> = React.memo(({
   chunks,
   chunkSize,
-  realm,
-  onTierProgression
+  realm
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -27,70 +24,35 @@ export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironment
 
   return (
     <group>
-      {/* Terrain Module - Hexagonal tiles with dirt/grass textures */}
+      {/* Terrain Module - Optimized hexagonal tiles */}
       <FantasyTerrainSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
       />
 
-      {/* Tree Module - Magical trees with glow effects */}
+      {/* Tree Module - Reduced density for better performance */}
       <FantasyMagicalTreeSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
       />
 
-      {/* Mountain Module - Polygonal mountains with crystals */}
+      {/* Mountain Module - Optimized polygonal mountains */}
       <FantasyPolygonalMountainSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
       />
 
-      {/* Portal Module - Stone portals with glowing runes */}
-      <FantasyStonePortalSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-        onTierProgression={onTierProgression}
-      />
-
-      {/* Atmosphere Module - Fog, particles, and ambient lighting */}
+      {/* Atmosphere Module - Reduced particle count */}
       <FantasyAtmosphereSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
       />
-
-      {/* Enhanced lighting setup */}
-      <ambientLight intensity={0.4} color="#E6E6FA" />
-      <directionalLight
-        position={[30, 60, 30]}
-        intensity={0.8}
-        color="#DDA0DD"
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-camera-far={1200}
-        shadow-camera-left={-150}
-        shadow-camera-right={150}
-        shadow-camera-top={150}
-        shadow-camera-bottom={-150}
-      />
-      
-      {/* Additional atmospheric lights */}
-      <directionalLight
-        position={[-20, 40, 20]}
-        intensity={0.3}
-        color="#FF69B4"
-      />
-      
-      <directionalLight
-        position={[15, 35, -15]}
-        intensity={0.25}
-        color="#00FFFF"
-      />
     </group>
   );
-};
+});
+
+FantasyScreenshotEnvironment.displayName = 'FantasyScreenshotEnvironment';
