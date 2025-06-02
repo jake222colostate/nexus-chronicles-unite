@@ -29,7 +29,7 @@ export const ImprovedFantasyLighting: React.FC = () => {
       
       {/* Hemisphere light for sky/ground color variation */}
       <hemisphereLight
-        skyColor={new THREE.Color(0.5, 0.4, 0.8)}
+        color={new THREE.Color(0.5, 0.4, 0.8)}
         groundColor={new THREE.Color(0.1, 0.1, 0.2)}
         intensity={0.6}
       />
