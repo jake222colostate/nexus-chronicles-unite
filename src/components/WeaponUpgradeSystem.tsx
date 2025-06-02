@@ -60,14 +60,14 @@ export const WeaponUpgradeSystem: React.FC<WeaponUpgradeSystemProps> = ({
         style={{
           maxWidth: '90vw',
           width: '100%',
-          maxHeight: '70vh',
+          maxHeight: '80vh',
           overflowX: 'hidden',
           boxSizing: 'border-box',
           borderRadius: '12px'
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-purple-400/20">
+        <div className="flex items-center justify-between p-4 border-b border-purple-400/20 flex-shrink-0">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             🏹 Weapon Upgrades
           </h2>
@@ -83,9 +83,9 @@ export const WeaponUpgradeSystem: React.FC<WeaponUpgradeSystemProps> = ({
 
         {/* Upgrades List */}
         <div 
-          className="p-4 space-y-3 overflow-y-auto"
+          className="p-4 space-y-3"
           style={{
-            maxHeight: 'calc(70vh - 80px)',
+            maxHeight: '60vh',
             overflowY: 'auto',
             overflowX: 'hidden'
           }}
