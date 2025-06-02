@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { ChunkData } from './ChunkSystem';
@@ -113,7 +112,7 @@ export const CartoonMagicalPathway: React.FC<CartoonMagicalPathwayProps> = ({
               ]}
             >
               <sphereGeometry args={[0.1, 8, 6]} />
-              <meshBasicMaterial 
+              <meshStandardMaterial 
                 color={i % 2 === 0 ? '#FFD700' : '#FF69B4'}
                 emissive={i % 2 === 0 ? '#FFD700' : '#FF69B4'}
                 emissiveIntensity={0.8}
