@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -61,7 +60,7 @@ const MagicalTree: React.FC<{
           {Array.from({ length: 3 }, (_, i) => (
             <mesh key={i} position={[2.5, 0, 0]}>
               <sphereGeometry args={[0.1, 8, 6]} />
-              <meshBasicMaterial 
+              <meshStandardMaterial 
                 color="#ffff00"
                 emissive="#ffff00"
                 emissiveIntensity={1}

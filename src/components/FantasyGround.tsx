@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
@@ -22,7 +21,7 @@ const StoneTile: React.FC<{
       {/* Purple glowing moss underneath */}
       <mesh position={[0, -0.2, 0]}>
         <boxGeometry args={[2.2, 0.1, 3.2]} />
-        <meshBasicMaterial 
+        <meshStandardMaterial 
           color="#9966cc"
           emissive="#6633aa"
           emissiveIntensity={0.3}
@@ -106,7 +105,7 @@ export const FantasyGround: React.FC = () => {
           ]}
         >
           <sphereGeometry args={[0.05, 6, 4]} />
-          <meshBasicMaterial 
+          <meshStandardMaterial 
             color={Math.random() > 0.5 ? "#00ffff" : "#ffffff"}
             emissive={Math.random() > 0.5 ? "#00ffff" : "#ffffff"}
             emissiveIntensity={0.8}
