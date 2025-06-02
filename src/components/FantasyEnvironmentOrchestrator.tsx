@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
+import { CartoonFantasyTerrain } from './CartoonFantasyTerrain';
+import { CartoonMagicalPathway } from './CartoonMagicalPathway';
 
 interface FantasyEnvironmentOrchestratorProps {
   chunks: ChunkData[];
@@ -20,15 +22,37 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
 
   return (
     <group>
-      {/* Simple ground plane - no textures */}
-      <mesh position={[0, -1.5, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[400, 400]} />
-        <meshLambertMaterial color="#2d4a2b" />
-      </mesh>
+      {/* Cartoon-style rolling terrain */}
+      <CartoonFantasyTerrain 
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
       
-      {/* Basic lighting */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 10, 5]} intensity={0.8} />
+      {/* Magical winding pathway */}
+      <CartoonMagicalPathway 
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
+      
+      {/* Enhanced lighting for cartoon feel */}
+      <ambientLight intensity={0.8} color="#FFE4E1" />
+      <directionalLight 
+        position={[20, 30, 10]} 
+        intensity={1.0}
+        color="#FFFACD"
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+      />
+      
+      {/* Additional warm rim lighting */}
+      <directionalLight 
+        position={[-20, 20, -10]} 
+        intensity={0.4}
+        color="#FF69B4"
+      />
     </group>
   );
 };
