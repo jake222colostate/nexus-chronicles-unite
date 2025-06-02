@@ -1,12 +1,11 @@
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { EnhancedStructure } from './EnhancedStructure';
-import { EnhancedNexusCore } from './EnhancedNexusCore';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { AnimatedBackground } from './AnimatedBackground';
 import { ParticleSystem } from './ParticleSystem';
 import { TapResourceEffect } from './TapResourceEffect';
-import { UpgradeFloatingTooltip } from './UpgradeFloatingTooltip';
-import { BuildingUpgradeModal } from './BuildingUpgradeModal';
+import { useCameraController } from './CameraController';
+import { StructureManager } from './StructureManager';
+import { useModalManager } from './ModalManager';
 
 interface MapViewProps {
   realm: 'fantasy' | 'scifi';
@@ -46,171 +45,28 @@ export const MapView: React.FC<MapViewProps> = ({
   onTapResource
 }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [camera, setCamera] = useState({ x: 0, y: 0, zoom: 0.9 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [lastTouch, setLastTouch] = useState({ x: 0, y: 0 });
-  const [lastPinchDistance, setLastPinchDistance] = useState(0);
-  const [selectedBuilding, setSelectedBuilding] = useState<{
-    building: any;
-    count: number;
-  } | null>(null);
-  const [upgradeTooltips, setUpgradeTooltips] = useState<Array<{
-    id: number;
-    buildingName: string;
-    level: number;
-    position: { x: number; y: number };
-  }>>([]);
 
-  // Enhanced structure positioning with better spacing and visual hierarchy
-  const structurePositions = {
-    fantasy: [
-      { id: 'temple', x: 50, y: 20, size: 'massive', tier: 1 },
-      { id: 'grove', x: 25, y: 45, size: 'large', tier: 2 },
-      { id: 'tower', x: 75, y: 45, size: 'medium', tier: 2 },
-      { id: 'altar', x: 50, y: 75, size: 'small', tier: 3 },
-    ],
-    scifi: [
-      { id: 'megastructure', x: 50, y: 20, size: 'massive', tier: 1 },
-      { id: 'station', x: 25, y: 45, size: 'large', tier: 2 },
-      { id: 'reactor', x: 75, y: 45, size: 'medium', tier: 2 },
-      { id: 'generator', x: 50, y: 75, size: 'small', tier: 3 },
-    ]
-  };
-
-  const updateTransform = useCallback(() => {
+  // Camera controller hook
+  const updateTransform = useCallback((camera: { x: number; y: number; zoom: number }) => {
     if (mapRef.current) {
       mapRef.current.style.transform = `scale(${camera.zoom}) translate(${camera.x}px, ${camera.y}px)`;
     }
-  }, [camera]);
-
-  useEffect(() => {
-    updateTransform();
-  }, [updateTransform]);
-
-  // Mouse wheel zoom (desktop)
-  const handleWheel = useCallback((e: WheelEvent) => {
-    e.preventDefault();
-    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-    setCamera(prev => ({
-      ...prev,
-      zoom: Math.max(0.5, Math.min(3, prev.zoom * zoomFactor))
-    }));
   }, []);
 
-  // Touch/mouse drag handling
-  const handleTouchStart = useCallback((e: TouchEvent | MouseEvent) => {
-    setIsDragging(true);
-    
-    if ('touches' in e) {
-      if (e.touches.length === 1) {
-        setLastTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-      } else if (e.touches.length === 2) {
-        // Pinch zoom setup
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        setLastPinchDistance(Math.sqrt(dx * dx + dy * dy));
-      }
-    } else {
-      setLastTouch({ x: e.clientX, y: e.clientY });
-    }
-  }, []);
+  const { camera, handleWheel, handleTouchStart, handleTouchMove, handleTouchEnd } = useCameraController({
+    onCameraUpdate: updateTransform
+  });
 
-  const handleTouchMove = useCallback((e: TouchEvent | MouseEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
+  // Modal manager hook
+  const { handleBuildingClick, renderModals } = useModalManager({
+    realm,
+    buildings,
+    buildingData,
+    currency,
+    onBuyBuilding
+  });
 
-    if ('touches' in e) {
-      if (e.touches.length === 1) {
-        // Single touch drag
-        const deltaX = e.touches[0].clientX - lastTouch.x;
-        const deltaY = e.touches[0].clientY - lastTouch.y;
-        
-        setCamera(prev => ({
-          ...prev,
-          x: prev.x + deltaX / prev.zoom,
-          y: prev.y + deltaY / prev.zoom
-        }));
-        
-        setLastTouch({ x: e.touches[0].clientX, y: e.touches[0].clientY });
-      } else if (e.touches.length === 2) {
-        // Pinch zoom
-        const dx = e.touches[0].clientX - e.touches[1].clientX;
-        const dy = e.touches[0].clientY - e.touches[1].clientY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        if (lastPinchDistance > 0) {
-          const zoomFactor = distance / lastPinchDistance;
-          setCamera(prev => ({
-            ...prev,
-            zoom: Math.max(0.5, Math.min(3, prev.zoom * zoomFactor))
-          }));
-        }
-        
-        setLastPinchDistance(distance);
-      }
-    } else {
-      // Mouse drag
-      const deltaX = e.clientX - lastTouch.x;
-      const deltaY = e.clientY - lastTouch.y;
-      
-      setCamera(prev => ({
-        ...prev,
-        x: prev.x + deltaX / prev.zoom,
-        y: prev.y + deltaY / prev.zoom
-      }));
-      
-      setLastTouch({ x: e.clientX, y: e.clientY });
-    }
-  }, [isDragging, lastTouch, lastPinchDistance]);
-
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-    setLastPinchDistance(0);
-  }, []);
-
-  // Handle building selection - Only one tooltip at a time
-  const handleBuildingClick = useCallback((buildingId: string) => {
-    const building = buildingData.find(b => b.id === buildingId);
-    const count = buildings[buildingId] || 0;
-    
-    // Clear all existing tooltips first
-    setUpgradeTooltips([]);
-    
-    if (building) {
-      setSelectedBuilding({ building, count });
-    }
-  }, [buildingData, buildings]);
-
-  // Handle building purchase with scale animation
-  const handleBuildingPurchase = useCallback(() => {
-    if (selectedBuilding) {
-      const position = structurePositions[realm].find(p => p.id === selectedBuilding.building.id);
-      if (position) {
-        // Clear existing tooltips and add new one
-        setUpgradeTooltips([{
-          id: Date.now(),
-          buildingName: selectedBuilding.building.name,
-          level: selectedBuilding.count + 1,
-          position: { x: position.x, y: position.y }
-        }]);
-      }
-      
-      onBuyBuilding(selectedBuilding.building.id);
-      setSelectedBuilding(null);
-    }
-  }, [selectedBuilding, onBuyBuilding, realm, structurePositions]);
-
-  const removeUpgradeTooltip = useCallback((id: number) => {
-    setUpgradeTooltips(prev => prev.filter(tooltip => tooltip.id !== id));
-  }, []);
-
-  // Close modal when clicking outside
-  const handleModalBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      setSelectedBuilding(null);
-    }
-  }, []);
-
+  // Event listeners setup
   useEffect(() => {
     const mapElement = mapRef.current;
     if (!mapElement) return;
@@ -270,29 +126,14 @@ export const MapView: React.FC<MapViewProps> = ({
             : 'bg-gradient-to-t from-slate-800/20 via-blue-800/10 to-transparent'
         }`} />
 
-        {/* Enhanced Structures with improved positioning */}
-        {structurePositions[realm].map((position) => {
-          const building = buildingData.find(b => b.id === position.id);
-          const count = buildings[position.id] || 0;
-          
-          if (!building) return null;
-
-          return (
-            <div
-              key={`${realm}-${position.id}`}
-              className="relative z-20"
-            >
-              <EnhancedStructure
-                building={building}
-                position={position}
-                count={count}
-                realm={realm}
-                onBuy={() => handleBuildingClick(position.id)}
-                canAfford={currency >= Math.floor(building.cost * Math.pow(building.costMultiplier, count))}
-              />
-            </div>
-          );
-        })}
+        {/* Enhanced Structures */}
+        <StructureManager
+          realm={realm}
+          buildings={buildings}
+          buildingData={buildingData}
+          currency={currency}
+          onBuildingClick={handleBuildingClick}
+        />
 
         {/* Reduced particle systems for sci-fi realm */}
         <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-20' : realm === 'scifi' ? 'opacity-30' : 'opacity-60'}`}>
@@ -311,36 +152,8 @@ export const MapView: React.FC<MapViewProps> = ({
         />
       )}
 
-      {/* Enhanced Upgrade Tooltips */}
-      {upgradeTooltips.map((tooltip) => (
-        <UpgradeFloatingTooltip
-          key={tooltip.id}
-          buildingName={tooltip.buildingName}
-          level={tooltip.level}
-          realm={realm}
-          position={tooltip.position}
-          onComplete={() => removeUpgradeTooltip(tooltip.id)}
-        />
-      ))}
-
-      {/* Building Upgrade Modal - Enhanced containment */}
-      {selectedBuilding && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          onClick={handleModalBackdropClick}
-        >
-          <div className="w-full max-w-[90%] max-h-[70vh]">
-            <BuildingUpgradeModal
-              building={selectedBuilding.building}
-              count={selectedBuilding.count}
-              realm={realm}
-              currency={currency}
-              onBuy={handleBuildingPurchase}
-              onClose={() => setSelectedBuilding(null)}
-            />
-          </div>
-        </div>
-      )}
+      {/* Render all modals */}
+      {renderModals()}
     </div>
   );
 };
