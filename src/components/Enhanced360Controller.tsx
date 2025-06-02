@@ -31,13 +31,14 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   const targetPosition = useRef(new Vector3(...position));
   const velocity = useRef(new Vector3());
   const lastNotifiedPosition = useRef(new Vector3(...position));
+  const isMousePressed = useRef(false);
 
-  // Initialize camera
+  // Initialize camera at proper character height
   useEffect(() => {
-    targetPosition.current.set(...position);
+    targetPosition.current.set(0, 1.7, -10); // Standard character eye level height
     camera.position.copy(targetPosition.current);
     lastNotifiedPosition.current.copy(targetPosition.current);
-  }, [camera, position]);
+  }, [camera]);
 
   // Keyboard event handlers
   useEffect(() => {
@@ -83,29 +84,44 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       }
     };
 
+    // Mouse controls with press and hold
+    const handleMouseDown = (event: MouseEvent) => {
+      if (event.button === 0) { // Left mouse button
+        isMousePressed.current = true;
+        event.preventDefault();
+      }
+    };
+
+    const handleMouseUp = (event: MouseEvent) => {
+      if (event.button === 0) {
+        isMousePressed.current = false;
+      }
+    };
+
     const handleMouseMove = (event: MouseEvent) => {
-      if (document.pointerLockElement === document.body) {
+      if (isMousePressed.current) {
         const sensitivity = 0.002;
         yawAngle.current -= event.movementX * sensitivity;
         pitchAngle.current -= event.movementY * sensitivity;
         pitchAngle.current = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitchAngle.current));
+        event.preventDefault();
       }
-    };
-
-    const handleClick = () => {
-      document.body.requestPointerLock();
     };
 
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
+    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('click', handleClick);
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('click', handleClick);
+      document.removeEventListener('contextmenu', (e) => e.preventDefault());
     };
   }, []);
 
@@ -132,12 +148,12 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       velocity.current.multiplyScalar(damping);
     }
     
-    // Update position with collision bounds
+    // Update position with mountain collision bounds
     targetPosition.current.add(velocity.current.clone().multiplyScalar(delta));
     
-    // Boundary collision (keep player between mountains)
-    targetPosition.current.x = Math.max(-20, Math.min(20, targetPosition.current.x));
-    targetPosition.current.y = Math.max(1.5, Math.min(8, targetPosition.current.y));
+    // Strict mountain collision - keep player within the path corridor
+    targetPosition.current.x = Math.max(-15, Math.min(15, targetPosition.current.x));
+    targetPosition.current.y = 1.7; // Fixed character height
     
     // Update camera
     camera.position.copy(targetPosition.current);
