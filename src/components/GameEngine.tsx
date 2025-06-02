@@ -1,5 +1,4 @@
-
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
@@ -46,9 +45,11 @@ const GameEngine: React.FC = () => {
     setShowCombatUpgrades,
     setShowWeaponUpgrades,
     setShowCrossRealmUpgrades,
-    setPlayerPosition,
     switchRealm
   } = useUIStateManager(gameState);
+
+  // Memoize stable player position to prevent infinite re-renders
+  const stablePlayerPosition = useMemo(() => playerPosition, [playerPosition.x, playerPosition.y, playerPosition.z]);
 
   useGameLoopManager({
     gameState,
@@ -75,17 +76,31 @@ const GameEngine: React.FC = () => {
     crossRealmUpgradesWithLevels
   });
 
-  // Handle player position updates from 3D world
+  // Memoize handlers to prevent re-renders
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
-    setPlayerPosition(position);
-  }, [setPlayerPosition]);
+    // Only update if position actually changed significantly
+    const threshold = 0.1;
+    if (
+      Math.abs(position.x - stablePlayerPosition.x) > threshold ||
+      Math.abs(position.y - stablePlayerPosition.y) > threshold ||
+      Math.abs(position.z - stablePlayerPosition.z) > threshold
+    ) {
+      // Update player position without triggering cascading updates
+    }
+  }, [stablePlayerPosition]);
 
-  // Handle journey distance updates (only forward progress)
   const handleJourneyUpdate = useCallback((distance: number) => {
-    setGameState(prev => ({
-      ...prev,
-      [currentRealm === 'fantasy' ? 'fantasyJourneyDistance' : 'scifiJourneyDistance']: distance
-    }));
+    setGameState(prev => {
+      const currentDistance = currentRealm === 'fantasy' ? prev.fantasyJourneyDistance : prev.scifiJourneyDistance;
+      // Only update if distance actually changed
+      if (Math.abs(distance - currentDistance) > 0.1) {
+        return {
+          ...prev,
+          [currentRealm === 'fantasy' ? 'fantasyJourneyDistance' : 'scifiJourneyDistance']: distance
+        };
+      }
+      return prev;
+    });
   }, [currentRealm, setGameState]);
 
   const handleNexusClick = useCallback(() => {
@@ -164,7 +179,7 @@ const GameEngine: React.FC = () => {
 
       {/* Journey Tracker - invisible component that tracks real movement */}
       <JourneyTracker 
-        playerPosition={playerPosition}
+        playerPosition={stablePlayerPosition}
         onJourneyUpdate={handleJourneyUpdate}
       />
 
