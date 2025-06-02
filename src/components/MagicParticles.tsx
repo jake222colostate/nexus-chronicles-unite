@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -27,7 +28,7 @@ const FloatingParticle: React.FC<{
       }
       
       // Pulsing glow
-      const material = particleRef.current.material as THREE.MeshBasicMaterial;
+      const material = particleRef.current.material as THREE.MeshStandardMaterial;
       material.opacity = 0.4 + Math.sin(time * 2) * 0.3;
     }
   });
@@ -35,7 +36,7 @@ const FloatingParticle: React.FC<{
   return (
     <mesh ref={particleRef} position={position}>
       <sphereGeometry args={[0.08, 6, 6]} />
-      <meshBasicMaterial 
+      <meshStandardMaterial 
         color={color}
         transparent
         opacity={0.6}

@@ -101,7 +101,7 @@ export const FantasySkybox: React.FC = () => {
       {stars.map((star, i) => (
         <mesh key={`star-${i}`} position={star.position} scale={star.scale}>
           <sphereGeometry args={[0.3, 6, 6]} />
-          <meshBasicMaterial 
+          <meshStandardMaterial 
             color="#ffffff"
             emissive="#ffffff"
             emissiveIntensity={0.8}
