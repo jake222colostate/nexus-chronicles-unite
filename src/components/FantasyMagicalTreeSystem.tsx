@@ -33,7 +33,8 @@ const MagicalTree: React.FC<{
     
     if (glowRef.current) {
       const time = state.clock.elapsedTime + seed;
-      glowRef.current.material.opacity = 0.2 + Math.sin(time * 2) * 0.1;
+      const material = glowRef.current.material as THREE.MeshBasicMaterial;
+      material.opacity = 0.2 + Math.sin(time * 2) * 0.1;
     }
   });
 

@@ -33,9 +33,10 @@ const FloatingParticle: React.FC<{
         particleRef.current.position.y = position[1];
       }
       
-      // Opacity animation
+      // Opacity animation - properly cast material
       const time = state.clock.elapsedTime + seed;
-      particleRef.current.material.opacity = 0.3 + Math.sin(time) * 0.2;
+      const material = particleRef.current.material as THREE.MeshBasicMaterial;
+      material.opacity = 0.3 + Math.sin(time) * 0.2;
     }
   });
 

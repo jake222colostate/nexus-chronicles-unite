@@ -34,7 +34,8 @@ const StonePortal: React.FC<{
     runeRefs.current.forEach((rune, i) => {
       if (rune) {
         const time = state.clock.elapsedTime + seed + i;
-        rune.material.emissiveIntensity = 1.0 + Math.sin(time * 2) * 0.5;
+        const material = rune.material as THREE.MeshStandardMaterial;
+        material.emissiveIntensity = 1.0 + Math.sin(time * 2) * 0.5;
       }
     });
   });
@@ -91,7 +92,7 @@ const StonePortal: React.FC<{
           rotation={[0, 0, rune.rotation]}
         >
           <planeGeometry args={[0.15, 0.3]} />
-          <meshBasicMaterial 
+          <meshStandardMaterial 
             color="#00caff"
             emissive="#00caff"
             emissiveIntensity={1.5}

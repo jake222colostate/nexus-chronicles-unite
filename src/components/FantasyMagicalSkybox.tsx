@@ -14,7 +14,8 @@ const FloatingNebula: React.FC<{ position: [number, number, number]; seed: numbe
     if (nebulaRef.current) {
       const time = state.clock.elapsedTime + seed;
       nebulaRef.current.rotation.z = time * 0.1;
-      nebulaRef.current.material.opacity = 0.2 + Math.sin(time * 0.5) * 0.1;
+      const material = nebulaRef.current.material as THREE.MeshBasicMaterial;
+      material.opacity = 0.2 + Math.sin(time * 0.5) * 0.1;
     }
   });
 
@@ -140,7 +141,7 @@ export const FantasyMagicalSkybox: React.FC<FantasyMagicalSkyboxProps> = ({ real
       {stars.map((star, i) => (
         <mesh key={`star_${i}`} position={star.position} scale={star.scale}>
           <sphereGeometry args={[1, 8, 6]} />
-          <meshBasicMaterial 
+          <meshStandardMaterial 
             color="#ffffff"
             emissive="#ffffff"
             emissiveIntensity={0.8}
