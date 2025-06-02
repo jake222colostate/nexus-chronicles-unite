@@ -20,7 +20,7 @@ export const MountainComponent: React.FC<MountainComponentProps> = ({
     const clone = scene.clone();
     
     // Create mountain material with purple-toned hue
-    const mountainMaterial = new THREE.MeshLambertMaterial({
+    const mountainMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0.5, 0.3, 0.6), // Purple-toned
       roughness: 0.9,
       metalness: 0.0

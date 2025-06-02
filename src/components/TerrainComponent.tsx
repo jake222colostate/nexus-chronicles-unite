@@ -20,7 +20,7 @@ export const TerrainComponent: React.FC<TerrainComponentProps> = ({
     const clone = scene.clone();
     
     // Create terrain material
-    const terrainMaterial = new THREE.MeshLambertMaterial({
+    const terrainMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0.2, 0.5, 0.2), // Mid-green
       roughness: 0.9,
       metalness: 0.0

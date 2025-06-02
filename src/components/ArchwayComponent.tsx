@@ -20,7 +20,7 @@ export const ArchwayComponent: React.FC<ArchwayComponentProps> = ({
     const clone = scene.clone();
     
     // Create archway material
-    const archwayMaterial = new THREE.MeshLambertMaterial({
+    const archwayMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0.4, 0.4, 0.4), // Medium-gray stone
       roughness: 0.85,
       metalness: 0.0

@@ -20,7 +20,7 @@ export const TreeComponent: React.FC<TreeComponentProps> = ({
     const clone = scene.clone();
     
     // Create tree trunk material
-    const treeTrunkMaterial = new THREE.MeshLambertMaterial({
+    const treeTrunkMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0.4, 0.2, 0.0), // Dark brown
       roughness: 0.7,
       metalness: 0.0
