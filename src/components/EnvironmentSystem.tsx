@@ -56,10 +56,12 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
 
   return (
     <>
-      {/* Dynamic Skybox with natural mountain transitions */}
-      <DynamicSkybox tier={currentTier} opacity={transitionOpacity} />
+      {/* Only render DynamicSkybox for fantasy realm */}
+      {realm === 'fantasy' && (
+        <DynamicSkybox tier={currentTier} opacity={transitionOpacity} />
+      )}
       
-      {/* Clean Pixel-style Terrain with stone path */}
+      {/* Simplified terrain for sci-fi realm */}
       <PixelTerrainSystem 
         tier={currentTier} 
         opacity={transitionOpacity} 
@@ -67,15 +69,17 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
         excludeMountains={realm === 'fantasy'}
       />
       
-      {/* Clean atmospheric fog only */}
-      <fog 
-        attach="fog" 
-        args={[
-          currentTier <= 2 ? '#87CEEB' : currentTier <= 3 ? '#8B5CF6' : '#1E1B4B', 
-          30, 
-          120
-        ]} 
-      />
+      {/* Minimal fog only for fantasy realm */}
+      {realm === 'fantasy' && (
+        <fog 
+          attach="fog" 
+          args={[
+            currentTier <= 2 ? '#87CEEB' : currentTier <= 3 ? '#8B5CF6' : '#1E1B4B', 
+            30, 
+            120
+          ]} 
+        />
+      )}
     </>
   );
 };

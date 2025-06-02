@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -107,47 +108,61 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          <ambientLight intensity={0.6} />
+          {/* Simplified lighting for sci-fi realm */}
+          <ambientLight intensity={realm === 'scifi' ? 0.8 : 0.6} />
           <directionalLight
             position={[10, 10, 5]}
-            intensity={0.8}
+            intensity={realm === 'scifi' ? 0.6 : 0.8}
             castShadow={false}
           />
 
           <FloatingIsland realm={realm} />
 
-          {/* Add the EnvironmentSystem with realm prop */}
-          <EnvironmentSystem
-            upgradeCount={gameState.purchasedUpgrades?.length || 0}
-            excludeTrees={true}
-            realm={realm}
-          />
+          {/* Only add EnvironmentSystem for fantasy realm */}
+          {realm === 'fantasy' && (
+            <EnvironmentSystem
+              upgradeCount={gameState.purchasedUpgrades?.length || 0}
+              excludeTrees={true}
+              realm={realm}
+            />
+          )}
 
-          {/* Enhanced Chunk System with proper tree handling */}
-          <ChunkSystem
-            playerPosition={playerPosition}
-            chunkSize={50}
-            renderDistance={200}
-          >
-            {(chunks) => (
-              <>
-                {/* Only render mountains in sci-fi realm */}
-                {realm === 'scifi' && (
-                  <GLBMountainSystem
+          {/* Simplified chunk system - only for fantasy realm */}
+          {realm === 'fantasy' && (
+            <ChunkSystem
+              playerPosition={playerPosition}
+              chunkSize={50}
+              renderDistance={200}
+            >
+              {(chunks) => (
+                <>
+                  {/* Custom GLB Tree System - Only for Fantasy realm */}
+                  <GLBTreeSystem
                     chunks={chunks}
                     chunkSize={50}
                     realm={realm}
                   />
-                )}
-                {/* Custom GLB Tree System - Only for Fantasy realm */}
-                <GLBTreeSystem
+                </>
+              )}
+            </ChunkSystem>
+          )}
+
+          {/* Mountains only for sci-fi realm with minimal chunk system */}
+          {realm === 'scifi' && (
+            <ChunkSystem
+              playerPosition={playerPosition}
+              chunkSize={50}
+              renderDistance={100}
+            >
+              {(chunks) => (
+                <GLBMountainSystem
                   chunks={chunks}
                   chunkSize={50}
                   realm={realm}
                 />
-              </>
-            )}
-          </ChunkSystem>
+              )}
+            </ChunkSystem>
+          )}
 
           {upgradeNodes}
 

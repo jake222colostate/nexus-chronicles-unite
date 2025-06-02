@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { EnhancedStructure } from './EnhancedStructure';
 import { EnhancedNexusCore } from './EnhancedNexusCore';
@@ -238,13 +239,17 @@ export const MapView: React.FC<MapViewProps> = ({
 
   return (
     <div className="relative w-full h-full overflow-hidden">
-      {/* Enhanced Background with better layering */}
+      {/* Simplified background for sci-fi realm */}
       <div className={`absolute inset-0 transition-all duration-700 ${
         isTransitioning ? 'opacity-50 scale-105' : 'opacity-100 scale-100'
       }`}>
-        <AnimatedBackground realm={realm} />
-        {/* Improved gradient overlay for better content visibility */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40 pointer-events-none" />
+        {realm === 'fantasy' && <AnimatedBackground realm={realm} />}
+        {/* Simple gradient background for sci-fi to reduce texture load */}
+        {realm === 'scifi' && (
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-blue-900 to-indigo-900" />
+        )}
+        {/* Simplified gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 pointer-events-none" />
       </div>
 
       {/* Map Container */}
@@ -258,11 +263,11 @@ export const MapView: React.FC<MapViewProps> = ({
           touchAction: 'none'
         }}
       >
-        {/* Ground/Base Layer with enhanced realm-specific styling */}
+        {/* Simplified ground layer for sci-fi realm */}
         <div className={`absolute inset-0 transition-all duration-700 ${
           realm === 'fantasy' 
             ? 'bg-gradient-to-t from-purple-900/30 via-violet-800/15 to-transparent' 
-            : 'bg-gradient-to-t from-cyan-900/30 via-blue-800/15 to-transparent'
+            : 'bg-gradient-to-t from-slate-800/20 via-blue-800/10 to-transparent'
         }`} />
 
         {/* Enhanced Structures with improved positioning */}
@@ -289,8 +294,8 @@ export const MapView: React.FC<MapViewProps> = ({
           );
         })}
 
-        {/* Optimized Particle Systems */}
-        <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-20' : 'opacity-60'}`}>
+        {/* Reduced particle systems for sci-fi realm */}
+        <div className={`transition-opacity duration-500 ${isTransitioning ? 'opacity-20' : realm === 'scifi' ? 'opacity-30' : 'opacity-60'}`}>
           <ParticleSystem 
             realm={realm} 
             productionRate={realm === 'fantasy' ? manaPerSecond : energyPerSecond} 
