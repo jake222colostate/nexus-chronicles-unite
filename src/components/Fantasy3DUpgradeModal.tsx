@@ -67,99 +67,130 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
   const isUnlocked = upgradeData?.unlocked ?? false;
 
   return (
-    <Card className="w-full max-w-sm max-h-[70vh] backdrop-blur-lg border-2 overflow-hidden flex flex-col bg-gradient-to-br from-purple-900/95 to-violet-800/90 border-purple-400/50"
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
       style={{
-        boxShadow: '0 8px 32px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-      }}>
-      
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-purple-300/30 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="text-3xl">{upgrade.icon}</div>
-          <div>
-            <h2 className="text-lg font-bold text-white">{upgradeName}</h2>
-            <p className="text-sm text-purple-200">
-              {isUnlocked ? 'Unlocked' : 'Mystical Enhancement'}
-            </p>
-          </div>
-        </div>
-        <Button
-          onClick={onClose}
-          variant="ghost"
-          size="sm"
-          className="text-white hover:bg-white/10 p-1 h-8 w-8 rounded-full flex-shrink-0"
-        >
-          <X size={16} />
-        </Button>
-      </div>
-
-      {/* Content */}
-      <div className="p-4 space-y-4 flex-1 overflow-y-auto">
-        <p className="text-sm text-white/90 leading-relaxed">{upgrade.description}</p>
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        boxSizing: 'border-box'
+      }}
+    >
+      <Card 
+        className="backdrop-blur-lg border-2 overflow-hidden flex flex-col bg-gradient-to-br from-purple-900/95 to-violet-800/90 border-purple-400/50"
+        style={{
+          maxWidth: '90vw',
+          width: '100%',
+          maxHeight: '70vh',
+          overflowX: 'hidden',
+          boxSizing: 'border-box',
+          borderRadius: '12px',
+          boxShadow: '0 8px 32px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+        }}
+      >
         
-        {/* Stats Display */}
-        <div className="space-y-3">
-          <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg border border-purple-400/20">
-            <div className="flex items-center gap-2">
-              <Zap className="text-green-400" size={16} />
-              <span className="text-white/80 text-sm">Power Bonus</span>
+        {/* Header */}
+        <div className="flex justify-between items-center p-4 border-b border-purple-300/30 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="text-3xl">{upgrade.icon}</div>
+            <div>
+              <h2 className="text-lg font-bold text-white">{upgradeName}</h2>
+              <p className="text-sm text-purple-200">
+                {isUnlocked ? 'Unlocked' : 'Mystical Enhancement'}
+              </p>
             </div>
-            <span className="font-bold text-green-400 text-sm">
-              +{formatNumber(manaPerSec)} Mana/sec
-            </span>
           </div>
-          
-          {!isUnlocked && (
-            <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg border border-purple-400/20">
-              <div className="flex items-center gap-2">
-                <Coins className="text-yellow-400" size={16} />
-                <span className="text-white/80 text-sm">Investment Cost</span>
-              </div>
-              <span className="font-bold text-yellow-400 text-sm">
-                {formatNumber(cost)} Mana
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Mystical preview area */}
-        <div className="bg-gradient-to-br from-purple-900/50 to-violet-800/50 rounded-lg p-4 text-center border border-purple-400/30">
-          <p className="text-purple-200/80 text-xs mb-2">Mystical Preview</p>
-          <div className="text-5xl mb-2">{upgrade.icon}</div>
-          <div className="w-full h-1 bg-purple-800/50 rounded-full overflow-hidden">
-            <div className={`w-full h-full ${
-              isUnlocked 
-                ? 'bg-gradient-to-r from-green-400 to-emerald-500' 
-                : 'bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse'
-            }`} />
-          </div>
-        </div>
-      </div>
-
-      {/* Purchase Button */}
-      {!isUnlocked && (
-        <div className="p-4 border-t border-purple-300/30 flex-shrink-0">
           <Button
-            onClick={onPurchase}
-            className="w-full transition-all duration-300 py-3 font-bold text-sm bg-gradient-to-r from-purple-600 to-violet-700 hover:from-purple-500 hover:to-violet-600 text-white hover:scale-[1.02] active:scale-95 shadow-lg hover:shadow-purple-500/25"
+            onClick={onClose}
+            variant="ghost"
+            size="sm"
+            className="text-white hover:bg-white/10 p-1 h-8 w-8 rounded-full flex-shrink-0"
           >
-            <Coins className="mr-2" size={16} />
-            Unlock for {formatNumber(cost)} Mana
+            <X size={16} />
           </Button>
         </div>
-      )}
 
-      {/* Already Unlocked Message */}
-      {isUnlocked && (
-        <div className="p-4 border-t border-purple-300/30 flex-shrink-0">
-          <div className="w-full py-3 px-4 text-center bg-gradient-to-r from-green-600/80 to-emerald-700/80 rounded-lg border border-green-400/30">
-            <div className="text-green-100 font-bold text-sm flex items-center justify-center gap-2">
-              <Zap size={16} />
-              Already Unlocked
+        {/* Content */}
+        <div 
+          className="p-4 space-y-4 flex-1 overflow-y-auto"
+          style={{
+            maxHeight: 'calc(70vh - 200px)',
+            overflowY: 'auto',
+            overflowX: 'hidden'
+          }}
+        >
+          <p className="text-sm text-white/90 leading-relaxed">{upgrade.description}</p>
+          
+          {/* Stats Display */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg border border-purple-400/20">
+              <div className="flex items-center gap-2">
+                <Zap className="text-green-400" size={16} />
+                <span className="text-white/80 text-sm">Power Bonus</span>
+              </div>
+              <span className="font-bold text-green-400 text-sm">
+                +{formatNumber(manaPerSec)} Mana/sec
+              </span>
+            </div>
+            
+            {!isUnlocked && (
+              <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg border border-purple-400/20">
+                <div className="flex items-center gap-2">
+                  <Coins className="text-yellow-400" size={16} />
+                  <span className="text-white/80 text-sm">Investment Cost</span>
+                </div>
+                <span className="font-bold text-yellow-400 text-sm">
+                  {formatNumber(cost)} Mana
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Mystical preview area */}
+          <div className="bg-gradient-to-br from-purple-900/50 to-violet-800/50 rounded-lg p-4 text-center border border-purple-400/30">
+            <p className="text-purple-200/80 text-xs mb-2">Mystical Preview</p>
+            <div className="text-5xl mb-2">{upgrade.icon}</div>
+            <div className="w-full h-1 bg-purple-800/50 rounded-full overflow-hidden">
+              <div className={`w-full h-full ${
+                isUnlocked 
+                  ? 'bg-gradient-to-r from-green-400 to-emerald-500' 
+                  : 'bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse'
+              }`} />
             </div>
           </div>
         </div>
-      )}
-    </Card>
+
+        {/* Purchase Button */}
+        {!isUnlocked && (
+          <div className="p-4 border-t border-purple-300/30 flex-shrink-0">
+            <Button
+              onClick={onPurchase}
+              className="w-full transition-all duration-300 py-3 font-bold text-sm bg-gradient-to-r from-purple-600 to-violet-700 hover:from-purple-500 hover:to-violet-600 text-white hover:scale-[1.02] active:scale-95 shadow-lg hover:shadow-purple-500/25"
+            >
+              <Coins className="mr-2" size={16} />
+              Unlock for {formatNumber(cost)} Mana
+            </Button>
+          </div>
+        )}
+
+        {/* Already Unlocked Message */}
+        {isUnlocked && (
+          <div className="p-4 border-t border-purple-300/30 flex-shrink-0">
+            <div className="w-full py-3 px-4 text-center bg-gradient-to-r from-green-600/80 to-emerald-700/80 rounded-lg border border-green-400/30">
+              <div className="text-green-100 font-bold text-sm flex items-center justify-center gap-2">
+                <Zap size={16} />
+                Already Unlocked
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
   );
 };

@@ -42,8 +42,32 @@ export const CombatUpgradeSystem: React.FC<CombatUpgradeSystemProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-gradient-to-br from-purple-900/95 to-violet-800/95 backdrop-blur-xl rounded-xl border border-purple-400/30 w-full max-w-md max-h-[80vh] overflow-hidden">
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        boxSizing: 'border-box'
+      }}
+    >
+      <div 
+        className="bg-gradient-to-br from-purple-900/95 to-violet-800/95 backdrop-blur-xl rounded-xl border border-purple-400/30 overflow-hidden"
+        style={{
+          maxWidth: '90vw',
+          width: '100%',
+          maxHeight: '70vh',
+          overflowX: 'hidden',
+          boxSizing: 'border-box',
+          borderRadius: '12px'
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-purple-400/20">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
@@ -60,7 +84,14 @@ export const CombatUpgradeSystem: React.FC<CombatUpgradeSystemProps> = ({
         </div>
 
         {/* Upgrades List */}
-        <div className="p-4 space-y-3 overflow-y-auto max-h-[60vh]">
+        <div 
+          className="p-4 space-y-3 overflow-y-auto"
+          style={{
+            maxHeight: 'calc(70vh - 80px)',
+            overflowY: 'auto',
+            overflowX: 'hidden'
+          }}
+        >
           {upgrades.map(upgrade => {
             const cost = calculateCost(upgrade);
             const affordable = canAfford(upgrade);

@@ -42,15 +42,36 @@ export const BuildingUpgradeModal: React.FC<BuildingUpgradeModalProps> = ({
   const currentProduction = building.production * count;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <Card className={`w-full max-w-[85%] max-h-[65vh] backdrop-blur-md border-2 overflow-hidden flex flex-col ${
-        realm === 'fantasy'
-          ? 'bg-gradient-to-br from-purple-900/95 to-violet-800/95 border-purple-400'
-          : 'bg-gradient-to-br from-cyan-900/95 to-blue-800/95 border-cyan-400'
-      }`}
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
       style={{
-        boxShadow: `0 8px 32px ${realm === 'fantasy' ? 'rgba(168, 85, 247, 0.3)' : 'rgba(34, 211, 238, 0.3)'}`
-      }}>
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px',
+        boxSizing: 'border-box'
+      }}
+    >
+      <Card 
+        className={`backdrop-blur-md border-2 overflow-hidden flex flex-col ${
+          realm === 'fantasy'
+            ? 'bg-gradient-to-br from-purple-900/95 to-violet-800/95 border-purple-400'
+            : 'bg-gradient-to-br from-cyan-900/95 to-blue-800/95 border-cyan-400'
+        }`}
+        style={{
+          maxWidth: '90vw',
+          width: '100%',
+          maxHeight: '70vh',
+          overflowX: 'hidden',
+          boxSizing: 'border-box',
+          borderRadius: '12px'
+        }}
+      >
         {/* Header */}
         <div className="flex justify-between items-center p-4 border-b border-white/20 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -71,7 +92,14 @@ export const BuildingUpgradeModal: React.FC<BuildingUpgradeModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4 flex-1 overflow-y-auto scrollbar-hide">
+        <div 
+          className="p-4 space-y-4 flex-1 overflow-y-auto scrollbar-hide"
+          style={{
+            maxHeight: 'calc(70vh - 120px)',
+            overflowY: 'auto',
+            overflowX: 'hidden'
+          }}
+        >
           <p className="text-sm text-white/80">{building.description}</p>
           
           {/* Stats */}
