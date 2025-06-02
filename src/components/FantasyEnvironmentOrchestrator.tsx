@@ -1,10 +1,10 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { RealisticMountainSystem } from './RealisticMountainSystem';
+import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
+import { ProceduralGroundSystem } from './ProceduralGroundSystem';
 import { RealisticTreeSystem } from './RealisticTreeSystem';
 import { RealisticPathSystem } from './RealisticPathSystem';
-import { FantasyGroundPlane } from './FantasyGroundPlane';
 
 interface FantasyEnvironmentOrchestratorProps {
   chunks: ChunkData[];
@@ -24,11 +24,15 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
 
   return (
     <group>
-      {/* Ground plane */}
-      <FantasyGroundPlane realm={realm} />
+      {/* Procedural ground with realistic textures */}
+      <ProceduralGroundSystem 
+        chunks={chunks} 
+        chunkSize={chunkSize} 
+        realm={realm} 
+      />
       
-      {/* Realistic mountains with varied shapes */}
-      <RealisticMountainSystem 
+      {/* Realistic mountain terrain that extends infinitely */}
+      <ProceduralMountainTerrain 
         chunks={chunks} 
         chunkSize={chunkSize} 
         realm={realm} 
