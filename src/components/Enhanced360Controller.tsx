@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
@@ -29,6 +28,12 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   // Mouse look state
   const isMouseDown = useRef(false);
   const lastMouse = useRef({ x: 0, y: 0 });
+
+  // Initialize camera at lower position
+  useEffect(() => {
+    targetPosition.current.set(0, 2, 12); // Lowered from y: 5 to y: 2
+    camera.position.copy(targetPosition.current);
+  }, [camera]);
 
   // Keyboard controls
   useEffect(() => {
@@ -211,6 +216,9 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     
     // Update position
     targetPosition.current.add(velocity.current.clone().multiplyScalar(delta));
+    
+    // Keep camera at reasonable height above ground
+    targetPosition.current.y = Math.max(1.5, Math.min(4, targetPosition.current.y));
     
     // Update camera position and rotation
     camera.position.copy(targetPosition.current);

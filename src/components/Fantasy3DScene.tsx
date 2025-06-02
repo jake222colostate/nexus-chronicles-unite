@@ -27,9 +27,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 }) => {
   return (
     <Suspense fallback={null}>
-      {/* Camera controller */}
+      {/* Camera controller with lower starting position */}
       <Enhanced360Controller
-        position={[0, 5, 12]}
+        position={[0, 2, 12]}
         onPositionChange={onPositionChange}
       />
 
