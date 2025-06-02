@@ -63,7 +63,7 @@ export const CartoonStoneArchway: React.FC<CartoonStoneArchway> = ({ realm }) =>
           ]}
         >
           <sphereGeometry args={[0.05]} />
-          <meshBasicMaterial
+          <meshStandardMaterial
             color="#DDA0DD"
             emissive="#DDA0DD"
             emissiveIntensity={0.8}

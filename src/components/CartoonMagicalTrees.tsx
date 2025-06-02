@@ -110,7 +110,7 @@ const CartoonTree: React.FC<{
           ]}
         >
           <sphereGeometry args={[0.05]} />
-          <meshBasicMaterial
+          <meshStandardMaterial
             color="#FFD700"
             emissive="#FFD700"
             emissiveIntensity={0.8}
