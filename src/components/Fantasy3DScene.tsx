@@ -4,12 +4,9 @@ import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
-import { FantasyMountainSystem } from './FantasyMountainSystem';
-import { FantasyTreeSystem } from './FantasyTreeSystem';
-import { FantasyRoadSystem } from './FantasyRoadSystem';
-import { FantasyPathSystem } from './FantasyPathSystem';
+import { FantasyScreenshotEnvironment } from './FantasyScreenshotEnvironment';
+import { FantasyScreenshotSkybox } from './FantasyScreenshotSkybox';
 import { FantasyPortalSystem } from './FantasyPortalSystem';
-import { FantasySkyboxSystem } from './FantasySkyboxSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -39,14 +36,14 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
         onPositionChange={onPositionChange}
       />
 
-      {/* Fantasy Skybox System */}
-      <FantasySkyboxSystem realm={realm} />
+      {/* Fantasy Screenshot Skybox */}
+      <FantasyScreenshotSkybox realm={realm} />
 
-      {/* Enhanced lighting for fantasy atmosphere */}
-      <ambientLight intensity={0.8} color="#E6E6FA" />
+      {/* Enhanced magical lighting */}
+      <ambientLight intensity={0.6} color="#E6E6FA" />
       <directionalLight
-        position={[20, 30, 20]}
-        intensity={1.2}
+        position={[20, 40, 20]}
+        intensity={1.0}
         color="#FFFFFF"
         castShadow
         shadow-mapSize-width={2048}
@@ -58,10 +55,17 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
         shadow-camera-bottom={-120}
       />
       
+      {/* Magical colored lights */}
       <directionalLight
         position={[-15, 25, 15]}
-        intensity={0.6}
-        color="#DDA0DD"
+        intensity={0.4}
+        color="#FF69B4"
+      />
+      
+      <directionalLight
+        position={[10, 30, -10]}
+        intensity={0.3}
+        color="#00FFFF"
       />
 
       <ChunkSystem
@@ -70,35 +74,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
         renderDistance={renderDistance}
       >
         {(chunks: ChunkData[]) => (
-          <>
-            {/* Fantasy Road System */}
-            <FantasyRoadSystem
-              chunks={chunks}
-              chunkSize={chunkSize}
-              realm={realm}
-            />
-            
-            {/* Fantasy Path System */}
-            <FantasyPathSystem
-              chunks={chunks}
-              chunkSize={chunkSize}
-              realm={realm}
-            />
-            
-            {/* Fantasy Mountains - High poly models */}
-            <FantasyMountainSystem
-              chunks={chunks}
-              chunkSize={chunkSize}
-              realm={realm}
-            />
-
-            {/* Fantasy Tree System - High poly models */}
-            <FantasyTreeSystem
-              chunks={chunks}
-              chunkSize={chunkSize}
-              realm={realm}
-            />
-          </>
+          <FantasyScreenshotEnvironment
+            chunks={chunks}
+            chunkSize={chunkSize}
+            realm={realm}
+          />
         )}
       </ChunkSystem>
 
@@ -111,19 +91,20 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
         onTierProgression={onTierProgression}
       />
 
+      {/* Dynamic player light */}
       <pointLight 
         position={[cameraPosition.x, 10, cameraPosition.z - 8]} 
-        intensity={1.0}
+        intensity={0.8}
         color="#DDA0DD" 
-        distance={50} 
+        distance={40} 
       />
 
       <ContactShadows 
         position={[0, -0.45, cameraPosition.z]} 
-        opacity={0.5} 
-        scale={80} 
-        blur={2.5} 
-        far={20} 
+        opacity={0.3} 
+        scale={100} 
+        blur={3} 
+        far={25} 
       />
     </Suspense>
   );
