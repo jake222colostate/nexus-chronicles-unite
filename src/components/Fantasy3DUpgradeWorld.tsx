@@ -54,8 +54,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
       <Canvas
         dpr={[1, 2]}
         camera={{ 
-          position: [0, 1.6, 0], 
-          fov: 75,
+          position: [0, 5, 12], 
+          fov: 50,
           near: 0.1,
           far: 1200
         }}

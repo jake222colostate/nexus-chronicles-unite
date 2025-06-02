@@ -1,6 +1,5 @@
 
-import React, { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React from 'react';
 import { GradientTexture, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -13,7 +12,7 @@ export const FantasySkybox: React.FC = () => {
         <meshBasicMaterial side={THREE.BackSide}>
           <GradientTexture
             stops={[0, 1]}
-            colors={['#1b0036', '#421C6D']}
+            colors={['#130c30', '#44146a']}
             size={1024}
           />
         </meshBasicMaterial>
@@ -21,10 +20,10 @@ export const FantasySkybox: React.FC = () => {
 
       {/* Sparkles for magical starry effect */}
       <Sparkles 
-        count={150} 
-        scale={[100, 100, 100]} 
+        count={300} 
+        scale={[500, 200, 500]} 
         size={2} 
-        speed={0.2} 
+        speed={0.1} 
         color="#99c2ff" 
       />
     </group>
