@@ -35,31 +35,29 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       {/* Background color for fantasy dusk */}
       <color attach="background" args={['#2d1b4e']} />
 
-      {/* Heavily optimized chunk system for 60fps */}
+      {/* Optimized chunk system for better performance */}
       <ChunkSystem
         playerPosition={cameraPosition}
-        chunkSize={Math.max(chunkSize, 75)} // Larger chunks = fewer objects
-        renderDistance={Math.min(renderDistance, 150)} // Limit to 2 chunks max
+        chunkSize={chunkSize}
+        renderDistance={Math.min(renderDistance, 3)} // Limit render distance for 60fps
       >
         {(chunks: ChunkData[]) => (
           <FantasyScreenshotEnvironment
-            chunks={chunks.slice(0, 4)} // Maximum 4 chunks for 60fps
+            chunks={chunks}
             chunkSize={chunkSize}
             realm={realm}
             playerPosition={cameraPosition}
-            useRealisticMountains={true} // Use realistic mountains instead of boundary mountains
           />
         )}
       </ChunkSystem>
 
-      {/* Simplified contact shadows - reduced performance impact */}
+      {/* Simplified contact shadows for better performance */}
       <ContactShadows 
         position={[0, -1.4, cameraPosition.z]} 
-        opacity={0.1} 
-        scale={20} 
-        blur={0.5} 
-        far={6} 
-        frames={1} // Static shadows for better performance
+        opacity={0.15} 
+        scale={30} 
+        blur={1} 
+        far={8} 
       />
     </Suspense>
   );
