@@ -18,6 +18,11 @@ export const useMovementControls = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Prevent default behavior for movement keys
+      if (['w', 's', 'a', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(event.key.toLowerCase())) {
+        event.preventDefault();
+      }
+      
       switch (event.key.toLowerCase()) {
         case 'w':
         case 'arrowup':
@@ -59,12 +64,15 @@ export const useMovementControls = () => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    // Add listeners to document instead of window for better reliability
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+
+    console.log('Movement controls initialized');
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
     };
   }, []);
 

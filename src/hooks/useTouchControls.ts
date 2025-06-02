@@ -25,10 +25,13 @@ export const useTouchControls = ({ keys, mouseControls }: TouchControlsProps) =>
 
   useEffect(() => {
     const handleTouchStart = (event: TouchEvent) => {
+      event.preventDefault();
+      
       if (event.touches.length === 1) {
         const touch = event.touches[0];
         lastMouse.current = { x: touch.clientX, y: touch.clientY };
         isMouseDown.current = true;
+        console.log('Touch start detected');
       } else if (event.touches.length === 2) {
         // Two finger touch for movement
         const rect = (event.target as HTMLElement).getBoundingClientRect();
@@ -46,6 +49,8 @@ export const useTouchControls = ({ keys, mouseControls }: TouchControlsProps) =>
     };
 
     const handleTouchMove = (event: TouchEvent) => {
+      event.preventDefault();
+      
       if (event.touches.length === 1 && isMouseDown.current) {
         const touch = event.touches[0];
         const deltaX = touch.clientX - lastMouse.current.x;
@@ -59,15 +64,45 @@ export const useTouchControls = ({ keys, mouseControls }: TouchControlsProps) =>
     };
 
     const handleTouchEnd = () => {
+      console.log('Touch end detected');
       isMouseDown.current = false;
       keys.current = { forward: false, backward: false, left: false, right: false };
     };
 
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
-      canvas.addEventListener('touchmove', handleTouchMove, { passive: true });
-      canvas.addEventListener('touchend', handleTouchEnd);
+    // Setup touch event listeners
+    const setupTouchListeners = () => {
+      const canvas = document.querySelector('canvas');
+      if (canvas) {
+        console.log('Canvas found, setting up touch controls');
+        canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+        canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+        
+        // Ensure touch events work properly
+        canvas.style.touchAction = 'none';
+        
+        return canvas;
+      }
+      return null;
+    };
+
+    // Try to setup immediately
+    let canvas = setupTouchListeners();
+    
+    // If canvas not found, try again after a short delay
+    if (!canvas) {
+      const timeout = setTimeout(() => {
+        canvas = setupTouchListeners();
+      }, 100);
+      
+      return () => {
+        clearTimeout(timeout);
+        if (canvas) {
+          canvas.removeEventListener('touchstart', handleTouchStart);
+          canvas.removeEventListener('touchmove', handleTouchMove);
+          canvas.removeEventListener('touchend', handleTouchEnd);
+        }
+      };
     }
 
     return () => {

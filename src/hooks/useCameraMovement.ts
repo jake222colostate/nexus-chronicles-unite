@@ -1,3 +1,4 @@
+
 import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
@@ -30,8 +31,9 @@ export const useCameraMovement = ({
 
   // Initialize camera at lower position
   useEffect(() => {
-    targetPosition.current.set(0, 2, 12); // Lowered from y: 5 to y: 2
+    targetPosition.current.set(0, 2, 12);
     camera.position.copy(targetPosition.current);
+    console.log('Camera initialized at position:', camera.position);
   }, [camera]);
 
   useFrame((state, delta) => {
@@ -45,11 +47,24 @@ export const useCameraMovement = ({
     
     // Apply movement based on keys
     const moveVector = new Vector3();
+    let isMoving = false;
     
-    if (keys.current.forward) moveVector.add(forward);
-    if (keys.current.backward) moveVector.sub(forward);
-    if (keys.current.left) moveVector.sub(right);
-    if (keys.current.right) moveVector.add(right);
+    if (keys.current.forward) {
+      moveVector.add(forward);
+      isMoving = true;
+    }
+    if (keys.current.backward) {
+      moveVector.sub(forward);
+      isMoving = true;
+    }
+    if (keys.current.left) {
+      moveVector.sub(right);
+      isMoving = true;
+    }
+    if (keys.current.right) {
+      moveVector.add(right);
+      isMoving = true;
+    }
     
     // Normalize and apply speed
     if (moveVector.length() > 0) {
@@ -71,5 +86,10 @@ export const useCameraMovement = ({
     
     // Notify parent of position changes
     onPositionChange(camera.position);
+    
+    // Log movement for debugging
+    if (isMoving) {
+      console.log('Camera moving to:', targetPosition.current);
+    }
   });
 };
