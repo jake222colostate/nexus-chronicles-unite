@@ -167,11 +167,23 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
 
       {/* 3D Fantasy Upgrade Modal */}
       {selected3DUpgrade && (
-        <Fantasy3DUpgradeModal
-          upgradeName={selected3DUpgrade}
-          onClose={() => setSelected3DUpgrade(null)}
-          onPurchase={handle3DUpgradePurchase}
-        />
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+          onClick={handleModalBackdropClick}
+        >
+          <div className="w-full max-w-sm">
+            <Fantasy3DUpgradeModal
+              upgradeName={selected3DUpgrade}
+              onClose={() => setSelected3DUpgrade(null)}
+              onPurchase={handle3DUpgradePurchase}
+              upgradeData={{
+                cost: 100,
+                manaPerSecond: 10,
+                unlocked: false
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
