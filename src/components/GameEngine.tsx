@@ -48,11 +48,26 @@ const GameEngine: React.FC = () => {
     switchRealm
   } = useUIStateManager(gameState);
 
-  // Memoize stable player position to prevent infinite re-renders
-  const stablePlayerPosition = useMemo(() => playerPosition, [playerPosition.x, playerPosition.y, playerPosition.z]);
+  // Create stable references to prevent infinite re-renders
+  const stablePlayerPosition = useMemo(() => ({
+    x: playerPosition.x,
+    y: playerPosition.y,
+    z: playerPosition.z
+  }), [playerPosition.x, playerPosition.y, playerPosition.z]);
+
+  const stableGameState = useMemo(() => gameState, [
+    gameState.mana,
+    gameState.energyCredits,
+    gameState.nexusShards,
+    gameState.manaPerSecond,
+    gameState.energyPerSecond,
+    gameState.fantasyJourneyDistance,
+    gameState.scifiJourneyDistance,
+    gameState.convergenceCount
+  ]);
 
   useGameLoopManager({
-    gameState,
+    gameState: stableGameState,
     setGameState,
     stableFantasyBuildings,
     stableScifiBuildings,
@@ -70,38 +85,29 @@ const GameEngine: React.FC = () => {
     purchaseWeaponUpgrade,
     purchaseCrossRealmUpgrade
   } = useUpgradeManagers({
-    gameState,
+    gameState: stableGameState,
     setGameState,
     currentRealm,
     crossRealmUpgradesWithLevels
   });
 
-  // Memoize handlers to prevent re-renders
+  // Memoize all handlers to prevent re-renders
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
-    // Only update if position actually changed significantly
-    const threshold = 0.1;
-    if (
-      Math.abs(position.x - stablePlayerPosition.x) > threshold ||
-      Math.abs(position.y - stablePlayerPosition.y) > threshold ||
-      Math.abs(position.z - stablePlayerPosition.z) > threshold
-    ) {
-      // Update player position without triggering cascading updates
-    }
-  }, [stablePlayerPosition]);
+    // Removed state update to prevent infinite loops - position tracking handled elsewhere
+    console.log('Player position updated:', position);
+  }, []);
 
   const handleJourneyUpdate = useCallback((distance: number) => {
-    setGameState(prev => {
-      const currentDistance = currentRealm === 'fantasy' ? prev.fantasyJourneyDistance : prev.scifiJourneyDistance;
-      // Only update if distance actually changed
-      if (Math.abs(distance - currentDistance) > 0.1) {
-        return {
-          ...prev,
-          [currentRealm === 'fantasy' ? 'fantasyJourneyDistance' : 'scifiJourneyDistance']: distance
-        };
-      }
-      return prev;
-    });
-  }, [currentRealm, setGameState]);
+    const currentDistance = currentRealm === 'fantasy' ? stableGameState.fantasyJourneyDistance : stableGameState.scifiJourneyDistance;
+    
+    // Only update if distance changed significantly
+    if (Math.abs(distance - currentDistance) > 0.5) {
+      setGameState(prev => ({
+        ...prev,
+        [currentRealm === 'fantasy' ? 'fantasyJourneyDistance' : 'scifiJourneyDistance']: distance
+      }));
+    }
+  }, [currentRealm, stableGameState.fantasyJourneyDistance, stableGameState.scifiJourneyDistance, setGameState]);
 
   const handleNexusClick = useCallback(() => {
     if (canConverge) {
@@ -186,12 +192,12 @@ const GameEngine: React.FC = () => {
       {/* Clean TopHUD with cross-realm upgrade button */}
       <TopHUD
         realm={currentRealm}
-        mana={gameState.mana}
-        energyCredits={gameState.energyCredits}
-        nexusShards={gameState.nexusShards}
+        mana={stableGameState.mana}
+        energyCredits={stableGameState.energyCredits}
+        nexusShards={stableGameState.nexusShards}
         convergenceProgress={convergenceProgress}
-        manaPerSecond={gameState.manaPerSecond}
-        energyPerSecond={gameState.energyPerSecond}
+        manaPerSecond={stableGameState.manaPerSecond}
+        energyPerSecond={stableGameState.energyPerSecond}
         onHelpClick={handleShowHelp}
         onCombatUpgradesClick={handleShowCombatUpgrades}
         enemyCount={0}
@@ -202,13 +208,13 @@ const GameEngine: React.FC = () => {
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
-          buildings={currentRealm === 'fantasy' ? gameState.fantasyBuildings : gameState.scifiBuildings}
-          manaPerSecond={gameState.manaPerSecond}
-          energyPerSecond={gameState.energyPerSecond}
+          buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : stableGameState.scifiBuildings}
+          manaPerSecond={stableGameState.manaPerSecond}
+          energyPerSecond={stableGameState.energyPerSecond}
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
           buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
-          currency={currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits}
-          gameState={gameState}
+          currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
+          gameState={stableGameState}
           onPurchaseUpgrade={purchaseUpgrade}
           isTransitioning={isTransitioning}
           showTapEffect={showTapEffect}
@@ -271,7 +277,7 @@ const GameEngine: React.FC = () => {
       {showCombatUpgrades && (
         <CombatUpgradeSystem
           upgrades={combatUpgrades}
-          mana={gameState.mana}
+          mana={stableGameState.mana}
           onUpgrade={purchaseCombatUpgrade}
           onClose={() => setShowCombatUpgrades(false)}
         />
@@ -281,7 +287,7 @@ const GameEngine: React.FC = () => {
       {showWeaponUpgrades && (
         <WeaponUpgradeSystem
           upgrades={weaponUpgrades}
-          mana={gameState.mana}
+          mana={stableGameState.mana}
           onUpgrade={purchaseWeaponUpgrade}
           onClose={() => setShowWeaponUpgrades(false)}
         />
@@ -292,10 +298,10 @@ const GameEngine: React.FC = () => {
         <CrossRealmUpgradeSystem
           upgrades={crossRealmUpgradesWithLevels}
           currentRealm={currentRealm}
-          mana={gameState.mana}
-          energyCredits={gameState.energyCredits}
-          fantasyJourneyDistance={gameState.fantasyJourneyDistance}
-          scifiJourneyDistance={gameState.scifiJourneyDistance}
+          mana={stableGameState.mana}
+          energyCredits={stableGameState.energyCredits}
+          fantasyJourneyDistance={stableGameState.fantasyJourneyDistance}
+          scifiJourneyDistance={stableGameState.scifiJourneyDistance}
           onUpgrade={purchaseCrossRealmUpgrade}
           onClose={() => setShowCrossRealmUpgrades(false)}
         />
@@ -313,7 +319,7 @@ const GameEngine: React.FC = () => {
         >
           <div className="max-w-[90%] w-full max-w-sm">
             <ConvergenceSystem
-              gameState={gameState}
+              gameState={stableGameState}
               onPerformConvergence={handlePerformConvergence}
             />
             <div className="mt-3 text-center">
