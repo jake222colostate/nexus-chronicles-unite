@@ -26,32 +26,40 @@ const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> 
 
   return (
     <group>
-      {/* Fantasy ground with hills */}
+      {/* Magical ground with stone pathway */}
       <FantasyGround />
 
-      {/* Glowing fantasy trees */}
+      {/* Glowing magical trees */}
       <FantasyTreesWithGlow />
 
-      {/* Magical mountains with crystals */}
+      {/* Crystal-infused mountains */}
       <FantasyMagicalMountains />
 
-      {/* Enhanced fog for magical atmosphere */}
-      <fog attach="fog" args={['#1b0036', 15, 150]} />
+      {/* Ground-level purple fog */}
+      <fog attach="fog" args={['#38245c', 50, 200]} />
       
-      {/* Ambient magical lighting */}
-      <ambientLight intensity={0.6} color="#E6E6FA" />
+      {/* Atmospheric lighting */}
+      <ambientLight intensity={0.4} color="#4c1b70" />
       <directionalLight
-        position={[10, 20, 10]}
-        intensity={1}
-        color="#FFFFFF"
+        position={[10, 30, 10]}
+        intensity={0.8}
+        color="#ffffff"
         castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
         shadow-camera-far={200}
         shadow-camera-left={-100}
         shadow-camera-right={100}
         shadow-camera-top={100}
         shadow-camera-bottom={-100}
+      />
+      
+      {/* Soft fill light for crystal glow */}
+      <pointLight 
+        position={[0, 15, -50]}
+        color="#00ffff"
+        intensity={0.3}
+        distance={100}
       />
     </group>
   );
