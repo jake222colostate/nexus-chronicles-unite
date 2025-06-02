@@ -71,7 +71,7 @@ export const CrossRealmUpgradeSystem: React.FC<CrossRealmUpgradeSystemProps> = (
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
       style={{
         position: 'fixed',
         top: 0,
@@ -81,41 +81,41 @@ export const CrossRealmUpgradeSystem: React.FC<CrossRealmUpgradeSystemProps> = (
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '12px',
         boxSizing: 'border-box'
       }}
     >
       <div 
         className="bg-gradient-to-br from-purple-900/95 to-violet-800/95 backdrop-blur-xl rounded-xl border border-purple-400/30 overflow-hidden"
         style={{
-          maxWidth: '90vw',
-          width: '100%',
-          maxHeight: '70vh',
-          overflowX: 'hidden',
+          width: '320px',
+          maxWidth: '320px',
+          height: '450px',
+          maxHeight: '450px',
           boxSizing: 'border-box',
           borderRadius: '12px'
         }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-purple-400/20">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+        <div className="flex items-center justify-between p-3 border-b border-purple-400/20">
+          <h2 className="text-sm font-bold text-white flex items-center gap-2">
             🏰 {currentRealm === 'fantasy' ? 'Fantasy' : 'Sci-Fi'} Upgrades
           </h2>
           <Button
             onClick={onClose}
             size="sm"
             variant="ghost"
-            className="h-8 w-8 p-0 text-white/70 hover:text-white hover:bg-white/10"
+            className="h-6 w-6 p-0 text-white/70 hover:text-white hover:bg-white/10"
           >
-            <X size={16} />
+            <X size={12} />
           </Button>
         </div>
 
         {/* Upgrades List */}
         <div 
-          className="p-4 space-y-3 overflow-y-auto"
+          className="p-3 space-y-2 overflow-y-auto"
           style={{
-            maxHeight: 'calc(70vh - 80px)',
+            height: '400px',
             overflowY: 'auto',
             overflowX: 'hidden'
           }}
@@ -129,24 +129,24 @@ export const CrossRealmUpgradeSystem: React.FC<CrossRealmUpgradeSystemProps> = (
             return (
               <div
                 key={upgrade.id}
-                className={`bg-black/40 rounded-lg p-4 border transition-all duration-200 ${
+                className={`bg-black/40 rounded-lg p-3 border transition-all duration-200 ${
                   unlocked 
                     ? 'border-purple-400/20 hover:border-purple-400/40' 
                     : 'border-gray-600/40 bg-gray-800/60'
                 }`}
               >
                 <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
                     <div className="relative">
-                      <span className="text-2xl">{upgrade.icon}</span>
+                      <span className="text-lg">{upgrade.icon}</span>
                       {!unlocked && (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <Lock size={16} className="text-gray-400" />
+                          <Lock size={12} className="text-gray-400" />
                         </div>
                       )}
                     </div>
                     <div>
-                      <h3 className={`font-semibold text-sm ${unlocked ? 'text-white' : 'text-gray-400'}`}>
+                      <h3 className={`font-semibold text-xs ${unlocked ? 'text-white' : 'text-gray-400'}`}>
                         {upgrade.name}
                       </h3>
                       <p className={`text-xs ${unlocked ? 'text-purple-300' : 'text-gray-500'}`}>
@@ -155,7 +155,7 @@ export const CrossRealmUpgradeSystem: React.FC<CrossRealmUpgradeSystemProps> = (
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`font-bold text-sm ${unlocked ? 'text-yellow-400' : 'text-gray-500'}`}>
+                    <div className={`font-bold text-xs ${unlocked ? 'text-yellow-400' : 'text-gray-500'}`}>
                       Level {upgrade.level}/{upgrade.maxLevel}
                     </div>
                   </div>
@@ -163,8 +163,8 @@ export const CrossRealmUpgradeSystem: React.FC<CrossRealmUpgradeSystemProps> = (
 
                 {/* Unlock Requirement */}
                 {!unlocked && upgrade.unlockRequirement && (
-                  <div className="mb-3 text-xs text-red-300 bg-red-900/30 rounded p-2 border border-red-400/30">
-                    <Lock size={12} className="inline mr-1" />
+                  <div className="mb-2 text-xs text-red-300 bg-red-900/30 rounded p-1 border border-red-400/30">
+                    <Lock size={10} className="inline mr-1" />
                     Unlockable at {upgrade.unlockRequirement.journeyDistance}m in{' '}
                     {upgrade.unlockRequirement.otherRealm === 'fantasy' ? 'Fantasy' : 'Sci-Fi'} realm
                   </div>
@@ -172,7 +172,7 @@ export const CrossRealmUpgradeSystem: React.FC<CrossRealmUpgradeSystemProps> = (
 
                 {/* Effect Display */}
                 {unlocked && (
-                  <div className="mb-3 text-xs text-purple-200">
+                  <div className="mb-2 text-xs text-purple-200">
                     {upgrade.effect.damage && (
                       <div>Damage: +{upgrade.effect.damage * (upgrade.level + 1)}</div>
                     )}
@@ -195,7 +195,7 @@ export const CrossRealmUpgradeSystem: React.FC<CrossRealmUpgradeSystemProps> = (
                 <Button
                   onClick={() => onUpgrade(upgrade.id)}
                   disabled={!affordable || maxed || !unlocked}
-                  className={`w-full h-8 text-sm ${
+                  className={`w-full h-7 text-xs ${
                     maxed
                       ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
                       : !unlocked

@@ -22,34 +22,34 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
     <div 
       className="bg-gradient-to-br from-purple-900/95 to-blue-900/95 backdrop-blur-sm border border-purple-400/30 rounded-xl text-white shadow-2xl"
       style={{
-        maxWidth: '90vw',
-        width: '100%',
-        maxHeight: '80vh',
-        overflowX: 'hidden',
+        width: '280px',
+        maxWidth: '280px',
+        height: '200px',
+        maxHeight: '200px',
         boxSizing: 'border-box',
         borderRadius: '12px',
-        padding: '24px'
+        padding: '16px'
       }}
     >
       <div className="text-center">
-        <h3 className="text-xl font-bold mb-4 text-purple-300">{upgradeName}</h3>
+        <h3 className="text-sm font-bold mb-3 text-purple-300">{upgradeName}</h3>
         
-        <div className="space-y-3 mb-6">
+        <div className="space-y-2 mb-4">
           <div className="flex justify-between">
-            <span>Cost:</span>
-            <span className="text-yellow-400">{upgradeData.cost} Mana</span>
+            <span className="text-xs">Cost:</span>
+            <span className="text-yellow-400 text-xs">{upgradeData.cost} Mana</span>
           </div>
           
           <div className="flex justify-between">
-            <span>Bonus:</span>
-            <span className="text-green-400">+{upgradeData.manaPerSecond} mana/sec</span>
+            <span className="text-xs">Bonus:</span>
+            <span className="text-green-400 text-xs">+{upgradeData.manaPerSecond} mana/sec</span>
           </div>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-gray-600/80 hover:bg-gray-500/80 rounded-lg transition-colors min-h-[44px] text-sm"
+            className="flex-1 px-3 py-2 bg-gray-600/80 hover:bg-gray-500/80 rounded-lg transition-colors min-h-[36px] text-xs"
           >
             Close
           </button>
@@ -57,7 +57,7 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
           <button
             onClick={onPurchase}
             disabled={upgradeData.unlocked}
-            className="flex-1 px-4 py-2 bg-purple-600/80 hover:bg-purple-500/80 disabled:bg-gray-600/50 disabled:cursor-not-allowed rounded-lg transition-colors min-h-[44px] text-sm"
+            className="flex-1 px-3 py-2 bg-purple-600/80 hover:bg-purple-500/80 disabled:bg-gray-600/50 disabled:cursor-not-allowed rounded-lg transition-colors min-h-[36px] text-xs"
           >
             {upgradeData.unlocked ? 'Owned' : 'Purchase'}
           </button>
