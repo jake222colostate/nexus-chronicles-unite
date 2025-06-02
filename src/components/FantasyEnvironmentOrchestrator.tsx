@@ -1,17 +1,24 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
+import { FantasyInfiniteTileSystem } from './FantasyInfiniteTileSystem';
+import { FantasyDuskSkybox } from './FantasyDuskSkybox';
+import { FantasyDuskLighting } from './FantasyDuskLighting';
+import { FantasyPostProcessing } from './FantasyPostProcessing';
+import { Vector3 } from 'three';
 
 interface FantasyEnvironmentOrchestratorProps {
   chunks: ChunkData[];
   chunkSize: number;
   realm: 'fantasy' | 'scifi';
+  playerPosition?: Vector3;
 }
 
 export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestratorProps> = ({
   chunks,
   chunkSize,
-  realm
+  realm,
+  playerPosition = new Vector3(0, 0, 0)
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -20,15 +27,20 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
 
   return (
     <group>
-      {/* Simple ground plane - no textures */}
-      <mesh position={[0, -1.5, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[400, 400]} />
-        <meshLambertMaterial color="#2d4a2b" />
-      </mesh>
+      {/* Infinite tiling system with GLB models */}
+      <FantasyInfiniteTileSystem
+        playerPosition={playerPosition}
+        renderDistance={120}
+      />
       
-      {/* Basic lighting */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[10, 10, 5]} intensity={0.8} />
+      {/* Fantasy dusk skybox */}
+      <FantasyDuskSkybox />
+      
+      {/* Specialized lighting for dusk atmosphere */}
+      <FantasyDuskLighting />
+      
+      {/* Post-processing effects */}
+      <FantasyPostProcessing />
     </group>
   );
 };
