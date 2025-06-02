@@ -1,315 +1,84 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
 import { ConvergenceSystem } from './ConvergenceSystem';
 import { BottomActionBar } from './BottomActionBar';
 import { TopHUD } from './TopHUD';
-import { EnhancedTapButton } from './EnhancedTapButton';
 import { EnhancedParticleBackground } from './EnhancedParticleBackground';
-import { useBuffSystem } from './CrossRealmBuffSystem';
-import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { QuickHelpModal } from './QuickHelpModal';
-import { CombatUpgradeSystem, CombatUpgrade } from './CombatUpgradeSystem';
+import { CombatUpgradeSystem } from './CombatUpgradeSystem';
 import { JourneyTracker } from './JourneyTracker';
-import { WeaponUpgradeSystem, WeaponUpgrade } from './WeaponUpgradeSystem';
-import { CrossRealmUpgradeSystem, CrossRealmUpgrade } from './CrossRealmUpgradeSystem';
-import { crossRealmUpgrades } from '../data/CrossRealmUpgrades';
-
-interface GameState {
-  mana: number;
-  energyCredits: number;
-  manaPerSecond: number;
-  energyPerSecond: number;
-  nexusShards: number;
-  convergenceCount: number;
-  fantasyBuildings: { [key: string]: number };
-  scifiBuildings: { [key: string]: number };
-  purchasedUpgrades: string[];
-  lastSaveTime: number;
-  combatUpgrades: { [key: string]: number };
-  weaponUpgrades?: { [key: string]: number };
-  crossRealmUpgrades?: { [key: string]: number };
-  fantasyJourneyDistance: number;
-  scifiJourneyDistance: number;
-  waveNumber: number;
-  enemiesKilled: number;
-}
-
-interface Building {
-  id: string;
-  name: string;
-  cost: number;
-  production: number;
-  costMultiplier: number;
-  description: string;
-  icon: string;
-}
-
-const fantasyBuildings: Building[] = [
-  { id: 'altar', name: 'Mana Altar', cost: 10, production: 1, costMultiplier: 1.15, description: 'Ancient stones that channel mystical energy', icon: '🔮' },
-  { id: 'tower', name: 'Wizard Tower', cost: 100, production: 8, costMultiplier: 1.2, description: 'Towering spires where mages conduct research', icon: '🗼' },
-  { id: 'grove', name: 'Enchanted Grove', cost: 1000, production: 47, costMultiplier: 1.25, description: 'Sacred forests pulsing with natural magic', icon: '🌳' },
-  { id: 'temple', name: 'Arcane Temple', cost: 11000, production: 260, costMultiplier: 1.3, description: 'Massive structures devoted to magical arts', icon: '🏛️' },
-];
-
-const scifiBuildings: Building[] = [
-  { id: 'generator', name: 'Solar Panel', cost: 15, production: 1, costMultiplier: 1.15, description: 'Basic renewable energy collection', icon: '☀️' },
-  { id: 'reactor', name: 'Fusion Reactor', cost: 150, production: 10, costMultiplier: 1.2, description: 'Advanced nuclear fusion technology', icon: '⚡' },
-  { id: 'station', name: 'Space Station', cost: 1500, production: 64, costMultiplier: 1.25, description: 'Orbital platforms generating massive energy', icon: '🛰️' },
-  { id: 'megastructure', name: 'Dyson Sphere', cost: 20000, production: 430, costMultiplier: 1.3, description: 'Planet-scale energy harvesting systems', icon: '🌌' },
-];
-
-const defaultCombatUpgrades: CombatUpgrade[] = [
-  {
-    id: 'manaBlaster',
-    name: 'Mana Blaster',
-    description: 'Basic magical projectile',
-    icon: '🧙‍♂️',
-    level: 0,
-    maxLevel: 10,
-    baseCost: 50,
-    effect: { damage: 1 }
-  },
-  {
-    id: 'explosionRadius',
-    name: 'Explosion Radius',
-    description: 'Increases splash damage area',
-    icon: '💥',
-    level: 0,
-    maxLevel: 8,
-    baseCost: 100,
-    effect: { explosionRadius: 2 }
-  },
-  {
-    id: 'fireRate',
-    name: 'Fire Rate',
-    description: 'Faster projectile shooting',
-    icon: '⚡',
-    level: 0,
-    maxLevel: 15,
-    baseCost: 75,
-    effect: { fireRate: 0.8 }
-  },
-  {
-    id: 'accuracy',
-    name: 'Accuracy Boost',
-    description: 'Better aim and precision',
-    icon: '🎯',
-    level: 0,
-    maxLevel: 5,
-    baseCost: 150,
-    effect: { accuracy: 0.2 }
-  },
-  {
-    id: 'autoAim',
-    name: 'Auto-Aim Range',
-    description: 'Automatically targets enemies',
-    icon: '🔮',
-    level: 0,
-    maxLevel: 7,
-    baseCost: 200,
-    effect: { autoAimRange: 5 }
-  }
-];
-
-const defaultWeaponUpgrades: WeaponUpgrade[] = [
-  {
-    id: 'damage',
-    name: 'Damage',
-    description: 'Increases projectile damage',
-    icon: '💥',
-    level: 0,
-    maxLevel: 20,
-    baseCost: 25,
-    effect: { damage: 1 }
-  },
-  {
-    id: 'fireRate',
-    name: 'Fire Rate',
-    description: 'Decreases time between shots',
-    icon: '⚡',
-    level: 0,
-    maxLevel: 15,
-    baseCost: 40,
-    effect: { fireRate: 200 }
-  },
-  {
-    id: 'range',
-    name: 'Range',
-    description: 'Increases weapon targeting range',
-    icon: '🎯',
-    level: 0,
-    maxLevel: 10,
-    baseCost: 60,
-    effect: { range: 5 }
-  }
-];
+import { WeaponUpgradeSystem } from './WeaponUpgradeSystem';
+import { CrossRealmUpgradeSystem } from './CrossRealmUpgradeSystem';
+import { useGameStateManager, fantasyBuildings, scifiBuildings } from './GameStateManager';
+import { useGameLoopManager } from './GameLoopManager';
+import { useUpgradeManagers } from './UpgradeManagers';
+import { useUIStateManager } from './UIStateManager';
 
 const GameEngine: React.FC = () => {
-  const [gameState, setGameState] = useState<GameState>(() => {
-    const saved = localStorage.getItem('celestialNexusGame');
-    if (saved) {
-      const parsedState = JSON.parse(saved);
-      return {
-        ...parsedState,
-        purchasedUpgrades: parsedState.purchasedUpgrades || [],
-        lastSaveTime: parsedState.lastSaveTime || Date.now(),
-        combatUpgrades: parsedState.combatUpgrades || {},
-        weaponUpgrades: parsedState.weaponUpgrades || {},
-        crossRealmUpgrades: parsedState.crossRealmUpgrades || {},
-        fantasyJourneyDistance: parsedState.fantasyJourneyDistance || 0,
-        scifiJourneyDistance: parsedState.scifiJourneyDistance || 0,
-        waveNumber: parsedState.waveNumber || 1,
-        enemiesKilled: parsedState.enemiesKilled || 0,
-      };
-    }
-    return {
-      mana: 10,
-      energyCredits: 10,
-      manaPerSecond: 0,
-      energyPerSecond: 0,
-      nexusShards: 0,
-      convergenceCount: 0,
-      fantasyBuildings: {},
-      scifiBuildings: {},
-      purchasedUpgrades: [],
-      lastSaveTime: Date.now(),
-      combatUpgrades: {},
-      weaponUpgrades: {},
-      crossRealmUpgrades: {},
-      fantasyJourneyDistance: 0,
-      scifiJourneyDistance: 0,
-      waveNumber: 1,
-      enemiesKilled: 0,
-    };
+  const {
+    gameState,
+    setGameState,
+    stableFantasyBuildings,
+    stableScifiBuildings,
+    stablePurchasedUpgrades,
+    crossRealmUpgradesWithLevels
+  } = useGameStateManager();
+
+  const {
+    currentRealm,
+    showConvergence,
+    isTransitioning,
+    showTapEffect,
+    showQuickHelp,
+    showCombatUpgrades,
+    showWeaponUpgrades,
+    showCrossRealmUpgrades,
+    playerPosition,
+    currentJourneyDistance,
+    canConverge,
+    convergenceProgress,
+    setShowConvergence,
+    setShowTapEffect,
+    setShowQuickHelp,
+    setShowCombatUpgrades,
+    setShowWeaponUpgrades,
+    setShowCrossRealmUpgrades,
+    setPlayerPosition,
+    switchRealm
+  } = useUIStateManager(gameState);
+
+  useGameLoopManager({
+    gameState,
+    setGameState,
+    stableFantasyBuildings,
+    stableScifiBuildings,
+    stablePurchasedUpgrades,
+    crossRealmUpgradesWithLevels
   });
 
-  const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi'>('fantasy');
-  const [showConvergence, setShowConvergence] = useState(false);
-  const [showSkillTree, setShowSkillTree] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showTapEffect, setShowTapEffect] = useState(false);
-  const [showQuickHelp, setShowQuickHelp] = useState(() => {
-    return !localStorage.getItem('celestialNexusHelpDismissed');
+  const {
+    combatUpgrades,
+    weaponUpgrades,
+    buyBuilding,
+    performConvergence,
+    purchaseUpgrade,
+    purchaseCombatUpgrade,
+    purchaseWeaponUpgrade,
+    purchaseCrossRealmUpgrade
+  } = useUpgradeManagers({
+    gameState,
+    setGameState,
+    currentRealm,
+    crossRealmUpgradesWithLevels
   });
-  const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
-  const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
-  const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
-  const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.6, z: 0 });
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Stable references to prevent re-renders
-  const stableFantasyBuildings = useMemo(() => gameState.fantasyBuildings || {}, [gameState.fantasyBuildings]);
-  const stableScifiBuildings = useMemo(() => gameState.scifiBuildings || {}, [gameState.scifiBuildings]);
-  const stablePurchasedUpgrades = useMemo(() => gameState.purchasedUpgrades || [], [gameState.purchasedUpgrades]);
-  const purchasedUpgradesCount = stablePurchasedUpgrades.length;
-
-  // Initialize buff system with stable dependencies
-  const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
-
-  // Cross-realm upgrades with current levels
-  const crossRealmUpgradesWithLevels = useMemo(() => {
-    return crossRealmUpgrades.map(upgrade => ({
-      ...upgrade,
-      level: gameState.crossRealmUpgrades?.[upgrade.id] || 0
-    }));
-  }, [gameState.crossRealmUpgrades]);
-
-  // Combat upgrades with current levels
-  const combatUpgrades = useMemo(() => {
-    return defaultCombatUpgrades.map(upgrade => ({
-      ...upgrade,
-      level: gameState.combatUpgrades[upgrade.id] || 0
-    }));
-  }, [gameState.combatUpgrades]);
-
-  // Weapon upgrades with current levels
-  const weaponUpgrades = useMemo(() => {
-    return defaultWeaponUpgrades.map(upgrade => ({
-      ...upgrade,
-      level: gameState.weaponUpgrades?.[upgrade.id] || 0
-    }));
-  }, [gameState.weaponUpgrades]);
-
-  // Combat stats with improved damage calculation
-  const combatStats = useMemo(() => {
-    const manaBlasterLevel = gameState.combatUpgrades.manaBlaster || 0;
-    const fireRateLevel = gameState.combatUpgrades.fireRate || 0;
-    const autoAimLevel = gameState.combatUpgrades.autoAim || 0;
-    
-    return {
-      damage: 1 + manaBlasterLevel * 2,
-      fireRate: Math.max(500, 1000 - (fireRateLevel * 80)),
-      explosionRadius: 2 + (gameState.combatUpgrades.explosionRadius || 0) * 2,
-      accuracy: 1 + (gameState.combatUpgrades.accuracy || 0) * 0.2,
-      autoAimRange: autoAimLevel > 0 ? 5 + autoAimLevel * 3 : 0
-    };
-  }, [gameState.combatUpgrades]);
-
-  // Weapon stats calculation
-  const weaponStats = useMemo(() => {
-    const damageLevel = gameState.weaponUpgrades?.damage || 0;
-    const fireRateLevel = gameState.weaponUpgrades?.fireRate || 0;
-    const rangeLevel = gameState.weaponUpgrades?.range || 0;
-    
-    return {
-      damage: 1 + damageLevel,
-      fireRate: Math.max(500, 2000 - (fireRateLevel * 200)),
-      range: 10 + (rangeLevel * 5)
-    };
-  }, [gameState.weaponUpgrades]);
-
-  // Current journey distance calculation
-  const currentJourneyDistance = useMemo(() => {
-    return currentRealm === 'fantasy' 
-      ? gameState.fantasyJourneyDistance 
-      : gameState.scifiJourneyDistance;
-  }, [currentRealm, gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance]);
-
-  // Calculate offline progress on mount
-  useEffect(() => {
-    const now = Date.now();
-    const offlineTime = Math.min((now - gameState.lastSaveTime) / 1000, 3600);
-    
-    if (offlineTime > 60) {
-      const offlineMana = gameState.manaPerSecond * offlineTime;
-      const offlineEnergy = gameState.energyPerSecond * offlineTime;
-      
-      setGameState(prev => ({
-        ...prev,
-        mana: prev.mana + offlineMana,
-        energyCredits: prev.energyCredits + offlineEnergy,
-        lastSaveTime: now,
-      }));
-    }
-  }, []);
-
-  // Game loop with proper journey tracking
-  useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setGameState(prev => {
-        const newState = {
-          ...prev,
-          mana: prev.mana + prev.manaPerSecond / 10,
-          energyCredits: prev.energyCredits + prev.energyPerSecond / 10,
-          lastSaveTime: Date.now(),
-        };
-        
-        localStorage.setItem('celestialNexusGame', JSON.stringify(newState));
-        return newState;
-      });
-    }, 100);
-
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
 
   // Handle player position updates from 3D world
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
     setPlayerPosition(position);
-  }, []);
+  }, [setPlayerPosition]);
 
   // Handle journey distance updates (only forward progress)
   const handleJourneyUpdate = useCallback((distance: number) => {
@@ -317,221 +86,29 @@ const GameEngine: React.FC = () => {
       ...prev,
       [currentRealm === 'fantasy' ? 'fantasyJourneyDistance' : 'scifiJourneyDistance']: distance
     }));
-  }, [currentRealm]);
-
-  // Enhanced production calculation with cross-realm upgrades
-  useEffect(() => {
-    let manaRate = 0;
-    let energyRate = 0;
-
-    // Base production from buildings
-    fantasyBuildings.forEach(building => {
-      const count = stableFantasyBuildings[building.id] || 0;
-      const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'fantasy');
-      manaRate += (count * building.production * multiplier) + flatBonus;
-    });
-
-    scifiBuildings.forEach(building => {
-      const count = stableScifiBuildings[building.id] || 0;
-      const { multiplier, flatBonus } = buffSystem.calculateBuildingMultiplier(building.id, 'scifi');
-      energyRate += (count * building.production * multiplier) + flatBonus;
-    });
-
-    // Apply cross-realm upgrade bonuses
-    crossRealmUpgradesWithLevels.forEach(upgrade => {
-      if (upgrade.level > 0) {
-        if (upgrade.effect.manaPerSecond && upgrade.realm === 'fantasy') {
-          manaRate += upgrade.effect.manaPerSecond * upgrade.level;
-        }
-        if (upgrade.effect.energyPerSecond && upgrade.realm === 'scifi') {
-          energyRate += upgrade.effect.energyPerSecond * upgrade.level;
-        }
-      }
-    });
-
-    // Apply hybrid upgrade bonuses
-    let globalMultiplier = 1;
-    stablePurchasedUpgrades.forEach(upgradeId => {
-      const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
-      if (upgrade) {
-        if (upgrade.effects.globalProductionBonus) {
-          globalMultiplier *= (1 + upgrade.effects.globalProductionBonus);
-        }
-        if (upgrade.effects.manaProductionBonus) {
-          manaRate += upgrade.effects.manaProductionBonus;
-        }
-        if (upgrade.effects.energyProductionBonus) {
-          energyRate += upgrade.effects.energyProductionBonus;
-        }
-      }
-    });
-
-    // Cross-realm bonuses
-    const fantasyBonus = 1 + (energyRate * 0.01);
-    const scifiBonus = 1 + (manaRate * 0.01);
-
-    setGameState(prev => ({
-      ...prev,
-      manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
-      energyPerSecond: energyRate * scifiBonus * globalMultiplier,
-    }));
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels]);
-
-  const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
-    const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
-    const building = buildings.find(b => b.id === buildingId);
-    if (!building) return;
-
-    const currentCount = isFantasy 
-      ? gameState.fantasyBuildings[buildingId] || 0
-      : gameState.scifiBuildings[buildingId] || 0;
-    
-    const cost = Math.floor(building.cost * Math.pow(building.costMultiplier, currentCount));
-    const currency = isFantasy ? gameState.mana : gameState.energyCredits;
-
-    if (currency >= cost) {
-      setGameState(prev => ({
-        ...prev,
-        mana: isFantasy ? prev.mana - cost : prev.mana,
-        energyCredits: isFantasy ? prev.energyCredits : prev.energyCredits - cost,
-        fantasyBuildings: isFantasy 
-          ? { ...prev.fantasyBuildings, [buildingId]: currentCount + 1 }
-          : prev.fantasyBuildings,
-        scifiBuildings: isFantasy 
-          ? prev.scifiBuildings
-          : { ...prev.scifiBuildings, [buildingId]: currentCount + 1 },
-      }));
-    }
-  }, [gameState.mana, gameState.energyCredits, gameState.fantasyBuildings, gameState.scifiBuildings]);
-
-  const performConvergence = useCallback(() => {
-    const totalValue = gameState.mana + gameState.energyCredits;
-    const shardsGained = Math.floor(Math.sqrt(totalValue / 1000)) + gameState.convergenceCount;
-    
-    if (shardsGained > 0) {
-      setGameState({
-        mana: 10,
-        energyCredits: 10,
-        manaPerSecond: 0,
-        energyPerSecond: 0,
-        nexusShards: gameState.nexusShards + shardsGained,
-        convergenceCount: gameState.convergenceCount + 1,
-        fantasyBuildings: {},
-        scifiBuildings: {},
-        purchasedUpgrades: gameState.purchasedUpgrades,
-        lastSaveTime: Date.now(),
-        combatUpgrades: gameState.combatUpgrades,
-        weaponUpgrades: gameState.weaponUpgrades,
-        crossRealmUpgrades: gameState.crossRealmUpgrades,
-        waveNumber: gameState.waveNumber,
-        enemiesKilled: gameState.enemiesKilled,
-        fantasyJourneyDistance: gameState.fantasyJourneyDistance,
-        scifiJourneyDistance: gameState.scifiJourneyDistance,
-      });
-      setShowConvergence(false);
-    }
-  }, [gameState]);
-
-  const purchaseUpgrade = useCallback((upgradeId: string) => {
-    const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
-    if (!upgrade || gameState.nexusShards < upgrade.cost) return;
-
-    setGameState(prev => ({
-      ...prev,
-      nexusShards: prev.nexusShards - upgrade.cost,
-      purchasedUpgrades: [...prev.purchasedUpgrades, upgradeId]
-    }));
-  }, [gameState.nexusShards]);
-
-  const purchaseCombatUpgrade = useCallback((upgradeId: string) => {
-    const upgrade = combatUpgrades.find(u => u.id === upgradeId);
-    if (!upgrade) return;
-
-    const cost = Math.floor(upgrade.baseCost * Math.pow(1.5, upgrade.level));
-    if (gameState.mana >= cost && upgrade.level < upgrade.maxLevel) {
-      setGameState(prev => ({
-        ...prev,
-        mana: prev.mana - cost,
-        combatUpgrades: {
-          ...prev.combatUpgrades,
-          [upgradeId]: (prev.combatUpgrades[upgradeId] || 0) + 1
-        }
-      }));
-    }
-  }, [gameState.mana, combatUpgrades]);
-
-  const purchaseWeaponUpgrade = useCallback((upgradeId: string) => {
-    const upgrade = weaponUpgrades.find(u => u.id === upgradeId);
-    if (!upgrade) return;
-
-    const cost = Math.floor(upgrade.baseCost * Math.pow(1.8, upgrade.level));
-    if (gameState.mana >= cost && upgrade.level < upgrade.maxLevel) {
-      setGameState(prev => ({
-        ...prev,
-        mana: prev.mana - cost,
-        weaponUpgrades: {
-          ...prev.weaponUpgrades,
-          [upgradeId]: (prev.weaponUpgrades?.[upgradeId] || 0) + 1
-        }
-      }));
-    }
-  }, [gameState.mana, weaponUpgrades]);
-
-  const purchaseCrossRealmUpgrade = useCallback((upgradeId: string) => {
-    const upgrade = crossRealmUpgradesWithLevels.find(u => u.id === upgradeId);
-    if (!upgrade) return;
-
-    const cost = Math.floor(upgrade.baseCost * Math.pow(1.6, upgrade.level));
-    const currency = currentRealm === 'fantasy' ? gameState.mana : gameState.energyCredits;
-    
-    if (currency >= cost && upgrade.level < upgrade.maxLevel) {
-      setGameState(prev => ({
-        ...prev,
-        mana: currentRealm === 'fantasy' ? prev.mana - cost : prev.mana,
-        energyCredits: currentRealm === 'scifi' ? prev.energyCredits - cost : prev.energyCredits,
-        crossRealmUpgrades: {
-          ...prev.crossRealmUpgrades,
-          [upgradeId]: (prev.crossRealmUpgrades?.[upgradeId] || 0) + 1
-        }
-      }));
-    }
-  }, [gameState.mana, gameState.energyCredits, currentRealm, crossRealmUpgradesWithLevels]);
-
-  // Enhanced realm switching with proper visual feedback
-  const switchRealm = useCallback((newRealm: 'fantasy' | 'scifi') => {
-    if (newRealm === currentRealm || isTransitioning) return;
-    
-    setIsTransitioning(true);
-    
-    setTimeout(() => {
-      setCurrentRealm(newRealm);
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 300);
-    }, 200);
-  }, [currentRealm, isTransitioning]);
+  }, [currentRealm, setGameState]);
 
   const handleNexusClick = useCallback(() => {
     if (canConverge) {
       setShowConvergence(true);
     }
-  }, []);
+  }, [canConverge, setShowConvergence]);
 
   const handleShowHelp = useCallback(() => {
     setShowQuickHelp(true);
-  }, []);
+  }, [setShowQuickHelp]);
 
   const handleShowCombatUpgrades = useCallback(() => {
     setShowCombatUpgrades(true);
-  }, []);
+  }, [setShowCombatUpgrades]);
 
   const handleShowWeaponUpgrades = useCallback(() => {
     setShowWeaponUpgrades(true);
-  }, []);
+  }, [setShowWeaponUpgrades]);
 
   const handleShowCrossRealmUpgrades = useCallback(() => {
     setShowCrossRealmUpgrades(true);
-  }, []);
+  }, [setShowCrossRealmUpgrades]);
 
   const handleTapResource = useCallback(() => {
     setShowTapEffect(true);
@@ -562,20 +139,20 @@ const GameEngine: React.FC = () => {
         document.body.removeChild(popup);
       }, 600);
     }
-  }, []);
+  }, [setShowTapEffect, setGameState]);
 
   const handleTapEffectComplete = useCallback(() => {
     setShowTapEffect(false);
-  }, []);
+  }, [setShowTapEffect]);
 
-  const formatNumber = useCallback((num: number): string => {
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-    return Math.floor(num).toString();
-  }, []);
+  const handleConvergenceClose = useCallback(() => {
+    setShowConvergence(false);
+  }, [setShowConvergence]);
 
-  const canConverge = gameState.mana + gameState.energyCredits >= 1000;
-  const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
+  const handlePerformConvergence = useCallback(() => {
+    performConvergence();
+    setShowConvergence(false);
+  }, [performConvergence, setShowConvergence]);
 
   return (
     <div className={`h-[667px] w-full relative overflow-hidden bg-black ${false ? 'animate-pulse bg-red-900/20' : ''}`}>
@@ -715,18 +292,18 @@ const GameEngine: React.FC = () => {
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              setShowConvergence(false);
+              handleConvergenceClose();
             }
           }}
         >
           <div className="max-w-[90%] w-full max-w-sm">
             <ConvergenceSystem
               gameState={gameState}
-              onPerformConvergence={performConvergence}
+              onPerformConvergence={handlePerformConvergence}
             />
             <div className="mt-3 text-center">
               <Button 
-                onClick={() => setShowConvergence(false)}
+                onClick={handleConvergenceClose}
                 variant="outline"
                 size="sm"
                 className="border-gray-400 text-gray-300 hover:bg-white/10 transition-all duration-200"
