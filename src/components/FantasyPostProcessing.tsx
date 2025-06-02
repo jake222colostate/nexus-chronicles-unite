@@ -1,5 +1,6 @@
 
 import React from 'react';
+import * as THREE from 'three';
 
 export const FantasyPostProcessing: React.FC = () => {
   return (

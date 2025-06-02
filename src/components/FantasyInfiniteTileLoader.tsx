@@ -25,37 +25,31 @@ export const FantasyInfiniteTileLoader: React.FC<FantasyInfiniteTileLoaderProps>
     
     // Configure materials
     const groundMaterial = new THREE.MeshLambertMaterial({
-      color: new THREE.Color().setHSL(110/360, 0.65, 0.5), // HSV(110°, 65%, 50%)
-      roughness: 0.9
+      color: new THREE.Color().setHSL(110/360, 0.65, 0.5) // HSV(110°, 65%, 50%)
     });
 
     const pathMaterial = new THREE.MeshLambertMaterial({
-      color: new THREE.Color(0.45, 0.25, 0.10), // Warm earthy brown
-      roughness: 0.8
+      color: new THREE.Color(0.45, 0.25, 0.10) // Warm earthy brown
     });
 
     const treeTrunkMaterial = new THREE.MeshLambertMaterial({
-      color: new THREE.Color(0.4, 0.2, 0.0), // Dark brown
-      roughness: 0.7
+      color: new THREE.Color(0.4, 0.2, 0.0) // Dark brown
     });
 
     const treeFoliageMaterial = new THREE.MeshLambertMaterial({
       color: new THREE.Color().setHSL(120/360, 0.8, 0.5), // Bright forest green
-      roughness: 0.8,
       emissive: new THREE.Color(0.05, 0.15, 0.05),
       emissiveIntensity: 0.15
     });
 
     const crystalMaterial = new THREE.MeshLambertMaterial({
       color: new THREE.Color(0.05, 0.8, 0.8), // Bright cyan-teal
-      roughness: 0.1,
       emissive: new THREE.Color(0.05, 0.8, 0.8),
       emissiveIntensity: 1.2
     });
 
     const archwayMaterial = new THREE.MeshLambertMaterial({
-      color: new THREE.Color(0.4, 0.4, 0.4), // Medium-gray stone
-      roughness: 0.85
+      color: new THREE.Color(0.4, 0.4, 0.4) // Medium-gray stone
     });
 
     // Apply materials to meshes
