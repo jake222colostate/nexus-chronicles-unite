@@ -47,6 +47,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
             chunkSize={chunkSize}
             realm={realm}
             playerPosition={cameraPosition}
+            useRealisticMountains={true} // Use realistic mountains instead of boundary mountains
           />
         )}
       </ChunkSystem>
