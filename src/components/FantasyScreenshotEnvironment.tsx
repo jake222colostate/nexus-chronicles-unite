@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { GradientPathTerrain } from './GradientPathTerrain';
-import { GradientGlowTrees } from './GradientGlowTrees';
-import { FantasyMountains } from './FantasyMountains';
-import { MagicParticles } from './MagicParticles';
+import { FantasyGround } from './FantasyGround';
+import { FantasyTreesWithGlow } from './FantasyTreesWithGlow';
+import { FantasyMagicalMountains } from './FantasyMagicalMountains';
 
 interface FantasyScreenshotEnvironmentProps {
   chunks: ChunkData[];
@@ -27,20 +26,33 @@ const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> 
 
   return (
     <group>
-      {/* New Gradient Path Terrain */}
-      <GradientPathTerrain />
+      {/* Fantasy ground with hills */}
+      <FantasyGround />
 
-      {/* New Gradient Glow Trees */}
-      <GradientGlowTrees />
+      {/* Glowing fantasy trees */}
+      <FantasyTreesWithGlow />
 
-      {/* New Fantasy Mountains */}
-      <FantasyMountains />
+      {/* Magical mountains with crystals */}
+      <FantasyMagicalMountains />
 
-      {/* New Magic Particles */}
-      <MagicParticles />
-
-      {/* Enhanced fog for atmosphere */}
-      <fog attach="fog" args={['#2d1b69', 30, 120]} />
+      {/* Enhanced fog for magical atmosphere */}
+      <fog attach="fog" args={['#1b0036', 15, 150]} />
+      
+      {/* Ambient magical lighting */}
+      <ambientLight intensity={0.6} color="#E6E6FA" />
+      <directionalLight
+        position={[10, 20, 10]}
+        intensity={1}
+        color="#FFFFFF"
+        castShadow
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
+        shadow-camera-far={200}
+        shadow-camera-left={-100}
+        shadow-camera-right={100}
+        shadow-camera-top={100}
+        shadow-camera-bottom={-100}
+      />
     </group>
   );
 });

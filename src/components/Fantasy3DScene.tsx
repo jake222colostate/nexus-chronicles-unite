@@ -27,31 +27,19 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 }) => {
   return (
     <Suspense fallback={null}>
+      {/* Camera controller */}
       <Enhanced360Controller
         position={[0, 1.6, 0]}
         onPositionChange={onPositionChange}
       />
 
-      {/* Fantasy Screenshot Skybox */}
+      {/* Fantasy skybox with gradient and sparkles */}
       <FantasyScreenshotSkybox realm={realm} />
 
-      {/* Optimized lighting setup */}
-      <ambientLight intensity={0.5} color="#E6E6FA" />
-      <directionalLight
-        position={[20, 40, 20]}
-        intensity={0.8}
-        color="#FFFFFF"
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
-        shadow-camera-far={800}
-        shadow-camera-left={-80}
-        shadow-camera-right={80}
-        shadow-camera-top={80}
-        shadow-camera-bottom={-80}
-      />
+      {/* Background color */}
+      <color attach="background" args={['#1b0036']} />
 
-      {/* Optimized chunk system with larger chunks for better performance */}
+      {/* Chunk system for terrain generation */}
       <ChunkSystem
         playerPosition={cameraPosition}
         chunkSize={chunkSize}
@@ -66,7 +54,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         )}
       </ChunkSystem>
 
-      {/* Simplified dynamic player light */}
+      {/* Dynamic player light */}
       <pointLight 
         position={[cameraPosition.x, 8, cameraPosition.z - 5]} 
         intensity={0.6}
@@ -74,10 +62,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         distance={30} 
       />
 
-      {/* Optimized contact shadows */}
+      {/* Contact shadows for better grounding */}
       <ContactShadows 
-        position={[0, -0.45, cameraPosition.z]} 
-        opacity={0.2} 
+        position={[0, -1.4, cameraPosition.z]} 
+        opacity={0.3} 
         scale={60} 
         blur={2} 
         far={15} 
