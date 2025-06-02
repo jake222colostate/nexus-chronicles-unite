@@ -1,10 +1,6 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
-import { ProceduralGroundSystem } from './ProceduralGroundSystem';
-import { RealisticTreeSystem } from './RealisticTreeSystem';
-import { RealisticPathSystem } from './RealisticPathSystem';
 
 interface FantasyEnvironmentOrchestratorProps {
   chunks: ChunkData[];
@@ -24,33 +20,15 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
 
   return (
     <group>
-      {/* Procedural ground with realistic textures */}
-      <ProceduralGroundSystem 
-        chunks={chunks} 
-        chunkSize={chunkSize} 
-        realm={realm} 
-      />
+      {/* Simple ground plane - no textures */}
+      <mesh position={[0, -1.5, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[400, 400]} />
+        <meshLambertMaterial color="#2d4a2b" />
+      </mesh>
       
-      {/* Realistic mountain terrain that extends infinitely */}
-      <ProceduralMountainTerrain 
-        chunks={chunks} 
-        chunkSize={chunkSize} 
-        realm={realm} 
-      />
-      
-      {/* Realistic trees with different types */}
-      <RealisticTreeSystem 
-        chunks={chunks} 
-        chunkSize={chunkSize} 
-        realm={realm} 
-      />
-      
-      {/* Detailed cobblestone path */}
-      <RealisticPathSystem 
-        chunks={chunks} 
-        chunkSize={chunkSize} 
-        realm={realm} 
-      />
+      {/* Basic lighting */}
+      <ambientLight intensity={0.6} />
+      <directionalLight position={[10, 10, 5]} intensity={0.8} />
     </group>
   );
 };

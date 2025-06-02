@@ -1,6 +1,6 @@
 
-import React, { Suspense } from 'react';
-import { Environment } from '@react-three/drei';
+import React from 'react';
+import { SimpleSkybox } from './SimpleSkybox';
 
 interface FantasySkyboxSystemProps {
   realm: 'fantasy' | 'scifi';
@@ -17,17 +17,5 @@ export const FantasySkyboxSystem: React.FC<FantasySkyboxSystemProps> = ({
     return null;
   }
 
-  return (
-    <Suspense fallback={null}>
-      <Environment 
-        background 
-        preset="sunset"
-      />
-      {/* Add atmospheric fog for fantasy feel */}
-      <fog 
-        attach="fog" 
-        args={['#8B5CF6', 50, 200]} 
-      />
-    </Suspense>
-  );
+  return <SimpleSkybox realm={realm} />;
 };
