@@ -1,47 +1,16 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { X, Coins, Zap } from 'lucide-react';
 
 interface Fantasy3DUpgradeModalProps {
   upgradeName: string;
   onClose: () => void;
-  onPurchase?: () => void;
-  upgradeData?: {
+  onPurchase: () => void;
+  upgradeData: {
     cost: number;
     manaPerSecond: number;
     unlocked: boolean;
   };
 }
-
-const upgradeDetails = {
-  'Mystic Fountain': { description: 'Ancient stones channel mystical energy from flowing waters, providing a steady stream of magical power.', icon: '⛲' },
-  'Crystal Grove': { description: 'Enchanted crystals that amplify magical resonance throughout your realm.', icon: '💎' },
-  'Arcane Sanctum': { description: 'Sacred chamber where ancient magic is studied and preserved by mystical scholars.', icon: '🏛️' },
-  'Celestial Spire': { description: 'Towering monument that pierces the veil between realms, channeling cosmic energy.', icon: '🗼' },
-  'Nexus Gateway': { description: 'Portal to infinite dimensions of pure magical energy, unlocking untold power.', icon: '🌌' },
-  'Dragon\'s Heart': { description: 'The beating heart of an ancient dragon, source of primal fire and raw power.', icon: '🐉' },
-  'Void Obelisk': { description: 'Monolith that channels the power of the cosmic void, transcending reality itself.', icon: '⚫' },
-  'Temporal Altar': { description: 'Sacred altar that manipulates the flow of time to accelerate magical processes.', icon: '⏰' },
-  'Phoenix Roost': { description: 'Eternal flame that never dies, generating endless magical energy through rebirth.', icon: '🔥' },
-  'Ethereal Nexus': { description: 'Connection point between multiple planes of existence, channeling interdimensional power.', icon: '✨' },
-  'Starfall Chamber': { description: 'Observatory that captures the power of falling stars and converts it to pure magic.', icon: '🌠' },
-  'Infinity Well': { description: 'Bottomless well that taps into the infinite reservoir of magical energy.', icon: '🕳️' },
-  'Cosmic Forge': { description: 'Ancient forge that shapes reality itself, creating magical energy from the void.', icon: '⚒️' },
-  'Dimensional Anchor': { description: 'Stabilizes reality and draws power from dimensional fractures.', icon: '⚓' },
-  'Reality Prism': { description: 'Crystalline structure that refracts reality into infinite magical possibilities.', icon: '🔮' },
-  'Astral Crown': { description: 'Crown of the astral realm, granting dominion over celestial magical forces.', icon: '👑' },
-  'Omni Core': { description: 'Core of omnipotent energy that transcends all known magical limitations.', icon: '💫' },
-  'Genesis Matrix': { description: 'Matrix that contains the blueprint of creation itself, generating infinite power.', icon: '🌀' },
-  'Eternal Beacon': { description: 'Beacon of eternal light that guides lost souls and generates endless energy.', icon: '🗼' },
-  'Infinite Spiral': { description: 'Spiral pattern that contains infinite recursive magical energy loops.', icon: '🌀' },
-  'Transcendent Gate': { description: 'Gateway beyond all understanding, connecting to the source of all magic.', icon: '🚪' },
-  'Primordial Engine': { description: 'Engine that harnesses the primordial forces that created the universe.', icon: '⚙️' },
-  'Universal Codex': { description: 'Contains all knowledge of magic across every possible reality.', icon: '📜' },
-  'Apex Throne': { description: 'Throne of absolute magical supremacy, commanding all forces of creation.', icon: '🪑' },
-  'Omega Singularity': { description: 'The final singularity that represents the end and beginning of all magic.', icon: '🌑' }
-};
 
 export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
   upgradeName,
@@ -49,148 +18,40 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
   onPurchase,
   upgradeData
 }) => {
-  const upgrade = upgradeDetails[upgradeName as keyof typeof upgradeDetails];
-
-  if (!upgrade) return null;
-
-  const formatNumber = (num: number): string => {
-    if (num >= 1e12) return (num / 1e12).toFixed(1) + 'T';
-    if (num >= 1e9) return (num / 1e9).toFixed(1) + 'B';
-    if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
-    return num.toString();
-  };
-
-  // Use default values if upgradeData is not provided (backwards compatibility)
-  const cost = upgradeData?.cost ?? 50;
-  const manaPerSec = upgradeData?.manaPerSecond ?? 10;
-  const isUnlocked = upgradeData?.unlocked ?? false;
-
   return (
-    <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '16px',
-        boxSizing: 'border-box'
-      }}
-    >
-      <Card 
-        className="backdrop-blur-lg border-2 overflow-hidden flex flex-col bg-gradient-to-br from-purple-900/95 to-violet-800/90 border-purple-400/50"
-        style={{
-          maxWidth: '90vw',
-          width: '100%',
-          maxHeight: '70vh',
-          overflowX: 'hidden',
-          boxSizing: 'border-box',
-          borderRadius: '12px',
-          boxShadow: '0 8px 32px rgba(168, 85, 247, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
-        }}
-      >
+    <div className="bg-gradient-to-br from-purple-900/95 to-blue-900/95 backdrop-blur-sm border border-purple-400/30 rounded-xl p-6 text-white shadow-2xl">
+      <div className="text-center">
+        <h3 className="text-xl font-bold mb-4 text-purple-300">{upgradeName}</h3>
         
-        {/* Header */}
-        <div className="flex justify-between items-center p-4 border-b border-purple-300/30 flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="text-3xl">{upgrade.icon}</div>
-            <div>
-              <h2 className="text-lg font-bold text-white">{upgradeName}</h2>
-              <p className="text-sm text-purple-200">
-                {isUnlocked ? 'Unlocked' : 'Mystical Enhancement'}
-              </p>
-            </div>
+        <div className="space-y-3 mb-6">
+          <div className="flex justify-between">
+            <span>Cost:</span>
+            <span className="text-yellow-400">{upgradeData.cost} Mana</span>
           </div>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-white/10 p-1 h-8 w-8 rounded-full flex-shrink-0"
-          >
-            <X size={16} />
-          </Button>
-        </div>
-
-        {/* Content */}
-        <div 
-          className="p-4 space-y-4 flex-1 overflow-y-auto"
-          style={{
-            maxHeight: 'calc(70vh - 200px)',
-            overflowY: 'auto',
-            overflowX: 'hidden'
-          }}
-        >
-          <p className="text-sm text-white/90 leading-relaxed">{upgrade.description}</p>
           
-          {/* Stats Display */}
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg border border-purple-400/20">
-              <div className="flex items-center gap-2">
-                <Zap className="text-green-400" size={16} />
-                <span className="text-white/80 text-sm">Power Bonus</span>
-              </div>
-              <span className="font-bold text-green-400 text-sm">
-                +{formatNumber(manaPerSec)} Mana/sec
-              </span>
-            </div>
-            
-            {!isUnlocked && (
-              <div className="flex justify-between items-center p-3 bg-black/30 rounded-lg border border-purple-400/20">
-                <div className="flex items-center gap-2">
-                  <Coins className="text-yellow-400" size={16} />
-                  <span className="text-white/80 text-sm">Investment Cost</span>
-                </div>
-                <span className="font-bold text-yellow-400 text-sm">
-                  {formatNumber(cost)} Mana
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Mystical preview area */}
-          <div className="bg-gradient-to-br from-purple-900/50 to-violet-800/50 rounded-lg p-4 text-center border border-purple-400/30">
-            <p className="text-purple-200/80 text-xs mb-2">Mystical Preview</p>
-            <div className="text-5xl mb-2">{upgrade.icon}</div>
-            <div className="w-full h-1 bg-purple-800/50 rounded-full overflow-hidden">
-              <div className={`w-full h-full ${
-                isUnlocked 
-                  ? 'bg-gradient-to-r from-green-400 to-emerald-500' 
-                  : 'bg-gradient-to-r from-purple-400 to-pink-400 animate-pulse'
-              }`} />
-            </div>
+          <div className="flex justify-between">
+            <span>Bonus:</span>
+            <span className="text-green-400">+{upgradeData.manaPerSecond} mana/sec</span>
           </div>
         </div>
-
-        {/* Purchase Button */}
-        {!isUnlocked && (
-          <div className="p-4 border-t border-purple-300/30 flex-shrink-0">
-            <Button
-              onClick={onPurchase}
-              className="w-full transition-all duration-300 py-3 font-bold text-sm bg-gradient-to-r from-purple-600 to-violet-700 hover:from-purple-500 hover:to-violet-600 text-white hover:scale-[1.02] active:scale-95 shadow-lg hover:shadow-purple-500/25"
-            >
-              <Coins className="mr-2" size={16} />
-              Unlock for {formatNumber(cost)} Mana
-            </Button>
-          </div>
-        )}
-
-        {/* Already Unlocked Message */}
-        {isUnlocked && (
-          <div className="p-4 border-t border-purple-300/30 flex-shrink-0">
-            <div className="w-full py-3 px-4 text-center bg-gradient-to-r from-green-600/80 to-emerald-700/80 rounded-lg border border-green-400/30">
-              <div className="text-green-100 font-bold text-sm flex items-center justify-center gap-2">
-                <Zap size={16} />
-                Already Unlocked
-              </div>
-            </div>
-          </div>
-        )}
-      </Card>
+        
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 bg-gray-600/80 hover:bg-gray-500/80 rounded-lg transition-colors"
+          >
+            Close
+          </button>
+          
+          <button
+            onClick={onPurchase}
+            disabled={upgradeData.unlocked}
+            className="flex-1 px-4 py-2 bg-purple-600/80 hover:bg-purple-500/80 disabled:bg-gray-600/50 disabled:cursor-not-allowed rounded-lg transition-colors"
+          >
+            {upgradeData.unlocked ? 'Owned' : 'Purchase'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
