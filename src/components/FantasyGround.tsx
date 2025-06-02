@@ -2,138 +2,169 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
-const SteppingStone: React.FC<{ 
+const FantasyTree: React.FC<{ 
   position: [number, number, number]; 
-  rotation: number;
   scale: number;
-  index: number;
-}> = ({ position, rotation, scale, index }) => {
+}> = ({ position, scale }) => {
   return (
-    <group position={position} rotation={[0, rotation, 0]} scale={[scale, 1, scale]}>
-      {/* Main stepping stone - brown/orange color like in reference */}
-      <mesh receiveShadow castShadow>
-        <cylinderGeometry args={[1.2, 1.3, 0.4, 8]} />
+    <group position={position} scale={[scale, scale, scale]}>
+      {/* Tree trunk - brown */}
+      <mesh position={[0, 1.5, 0]} castShadow>
+        <cylinderGeometry args={[0.3, 0.4, 3, 8]} />
         <meshStandardMaterial 
-          color="#8B4513"
-          roughness={0.8}
-          metalness={0.1}
+          color="#4a2c2a"
+          roughness={0.9}
         />
       </mesh>
       
-      {/* Stone base - darker */}
-      <mesh position={[0, -0.25, 0]} receiveShadow>
-        <cylinderGeometry args={[1.4, 1.5, 0.3, 8]} />
+      {/* Tree foliage - bright green round shape like reference */}
+      <mesh position={[0, 4, 0]} castShadow>
+        <sphereGeometry args={[2.2, 12, 8]} />
         <meshStandardMaterial 
-          color="#654321"
-          roughness={0.9}
-          metalness={0.05}
+          color="#4CAF50"
+          roughness={0.7}
+        />
+      </mesh>
+      
+      {/* Additional foliage layers for fuller look */}
+      <mesh position={[0.5, 3.5, 0.3]} castShadow>
+        <sphereGeometry args={[1.8, 10, 6]} />
+        <meshStandardMaterial 
+          color="#66BB6A"
+          roughness={0.7}
+        />
+      </mesh>
+      
+      <mesh position={[-0.3, 3.8, -0.2]} castShadow>
+        <sphereGeometry args={[1.6, 8, 6]} />
+        <meshStandardMaterial 
+          color="#81C784"
+          roughness={0.7}
         />
       </mesh>
     </group>
   );
 };
 
-const GrassyHill: React.FC<{ 
+const SteppingStone: React.FC<{ 
   position: [number, number, number]; 
-  scale: [number, number, number];
-}> = ({ position, scale }) => {
+  rotation: number;
+  scale: number;
+}> = ({ position, rotation, scale }) => {
   return (
-    <mesh position={position} scale={scale} receiveShadow>
-      <sphereGeometry args={[1, 12, 8]} />
-      <meshStandardMaterial 
-        color="#228B22"
-        roughness={0.9}
-        metalness={0.0}
-      />
-    </mesh>
+    <group position={position} rotation={[0, rotation, 0]} scale={[scale, 1, scale]}>
+      {/* Main stepping stone - brown/orange like reference */}
+      <mesh receiveShadow castShadow>
+        <cylinderGeometry args={[1.5, 1.6, 0.3, 8]} />
+        <meshStandardMaterial 
+          color="#D2691E"
+          roughness={0.8}
+          metalness={0.1}
+        />
+      </mesh>
+      
+      {/* Stone edge detail */}
+      <mesh position={[0, -0.2, 0]} receiveShadow>
+        <cylinderGeometry args={[1.7, 1.8, 0.2, 8]} />
+        <meshStandardMaterial 
+          color="#8B4513"
+          roughness={0.9}
+        />
+      </mesh>
+    </group>
   );
 };
 
 export const FantasyGround: React.FC = () => {
-  // Generate stepping stone pathway - exactly like in reference
+  // Generate the winding stone path exactly like reference
   const steppingStones = useMemo(() => {
     const stones = [];
-    for (let i = 0; i < 50; i++) {
-      const z = -i * 2.5; // Closer spacing
-      const x = Math.sin(i * 0.08) * 0.8; // Gentle curve
-      const y = Math.sin(i * 0.05) * 0.1; // Slight elevation
+    for (let i = 0; i < 80; i++) {
+      const z = -i * 2.5;
+      // Create the winding pattern from the reference
+      const curve = Math.sin(i * 0.08) * 1.2;
+      const x = curve;
+      const y = -0.9;
       const rotation = (Math.random() - 0.5) * 0.4;
-      const scale = 0.9 + Math.random() * 0.3;
+      const scale = 0.9 + Math.random() * 0.2;
       
       stones.push(
         <SteppingStone
-          key={i}
-          position={[x, y - 0.8, z]}
+          key={`stone-${i}`}
+          position={[x, y, z]}
           rotation={rotation}
           scale={scale}
-          index={i}
         />
       );
     }
     return stones;
   }, []);
 
-  // Rolling grassy hills on both sides
-  const grassyHills = useMemo(() => {
-    const hills = [];
-    for (let i = 0; i < 30; i++) {
-      const side = i % 2 === 0 ? 1 : -1;
-      const x = side * (3 + Math.random() * 8);
-      const z = -i * 8 - Math.random() * 5;
-      const scaleX = 2 + Math.random() * 3;
-      const scaleY = 1 + Math.random() * 1.5;
-      const scaleZ = 2 + Math.random() * 3;
+  // Generate trees on both sides exactly like reference
+  const trees = useMemo(() => {
+    const treeList = [];
+    for (let i = 0; i < 25; i++) {
+      const z = -i * 8 - 5;
       
-      hills.push(
-        <GrassyHill
-          key={i}
-          position={[x, -1, z]}
-          scale={[scaleX, scaleY, scaleZ]}
+      // Left side trees
+      const leftX = -8 - Math.random() * 6;
+      const leftScale = 0.8 + Math.random() * 0.4;
+      treeList.push(
+        <FantasyTree
+          key={`tree-left-${i}`}
+          position={[leftX, -1, z]}
+          scale={leftScale}
         />
       );
+      
+      // Right side trees
+      const rightX = 8 + Math.random() * 6;
+      const rightScale = 0.8 + Math.random() * 0.4;
+      treeList.push(
+        <FantasyTree
+          key={`tree-right-${i}`}
+          position={[rightX, -1, z]}
+          scale={rightScale}
+        />
+      );
+      
+      // Additional background trees for depth
+      if (i % 2 === 0) {
+        const backLeftX = -15 - Math.random() * 8;
+        const backRightX = 15 + Math.random() * 8;
+        const backScale = 0.6 + Math.random() * 0.3;
+        
+        treeList.push(
+          <FantasyTree
+            key={`tree-back-left-${i}`}
+            position={[backLeftX, -1, z - 5]}
+            scale={backScale}
+          />
+        );
+        
+        treeList.push(
+          <FantasyTree
+            key={`tree-back-right-${i}`}
+            position={[backRightX, -1, z - 5]}
+            scale={backScale}
+          />
+        );
+      }
     }
-    return hills;
+    return treeList;
   }, []);
 
   // Ground plane with grass texture
   const groundPlane = useMemo(() => {
     return (
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, -100]} receiveShadow>
         <planeGeometry args={[200, 400]} />
         <meshStandardMaterial 
-          color="#2E8B57"
+          color="#2E7D32"
           roughness={0.8}
-          metalness={0.0}
         />
       </mesh>
     );
-  }, []);
-
-  // Magical sparkles floating around
-  const magicalSparkles = useMemo(() => {
-    const sparkles = [];
-    for (let i = 0; i < 80; i++) {
-      sparkles.push(
-        <mesh 
-          key={`sparkle_${i}`}
-          position={[
-            (Math.random() - 0.5) * 60,
-            Math.random() * 8 + 0.5,
-            -Math.random() * 150
-          ]}
-        >
-          <sphereGeometry args={[0.03, 6, 4]} />
-          <meshStandardMaterial 
-            color="#FFD700"
-            emissive="#FFD700"
-            emissiveIntensity={0.8}
-            transparent
-            opacity={0.8}
-          />
-        </mesh>
-      );
-    }
-    return sparkles;
   }, []);
 
   return (
@@ -141,14 +172,11 @@ export const FantasyGround: React.FC = () => {
       {/* Ground plane */}
       {groundPlane}
       
-      {/* Rolling grassy hills */}
-      {grassyHills}
+      {/* Trees on both sides */}
+      {trees}
       
-      {/* Stepping stone pathway */}
+      {/* Winding stepping stone path */}
       {steppingStones}
-      
-      {/* Magical sparkles */}
-      {magicalSparkles}
     </group>
   );
 };
