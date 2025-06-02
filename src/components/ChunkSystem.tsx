@@ -29,24 +29,24 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     const playerChunkX = Math.floor(playerPosition.x / chunkSize);
     const playerChunkZ = Math.floor(Math.abs(playerPosition.z) / chunkSize);
     
-    // Optimized chunk radius calculation
-    const chunkRadius = Math.ceil(renderDistance / chunkSize);
+    // Reduced chunk radius for 60fps performance
+    const chunkRadius = 1; // Maximum 2x2 chunks = 4 total chunks
     
-    // Generate chunks in a more efficient pattern
+    // Generate minimal chunks for better performance
     for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius; x++) {
-      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + chunkRadius + 2; z++) {
+      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + chunkRadius + 1; z++) {
         // Always generate chunks ahead of player for seamless movement
         if (z >= -1) {
           const worldX = x * chunkSize;
           const worldZ = -z * chunkSize;
           
-          // Distance-based culling for better performance
+          // Tighter distance culling for performance
           const distanceToPlayer = Math.sqrt(
             Math.pow(worldX - playerPosition.x, 2) + 
             Math.pow(worldZ - playerPosition.z, 2)
           );
           
-          if (distanceToPlayer <= renderDistance + chunkSize) {
+          if (distanceToPlayer <= renderDistance * 0.8) { // 20% tighter culling
             // Optimized deterministic seed
             const seed = ((x & 0xFFFF) << 16) | (z & 0xFFFF);
             
@@ -63,7 +63,8 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
       }
     }
     
-    return chunks;
+    // Limit to maximum 4 chunks for guaranteed 60fps
+    return chunks.slice(0, 4);
   }, [
     Math.floor(playerPosition.x / chunkSize), 
     Math.floor(Math.abs(playerPosition.z) / chunkSize), 
