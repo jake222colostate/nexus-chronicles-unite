@@ -21,97 +21,162 @@ const OptimizedMountainCluster: React.FC<{
   side: 'left' | 'right';
 }> = ({ position, seed, scale, side }) => {
   
-  // Simplified mountain geometry for better performance
-  const createOptimizedMountainGeometry = (type: 'peak' | 'ridge', mountainSeed: number) => {
-    switch (type) {
-      case 'peak':
-        return new THREE.ConeGeometry(
-          2 + seededRandom(mountainSeed) * 1.5, 
-          20 + seededRandom(mountainSeed + 1) * 15, 
-          4  // Reduced segments for performance
-        );
-      case 'ridge':
-        return new THREE.CylinderGeometry(
-          0.3 + seededRandom(mountainSeed) * 0.5, 
-          1.5 + seededRandom(mountainSeed + 1) * 1.5, 
-          15 + seededRandom(mountainSeed + 2) * 10, 
-          4  // Reduced segments
-        );
-      default:
-        return new THREE.ConeGeometry(2, 20, 4);
+  // Create low-poly mountain geometry that matches the reference image
+  const createLowPolyMountainGeometry = (mountainSeed: number) => {
+    // Create a more complex base geometry for the mountain profile
+    const geometry = new THREE.ConeGeometry(8, 25, 8, 1, false); // Wider base, taller height
+    const vertices = geometry.attributes.position.array as Float32Array;
+    
+    // Modify vertices to create the distinctive mountain shape
+    for (let i = 0; i < vertices.length; i += 3) {
+      const x = vertices[i];
+      const y = vertices[i + 1];
+      const z = vertices[i + 2];
+      
+      // Height factor from bottom (0) to top (1)
+      const heightFactor = (y + 12.5) / 25;
+      
+      // Create the distinctive profile - wider at base, narrower at top
+      // But also push the top further back (negative Z direction)
+      if (heightFactor > 0.3) {
+        // Push upper portions back farther from the path
+        const backwardsPush = heightFactor * heightFactor * 15; // Quadratic falloff
+        vertices[i + 2] = z - backwardsPush;
+        
+        // Add some randomness for natural variation
+        const noise = seededRandom(mountainSeed + x * 10 + y * 10 + z * 10) - 0.5;
+        vertices[i] += noise * 2 * heightFactor;
+        vertices[i + 2] += noise * 3 * heightFactor;
+      }
+      
+      // Create terraced/stepped appearance for low-poly look
+      const stepHeight = Math.floor(y / 3) * 3;
+      const stepFactor = (stepHeight + 12.5) / 25;
+      vertices[i + 1] = stepHeight;
+      
+      // Add angular faceted details
+      const facetNoise = Math.floor(seededRandom(mountainSeed + i) * 4) - 2;
+      vertices[i] += facetNoise * 0.5 * stepFactor;
     }
+    
+    geometry.attributes.position.needsUpdate = true;
+    geometry.computeVertexNormals();
+    return geometry;
   };
 
-  const mountainTypes = ['peak', 'ridge'] as const; // Reduced types
-  const mountainCount = 3 + Math.floor(seededRandom(seed) * 2); // Fewer mountains
+  // Create layered mountain base that extends towards the path
+  const createMountainBase = (baseSeed: number) => {
+    const layers = [];
+    
+    // Multiple layers to create the wide base close to the path
+    for (let layer = 0; layer < 4; layer++) {
+      const layerHeight = 3 + layer * 2;
+      const layerRadius = 12 - layer * 2; // Smaller as we go up
+      const layerY = -1 + layer * 2;
+      
+      // Push base layers closer to the path
+      const forwardPush = (4 - layer) * 3; // Closer layers pushed more towards path
+      const layerZ = layer === 0 ? forwardPush : forwardPush * 0.7;
+      
+      layers.push(
+        <mesh
+          key={`base-layer-${layer}`}
+          position={[0, layerY, layerZ]}
+          receiveShadow
+          castShadow
+        >
+          <cylinderGeometry args={[layerRadius * 0.8, layerRadius, layerHeight, 8]} />
+          <meshLambertMaterial 
+            color={layer === 0 ? "#4CAF50" : layer === 1 ? "#8D6E63" : layer === 2 ? "#A0522D" : "#8B7355"} 
+          />
+        </mesh>
+      );
+    }
+    
+    return layers;
+  };
 
   return (
     <group position={position} scale={[scale, scale, scale]}>
-      {/* Fewer mountain shapes for better performance */}
-      {Array.from({ length: mountainCount }, (_, i) => {
-        const mountainSeed = seed + i * 47;
-        const type = mountainTypes[Math.floor(seededRandom(mountainSeed) * mountainTypes.length)];
-        
-        const localX = (seededRandom(mountainSeed + 1) - 0.5) * 6;
-        const localY = seededRandom(mountainSeed + 2) * 3;
-        const localZ = (seededRandom(mountainSeed + 3) - 0.5) * 10;
-        
-        const rotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
-        
-        // Simplified colors for better performance
-        const baseHue = 0.05 + seededRandom(mountainSeed + 7) * 0.05;
-        const saturation = 0.1 + seededRandom(mountainSeed + 8) * 0.2;
-        const lightness = 0.15 + seededRandom(mountainSeed + 9) * 0.15;
+      {/* Wide mountain base extending towards the path */}
+      {createMountainBase(seed)}
+      
+      {/* Main mountain peaks - positioned further back */}
+      {Array.from({ length: 2 + Math.floor(seededRandom(seed) * 2) }, (_, i) => {
+        const peakSeed = seed + i * 47;
+        const peakX = (seededRandom(peakSeed + 1) - 0.5) * 8;
+        const peakY = 5 + seededRandom(peakSeed + 2) * 8;
+        const peakZ = -5 - seededRandom(peakSeed + 3) * 12; // Position peaks further back
+        const peakScale = 0.7 + seededRandom(peakSeed + 4) * 0.6;
         
         return (
           <mesh
-            key={i}
-            position={[localX, localY, localZ]}
-            rotation={[0, rotationY, 0]}
+            key={`peak-${i}`}
+            position={[peakX, peakY, peakZ]}
+            scale={[peakScale, peakScale, peakScale]}
             castShadow
             receiveShadow
           >
-            <primitive object={createOptimizedMountainGeometry(type, mountainSeed)} />
+            <primitive object={createLowPolyMountainGeometry(peakSeed)} />
             <meshLambertMaterial 
-              color={new THREE.Color().setHSL(baseHue, saturation, lightness)}
+              color="#8B7355"
+              flatShading={true} // Low-poly flat shading
             />
           </mesh>
         );
       })}
       
-      {/* Fewer rock formations for better performance */}
-      {Array.from({ length: 4 + Math.floor(seededRandom(seed + 100) * 3) }, (_, i) => {
+      {/* Rocky outcroppings near the base (closer to path) */}
+      {Array.from({ length: 6 + Math.floor(seededRandom(seed + 100) * 4) }, (_, i) => {
         const rockSeed = seed + i * 73 + 1000;
-        const rockX = (seededRandom(rockSeed) - 0.5) * 12;
-        const rockY = -2 + seededRandom(rockSeed + 1) * 3;
-        const rockZ = (seededRandom(rockSeed + 2) - 0.5) * 15;
-        const rockScale = 0.8 + seededRandom(rockSeed + 3) * 1.2;
+        const rockX = (seededRandom(rockSeed) - 0.5) * 16;
+        const rockY = -1 + seededRandom(rockSeed + 1) * 4;
+        const rockZ = 8 + seededRandom(rockSeed + 2) * 8; // Position rocks closer to path
+        const rockScale = 0.8 + seededRandom(rockSeed + 3) * 1.0;
+        
+        // Different rock types for variety
+        const rockType = Math.floor(seededRandom(rockSeed + 4) * 3);
+        let geometry;
+        
+        switch (rockType) {
+          case 0:
+            geometry = <boxGeometry args={[2, 2, 2]} />;
+            break;
+          case 1:
+            geometry = <dodecahedronGeometry args={[1.5]} />;
+            break;
+          default:
+            geometry = <octahedronGeometry args={[1.8]} />;
+        }
         
         return (
           <mesh
             key={`rock-${i}`}
             position={[rockX, rockY, rockZ]}
             rotation={[
-              0,
-              seededRandom(rockSeed + 5) * Math.PI * 2,
-              0
+              seededRandom(rockSeed + 5) * 0.5,
+              seededRandom(rockSeed + 6) * Math.PI * 2,
+              seededRandom(rockSeed + 7) * 0.3
             ]}
-            scale={[rockScale, rockScale * 1.2, rockScale]}
+            scale={[rockScale, rockScale, rockScale]}
             castShadow
             receiveShadow
           >
-            <boxGeometry args={[1.5, 1.5, 1.5]} />
-            <meshLambertMaterial color="#3A3A3A" />
+            {geometry}
+            <meshLambertMaterial 
+              color={rockType === 0 ? "#4CAF50" : rockType === 1 ? "#8D6E63" : "#A0522D"}
+              flatShading={true}
+            />
           </mesh>
         );
       })}
       
-      {/* Simplified collision barriers */}
+      {/* Collision barriers - closer to accommodate new mountain shape */}
       <mesh
-        position={[side === 'left' ? 8 : -8, 15, 0]}
+        position={[side === 'left' ? 12 : -12, 15, 5]}
         visible={false}
       >
-        <boxGeometry args={[16, 30, 40]} />
+        <boxGeometry args={[20, 30, 50]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
     </group>
@@ -137,13 +202,13 @@ export const BoundaryMountainSystem: React.FC<BoundaryMountainSystemProps> = ({
     processedChunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
       
-      // Fewer clusters per chunk
+      // Left side mountains - closer to path
       const leftClusterCount = 1 + Math.floor(seededRandom(seed + 100) * 1);
       for (let i = 0; i < leftClusterCount; i++) {
         const clusterSeed = seed + i * 89 + 1000;
-        const x = -22 - seededRandom(clusterSeed) * 6;
-        const z = worldZ - (i * 35) - seededRandom(clusterSeed + 1) * 15;
-        const scale = 1.4 + seededRandom(clusterSeed + 2) * 1.0;
+        const x = -16 - seededRandom(clusterSeed) * 4; // Closer to path (was -22)
+        const z = worldZ - (i * 40) - seededRandom(clusterSeed + 1) * 15;
+        const scale = 1.2 + seededRandom(clusterSeed + 2) * 0.8;
         
         clusters.push({
           x, y: 0, z, scale, seed: clusterSeed,
@@ -151,12 +216,13 @@ export const BoundaryMountainSystem: React.FC<BoundaryMountainSystemProps> = ({
         });
       }
       
+      // Right side mountains - closer to path
       const rightClusterCount = 1 + Math.floor(seededRandom(seed + 200) * 1);
       for (let i = 0; i < rightClusterCount; i++) {
         const clusterSeed = seed + i * 89 + 2000;
-        const x = 22 + seededRandom(clusterSeed) * 6;
-        const z = worldZ - (i * 35) - seededRandom(clusterSeed + 1) * 15;
-        const scale = 1.4 + seededRandom(clusterSeed + 2) * 1.0;
+        const x = 16 + seededRandom(clusterSeed) * 4; // Closer to path (was +22)
+        const z = worldZ - (i * 40) - seededRandom(clusterSeed + 1) * 15;
+        const scale = 1.2 + seededRandom(clusterSeed + 2) * 0.8;
         
         clusters.push({
           x, y: 0, z, scale, seed: clusterSeed,
