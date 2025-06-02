@@ -7,49 +7,28 @@ interface FantasyMagicalSkyboxProps {
   realm: 'fantasy' | 'scifi';
 }
 
-const FloatingNebula: React.FC<{ position: [number, number, number]; seed: number }> = ({ position, seed }) => {
-  const nebulaRef = useRef<THREE.Mesh>(null);
+const AuroraRibbon: React.FC<{ position: [number, number, number]; seed: number; color: string }> = ({ position, seed, color }) => {
+  const ribbonRef = useRef<THREE.Mesh>(null);
   
   useFrame((state) => {
-    if (nebulaRef.current) {
+    if (ribbonRef.current) {
       const time = state.clock.elapsedTime + seed;
-      nebulaRef.current.rotation.z = time * 0.1;
-      const material = nebulaRef.current.material as THREE.MeshBasicMaterial;
-      material.opacity = 0.2 + Math.sin(time * 0.5) * 0.1;
+      ribbonRef.current.rotation.z = time * 0.1;
+      const material = ribbonRef.current.material as THREE.MeshBasicMaterial;
+      material.opacity = 0.3 + Math.sin(time * 0.8) * 0.2;
     }
   });
 
   return (
-    <mesh ref={nebulaRef} position={position}>
-      <planeGeometry args={[20, 15]} />
+    <mesh ref={ribbonRef} position={position}>
+      <planeGeometry args={[40, 12]} />
       <meshBasicMaterial 
-        color="#9c27b0"
+        color={color}
         transparent
-        opacity={0.3}
+        opacity={0.4}
         side={THREE.DoubleSide}
       />
     </mesh>
-  );
-};
-
-const PulsingLight: React.FC<{ position: [number, number, number]; seed: number }> = ({ position, seed }) => {
-  const lightRef = useRef<THREE.PointLight>(null);
-  
-  useFrame((state) => {
-    if (lightRef.current) {
-      const time = state.clock.elapsedTime + seed;
-      lightRef.current.intensity = 0.2 + Math.sin(time * 0.3) * 0.2;
-    }
-  });
-
-  return (
-    <pointLight 
-      ref={lightRef}
-      position={position}
-      color="#ffffff"
-      intensity={0.2}
-      distance={50}
-    />
   );
 };
 
@@ -59,47 +38,37 @@ export const FantasyMagicalSkybox: React.FC<FantasyMagicalSkyboxProps> = ({ real
     return null;
   }
 
-  // Generate random star positions
+  // Generate magical stars
   const stars = useMemo(() => {
-    return Array.from({ length: 200 }, (_, i) => ({
+    return Array.from({ length: 300 }, (_, i) => ({
       position: [
-        (Math.random() - 0.5) * 400,
-        30 + Math.random() * 100,
-        (Math.random() - 0.5) * 400
+        (Math.random() - 0.5) * 500,
+        40 + Math.random() * 150,
+        (Math.random() - 0.5) * 500
       ] as [number, number, number],
-      scale: 0.02 + Math.random() * 0.03
+      scale: 0.02 + Math.random() * 0.04,
+      color: Math.random() > 0.5 ? '#FFFFFF' : '#FFD700'
     }));
   }, []);
 
-  // Generate nebula positions
-  const nebulae = useMemo(() => {
-    return Array.from({ length: 8 }, (_, i) => ({
-      position: [
-        (Math.random() - 0.5) * 300,
-        40 + Math.random() * 60,
-        (Math.random() - 0.5) * 300
-      ] as [number, number, number],
-      seed: i * 123
-    }));
-  }, []);
-
-  // Generate pulsing lights
-  const lights = useMemo(() => {
+  // Generate aurora ribbons
+  const auroraRibbons = useMemo(() => {
     return Array.from({ length: 6 }, (_, i) => ({
       position: [
         (Math.random() - 0.5) * 200,
-        50 + Math.random() * 40,
+        60 + Math.random() * 40,
         (Math.random() - 0.5) * 200
       ] as [number, number, number],
-      seed: i * 456
+      seed: i * 234,
+      color: i % 3 === 0 ? '#00FFFF' : i % 3 === 1 ? '#FF69B4' : '#9932CC'
     }));
   }, []);
 
   return (
     <group>
-      {/* Main gradient skybox sphere */}
+      {/* Main gradient skybox sphere - matching reference colors */}
       <mesh>
-        <sphereGeometry args={[200, 32, 32]} />
+        <sphereGeometry args={[300, 32, 32]} />
         <meshBasicMaterial 
           side={THREE.BackSide}
         >
@@ -110,25 +79,30 @@ export const FantasyMagicalSkybox: React.FC<FantasyMagicalSkyboxProps> = ({ real
               canvas.height = 1024;
               const ctx = canvas.getContext('2d')!;
               
-              // Create magical gradient: bottom #260c63, top #4c1b70
+              // Create magical gradient matching reference: deep blue to purple with aurora hints
               const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-              gradient.addColorStop(0, '#4c1b70'); // Top
-              gradient.addColorStop(0.4, '#3d1a58'); // Mid-upper
-              gradient.addColorStop(0.7, '#2e1340'); // Mid-lower
-              gradient.addColorStop(1, '#260c63'); // Bottom
+              gradient.addColorStop(0, '#1E1B4B'); // Deep indigo at top
+              gradient.addColorStop(0.3, '#4338CA'); // Royal blue
+              gradient.addColorStop(0.6, '#7C3AED'); // Purple
+              gradient.addColorStop(0.8, '#A855F7'); // Light purple
+              gradient.addColorStop(1, '#EC4899'); // Pink at horizon
               
               ctx.fillStyle = gradient;
               ctx.fillRect(0, 0, canvas.width, canvas.height);
               
-              // Add magical shimmer and texture
-              ctx.fillStyle = 'rgba(156, 39, 176, 0.1)';
-              for (let i = 0; i < 150; i++) {
-                const x = Math.random() * canvas.width;
-                const y = Math.random() * canvas.height;
-                const size = Math.random() * 6;
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
-                ctx.fill();
+              // Add aurora-like streaks
+              ctx.globalCompositeOperation = 'lighter';
+              for (let i = 0; i < 20; i++) {
+                const auroraGradient = ctx.createLinearGradient(
+                  Math.random() * canvas.width, 0,
+                  Math.random() * canvas.width, canvas.height * 0.6
+                );
+                auroraGradient.addColorStop(0, 'rgba(0, 255, 255, 0.1)');
+                auroraGradient.addColorStop(0.5, 'rgba(255, 105, 180, 0.2)');
+                auroraGradient.addColorStop(1, 'rgba(147, 51, 234, 0.1)');
+                
+                ctx.fillStyle = auroraGradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
               }
               
               return canvas;
@@ -137,53 +111,45 @@ export const FantasyMagicalSkybox: React.FC<FantasyMagicalSkyboxProps> = ({ real
         </meshBasicMaterial>
       </mesh>
 
-      {/* Scattered stars */}
+      {/* Scattered magical stars */}
       {stars.map((star, i) => (
         <mesh key={`star_${i}`} position={star.position} scale={star.scale}>
-          <sphereGeometry args={[1, 8, 6]} />
+          <sphereGeometry args={[1, 6, 4]} />
           <meshStandardMaterial 
-            color="#ffffff"
-            emissive="#ffffff"
-            emissiveIntensity={0.8}
+            color={star.color}
+            emissive={star.color}
+            emissiveIntensity={0.9}
           />
         </mesh>
       ))}
 
-      {/* Floating nebula effects */}
-      {nebulae.map((nebula, i) => (
-        <FloatingNebula
-          key={`nebula_${i}`}
-          position={nebula.position}
-          seed={nebula.seed}
+      {/* Aurora ribbon effects */}
+      {auroraRibbons.map((aurora, i) => (
+        <AuroraRibbon
+          key={`aurora_${i}`}
+          position={aurora.position}
+          seed={aurora.seed}
+          color={aurora.color}
         />
       ))}
 
-      {/* Pulsing magical lights */}
-      {lights.map((light, i) => (
-        <PulsingLight
-          key={`light_${i}`}
-          position={light.position}
-          seed={light.seed}
-        />
-      ))}
-
-      {/* Additional atmospheric elements */}
+      {/* Additional floating magical effects */}
       <group>
-        {Array.from({ length: 12 }, (_, i) => (
+        {Array.from({ length: 20 }, (_, i) => (
           <mesh 
-            key={`atmosphere_${i}`} 
+            key={`magic_${i}`} 
             position={[
               (Math.random() - 0.5) * 150,
-              20 + Math.random() * 30,
+              30 + Math.random() * 50,
               (Math.random() - 0.5) * 150
             ]}
             rotation={[0, Math.random() * Math.PI * 2, 0]}
           >
-            <planeGeometry args={[25, 8]} />
+            <ringGeometry args={[3, 5, 8]} />
             <meshBasicMaterial 
-              color={i % 2 === 0 ? '#9c27b0' : '#673ab7'}
+              color={i % 2 === 0 ? '#00FFFF' : '#FF69B4'}
               transparent
-              opacity={0.15}
+              opacity={0.2}
               side={THREE.DoubleSide}
             />
           </mesh>

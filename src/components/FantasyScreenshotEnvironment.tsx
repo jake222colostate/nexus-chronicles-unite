@@ -4,6 +4,7 @@ import { ChunkData } from './ChunkSystem';
 import { FantasyGround } from './FantasyGround';
 import { FantasyTreesWithGlow } from './FantasyTreesWithGlow';
 import { FantasyMagicalMountains } from './FantasyMagicalMountains';
+import { FantasyPortalGateway } from './FantasyPortalGateway';
 
 interface FantasyScreenshotEnvironmentProps {
   chunks: ChunkData[];
@@ -26,23 +27,23 @@ const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> 
 
   return (
     <group>
-      {/* Magical ground with stone pathway */}
+      {/* Magical ground with stepping stone pathway */}
       <FantasyGround />
 
-      {/* Glowing magical trees */}
+      {/* Lush magical trees */}
       <FantasyTreesWithGlow />
 
-      {/* Crystal-infused mountains */}
+      {/* Pink/purple crystalline mountains with cyan crystals */}
       <FantasyMagicalMountains />
 
-      {/* Ground-level purple fog */}
-      <fog attach="fog" args={['#38245c', 50, 200]} />
-      
-      {/* Atmospheric lighting */}
-      <ambientLight intensity={0.4} color="#4c1b70" />
+      {/* Portal gateway in the distance */}
+      <FantasyPortalGateway />
+
+      {/* Enhanced atmospheric lighting to match reference */}
+      <ambientLight intensity={0.6} color="#E6E6FA" />
       <directionalLight
         position={[10, 30, 10]}
-        intensity={0.8}
+        intensity={1.0}
         color="#ffffff"
         castShadow
         shadow-mapSize-width={2048}
@@ -54,12 +55,20 @@ const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> 
         shadow-camera-bottom={-100}
       />
       
-      {/* Soft fill light for crystal glow */}
+      {/* Magical cyan accent lighting */}
       <pointLight 
         position={[0, 15, -50]}
-        color="#00ffff"
-        intensity={0.3}
+        color="#00FFFF"
+        intensity={0.4}
         distance={100}
+      />
+      
+      {/* Warm orange lighting from the pathway */}
+      <pointLight 
+        position={[0, 2, -20]}
+        color="#FF8C00"
+        intensity={0.3}
+        distance={40}
       />
     </group>
   );
