@@ -28,10 +28,20 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
   // Spawn new enemy ahead of player
   const spawnEnemy = useCallback(() => {
     const now = Date.now();
-    if (now - lastSpawnTime.current < spawnInterval) return;
+    console.log(`EnemySystem: Attempting to spawn enemy. Now: ${now}, Last spawn: ${lastSpawnTime.current}, Interval: ${spawnInterval}`);
+    
+    if (now - lastSpawnTime.current < spawnInterval) {
+      console.log(`EnemySystem: Too soon to spawn (${now - lastSpawnTime.current}ms since last spawn)`);
+      return;
+    }
 
     setEnemies(prev => {
-      if (prev.length >= maxEnemies) return prev;
+      console.log(`EnemySystem: Current enemy count: ${prev.length}, Max: ${maxEnemies}`);
+      
+      if (prev.length >= maxEnemies) {
+        console.log(`EnemySystem: Max enemies reached (${prev.length}/${maxEnemies})`);
+        return prev;
+      }
 
       // Spawn enemy 100m ahead of player's Z position
       const spawnZ = playerPosition.z - spawnDistance;
@@ -45,6 +55,8 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
         spawnTime: now
       };
 
+      console.log(`EnemySystem: Spawning enemy at position [${spawnX}, 1, ${spawnZ}], player at [${playerPosition.x}, ${playerPosition.y}, ${playerPosition.z}]`);
+      
       lastSpawnTime.current = now;
       return [...prev, newEnemy];
     });
@@ -52,6 +64,7 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
 
   // Remove enemy when it reaches player or gets too far behind
   const removeEnemy = useCallback((enemyId: string) => {
+    console.log(`EnemySystem: Removing enemy ${enemyId}`);
     setEnemies(prev => prev.filter(enemy => enemy.id !== enemyId));
   }, []);
 
@@ -61,14 +74,28 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
     spawnEnemy();
 
     // Clean up enemies that are too far behind player
-    setEnemies(prev => prev.filter(enemy => {
-      const enemyZ = enemy.position[2];
-      const distanceBehindPlayer = playerPosition.z - enemyZ;
+    setEnemies(prev => {
+      const filtered = prev.filter(enemy => {
+        const enemyZ = enemy.position[2];
+        const distanceBehindPlayer = playerPosition.z - enemyZ;
+        
+        // Remove if more than 50 units behind player
+        const shouldKeep = distanceBehindPlayer < 50;
+        if (!shouldKeep) {
+          console.log(`EnemySystem: Cleaning up enemy at Z=${enemyZ}, player at Z=${playerPosition.z}, distance behind: ${distanceBehindPlayer}`);
+        }
+        return shouldKeep;
+      });
       
-      // Remove if more than 50 units behind player
-      return distanceBehindPlayer < 50;
-    }));
+      if (filtered.length !== prev.length) {
+        console.log(`EnemySystem: Cleaned up ${prev.length - filtered.length} enemies`);
+      }
+      
+      return filtered;
+    });
   });
+
+  console.log(`EnemySystem: Rendering ${enemies.length} enemies`);
 
   return (
     <group>
