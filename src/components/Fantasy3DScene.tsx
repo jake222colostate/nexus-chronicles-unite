@@ -5,6 +5,7 @@ import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { FantasyScreenshotEnvironment } from './FantasyScreenshotEnvironment';
+import { EnemySystem } from './EnemySystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -50,6 +51,13 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           />
         )}
       </ChunkSystem>
+
+      {/* Enemy System - spawns enemies ahead of player */}
+      <EnemySystem 
+        playerPosition={cameraPosition}
+        maxEnemies={5}
+        spawnDistance={100}
+      />
 
       {/* Simplified contact shadows */}
       <ContactShadows 
