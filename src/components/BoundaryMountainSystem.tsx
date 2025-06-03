@@ -27,20 +27,20 @@ const SharpMountainCluster: React.FC<{
         return new THREE.ConeGeometry(
           2 + seededRandom(mountainSeed) * 1.5, 
           20 + seededRandom(mountainSeed + 1) * 15, 
-          6  // Fewer segments for sharper look
+          4  // Reduced segments for performance
         );
       case 'ridge':
         return new THREE.CylinderGeometry(
           0.3 + seededRandom(mountainSeed) * 0.5, 
           1.5 + seededRandom(mountainSeed + 1) * 1.5, 
           15 + seededRandom(mountainSeed + 2) * 10, 
-          6  // Sharp ridges
+          4  // Reduced segments
         );
       case 'spire':
         return new THREE.ConeGeometry(
           0.8 + seededRandom(mountainSeed) * 0.7,
           25 + seededRandom(mountainSeed + 1) * 12,
-          4  // Very sharp spires
+          3  // Reduced segments for performance
         );
       case 'cliff':
         return new THREE.BoxGeometry(
@@ -49,16 +49,16 @@ const SharpMountainCluster: React.FC<{
           4 + seededRandom(mountainSeed + 2) * 2
         );
       default:
-        return new THREE.ConeGeometry(2, 20, 6);
+        return new THREE.ConeGeometry(2, 20, 4);
     }
   };
 
   const mountainTypes = ['peak', 'ridge', 'spire', 'cliff'] as const;
-  const mountainCount = 5 + Math.floor(seededRandom(seed) * 4);
+  const mountainCount = 3 + Math.floor(seededRandom(seed) * 2); // Reduced from 5-9 to 3-5
 
   return (
     <group position={position} scale={[scale, scale, scale]}>
-      {/* Create multiple sharp mountain shapes */}
+      {/* Create fewer mountain shapes for performance */}
       {Array.from({ length: mountainCount }, (_, i) => {
         const mountainSeed = seed + i * 47;
         const type = mountainTypes[Math.floor(seededRandom(mountainSeed) * mountainTypes.length)];
@@ -71,7 +71,6 @@ const SharpMountainCluster: React.FC<{
         const rotationX = (seededRandom(mountainSeed + 5) - 0.5) * 0.2;
         const rotationZ = (seededRandom(mountainSeed + 6) - 0.5) * 0.1;
         
-        // Darker, more dramatic colors for sharp mountains
         const baseHue = 0.05 + seededRandom(mountainSeed + 7) * 0.05;
         const saturation = 0.1 + seededRandom(mountainSeed + 8) * 0.2;
         const lightness = 0.15 + seededRandom(mountainSeed + 9) * 0.15;
@@ -92,8 +91,8 @@ const SharpMountainCluster: React.FC<{
         );
       })}
       
-      {/* Sharp rock formations at base */}
-      {Array.from({ length: 8 + Math.floor(seededRandom(seed + 100) * 6) }, (_, i) => {
+      {/* Fewer rock formations for performance */}
+      {Array.from({ length: 4 + Math.floor(seededRandom(seed + 100) * 3) }, (_, i) => { // Reduced from 8-14 to 4-7
         const rockSeed = seed + i * 73 + 1000;
         const rockX = (seededRandom(rockSeed) - 0.5) * 12;
         const rockY = -2 + seededRandom(rockSeed + 1) * 3;
@@ -119,7 +118,7 @@ const SharpMountainCluster: React.FC<{
         );
       })}
       
-      {/* Invisible collision barriers extending toward path */}
+      {/* Invisible collision barriers */}
       <mesh
         position={[side === 'left' ? 8 : -8, 15, 0]}
         visible={false}
@@ -147,12 +146,12 @@ export const BoundaryMountainSystem: React.FC<BoundaryMountainSystemProps> = ({
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
       
-      // Left boundary mountains (closer to path, X = -18 to -28)
-      const leftClusterCount = 2 + Math.floor(seededRandom(seed + 100) * 2);
+      // Fewer mountain clusters for performance
+      const leftClusterCount = 1 + Math.floor(seededRandom(seed + 100) * 1); // Reduced from 2-4 to 1-2
       for (let i = 0; i < leftClusterCount; i++) {
         const clusterSeed = seed + i * 89 + 1000;
-        const x = -22 - seededRandom(clusterSeed) * 6; // -22 to -28, much closer to path
-        const z = worldZ - (i * 25) - seededRandom(clusterSeed + 1) * 15;
+        const x = -22 - seededRandom(clusterSeed) * 6;
+        const z = worldZ - (i * 30) - seededRandom(clusterSeed + 1) * 20; // Increased spacing
         const scale = 1.4 + seededRandom(clusterSeed + 2) * 1.0;
         
         clusters.push({
@@ -161,12 +160,11 @@ export const BoundaryMountainSystem: React.FC<BoundaryMountainSystemProps> = ({
         });
       }
       
-      // Right boundary mountains (closer to path, X = +18 to +28)
-      const rightClusterCount = 2 + Math.floor(seededRandom(seed + 200) * 2);
+      const rightClusterCount = 1 + Math.floor(seededRandom(seed + 200) * 1); // Reduced
       for (let i = 0; i < rightClusterCount; i++) {
         const clusterSeed = seed + i * 89 + 2000;
-        const x = 22 + seededRandom(clusterSeed) * 6; // +22 to +28, much closer to path
-        const z = worldZ - (i * 25) - seededRandom(clusterSeed + 1) * 15;
+        const x = 22 + seededRandom(clusterSeed) * 6;
+        const z = worldZ - (i * 30) - seededRandom(clusterSeed + 1) * 20; // Increased spacing
         const scale = 1.4 + seededRandom(clusterSeed + 2) * 1.0;
         
         clusters.push({

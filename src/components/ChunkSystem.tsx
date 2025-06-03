@@ -29,25 +29,29 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     const playerChunkX = Math.floor(playerPosition.x / chunkSize);
     const playerChunkZ = Math.floor(Math.abs(playerPosition.z) / chunkSize);
     
-    // Much larger chunk radius for far terrain rendering
-    const chunkRadius = Math.ceil(renderDistance / chunkSize);
-    const farAheadChunks = Math.ceil(renderDistance / chunkSize) * 2; // Generate chunks much farther ahead
+    // Much smaller chunk radius for 60fps performance
+    const maxRenderDistance = Math.min(renderDistance, 200); // Cap render distance
+    const chunkRadius = Math.ceil(maxRenderDistance / chunkSize);
+    const farAheadChunks = Math.ceil(maxRenderDistance / chunkSize);
     
-    // Generate chunks in a much larger pattern for far terrain
-    for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius; x++) {
-      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + chunkRadius + farAheadChunks; z++) {
-        // Generate chunks far ahead and behind the player
-        if (z >= -Math.ceil(renderDistance / chunkSize)) {
+    // Limit total chunks for performance
+    let chunkCount = 0;
+    const maxChunks = 80; // Hard limit for 60fps
+    
+    // Generate chunks in a smaller pattern for performance
+    for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius && chunkCount < maxChunks; x++) {
+      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + chunkRadius + farAheadChunks && chunkCount < maxChunks; z++) {
+        if (z >= -Math.ceil(maxRenderDistance / chunkSize)) {
           const worldX = x * chunkSize;
           const worldZ = -z * chunkSize;
           
-          // Much more generous distance-based culling for far terrain
+          // More aggressive distance-based culling
           const distanceToPlayer = Math.sqrt(
             Math.pow(worldX - playerPosition.x, 2) + 
             Math.pow(worldZ - playerPosition.z, 2)
           );
           
-          if (distanceToPlayer <= renderDistance + chunkSize * 2) {
+          if (distanceToPlayer <= maxRenderDistance) {
             // Optimized deterministic seed
             const seed = ((x & 0xFFFF) << 16) | (z & 0xFFFF);
             
@@ -59,19 +63,21 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
               worldZ,
               seed: Math.abs(seed) % 10000
             });
+            
+            chunkCount++;
           }
         }
       }
     }
     
-    console.log(`ChunkSystem: Generated ${chunks.length} chunks with render distance ${renderDistance}`);
+    console.log(`ChunkSystem: Generated ${chunks.length} chunks (max: ${maxChunks}) with render distance ${maxRenderDistance}`);
     
     return chunks;
   }, [
     Math.floor(playerPosition.x / chunkSize), 
     Math.floor(Math.abs(playerPosition.z) / chunkSize), 
     chunkSize, 
-    renderDistance
+    Math.min(renderDistance, 200) // Cap for performance
   ]);
 
   return <>{children(activeChunks)}</>;
