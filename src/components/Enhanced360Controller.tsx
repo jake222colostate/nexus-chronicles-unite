@@ -42,79 +42,74 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     console.log('Camera initialized at:', targetPosition.current);
   }, [camera]);
 
-  // Keyboard event handlers
+  // Keyboard event handlers with improved key detection
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      console.log('Key pressed:', event.key, event.code);
-      switch (event.key.toLowerCase()) {
+      const key = event.key.toLowerCase();
+      console.log('Key down:', key, event.code);
+      
+      // Prevent default for movement keys
+      if (['w', 's', 'a', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+        event.preventDefault();
+      }
+      
+      switch (key) {
         case 'w':
-          keys.current.forward = true;
-          console.log('Moving forward');
-          break;
-        case 's':
-          keys.current.backward = true;
-          console.log('Moving backward');
-          break;
-        case 'a':
-          keys.current.left = true;
-          console.log('Moving left');
-          break;
-        case 'd':
-          keys.current.right = true;
-          console.log('Moving right');
-          break;
         case 'arrowup':
           keys.current.forward = true;
-          console.log('Moving forward (arrow)');
+          console.log('Forward movement activated');
           break;
+        case 's':
         case 'arrowdown':
           keys.current.backward = true;
-          console.log('Moving backward (arrow)');
+          console.log('Backward movement activated');
           break;
+        case 'a':
         case 'arrowleft':
           keys.current.left = true;
-          console.log('Moving left (arrow)');
+          console.log('Left movement activated');
           break;
+        case 'd':
         case 'arrowright':
           keys.current.right = true;
-          console.log('Moving right (arrow)');
+          console.log('Right movement activated');
           break;
       }
+      
+      console.log('Current keys state:', keys.current);
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      switch (event.key.toLowerCase()) {
+      const key = event.key.toLowerCase();
+      console.log('Key up:', key);
+      
+      switch (key) {
         case 'w':
-          keys.current.forward = false;
-          break;
-        case 's':
-          keys.current.backward = false;
-          break;
-        case 'a':
-          keys.current.left = false;
-          break;
-        case 'd':
-          keys.current.right = false;
-          break;
         case 'arrowup':
           keys.current.forward = false;
           break;
+        case 's':
         case 'arrowdown':
           keys.current.backward = false;
           break;
+        case 'a':
         case 'arrowleft':
           keys.current.left = false;
           break;
+        case 'd':
         case 'arrowright':
           keys.current.right = false;
           break;
       }
+      
+      console.log('Keys state after release:', keys.current);
     };
 
     // Mouse controls with press and hold
     const handleMouseDown = (event: MouseEvent) => {
       if (event.button === 0) {
         isMousePressed.current = true;
+        console.log('Mouse pressed for look controls');
         event.preventDefault();
       }
     };
@@ -122,6 +117,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     const handleMouseUp = (event: MouseEvent) => {
       if (event.button === 0) {
         isMousePressed.current = false;
+        console.log('Mouse released');
       }
     };
 
@@ -135,18 +131,19 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('keyup', handleKeyUp);
+    // Add event listeners to window for better key capture
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
+    window.addEventListener('keyup', handleKeyUp, { capture: true });
     document.addEventListener('mousedown', handleMouseDown);
     document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-    console.log('Enhanced360Controller event listeners attached');
+    console.log('Enhanced360Controller event listeners attached to window');
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      window.removeEventListener('keyup', handleKeyUp, { capture: true });
       document.removeEventListener('mousedown', handleMouseDown);
       document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('mousemove', handleMouseMove);
@@ -167,26 +164,33 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     const moveVector = new Vector3();
     let isMoving = false;
     
+    // Check each movement direction
     if (keys.current.forward) {
       moveVector.add(forward);
       isMoving = true;
+      console.log('Moving forward');
     }
     if (keys.current.backward) {
       moveVector.sub(forward);
       isMoving = true;
+      console.log('Moving backward');
     }
     if (keys.current.left) {
       moveVector.sub(right);
       isMoving = true;
+      console.log('Moving left');
     }
     if (keys.current.right) {
       moveVector.add(right);
       isMoving = true;
+      console.log('Moving right');
     }
     
+    // Apply velocity and movement
     if (moveVector.length() > 0) {
       moveVector.normalize().multiplyScalar(moveSpeed);
       velocity.current.lerp(moveVector, acceleration);
+      console.log('Movement vector applied:', moveVector, 'Velocity:', velocity.current);
     } else {
       velocity.current.multiplyScalar(damping);
     }
@@ -203,12 +207,14 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     camera.position.copy(targetPosition.current);
     camera.rotation.set(pitchAngle.current, yawAngle.current, 0, 'YXZ');
     
-    // Log movement for debugging
-    if (isMoving) {
-      console.log('Moving:', {
+    // Log movement details for debugging
+    if (isMoving || velocity.current.length() > 0.01) {
+      console.log('Frame update:', {
+        isMoving,
+        keys: keys.current,
+        velocity: velocity.current.length(),
         position: targetPosition.current,
-        velocity: velocity.current,
-        keys: keys.current
+        deltaTime: delta
       });
     }
     
@@ -217,6 +223,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     if (distanceMoved > 0.1) {
       lastNotifiedPosition.current.copy(targetPosition.current);
       onPositionChange(targetPosition.current.clone());
+      console.log('Position change notified:', targetPosition.current);
     }
   });
 
