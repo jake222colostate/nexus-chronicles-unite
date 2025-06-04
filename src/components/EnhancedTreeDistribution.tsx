@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -176,88 +177,94 @@ const applyTrunkProportionFix = (scene: THREE.Object3D, treeType: 'pine218' | 's
   return scene;
 };
 
-// Performance-optimized instanced tree component with trunk proportion fix
+// Performance-optimized instanced tree component with proper hook usage
 const InstancedTreeGroup: React.FC<{
   modelUrl: string;
   treeType: 'pine218' | 'stylized';
   positions: Array<{ x: number; y: number; z: number; scale: number; rotation: number; }>;
   playerPosition: THREE.Vector3;
 }> = ({ modelUrl, treeType, positions, playerPosition }) => {
+  // FIXED: Move all hooks to the top level
   const meshRef = useRef<THREE.InstancedMesh>(null);
-  const lodDistance = 100; // LOD switching distance
   
+  // Load the model at the top level
+  let scene: THREE.Object3D | null = null;
   try {
-    const { scene } = useGLTF(modelUrl);
-    
-    if (!scene || positions.length === 0) {
-      return null;
+    const gltf = useGLTF(modelUrl);
+    scene = gltf.scene;
+  } catch (error) {
+    console.log(`Failed to load ${treeType} model:`, error);
+    return null;
+  }
+
+  // Early return if no scene or positions
+  if (!scene || positions.length === 0) {
+    console.log(`No scene or positions for ${treeType}, skipping`);
+    return null;
+  }
+
+  // Apply trunk proportion corrections for stylized trees
+  const processedScene = applyTrunkProportionFix(scene.clone(), treeType);
+
+  // Get geometry and material from the processed model
+  let geometry: THREE.BufferGeometry | null = null;
+  let material: THREE.Material | null = null;
+  
+  processedScene.traverse((child) => {
+    if (child instanceof THREE.Mesh && !geometry) {
+      geometry = child.geometry;
+      material = child.material;
     }
+  });
 
-    // FIXED: Apply trunk proportion corrections for stylized trees
-    const processedScene = applyTrunkProportionFix(scene.clone(), treeType);
+  // Early return if no valid geometry/material
+  if (!geometry || !material) {
+    console.log(`No valid geometry/material found for ${treeType}, skipping`);
+    return null;
+  }
 
-    // Get geometry and material from the processed model
-    let geometry: THREE.BufferGeometry | null = null;
-    let material: THREE.Material | null = null;
-    
-    processedScene.traverse((child) => {
-      if (child instanceof THREE.Mesh && !geometry) {
-        geometry = child.geometry;
-        material = child.material;
-      }
-    });
+  console.log(`Successfully rendering ${treeType} with FIXED trunk proportions - ${positions.length} instances`);
 
-    if (!geometry || !material) {
-      console.log(`No valid geometry/material found for ${treeType}, skipping entirely`);
-      return null; // Skip tree entirely if GLB fails to load - no geometric fallback
-    }
-
-    console.log(`Successfully loaded ${treeType} with FIXED trunk proportions - ${positions.length} instances`);
-
-    // Performance optimization: Use LOD based on distance and automatically discard outside render distance
-    useFrame(() => {
-      if (meshRef.current && playerPosition) {
-        const tempMatrix = new THREE.Matrix4();
-        const tempPosition = new THREE.Vector3();
-        const renderDistance = 200; // Automatically discard objects outside render distance
+  // Performance optimization: Use LOD based on distance
+  useFrame(() => {
+    if (meshRef.current && playerPosition) {
+      const tempMatrix = new THREE.Matrix4();
+      const renderDistance = 200;
+      const lodDistance = 100;
+      
+      for (let i = 0; i < positions.length; i++) {
+        const pos = positions[i];
+        const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
         
-        for (let i = 0; i < positions.length; i++) {
-          const pos = positions[i];
-          const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
-          
-          // Skip if outside render distance
-          if (distance > renderDistance) {
-            continue;
-          }
-          
-          // Simple LOD: reduce scale for distant trees
-          const lodScale = distance > lodDistance ? pos.scale * 0.5 : pos.scale;
-          
-          tempMatrix.compose(
-            new THREE.Vector3(pos.x, pos.y, pos.z),
-            new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), pos.rotation),
-            new THREE.Vector3(lodScale, lodScale, lodScale)
-          );
-          
-          meshRef.current.setMatrixAt(i, tempMatrix);
+        // Skip if outside render distance
+        if (distance > renderDistance) {
+          continue;
         }
         
-        meshRef.current.instanceMatrix.needsUpdate = true;
+        // Simple LOD: reduce scale for distant trees
+        const lodScale = distance > lodDistance ? pos.scale * 0.5 : pos.scale;
+        
+        tempMatrix.compose(
+          new THREE.Vector3(pos.x, pos.y, pos.z),
+          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), pos.rotation),
+          new THREE.Vector3(lodScale, lodScale, lodScale)
+        );
+        
+        meshRef.current.setMatrixAt(i, tempMatrix);
       }
-    });
+      
+      meshRef.current.instanceMatrix.needsUpdate = true;
+    }
+  });
 
-    return (
-      <instancedMesh
-        ref={meshRef}
-        args={[geometry, material, positions.length]}
-        castShadow
-        receiveShadow
-      />
-    );
-  } catch (error) {
-    console.log(`Failed to load ${treeType} model, skipping entirely:`, error);
-    return null; // Skip tree entirely if GLB fails to load - no geometric fallback
-  }
+  return (
+    <instancedMesh
+      ref={meshRef}
+      args={[geometry, material, positions.length]}
+      castShadow
+      receiveShadow
+    />
+  );
 };
 
 export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> = ({
