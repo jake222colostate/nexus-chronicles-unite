@@ -32,15 +32,15 @@ const FallbackPineTree: React.FC<{
   return (
     <group position={position} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
       <mesh position={[0, 1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.1, 0.15, 2]} />
+        <cylinderGeometry args={[0.05, 0.08, 1]} />
         <meshLambertMaterial color="#654321" />
       </mesh>
-      <mesh position={[0, 2.2, 0]} castShadow receiveShadow>
-        <coneGeometry args={[0.8, 1.8, 8]} />
+      <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
+        <coneGeometry args={[0.4, 0.9, 8]} />
         <meshLambertMaterial color="#013220" />
       </mesh>
-      <mesh position={[0, 3.2, 0]} castShadow receiveShadow>
-        <coneGeometry args={[0.6, 1.4, 8]} />
+      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
+        <coneGeometry args={[0.3, 0.7, 8]} />
         <meshLambertMaterial color="#228B22" />
       </mesh>
     </group>
@@ -54,16 +54,16 @@ const FallbackStylizedTree: React.FC<{
 }> = ({ position, scale, rotation }) => {
   return (
     <group position={position} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.12, 0.18, 1.6]} />
+      <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.06, 0.09, 0.8]} />
         <meshLambertMaterial color="#8B4513" />
       </mesh>
-      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-        <sphereGeometry args={[1.2, 12, 8]} />
+      <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
+        <sphereGeometry args={[0.6, 12, 8]} />
         <meshLambertMaterial color="#228B22" />
       </mesh>
-      <mesh position={[0, 2.4, 0]} castShadow receiveShadow>
-        <sphereGeometry args={[0.9, 10, 6]} />
+      <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
+        <sphereGeometry args={[0.45, 10, 6]} />
         <meshLambertMaterial color="#32CD32" />
       </mesh>
     </group>
@@ -117,13 +117,13 @@ const GLBTreeInstance: React.FC<{
 
 // Terrain height simulation function
 const getTerrainHeight = (x: number, z: number): number => {
-  return Math.sin(x * 0.01) * Math.cos(z * 0.01) * 3 + 
-         Math.sin(x * 0.005) * Math.cos(z * 0.005) * 5;
+  return Math.sin(x * 0.01) * Math.cos(z * 0.01) * 1.5 + 
+         Math.sin(x * 0.005) * Math.cos(z * 0.005) * 2.5;
 };
 
 // Check if position is on a steep slope (>45°)
 const isOnSteepSlope = (x: number, z: number): boolean => {
-  const sampleDistance = 2;
+  const sampleDistance = 1.5;
   const centerHeight = getTerrainHeight(x, z);
   const northHeight = getTerrainHeight(x, z - sampleDistance);
   const southHeight = getTerrainHeight(x, z + sampleDistance);
@@ -137,12 +137,17 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
     Math.abs(centerHeight - westHeight)
   ) / sampleDistance;
   
-  return maxSlope > 1.0; // ~45° slope threshold
+  return maxSlope > 0.8; // Adjusted slope threshold
 };
 
 // Check if position is too close to player path
 const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4; // 4 unit buffer around path center
+};
+
+// Check if position conflicts with mountain areas
+const isInMountainArea = (x: number, z: number): boolean => {
+  return Math.abs(x) > 15; // Keep trees away from mountain areas (x > 15 or x < -15)
 };
 
 // Determine tree type based on distribution percentages
@@ -171,18 +176,18 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
     return null;
   }
 
-  // Generate tree positions with even distribution and proper constraints
+  // Generate tree positions with careful placement to avoid mountains
   const treePositions = useMemo(() => {
     console.log('Generating distributed tree positions for', chunks.length, 'chunks');
     const positions = [];
-    const minDistance = 3; // 2-4 meter separation as requested
-    const maxAttempts = 25;
+    const minDistance = 4; // Reduced minimum distance
+    const maxAttempts = 20; // Reduced attempts for performance
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 5-8 trees per chunk for good coverage
-      const treeCount = 5 + Math.floor(seededRandom(seed) * 4);
+      // Generate fewer trees per chunk to avoid overcrowding
+      const treeCount = 2 + Math.floor(seededRandom(seed) * 3); // 2-4 trees per chunk
       console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
       
       for (let i = 0; i < treeCount; i++) {
@@ -193,31 +198,28 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 123;
           
-          // Apply position jitter to avoid grid alignment
-          const jitterX = (seededRandom(treeSeed + 10) - 0.5) * 6; // ±3 meter jitter
-          const jitterZ = (seededRandom(treeSeed + 11) - 0.5) * 6; // ±3 meter jitter
-          
-          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8 + jitterX;
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8 + jitterZ;
+          // More constrained positioning to avoid mountains
+          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.5; // Reduced spread
+          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.5;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Skip if on player path or steep slope
-          if (isOnPlayerPath(x, z) || isOnSteepSlope(x, z)) {
+          // Skip if on player path, steep slope, or in mountain area
+          if (isOnPlayerPath(x, z) || isOnSteepSlope(x, z) || isInMountainArea(x, z)) {
             attempts++;
             continue;
           }
           
-          // Determine tree type based on even distribution percentages
+          // Determine tree type based on distribution percentages
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // Random scaling between 0.8x and 1.2x as requested
-          scale = 0.8 + seededRandom(treeSeed + 3) * 0.4; // 0.8 to 1.2
+          // Much smaller scaling - trees should be decorative, not dominant
+          scale = 0.2 + seededRandom(treeSeed + 3) * 0.15; // 0.2 to 0.35 scale
           
           // Y-axis random rotation (0°–360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
-          // Check minimum distance from existing trees (2-4 meters)
+          // Check minimum distance from existing trees
           validPosition = positions.every(pos => {
             const distance = Math.sqrt(
               Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
@@ -239,8 +241,6 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
             chunkId: chunk.id 
           });
           console.log(`${treeType} tree placed at (${x.toFixed(2)}, ${terrainHeight.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
-        } else {
-          console.warn(`Failed to place tree ${i} in chunk ${chunk.id} after ${maxAttempts} attempts`);
         }
       }
     });
@@ -252,9 +252,9 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
     const total = positions.length;
     
     console.log(`Total distributed trees generated: ${total}`);
-    console.log(`Pine trees: ${pineCount} (${((pineCount/total)*100).toFixed(1)}%)`);
-    console.log(`Stylized A trees: ${stylizedACount} (${((stylizedACount/total)*100).toFixed(1)}%)`);
-    console.log(`Stylized B trees: ${stylizedBCount} (${((stylizedBCount/total)*100).toFixed(1)}%)`);
+    console.log(`Pine trees: ${pineCount} (${total > 0 ? ((pineCount/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Stylized A trees: ${stylizedACount} (${total > 0 ? ((stylizedACount/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Stylized B trees: ${stylizedBCount} (${total > 0 ? ((stylizedBCount/total)*100).toFixed(1) : 0}%)`);
     
     return positions;
   }, [chunks, chunkSize]);

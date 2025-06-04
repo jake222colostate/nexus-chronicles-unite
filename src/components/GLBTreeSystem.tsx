@@ -23,6 +23,17 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
+// Terrain height simulation function
+const getTerrainHeight = (x: number, z: number): number => {
+  return Math.sin(x * 0.01) * Math.cos(z * 0.01) * 2 + 
+         Math.sin(x * 0.005) * Math.cos(z * 0.005) * 3;
+};
+
+// Check if position is on player path
+const isOnPlayerPath = (x: number, z: number): boolean => {
+  return Math.abs(x) < 3; // 3 unit buffer around path center
+};
+
 // Fallback tree component using basic geometry
 const FallbackTree: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
   position,
@@ -112,32 +123,42 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
     const positions: Array<{
       x: number;
       z: number;
+      y: number;
       scale: number;
       rotation: number;
       modelUrl: string;
       chunkId: number;
     }> = [];
-    const minDistance = 5; // Reduced for better coverage
-    const maxAttempts = 30;
+    const minDistance = 8; // Increased distance to spread trees out more
+    const maxAttempts = 20;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 2-4 trees per chunk for better density
-      const treeCount = 2 + Math.floor(seededRandom(seed) * 3);
+      // Generate fewer trees per chunk to avoid overcrowding
+      const treeCount = 1 + Math.floor(seededRandom(seed) * 2); // 1-2 trees per chunk
       console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
         let validPosition = false;
-        let x, z, scale, rotation, modelUrl;
+        let x, z, y, scale, rotation, modelUrl;
         
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 67;
           
-          // Spread trees more broadly across the chunk
-          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8;
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
+          // Place trees further from the path center
+          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.6;
+          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
+          
+          // Skip if on player path
+          if (isOnPlayerPath(x, z)) {
+            attempts++;
+            continue;
+          }
+          
+          // Calculate terrain height for proper placement
+          y = getTerrainHeight(x, z);
           
           // Randomly select a tree model
           const modelKeys = Object.keys(TREE_MODELS) as Array<keyof typeof TREE_MODELS>;
@@ -145,9 +166,9 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
           const treeKey = modelKeys[modelIndex];
           modelUrl = TREE_MODELS[treeKey];
 
-          // Base scale per model for consistent sizing
-          const baseScale = treeKey === 'stylized' ? 1 : treeKey === 'pine218' ? 0.9 : 0.8;
-          const variation = 0.85 + seededRandom(treeSeed + 3) * 0.3;
+          // Much smaller scale for trees - they should be decorative elements
+          const baseScale = 0.3; // Reduced from 0.8-0.9 to 0.3
+          const variation = 0.8 + seededRandom(treeSeed + 3) * 0.4; // 0.8-1.2 variation
           scale = baseScale * variation;
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
@@ -167,8 +188,8 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
         }
         
         if (validPosition) {
-          positions.push({ x, z, scale, rotation, modelUrl, chunkId: chunk.id });
-          console.log(`Tree ${i} placed at (${x.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
+          positions.push({ x, z, y, scale, rotation, modelUrl, chunkId: chunk.id });
+          console.log(`Tree ${i} placed at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
         } else {
           console.warn(`Failed to place tree ${i} in chunk ${chunk.id} after ${maxAttempts} attempts`);
         }
@@ -186,7 +207,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
           <GLBTree
             key={`glb-tree-${pos.chunkId}-${index}`}
             modelUrl={pos.modelUrl}
-            position={[pos.x, 0, pos.z]}
+            position={[pos.x, pos.y, pos.z]}
             scale={pos.scale}
             rotation={pos.rotation}
           />
