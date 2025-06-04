@@ -4,11 +4,11 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Wizard staff model URLs from Netlify
+// Local wizard staff model URLs
 const STAFF_MODELS = {
-  base: 'https://startling-madeleine-8cd04b.netlify.app/mage_staff.glb',
-  upgrade1: 'https://startling-madeleine-8cd04b.netlify.app/magical_staff.glb',
-  upgrade2: 'https://startling-madeleine-8cd04b.netlify.app/stylized_magic_staff_of_water_game_ready.glb'
+  base: '/staffs/mage_staff.glb',
+  upgrade1: '/staffs/magical_staff.glb',
+  upgrade2: '/staffs/stylized_magic_staff_of_water_game_ready.glb'
 } as const;
 
 interface MagicStaffWeaponSystemProps {
@@ -33,9 +33,16 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 
   console.log(`MagicStaffWeaponSystem: Current upgrade level ${upgradeLevel}, using ${currentStaffType} staff`);
 
-  // Load the appropriate staff model
+  // Load the appropriate staff model with error handling
   const modelUrl = STAFF_MODELS[currentStaffType];
-  const gltfResult = useGLTF(modelUrl);
+  let gltfResult;
+  
+  try {
+    gltfResult = useGLTF(modelUrl);
+  } catch (error) {
+    console.warn(`Failed to load staff model ${currentStaffType}:`, error);
+    gltfResult = null;
+  }
 
   // Attach weapon to camera (first-person POV)
   useFrame(() => {
@@ -86,7 +93,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   });
 
-  console.log(`Successfully rendering ${currentStaffType} staff from Netlify`);
+  console.log(`Successfully rendering ${currentStaffType} staff from local files`);
 
   return (
     <group ref={weaponGroupRef}>
@@ -99,13 +106,13 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 };
 
 // Preload all staff models for smooth upgrades
-console.log('Preloading Netlify wizard staff models...');
+console.log('Preloading local wizard staff models...');
 Object.entries(STAFF_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded ${type} staff model from Netlify:`, url);
+    console.log(`Preloaded ${type} staff model from local files:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} staff model from Netlify:`, error);
+    console.warn(`Failed to preload ${type} staff model from local files:`, error);
   }
 });
 
