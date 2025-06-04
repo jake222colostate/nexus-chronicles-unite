@@ -72,7 +72,7 @@ const getTreeTypeByDistribution = (seed: number): 'pine218' | 'stylized' => {
   return random < 0.5 ? 'pine218' : 'stylized';
 };
 
-// Updated scale ranges with new stylized tree specifications
+// Updated scale ranges with trunk compensation fix for stylized trees
 const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): number => {
   const random = seededRandom(seed);
   
@@ -80,13 +80,13 @@ const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): nu
     case 'pine218':
       return 2.8 + random * 0.5; // 2.8 to 3.3 scale
     case 'stylized':
-      return 1.4 + random * 0.2; // 1.4 to 1.6 scale (NEW: reduced from 2.5-3.0)
+      return 2.0; // FIXED: uniform scale 2.0 for trunk compensation
     default:
       return 1.0;
   }
 };
 
-// Performance-optimized instanced tree component with stylized tree trunk fix
+// Performance-optimized instanced tree component with stylized tree trunk compensation fix
 const InstancedTreeGroup: React.FC<{
   modelUrl: string;
   treeType: 'pine218' | 'stylized';
@@ -124,8 +124,8 @@ const InstancedTreeGroup: React.FC<{
         // Simple LOD: reduce scale for distant trees
         const lodScale = distance > lodDistance ? pos.scale * 0.5 : pos.scale;
         
-        // Apply stylized tree trunk fix: lower Y-position by 0.3 to bury excessive trunk
-        const adjustedY = treeType === 'stylized' ? pos.y - 0.3 : pos.y;
+        // Apply stylized tree trunk compensation fix: lower Y-position by 1.2 to bury excessive trunk
+        const adjustedY = treeType === 'stylized' ? pos.y - 1.2 : pos.y;
         
         tempMatrix.compose(
           new THREE.Vector3(pos.x, adjustedY, pos.z),
@@ -162,7 +162,7 @@ const InstancedTreeGroup: React.FC<{
     return null;
   }
 
-  console.log(`Successfully rendering ${treeType} from new Netlify - ${positions.length} instances ${treeType === 'stylized' ? '(with trunk fix)' : ''}`);
+  console.log(`Successfully rendering ${treeType} from new Netlify - ${positions.length} instances ${treeType === 'stylized' ? '(with trunk compensation fix: scale 2.0, Y offset -1.2)' : ''}`);
 
   return (
     <instancedMesh
@@ -179,7 +179,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using new Netlify URLs with stylized tree trunk fix');
+  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using new Netlify URLs with stylized tree trunk compensation fix');
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -189,11 +189,11 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
   // Generate tree positions with updated scaling and spacing requirements
   const { pine218Positions, stylizedPositions, playerPosition } = useMemo(() => {
-    console.log('Generating tree positions with new Netlify models, stylized tree scaling (1.4-1.6×), and 3m spacing');
+    console.log('Generating tree positions with new Netlify models, stylized tree trunk compensation (uniform 2.0 scale, -1.2 Y offset), and 3m spacing');
     
     const pine218Trees = [];
     const stylizedTrees = [];
-    const minDistance = 3; // 3 meter minimum spacing (UPDATED from previous value)
+    const minDistance = 3; // 3 meter minimum spacing
     const maxAttempts = 30;
     const allPositions = [];
 
@@ -227,7 +227,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Determine tree type based on 50/50 distribution
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // Get appropriate scale for tree type with NEW stylized tree specifications
+          // Get appropriate scale for tree type with trunk compensation fix
           scale = getScaleForTreeType(treeType, treeSeed + 3);
           
           // Random Y-axis rotation (0°–360°)
@@ -257,7 +257,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             stylizedTrees.push(position);
           }
           
-          console.log(`${treeType} tree (new Netlify) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} rotation ${(rotation * 180 / Math.PI).toFixed(0)}° ${treeType === 'stylized' ? '(will apply trunk fix)' : ''}`);
+          console.log(`${treeType} tree (new Netlify) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} rotation ${(rotation * 180 / Math.PI).toFixed(0)}° ${treeType === 'stylized' ? '(will apply trunk compensation: -1.2 Y offset)' : ''}`);
         } else {
           console.log(`Failed to place tree after ${maxAttempts} attempts in chunk ${chunk.id}`);
         }
@@ -271,7 +271,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     
     console.log(`Total trees generated from new Netlify: ${total}`);
     console.log(`Pine 218 trees (scale 2.8-3.3): ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
-    console.log(`Stylized trees (scale 1.4-1.6 + trunk fix): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Stylized trees (uniform scale 2.0 + trunk compensation): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     
     // Player position for LOD calculations
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
@@ -297,7 +297,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           />
         )}
         
-        {/* Instanced Stylized Trees from new Netlify with trunk fix */}
+        {/* Instanced Stylized Trees from new Netlify with trunk compensation fix */}
         {stylizedPositions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.stylized}

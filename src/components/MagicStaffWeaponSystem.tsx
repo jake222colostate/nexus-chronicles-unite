@@ -44,7 +44,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     gltfResult = null;
   }
 
-  // Attach weapon to camera (first-person POV) with right-hand positioning
+  // Attach weapon to camera (first-person POV) with corrected right-hand positioning
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible) {
       // Position relative to camera for first-person view
@@ -56,19 +56,18 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // RIGHT-HAND staff positioning: X = 0.5 (more right), Y = -0.3 (slightly up), Z = 0.6 (closer)
+      // CORRECTED RIGHT-HAND staff positioning: X = 0.45, Y = -0.3, Z = 0.6
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.5))   // Right-hand offset (increased)
-        .add(cameraUp.clone().multiplyScalar(-0.3))      // Slightly up from previous position
-        .add(cameraForward.clone().multiplyScalar(0.6)); // Closer to camera
+        .add(cameraRight.clone().multiplyScalar(0.45))   // Right-hand offset (corrected)
+        .add(cameraUp.clone().multiplyScalar(-0.3))       // Lower position
+        .add(cameraForward.clone().multiplyScalar(0.6));  // Forward distance
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Rotate for right-hand grip - more natural right-hand angle
+      // Corrected rotation for right-hand grip: Y = -20°, Z = 30°
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-Math.PI / 8);  // Slight left rotation for right hand
-      weaponGroupRef.current.rotateX(-Math.PI / 16); // Slight downward tilt
-      weaponGroupRef.current.rotateZ(Math.PI / 12);  // Slight roll for natural grip
+      weaponGroupRef.current.rotateY(-20 * Math.PI / 180);  // -20° Y rotation (inward)
+      weaponGroupRef.current.rotateZ(30 * Math.PI / 180);   // 30° Z rotation (grip angle)
     }
   });
 
@@ -94,7 +93,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   });
 
-  console.log(`Successfully rendering ${currentStaffType} staff from new Netlify (right-hand position)`);
+  console.log(`Successfully rendering ${currentStaffType} staff from new Netlify (corrected right-hand position: X=0.45, Y=-0.3, Z=0.6, rotations: Y=-20°, Z=30°)`);
 
   return (
     <group ref={weaponGroupRef}>
