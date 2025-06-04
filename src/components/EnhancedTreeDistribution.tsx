@@ -7,7 +7,7 @@ import * as THREE from 'three';
 // Updated tree model URLs from your specifications
 const TREE_MODELS = {
   pine218: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/env/pine_tree_218poly.glb',
-  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/env/stylized_tree.glb'
+  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/env/stylized_tree%20(1).glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -107,7 +107,7 @@ const getTreeTypeByDistribution = (seed: number): 'pine218' | 'stylized' => {
   }
 };
 
-// Updated scale ranges for final specifications
+// Updated scale ranges for new specifications
 const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): number => {
   const random = seededRandom(seed);
   
@@ -115,7 +115,7 @@ const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): nu
     case 'pine218':
       return 3.5 + random * 0.5; // 3.5 to 4.0
     case 'stylized':
-      return 1.3 + random * 0.2; // 1.3 to 1.5
+      return 1.6 + random * 0.3; // 1.6 to 1.9
     default:
       return 1.0;
   }

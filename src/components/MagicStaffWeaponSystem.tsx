@@ -53,10 +53,10 @@ const StaffInstance: React.FC<{
       return clone;
     }, [scene]);
 
-    // Final positioning: X = 0.3, Y = -0.4, Z = 0.8 relative to camera
+    // Updated positioning: X = 0.3, Y = -0.4, Z = 0.8 relative to camera
     const position: [number, number, number] = [0.3, -0.4, 0.8];
     
-    // Rotate to aim diagonally forward in natural grip pose
+    // Rotate to tilt forward naturally in right-hand grip
     const rotation: [number, number, number] = [0.1, Math.PI / 8, 0.1];
 
     return (
