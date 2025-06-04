@@ -176,57 +176,22 @@ const applyTrunkProportionFix = (scene: THREE.Object3D, treeType: 'pine218' | 's
   return scene;
 };
 
-// Performance-optimized instanced tree component with proper hook usage
+// Performance-optimized instanced tree component with FIXED hook usage
 const InstancedTreeGroup: React.FC<{
   modelUrl: string;
   treeType: 'pine218' | 'stylized';
   positions: Array<{ x: number; y: number; z: number; scale: number; rotation: number; }>;
   playerPosition: THREE.Vector3;
 }> = ({ modelUrl, treeType, positions, playerPosition }) => {
-  // FIXED: Move all hooks to the top level
+  // FIXED: ALL hooks must be at the top level and called consistently
   const meshRef = useRef<THREE.InstancedMesh>(null);
   
-  // Load the model at the top level
-  let scene: THREE.Object3D | null = null;
-  try {
-    const gltf = useGLTF(modelUrl);
-    scene = gltf.scene;
-  } catch (error) {
-    console.log(`Failed to load ${treeType} model:`, error);
-    return null;
-  }
-
-  // Early return if no scene or positions
-  if (!scene || positions.length === 0) {
-    console.log(`No scene or positions for ${treeType}, skipping`);
-    return null;
-  }
-
-  // Apply trunk proportion corrections for stylized trees
-  const processedScene = applyTrunkProportionFix(scene.clone(), treeType);
-
-  // Get geometry and material from the processed model
-  let geometry: THREE.BufferGeometry | null = null;
-  let material: THREE.Material | null = null;
+  // Always call useGLTF - never conditionally
+  const gltfResult = useGLTF(modelUrl);
   
-  processedScene.traverse((child) => {
-    if (child instanceof THREE.Mesh && !geometry) {
-      geometry = child.geometry;
-      material = child.material;
-    }
-  });
-
-  // Early return if no valid geometry/material
-  if (!geometry || !material) {
-    console.log(`No valid geometry/material found for ${treeType}, skipping`);
-    return null;
-  }
-
-  console.log(`Successfully rendering ${treeType} with FIXED trunk proportions - ${positions.length} instances`);
-
-  // Performance optimization: Use LOD based on distance
+  // Always call useFrame - never conditionally  
   useFrame(() => {
-    if (meshRef.current && playerPosition) {
+    if (meshRef.current && playerPosition && positions.length > 0) {
       const tempMatrix = new THREE.Matrix4();
       const renderDistance = 200;
       const lodDistance = 100;
@@ -255,6 +220,34 @@ const InstancedTreeGroup: React.FC<{
       meshRef.current.instanceMatrix.needsUpdate = true;
     }
   });
+
+  // After all hooks are called, check for valid data
+  if (!gltfResult?.scene || positions.length === 0) {
+    console.log(`No scene or positions for ${treeType}, skipping render`);
+    return null;
+  }
+
+  // Apply trunk proportion corrections for stylized trees
+  const processedScene = applyTrunkProportionFix(gltfResult.scene.clone(), treeType);
+
+  // Get geometry and material from the processed model
+  let geometry: THREE.BufferGeometry | null = null;
+  let material: THREE.Material | null = null;
+  
+  processedScene.traverse((child) => {
+    if (child instanceof THREE.Mesh && !geometry) {
+      geometry = child.geometry;
+      material = child.material;
+    }
+  });
+
+  // Check for valid geometry/material after processing
+  if (!geometry || !material) {
+    console.log(`No valid geometry/material found for ${treeType}, skipping render`);
+    return null;
+  }
+
+  console.log(`Successfully rendering ${treeType} with FIXED trunk proportions - ${positions.length} instances`);
 
   return (
     <instancedMesh
