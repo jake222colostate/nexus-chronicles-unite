@@ -1,14 +1,12 @@
-
 import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-// External GLB tree model URLs from the repository
+// External GLB tree model URLs from the repository - updated lineup
 const TREE_MODELS = {
   stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree.glb',
-  pineA: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/lowpoly_pine_tree.glb',
-  pineB: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/pine_tree_218poly.glb'
+  pine218: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/pine_tree_218poly.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -26,7 +24,7 @@ const seededRandom = (seed: number) => {
 // Individual tree component with GLB loading - no fallbacks
 const TreeInstance: React.FC<{
   modelUrl: string;
-  treeType: 'stylized' | 'pineA' | 'pineB';
+  treeType: 'stylized' | 'pine218';
   position: [number, number, number];
   scale: number;
   rotation: number;
@@ -97,32 +95,28 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4; // 4 unit buffer around path center
 };
 
-// Determine tree type based on distribution percentages: 40% Stylized, 30% Pine A, 30% Pine B
-const getTreeTypeByDistribution = (seed: number): 'stylized' | 'pineA' | 'pineB' => {
+// Determine tree type based on updated distribution: 50% Stylized, 50% Pine 218
+const getTreeTypeByDistribution = (seed: number): 'stylized' | 'pine218' => {
   const random = seededRandom(seed);
   
-  if (random < 0.4) {
-    return 'stylized'; // 40%
-  } else if (random < 0.7) {
-    return 'pineA'; // 30%
+  if (random < 0.5) {
+    return 'stylized'; // 50%
   } else {
-    return 'pineB'; // 30%
+    return 'pine218'; // 50%
   }
 };
 
-// Get scale range based on tree type
-const getScaleForTreeType = (treeType: 'stylized' | 'pineA' | 'pineB', seed: number): number => {
+// Get scale range based on updated tree type scaling
+const getScaleForTreeType = (treeType: 'stylized' | 'pine218', seed: number): number => {
   const random = seededRandom(seed);
   
   switch (treeType) {
     case 'stylized':
-      return 0.85 + random * 0.2; // 0.85 to 1.05
-    case 'pineA':
-      return 0.2 + random * 0.15; // 0.2 to 0.35 (aggressive downscale)
-    case 'pineB':
-      return 0.85 + random * 0.2; // 0.85 to 1.05
+      return 0.85 + random * 0.15; // 0.85 to 1.0
+    case 'pine218':
+      return 1.8 + random * 0.4; // 1.8 to 2.2 (upscaled to match stylized tree height)
     default:
-      return 0.85 + random * 0.2;
+      return 0.85 + random * 0.15;
   }
 };
 
@@ -173,7 +167,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             continue;
           }
           
-          // Determine tree type based on distribution percentages
+          // Determine tree type based on updated distribution percentages
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
           // Get appropriate scale for tree type
@@ -210,14 +204,12 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     
     // Log distribution statistics
     const stylizedCount = positions.filter(p => p.treeType === 'stylized').length;
-    const pineACount = positions.filter(p => p.treeType === 'pineA').length;
-    const pineBCount = positions.filter(p => p.treeType === 'pineB').length;
+    const pine218Count = positions.filter(p => p.treeType === 'pine218').length;
     const total = positions.length;
     
     console.log(`Total enhanced trees generated: ${total}`);
     console.log(`Stylized trees: ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
-    console.log(`Pine A trees: ${pineACount} (${total > 0 ? ((pineACount/total)*100).toFixed(1) : 0}%)`);
-    console.log(`Pine B trees: ${pineBCount} (${total > 0 ? ((pineBCount/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Pine 218 trees: ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
     
     return positions;
   }, [chunks, chunkSize]);
