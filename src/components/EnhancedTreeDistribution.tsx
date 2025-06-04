@@ -4,10 +4,10 @@ import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-// Final tree model URLs
+// Updated tree model URLs from your specifications
 const TREE_MODELS = {
-  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree.glb',
-  pine218: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/pine_tree_218poly.glb'
+  pine218: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/env/pine_tree_218poly.glb',
+  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/env/stylized_tree.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -25,7 +25,7 @@ const seededRandom = (seed: number) => {
 // Individual tree component with GLB loading - no fallbacks
 const TreeInstance: React.FC<{
   modelUrl: string;
-  treeType: 'stylized' | 'pine218';
+  treeType: 'pine218' | 'stylized';
   position: [number, number, number];
   scale: number;
   rotation: number;
@@ -97,27 +97,27 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
 };
 
 // Determine tree type based on 50/50 distribution
-const getTreeTypeByDistribution = (seed: number): 'stylized' | 'pine218' => {
+const getTreeTypeByDistribution = (seed: number): 'pine218' | 'stylized' => {
   const random = seededRandom(seed);
   
   if (random < 0.5) {
-    return 'stylized'; // 50%
-  } else {
     return 'pine218'; // 50%
+  } else {
+    return 'stylized'; // 50%
   }
 };
 
-// Get scale range based on final tree type scaling
-const getScaleForTreeType = (treeType: 'stylized' | 'pine218', seed: number): number => {
+// Updated scale ranges for final specifications
+const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): number => {
   const random = seededRandom(seed);
   
   switch (treeType) {
-    case 'stylized':
-      return 0.9 + random * 0.2; // 0.9 to 1.1
     case 'pine218':
-      return 6.0 + random * 1.5; // 6.0 to 7.5
+      return 3.5 + random * 0.5; // 3.5 to 4.0
+    case 'stylized':
+      return 1.3 + random * 0.2; // 1.3 to 1.5
     default:
-      return 0.9 + random * 0.2;
+      return 1.0;
   }
 };
 
@@ -204,13 +204,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     });
     
     // Log distribution statistics
-    const stylizedCount = positions.filter(p => p.treeType === 'stylized').length;
     const pine218Count = positions.filter(p => p.treeType === 'pine218').length;
+    const stylizedCount = positions.filter(p => p.treeType === 'stylized').length;
     const total = positions.length;
     
     console.log(`Total trees generated: ${total}`);
-    console.log(`Stylized trees: ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     console.log(`Pine 218 trees: ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Stylized trees: ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     
     return positions;
   }, [chunks, chunkSize]);

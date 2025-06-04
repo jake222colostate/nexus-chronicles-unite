@@ -4,7 +4,7 @@ import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// Final magic staff model URLs
+// Updated staff model URLs from your specifications
 const STAFF_MODELS = {
   base: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/staffs/mage_staff.glb',
   upgrade1: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/staffs/magical_staff.glb',
@@ -83,10 +83,11 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   const { camera } = useThree();
   const weaponGroupRef = useRef<THREE.Group>(null);
 
-  // Determine current staff type based on upgrade level
+  // Determine current staff type based on upgrade level (ensure minimum 0)
   const currentStaffType = useMemo(() => {
-    if (upgradeLevel >= 2) return 'upgrade2';
-    if (upgradeLevel >= 1) return 'upgrade1';
+    const safeUpgradeLevel = Math.max(0, upgradeLevel); // Ensure no negative values
+    if (safeUpgradeLevel >= 2) return 'upgrade2';
+    if (safeUpgradeLevel >= 1) return 'upgrade1';
     return 'base';
   }, [upgradeLevel]);
 

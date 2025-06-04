@@ -1,4 +1,3 @@
-
 import React, { Suspense, useRef, useState, useCallback } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
@@ -35,8 +34,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const enemySystemRef = useRef<EnemySystemHandle>(null);
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
 
-  // Calculate weapon upgrade level based on maxUnlockedUpgrade
-  const weaponUpgradeLevel = Math.min(Math.floor(maxUnlockedUpgrade / 3), 2); // 0-2 based on upgrade progression
+  // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
+  const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2)); // 0-2 based on upgrade progression
 
   const handleEnemiesChange = useCallback(
     (list: EnemyData[]) => {
