@@ -5,11 +5,11 @@ import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Use local GLB files instead of broken external URLs
+// Updated GLB URLs from new Netlify deployment
 const TREE_MODELS = {
-  realistic: '/stylized_tree.glb', // Using stylized as realistic fallback
-  stylized: '/stylized_tree.glb',
-  pine: '/pine_tree_218poly.glb'
+  realistic: 'https://6840b83a5870760bb84980de--stately-liger-80d127.netlify.app/realistic_tree.glb',
+  stylized: 'https://6840b83a5870760bb84980de--stately-liger-80d127.netlify.app/stylized_tree.glb',
+  pine: 'https://6840b83a5870760bb84980de--stately-liger-80d127.netlify.app/pine_tree_218poly.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -79,14 +79,14 @@ const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine' => {
   return 'pine';
 };
 
-// Get appropriate scale based on tree type
+// Get appropriate scale based on tree type with new specifications
 const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine', seed: number): number => {
   const random = seededRandom(seed);
   switch (treeType) {
     case 'realistic':
       return 0.7 + random * 0.15; // 0.7 to 0.85
     case 'stylized':
-      return 1.2 + random * 0.2; // 1.2 to 1.4
+      return 1.1 + random * 0.2; // 1.1 to 1.3
     case 'pine':
       return 0.45 + random * 0.15; // 0.45 to 0.6
     default:
@@ -161,7 +161,7 @@ const FallbackTree: React.FC<{
   );
 };
 
-// Individual tree instance component
+// Individual tree instance component with enhanced visibility
 const TreeInstance: React.FC<{
   modelUrl: string;
   position: [number, number, number];
@@ -184,16 +184,31 @@ const TreeInstance: React.FC<{
       );
     }
 
-    // Clone and ensure all meshes are visible
+    // Clone and ensure all meshes are visible with enhanced material processing
     const clonedScene = useMemo(() => {
       const sceneClone = scene.clone();
       sceneClone.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.castShadow = true;
           child.receiveShadow = true;
-          child.visible = true; // Ensure visibility
-          if (child.material && 'needsUpdate' in child.material) {
-            child.material.needsUpdate = true;
+          child.visible = true;
+          child.frustumCulled = false; // Ensure no culling issues
+          
+          // Enhanced material visibility for all tree parts
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach(mat => {
+                mat.transparent = false;
+                mat.opacity = 1.0;
+                mat.side = THREE.DoubleSide; // Ensure both sides render
+                mat.needsUpdate = true;
+              });
+            } else {
+              child.material.transparent = false;
+              child.material.opacity = 1.0;
+              child.material.side = THREE.DoubleSide;
+              child.material.needsUpdate = true;
+            }
           }
         }
       });
@@ -313,7 +328,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Get appropriate scale for tree type
           scale = getTreeScale(treeType, treeSeed + 3);
           
-          // Random Y-axis rotation (0°–360°)
+          // Random Y-axis rotation (0°–360°) - full rotation for realistic trees
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
           // Apply Y position adjustment for stylized trees
@@ -360,13 +375,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   );
 };
 
-// Preload models for better performance - with error handling
+// Asynchronously preload models for better performance
 Object.values(TREE_MODELS).forEach(url => {
   try {
     useGLTF.preload(url);
     console.log(`Preloading tree model: ${url}`);
   } catch (error) {
-    console.warn(`Failed to preload tree model ${url}, will use fallback:`, error);
+    console.warn(`Failed to preload tree model ${url}, will load on demand:`, error);
   }
 });
 
