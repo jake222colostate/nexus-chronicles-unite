@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -107,54 +106,58 @@ const InstancedTreeGroup: React.FC<{
 }> = ({ modelUrl, treeType, positions, playerPosition }) => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   
-  // Load GLB with error handling
-  let gltfResult;
+  // Load GLB with error handling - ALWAYS call hooks before any conditional logic
+  let gltfResult = null;
+  let loadError = false;
   
   try {
     gltfResult = useGLTF(modelUrl);
   } catch (error) {
     console.warn(`Failed to load tree model ${treeType}:`, error);
-    return null;
+    loadError = true;
   }
   
-  // Optimized frame update with culling
+  // ALWAYS call useFrame hook regardless of conditions
   useFrame(() => {
-    if (meshRef.current && playerPosition && positions.length > 0) {
-      const tempMatrix = new THREE.Matrix4();
-      const renderDistance = 150;
-      const lodDistance = 75;
-      let visibleCount = 0;
+    // Only proceed if we have valid data and no errors
+    if (loadError || !gltfResult?.scene || !meshRef.current || !playerPosition || positions.length === 0) {
+      return;
+    }
+    
+    const tempMatrix = new THREE.Matrix4();
+    const renderDistance = 150;
+    const lodDistance = 75;
+    let visibleCount = 0;
+    
+    for (let i = 0; i < positions.length; i++) {
+      const pos = positions[i];
+      const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
       
-      for (let i = 0; i < positions.length; i++) {
-        const pos = positions[i];
-        const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
-        
-        // Skip if outside render distance
-        if (distance > renderDistance) {
-          continue;
-        }
-        
-        // LOD system: reduce scale for distant trees
-        const lodScale = distance > lodDistance ? pos.scale * 0.6 : pos.scale;
-        
-        tempMatrix.compose(
-          new THREE.Vector3(pos.x, pos.y, pos.z),
-          new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), pos.rotation),
-          new THREE.Vector3(lodScale, lodScale, lodScale)
-        );
-        
-        meshRef.current.setMatrixAt(visibleCount, tempMatrix);
-        visibleCount++;
+      // Skip if outside render distance
+      if (distance > renderDistance) {
+        continue;
       }
       
-      // Update instance count for performance
-      meshRef.current.count = visibleCount;
-      meshRef.current.instanceMatrix.needsUpdate = true;
+      // LOD system: reduce scale for distant trees
+      const lodScale = distance > lodDistance ? pos.scale * 0.6 : pos.scale;
+      
+      tempMatrix.compose(
+        new THREE.Vector3(pos.x, pos.y, pos.z),
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), pos.rotation),
+        new THREE.Vector3(lodScale, lodScale, lodScale)
+      );
+      
+      meshRef.current.setMatrixAt(visibleCount, tempMatrix);
+      visibleCount++;
     }
+    
+    // Update instance count for performance
+    meshRef.current.count = visibleCount;
+    meshRef.current.instanceMatrix.needsUpdate = true;
   });
 
-  // Skip rendering if GLB failed to load
-  if (!gltfResult?.scene || positions.length === 0) {
+  // After all hooks are called, handle conditional rendering
+  if (loadError || !gltfResult?.scene || positions.length === 0) {
     return null;
   }
 
