@@ -1,16 +1,9 @@
 
-import React, { useMemo, Suspense, useRef } from 'react';
-import { useGLTF } from '@react-three/drei';
+import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-
-// Updated GLB URLs from new Netlify deployment
-const TREE_MODELS = {
-  realistic: 'https://6840b83a5870760bb84980de--stately-liger-80d127.netlify.app/realistic_tree.glb',
-  stylized: 'https://6840b83a5870760bb84980de--stately-liger-80d127.netlify.app/stylized_tree.glb',
-  pine: 'https://6840b83a5870760bb84980de--stately-liger-80d127.netlify.app/pine_tree_218poly.glb'
-} as const;
+import { TreeAssetManager, TREE_MODELS, TREE_SCALES, TREE_Y_OFFSETS } from './TreeAssetManager';
 
 interface EnhancedTreeDistributionProps {
   chunks: ChunkData[];
@@ -24,12 +17,10 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Terrain height simulation function with height jitter
+// Terrain height simulation function
 const getTerrainHeight = (x: number, z: number): number => {
   const baseHeight = Math.sin(x * 0.01) * Math.cos(z * 0.01) * 1.5 + 
                      Math.sin(x * 0.005) * Math.cos(z * 0.005) * 2.5;
-  
-  // Add natural terrain blending jitter
   const jitter = (Math.sin(x * 0.1) * Math.cos(z * 0.1)) * 0.15;
   return baseHeight + jitter;
 };
@@ -58,17 +49,10 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4;
 };
 
-// Check if position is too close to player starting position - 8 meter buffer
+// Check if position is too close to player starting position
 const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
-  const playerStartX = 0;
-  const playerStartZ = -10;
-  const safetyBuffer = 8;
-  
-  const distance = Math.sqrt(
-    Math.pow(x - playerStartX, 2) + Math.pow(z - playerStartZ, 2)
-  );
-  
-  return distance < safetyBuffer;
+  const distance = Math.sqrt(x * x + (z + 10) * (z + 10));
+  return distance < 8;
 };
 
 // Get tree type with 33% distribution
@@ -77,26 +61,6 @@ const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine' => {
   if (random < 0.33) return 'realistic';
   if (random < 0.66) return 'stylized';
   return 'pine';
-};
-
-// Get appropriate scale based on tree type with new specifications
-const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine', seed: number): number => {
-  const random = seededRandom(seed);
-  switch (treeType) {
-    case 'realistic':
-      return 0.7 + random * 0.15; // 0.7 to 0.85
-    case 'stylized':
-      return 1.1 + random * 0.2; // 1.1 to 1.3
-    case 'pine':
-      return 0.45 + random * 0.15; // 0.45 to 0.6
-    default:
-      return 1.0;
-  }
-};
-
-// Get Y position adjustment for stylized trees
-const getYAdjustment = (treeType: 'realistic' | 'stylized' | 'pine'): number => {
-  return treeType === 'stylized' ? -0.25 : 0;
 };
 
 // Fallback tree component using basic geometry
@@ -161,83 +125,96 @@ const FallbackTree: React.FC<{
   );
 };
 
-// Individual tree instance component with enhanced visibility
+// Individual tree instance component with cached model loading
 const TreeInstance: React.FC<{
-  modelUrl: string;
   position: [number, number, number];
   scale: number;
   rotation: number;
   treeType: 'realistic' | 'stylized' | 'pine';
-}> = ({ modelUrl, position, scale, rotation, treeType }) => {
-  try {
-    const { scene } = useGLTF(modelUrl);
-    
-    if (!scene) {
-      console.warn(`Tree model not loaded for ${treeType}, using fallback`);
-      return (
-        <FallbackTree 
-          position={position} 
-          scale={scale} 
-          rotation={rotation} 
-          treeType={treeType}
-        />
-      );
-    }
+  playerPosition: THREE.Vector3;
+}> = ({ position, scale, rotation, treeType, playerPosition }) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const groupRef = useRef<THREE.Group>(null);
 
-    // Clone and ensure all meshes are visible with enhanced material processing
-    const clonedScene = useMemo(() => {
-      const sceneClone = scene.clone();
-      sceneClone.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          child.visible = true;
-          child.frustumCulled = false; // Ensure no culling issues
-          
-          // Enhanced material visibility for all tree parts
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach(mat => {
-                mat.transparent = false;
-                mat.opacity = 1.0;
-                mat.side = THREE.DoubleSide; // Ensure both sides render
-                mat.needsUpdate = true;
-              });
-            } else {
-              child.material.transparent = false;
-              child.material.opacity = 1.0;
-              child.material.side = THREE.DoubleSide;
-              child.material.needsUpdate = true;
-            }
+  // Performance culling based on distance
+  useFrame(() => {
+    if (groupRef.current) {
+      const distance = playerPosition.distanceTo(new THREE.Vector3(...position));
+      const newVisibility = distance <= 150; // 150m culling distance
+      
+      if (newVisibility !== isVisible) {
+        setIsVisible(newVisibility);
+      }
+
+      // LOD scaling for distant trees
+      if (distance > 20) {
+        groupRef.current.visible = distance <= 50; // Hide very distant trees
+      } else {
+        groupRef.current.visible = true;
+      }
+    }
+  });
+
+  if (!isVisible) {
+    return null;
+  }
+
+  // Try to get cached model first
+  const cachedModel = TreeAssetManager.getCachedModel(treeType);
+  
+  if (cachedModel) {
+    // Apply optimizations to cached model
+    cachedModel.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.frustumCulled = true;
+        
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(mat => {
+              mat.transparent = false;
+              mat.opacity = 1.0;
+              mat.side = THREE.DoubleSide;
+              mat.needsUpdate = true;
+            });
+          } else {
+            child.material.transparent = false;
+            child.material.opacity = 1.0;
+            child.material.side = THREE.DoubleSide;
+            child.material.needsUpdate = true;
           }
         }
-      });
-      return sceneClone;
-    }, [scene]);
+      }
+    });
+
+    const finalScale = scale * TREE_SCALES[treeType];
+    const yOffset = TREE_Y_OFFSETS[treeType];
 
     return (
       <group 
-        position={position} 
-        scale={[scale, scale, scale]} 
+        ref={groupRef}
+        position={[position[0], position[1] + yOffset, position[2]]} 
+        scale={[finalScale, finalScale, finalScale]} 
         rotation={[0, rotation, 0]}
       >
-        <primitive object={clonedScene} />
+        <primitive object={cachedModel} />
       </group>
     );
-  } catch (error) {
-    console.warn(`Failed to load ${treeType} tree model, using fallback:`, error);
-    return (
-      <FallbackTree 
-        position={position} 
-        scale={scale} 
-        rotation={rotation} 
-        treeType={treeType}
-      />
-    );
   }
+
+  // Fallback to basic geometry if model not loaded
+  return (
+    <FallbackTree 
+      position={position} 
+      scale={scale * TREE_SCALES[treeType]} 
+      rotation={rotation} 
+      treeType={treeType}
+    />
+  );
 };
 
-// Performance-optimized instanced tree group
+// Performance-optimized tree group with frame throttling
 const InstancedTreeGroup: React.FC<{
   positions: Array<{ 
     x: number; 
@@ -249,32 +226,35 @@ const InstancedTreeGroup: React.FC<{
   }>;
   playerPosition: THREE.Vector3;
 }> = ({ positions, playerPosition }) => {
-  const groupRef = useRef<THREE.Group>(null);
-  
-  // Filter positions by distance for performance
-  const visiblePositions = useMemo(() => {
-    const renderDistance = 150;
-    return positions.filter(pos => {
+  const [renderedCount, setRenderedCount] = useState(0);
+  const maxTreesPerFrame = 3;
+
+  // Frame throttling - render only 3 trees per frame
+  useFrame(() => {
+    if (renderedCount < Math.min(positions.length, 50)) { // Max 50 trees total
+      setRenderedCount(prev => Math.min(prev + maxTreesPerFrame, Math.min(positions.length, 50)));
+    }
+  });
+
+  const visiblePositions = positions
+    .slice(0, renderedCount)
+    .filter(pos => {
       const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
-      return distance <= renderDistance;
+      return distance <= 150;
     });
-  }, [positions, playerPosition]);
 
   return (
-    <group ref={groupRef} name="TreeGroup">
-      {visiblePositions.map((pos, index) => {
-        const modelUrl = TREE_MODELS[pos.treeType];
-        return (
-          <TreeInstance
-            key={`tree-${index}-${pos.treeType}`}
-            modelUrl={modelUrl}
-            position={[pos.x, pos.y, pos.z]}
-            scale={pos.scale}
-            rotation={pos.rotation}
-            treeType={pos.treeType}
-          />
-        );
-      })}
+    <group name="TreeGroup">
+      {visiblePositions.map((pos, index) => (
+        <TreeInstance
+          key={`tree-${index}-${pos.treeType}`}
+          position={[pos.x, pos.y, pos.z]}
+          scale={pos.scale}
+          rotation={pos.rotation}
+          treeType={pos.treeType}
+          playerPosition={playerPosition}
+        />
+      ))}
     </group>
   );
 };
@@ -284,15 +264,47 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Only render for fantasy realm
-  if (realm !== 'fantasy') {
+  const [isReady, setIsReady] = useState(false);
+  const [realmSwitchDelay, setRealmSwitchDelay] = useState(false);
+  const previousRealm = useRef<'fantasy' | 'scifi'>(realm);
+
+  // Handle realm switching with delay and cleanup
+  useEffect(() => {
+    if (previousRealm.current !== realm) {
+      console.log(`EnhancedTreeDistribution: Realm switch detected (${previousRealm.current} -> ${realm})`);
+      
+      if (realm === 'fantasy') {
+        // Clear existing trees and add delay before regenerating
+        setIsReady(false);
+        setRealmSwitchDelay(true);
+        
+        const delayTimeout = setTimeout(() => {
+          console.log('EnhancedTreeDistribution: Post-transition delay complete, regenerating trees');
+          setRealmSwitchDelay(false);
+          setIsReady(true);
+        }, 350); // 350ms delay as requested
+        
+        return () => clearTimeout(delayTimeout);
+      } else {
+        setIsReady(false);
+      }
+      
+      previousRealm.current = realm;
+    } else if (realm === 'fantasy' && !realmSwitchDelay) {
+      setIsReady(true);
+    }
+  }, [realm, realmSwitchDelay]);
+
+  // Only render for fantasy realm when ready
+  if (realm !== 'fantasy' || !isReady || realmSwitchDelay) {
     return null;
   }
 
   // Generate tree positions with optimized algorithm
   const { treePositions, playerPosition } = useMemo(() => {
+    console.log('EnhancedTreeDistribution: Generating tree positions for', chunks.length, 'chunks');
     const trees = [];
-    const minDistance = 3; // 3m minimum distance as specified
+    const minDistance = 3; // 3m minimum distance
     const maxAttempts = 25;
     const allPositions = [];
 
@@ -310,13 +322,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Random jittered placement within chunk bounds
+          // Random placement within chunk bounds
           x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Skip if on player path, steep slope, or too close to player start
+          // Skip invalid positions
           if (isOnPlayerPath(x, z) || isOnSteepSlope(x, z) || isTooCloseToPlayerStart(x, z)) {
             attempts++;
             continue;
@@ -325,16 +337,15 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Get tree type with 33% distribution
           treeType = getTreeType(treeSeed + 2);
           
-          // Get appropriate scale for tree type
-          scale = getTreeScale(treeType, treeSeed + 3);
+          // Base scale with some variation
+          scale = 0.8 + seededRandom(treeSeed + 3) * 0.4; // 0.8 to 1.2
           
-          // Random Y-axis rotation (0°–360°) - full rotation for realistic trees
+          // Random Y-axis rotation
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
-          // Apply Y position adjustment for stylized trees
-          finalY = terrainHeight + getYAdjustment(treeType);
+          finalY = terrainHeight;
           
-          // Check minimum distance from existing trees (3m as specified)
+          // Check minimum distance from existing trees
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
               Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
@@ -353,9 +364,11 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    // Player position for LOD calculations
+    // Player position for distance calculations
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
+    
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees`);
     
     return {
       treePositions: trees,
@@ -375,19 +388,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   );
 };
 
-// Asynchronously preload models for better performance
-Object.values(TREE_MODELS).forEach(url => {
-  try {
-    useGLTF.preload(url);
-    console.log(`Preloading tree model: ${url}`);
-  } catch (error) {
-    console.warn(`Failed to preload tree model ${url}, will load on demand:`, error);
-  }
-});
-
-// Clear unused model cache
+// Clear cache when component unmounts
 export const clearTreeModelCache = () => {
-  Object.values(TREE_MODELS).forEach(url => {
-    useGLTF.clear(url);
-  });
+  TreeAssetManager.clearCache();
 };

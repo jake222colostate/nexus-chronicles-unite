@@ -12,67 +12,74 @@ interface MagicStaffWeaponSystemProps {
   visible?: boolean;
 }
 
-export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
-  upgradeLevel,
-  visible = true
-}) => {
-  const { camera } = useThree();
-  const weaponGroupRef = useRef<THREE.Group>(null);
+// Persistent staff model cache
+class StaffModelCache {
+  private static instance: StaffModelCache;
+  private cachedModel: THREE.Object3D | null = null;
+  private isLoading = false;
+  private loadPromise: Promise<THREE.Object3D> | null = null;
 
-  // Load the staff model with error handling and async loading
-  const gltfResult = useMemo(() => {
-    try {
-      return useGLTF(STAFF_MODEL_URL);
-    } catch (error) {
-      console.warn(`Failed to load staff model:`, error);
-      return null;
+  static getInstance(): StaffModelCache {
+    if (!StaffModelCache.instance) {
+      StaffModelCache.instance = new StaffModelCache();
     }
-  }, []);
-
-  // First-person weapon positioning for bottom right corner view
-  useFrame(() => {
-    if (weaponGroupRef.current && camera && visible && gltfResult?.scene) {
-      // Get camera vectors for positioning
-      const cameraForward = new THREE.Vector3();
-      const cameraRight = new THREE.Vector3();
-      const cameraUp = new THREE.Vector3();
-      
-      camera.getWorldDirection(cameraForward);
-      cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
-      cameraUp.crossVectors(cameraForward, cameraRight).normalize();
-      
-      // Right-hand positioning for bottom right corner display
-      // Position: X = 0.55 (right side), Y = -0.25 (down), Z = 0.55 (forward)
-      const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.55))    // X = 0.55 (moves to right side)
-        .add(cameraUp.clone().multiplyScalar(-0.25))       // Y = -0.25 (down for bottom corner)
-        .add(cameraForward.clone().multiplyScalar(0.55));  // Z = 0.55 (forward)
-      
-      weaponGroupRef.current.position.copy(staffPosition);
-      
-      // First-person weapon rotation for angled view toward center
-      // Rotation: Y = -30°, Z = 15° (angled toward screen center)
-      weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-30 * Math.PI / 180); // Y = -30° (turn inward)
-      weaponGroupRef.current.rotateZ(15 * Math.PI / 180);  // Z = 15° (slight tilt)
-    }
-  });
-
-  // Skip rendering if GLB failed to load or not visible
-  if (!visible || !gltfResult?.scene) {
-    return null;
+    return StaffModelCache.instance;
   }
 
-  // Clone and optimize the staff scene with enhanced visibility
-  const clonedScene = useMemo(() => {
-    const scene = gltfResult.scene.clone();
-    scene.traverse((child) => {
+  async loadModel(): Promise<THREE.Object3D> {
+    if (this.cachedModel) {
+      return this.cachedModel.clone();
+    }
+
+    if (this.loadPromise) {
+      const model = await this.loadPromise;
+      return model.clone();
+    }
+
+    if (!this.isLoading) {
+      this.isLoading = true;
+      this.loadPromise = this.loadStaffModel();
+    }
+
+    const model = await this.loadPromise!;
+    return model.clone();
+  }
+
+  private async loadStaffModel(): Promise<THREE.Object3D> {
+    try {
+      console.log('StaffModelCache: Loading staff model...');
+      
+      // Use GLTFLoader directly for better control
+      const loader = new THREE.GLTFLoader();
+      const gltf = await new Promise<any>((resolve, reject) => {
+        loader.load(STAFF_MODEL_URL, resolve, undefined, reject);
+      });
+
+      if (gltf?.scene) {
+        this.cachedModel = gltf.scene;
+        this.optimizeModel(this.cachedModel);
+        console.log('StaffModelCache: Staff model loaded and cached successfully');
+        return this.cachedModel;
+      } else {
+        throw new Error('No scene found in GLB file');
+      }
+    } catch (error) {
+      console.error('StaffModelCache: Failed to load staff model:', error);
+      // Create fallback staff
+      this.cachedModel = this.createFallbackStaff();
+      return this.cachedModel;
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  private optimizeModel(model: THREE.Object3D): void {
+    model.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = false;
         child.frustumCulled = false; // Prevent first-person culling issues
         
-        // Enhanced material processing for weapon visibility
         if (child.material) {
           if (Array.isArray(child.material)) {
             child.material.forEach(mat => {
@@ -90,28 +97,119 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
         }
       }
     });
-    return scene;
-  }, [gltfResult.scene]);
+  }
+
+  private createFallbackStaff(): THREE.Object3D {
+    console.log('StaffModelCache: Creating fallback staff geometry');
+    const group = new THREE.Group();
+    
+    // Staff handle
+    const handleGeometry = new THREE.CylinderGeometry(0.02, 0.025, 1.5, 8);
+    const handleMaterial = new THREE.MeshLambertMaterial({ color: '#8B4513' });
+    const handle = new THREE.Mesh(handleGeometry, handleMaterial);
+    handle.position.y = 0.75;
+    group.add(handle);
+    
+    // Staff crystal/orb
+    const orbGeometry = new THREE.SphereGeometry(0.08, 12, 8);
+    const orbMaterial = new THREE.MeshLambertMaterial({ 
+      color: '#4B0082', 
+      emissive: '#4B0082', 
+      emissiveIntensity: 0.3 
+    });
+    const orb = new THREE.Mesh(orbGeometry, orbMaterial);
+    orb.position.y = 1.6;
+    group.add(orb);
+    
+    return group;
+  }
+
+  getCachedModel(): THREE.Object3D | null {
+    return this.cachedModel ? this.cachedModel.clone() : null;
+  }
+
+  clearCache(): void {
+    this.cachedModel = null;
+    this.loadPromise = null;
+    this.isLoading = false;
+    console.log('StaffModelCache: Cache cleared');
+  }
+}
+
+export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
+  upgradeLevel,
+  visible = true
+}) => {
+  const { camera } = useThree();
+  const weaponGroupRef = useRef<THREE.Group>(null);
+  const [staffModel, setStaffModel] = React.useState<THREE.Object3D | null>(null);
+  const staffCache = StaffModelCache.getInstance();
+
+  // Load staff model on mount
+  useEffect(() => {
+    if (visible) {
+      staffCache.loadModel().then(model => {
+        setStaffModel(model);
+      }).catch(error => {
+        console.error('MagicStaffWeaponSystem: Failed to load staff model:', error);
+        // Use fallback
+        setStaffModel(staffCache.getCachedModel());
+      });
+    }
+  }, [visible, staffCache]);
+
+  // First-person weapon positioning with exact specifications
+  useFrame(() => {
+    if (weaponGroupRef.current && camera && visible && staffModel) {
+      // Get camera vectors for positioning
+      const cameraForward = new THREE.Vector3();
+      const cameraRight = new THREE.Vector3();
+      const cameraUp = new THREE.Vector3();
+      
+      camera.getWorldDirection(cameraForward);
+      cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
+      cameraUp.crossVectors(cameraForward, cameraRight).normalize();
+      
+      // Exact positioning as specified:
+      // X: 0.55 (right side), Y: -0.25 (down), Z: 0.55 (forward)
+      const staffPosition = camera.position.clone()
+        .add(cameraRight.clone().multiplyScalar(0.55))    // X = 0.55
+        .add(cameraUp.clone().multiplyScalar(-0.25))       // Y = -0.25
+        .add(cameraForward.clone().multiplyScalar(0.55));  // Z = 0.55
+      
+      weaponGroupRef.current.position.copy(staffPosition);
+      
+      // Exact rotation as specified:
+      // Y: -30°, Z: 15°
+      weaponGroupRef.current.rotation.copy(camera.rotation);
+      weaponGroupRef.current.rotateY(-30 * Math.PI / 180); // Y = -30°
+      weaponGroupRef.current.rotateZ(15 * Math.PI / 180);  // Z = 15°
+    }
+  });
+
+  // Don't render if not visible or model not loaded
+  if (!visible || !staffModel) {
+    return null;
+  }
 
   return (
     <group ref={weaponGroupRef}>
       <primitive 
-        object={clonedScene} 
-        scale={[0.55, 0.55, 0.55]}
+        object={staffModel} 
+        scale={[0.55, 0.55, 0.55]} // Scale = 0.55 as specified
       />
     </group>
   );
 };
 
-// Asynchronously preload staff model for smooth loading
-try {
-  useGLTF.preload(STAFF_MODEL_URL);
-  console.log(`Preloading staff model: ${STAFF_MODEL_URL}`);
-} catch (error) {
-  console.warn(`Failed to preload staff model:`, error);
-}
+// Preload staff model for immediate availability
+const staffCache = StaffModelCache.getInstance();
+staffCache.loadModel().catch(error => {
+  console.warn('MagicStaffWeaponSystem: Failed to preload staff model:', error);
+});
 
-// Clear unused staff model cache
+// Clear staff model cache
 export const clearStaffModelCache = () => {
-  useGLTF.clear(STAFF_MODEL_URL);
+  const staffCache = StaffModelCache.getInstance();
+  staffCache.clearCache();
 };
