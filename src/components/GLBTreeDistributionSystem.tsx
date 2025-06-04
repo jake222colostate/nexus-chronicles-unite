@@ -88,7 +88,7 @@ const GLBTreeInstance: React.FC<{
         <FallbackStylizedTree position={position} scale={scale} rotation={rotation} />;
     }
 
-    // Clone the scene to avoid sharing geometry between instances
+    // Clone the scene to create unique instances
     const clonedScene = scene.clone();
     
     // Ensure all meshes have proper materials and shadows
@@ -117,12 +117,11 @@ const GLBTreeInstance: React.FC<{
 
 // Terrain height simulation function
 const getTerrainHeight = (x: number, z: number): number => {
-  // Simple noise-based terrain height calculation
   return Math.sin(x * 0.01) * Math.cos(z * 0.01) * 3 + 
          Math.sin(x * 0.005) * Math.cos(z * 0.005) * 5;
 };
 
-// Check if position is on a steep slope
+// Check if position is on a steep slope (>45°)
 const isOnSteepSlope = (x: number, z: number): boolean => {
   const sampleDistance = 2;
   const centerHeight = getTerrainHeight(x, z);
@@ -138,12 +137,25 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
     Math.abs(centerHeight - westHeight)
   ) / sampleDistance;
   
-  return maxSlope > 0.8; // Too steep for trees
+  return maxSlope > 1.0; // ~45° slope threshold
 };
 
 // Check if position is too close to player path
 const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4; // 4 unit buffer around path center
+};
+
+// Determine tree type based on distribution percentages
+const getTreeTypeByDistribution = (seed: number): 'pine' | 'stylizedA' | 'stylizedB' => {
+  const random = seededRandom(seed);
+  
+  if (random < 0.4) {
+    return 'pine'; // 40%
+  } else if (random < 0.7) {
+    return 'stylizedA'; // 30%
+  } else {
+    return 'stylizedB'; // 30%
+  }
 };
 
 export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps> = ({
@@ -159,18 +171,18 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
     return null;
   }
 
-  // Generate tree positions with terrain-based distribution
+  // Generate tree positions with even distribution and proper constraints
   const treePositions = useMemo(() => {
     console.log('Generating distributed tree positions for', chunks.length, 'chunks');
     const positions = [];
-    const minDistance = 4; // Minimum distance between trees
-    const maxAttempts = 20;
+    const minDistance = 3; // 2-4 meter separation as requested
+    const maxAttempts = 25;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 4-7 trees per chunk with natural distribution
-      const treeCount = 4 + Math.floor(seededRandom(seed) * 4);
+      // Generate 5-8 trees per chunk for good coverage
+      const treeCount = 5 + Math.floor(seededRandom(seed) * 4);
       console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
       
       for (let i = 0; i < treeCount; i++) {
@@ -179,11 +191,14 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
         let x, z, terrainHeight, treeType, scale, rotation;
         
         while (!validPosition && attempts < maxAttempts) {
-          const treeSeed = seed + i * 83;
+          const treeSeed = seed + i * 123;
           
-          // Position trees across the chunk area (not just near roads)
-          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.9;
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.9;
+          // Apply position jitter to avoid grid alignment
+          const jitterX = (seededRandom(treeSeed + 10) - 0.5) * 6; // ±3 meter jitter
+          const jitterZ = (seededRandom(treeSeed + 11) - 0.5) * 6; // ±3 meter jitter
+          
+          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8 + jitterX;
+          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8 + jitterZ;
           
           terrainHeight = getTerrainHeight(x, z);
           
@@ -193,25 +208,16 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
             continue;
           }
           
-          // Determine tree type based on terrain height
-          if (terrainHeight > 2) {
-            // Elevated/hilly terrain - prefer pine trees
-            treeType = seededRandom(treeSeed + 2) < 0.7 ? 'pine' : 
-                      (seededRandom(treeSeed + 3) < 0.5 ? 'stylizedA' : 'stylizedB');
-          } else {
-            // Flat/valley terrain - prefer stylized trees
-            treeType = seededRandom(treeSeed + 4) < 0.3 ? 'pine' : 
-                      (seededRandom(treeSeed + 5) < 0.5 ? 'stylizedA' : 'stylizedB');
-          }
+          // Determine tree type based on even distribution percentages
+          treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // 10-15% scale variation for realism
-          const baseScale = treeType === 'pine' ? 0.8 : 1.0;
-          scale = baseScale * (0.85 + seededRandom(treeSeed + 6) * 0.3); // 85% to 115% variation
+          // Random scaling between 0.8x and 1.2x as requested
+          scale = 0.8 + seededRandom(treeSeed + 3) * 0.4; // 0.8 to 1.2
           
-          // Random Y-axis rotation
-          rotation = seededRandom(treeSeed + 7) * Math.PI * 2;
+          // Y-axis random rotation (0°–360°)
+          rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
-          // Check distance from existing trees
+          // Check minimum distance from existing trees (2-4 meters)
           validPosition = positions.every(pos => {
             const distance = Math.sqrt(
               Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
@@ -239,10 +245,16 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
       }
     });
     
-    console.log(`Total distributed trees generated: ${positions.length}`);
-    console.log(`Pine trees: ${positions.filter(p => p.treeType === 'pine').length}`);
-    console.log(`Stylized A trees: ${positions.filter(p => p.treeType === 'stylizedA').length}`);
-    console.log(`Stylized B trees: ${positions.filter(p => p.treeType === 'stylizedB').length}`);
+    // Log distribution statistics
+    const pineCount = positions.filter(p => p.treeType === 'pine').length;
+    const stylizedACount = positions.filter(p => p.treeType === 'stylizedA').length;
+    const stylizedBCount = positions.filter(p => p.treeType === 'stylizedB').length;
+    const total = positions.length;
+    
+    console.log(`Total distributed trees generated: ${total}`);
+    console.log(`Pine trees: ${pineCount} (${((pineCount/total)*100).toFixed(1)}%)`);
+    console.log(`Stylized A trees: ${stylizedACount} (${((stylizedACount/total)*100).toFixed(1)}%)`);
+    console.log(`Stylized B trees: ${stylizedBCount} (${((stylizedBCount/total)*100).toFixed(1)}%)`);
     
     return positions;
   }, [chunks, chunkSize]);
