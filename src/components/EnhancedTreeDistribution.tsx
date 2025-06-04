@@ -5,10 +5,10 @@ import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Using local GLB tree models bundled with the project
+// Tree model URLs from Netlify
 const TREE_MODELS = {
-  pine218: '/pine_tree_218poly.glb',
-  stylized: '/stylized_tree.glb'
+  pine218: 'https://startling-madeleine-8cd04b.netlify.app/pine_tree_218poly.glb',
+  stylized: 'https://startling-madeleine-8cd04b.netlify.app/stylized_tree.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -53,11 +53,11 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4; // 4 unit buffer around path center
 };
 
-// Check if position is too close to player starting position - updated to 8 meter buffer
+// Check if position is too close to player starting position - 8 meter buffer
 const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   const playerStartX = 0; // Player starts at origin
   const playerStartZ = -10; // Player starts at z = -10
-  const safetyBuffer = 8; // Updated to 8m buffer around player
+  const safetyBuffer = 8; // 8m buffer around player
   
   const distance = Math.sqrt(
     Math.pow(x - playerStartX, 2) + Math.pow(z - playerStartZ, 2)
@@ -72,125 +72,33 @@ const getTreeTypeByDistribution = (seed: number): 'pine218' | 'stylized' => {
   return random < 0.5 ? 'pine218' : 'stylized';
 };
 
-// Updated scale ranges according to new specifications
+// Updated scale ranges according to specifications
 const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): number => {
   const random = seededRandom(seed);
   
   switch (treeType) {
     case 'pine218':
-      return 2.5 + random * 0.5; // 2.5 to 3.0 scale
-    case 'stylized':
       return 2.8 + random * 0.5; // 2.8 to 3.3 scale
+    case 'stylized':
+      return 2.5 + random * 0.5; // 2.5 to 3.0 scale
     default:
       return 1.0;
   }
 };
 
-// Get Y-offset to fix pivot positioning
-const getYOffsetForTreeType = (treeType: 'pine218' | 'stylized', scale: number): number => {
-  switch (treeType) {
-    case 'pine218':
-      return 0; // Pine tree has proper base pivot
-    case 'stylized':
-      return scale * 2.0; // Stylized tree origin is at top, offset to place base on ground
-    default:
-      return 0;
-  }
-};
-
-// Updated trunk proportion fixes for stylized tree with new scaling
-const applyTrunkProportionFix = (scene: THREE.Object3D, treeType: 'pine218' | 'stylized') => {
-  if (treeType === 'stylized') {
-    let hasSeparateMeshes = false;
-    let trunkMeshFound = false;
-    let canopyMeshFound = false;
-    
-    // First pass: Check if we have separate trunk and canopy meshes
-    scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        const meshName = child.name.toLowerCase();
-        
-        if (meshName.includes('trunk') || meshName.includes('stem') || 
-            meshName.includes('bark') || meshName.includes('wood')) {
-          trunkMeshFound = true;
-        }
-        
-        if (meshName.includes('leaf') || meshName.includes('canopy') || 
-            meshName.includes('foliage') || meshName.includes('crown')) {
-          canopyMeshFound = true;
-        }
-      }
-    });
-    
-    hasSeparateMeshes = trunkMeshFound && canopyMeshFound;
-    
-    if (hasSeparateMeshes) {
-      // CASE 1: Separate trunk and canopy meshes - reduce trunk width while keeping canopy
-      console.log('Stylized tree has separate meshes - reducing trunk width');
-      
-      scene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          const meshName = child.name.toLowerCase();
-          
-          // Reduce trunk width: X=0.3, Y=0.8, Z=0.3 (thinner trunk, slightly shorter)
-          if (meshName.includes('trunk') || meshName.includes('stem') || 
-              meshName.includes('bark') || meshName.includes('wood')) {
-            console.log(`Applying trunk width reduction to: ${child.name}`);
-            child.scale.set(0.3, 0.8, 0.3);
-          }
-          
-          // Keep canopy scale unchanged to maintain visual impact
-          else if (meshName.includes('leaf') || meshName.includes('canopy') || 
-                   meshName.includes('foliage') || meshName.includes('crown')) {
-            console.log(`Keeping canopy scale unchanged: ${child.name}`);
-            child.scale.set(1.0, 1.0, 1.0);
-          }
-        }
-      });
-    } else {
-      // CASE 2: Single mesh - apply reduced trunk scaling
-      console.log('Stylized tree is single mesh - applying trunk-focused scaling');
-      
-      scene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          // Apply trunk-focused scaling: Y=0.85 (slightly shorter), X/Z=0.4 (much thinner)
-          console.log(`Applying trunk-focused scaling to single mesh: ${child.name}`);
-          child.scale.set(0.4, 0.85, 0.4);
-          
-          // Adjust position to maintain canopy alignment
-          const geometry = child.geometry;
-          if (geometry && geometry.boundingBox) {
-            geometry.computeBoundingBox();
-            const bbox = geometry.boundingBox;
-            const originalHeight = bbox.max.y - bbox.min.y;
-            const newHeight = originalHeight * 0.85;
-            const heightDifference = originalHeight - newHeight;
-            
-            // Move the mesh up by half the height difference to keep top aligned
-            child.position.y += heightDifference * 0.5;
-          }
-        }
-      });
-    }
-  }
-  
-  return scene;
-};
-
-// Performance-optimized instanced tree component with FIXED hook usage
+// Performance-optimized instanced tree component
 const InstancedTreeGroup: React.FC<{
   modelUrl: string;
   treeType: 'pine218' | 'stylized';
   positions: Array<{ x: number; y: number; z: number; scale: number; rotation: number; }>;
   playerPosition: THREE.Vector3;
 }> = ({ modelUrl, treeType, positions, playerPosition }) => {
-  // FIXED: ALL hooks must be at the top level and called consistently
   const meshRef = useRef<THREE.InstancedMesh>(null);
   
-  // Always call useGLTF - never conditionally
+  // Always call useGLTF
   const gltfResult = useGLTF(modelUrl);
   
-  // Always call useFrame - never conditionally  
+  // Always call useFrame
   useFrame(() => {
     if (meshRef.current && playerPosition && positions.length > 0) {
       const tempMatrix = new THREE.Matrix4();
@@ -222,33 +130,29 @@ const InstancedTreeGroup: React.FC<{
     }
   });
 
-  // After all hooks are called, check for valid data
+  // Skip rendering if GLB failed to load
   if (!gltfResult?.scene || positions.length === 0) {
-    console.log(`No scene or positions for ${treeType}, skipping render`);
+    console.log(`GLB load failed or no positions for ${treeType}, skipping render`);
     return null;
   }
 
-  // Apply trunk proportion corrections for stylized trees
-  const processedScene = applyTrunkProportionFix(gltfResult.scene.clone(), treeType);
-
-  // Get geometry and material from the processed model
+  // Get geometry and material from the model
   let geometry: THREE.BufferGeometry | null = null;
   let material: THREE.Material | null = null;
   
-  processedScene.traverse((child) => {
+  gltfResult.scene.traverse((child) => {
     if (child instanceof THREE.Mesh && !geometry) {
       geometry = child.geometry;
       material = child.material;
     }
   });
 
-  // Check for valid geometry/material after processing
   if (!geometry || !material) {
     console.log(`No valid geometry/material found for ${treeType}, skipping render`);
     return null;
   }
 
-  console.log(`Successfully rendering ${treeType} with LOCAL GLB files - ${positions.length} instances`);
+  console.log(`Successfully rendering ${treeType} from Netlify - ${positions.length} instances`);
 
   return (
     <instancedMesh
@@ -265,7 +169,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using LOCAL GLB files');
+  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using Netlify URLs');
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -275,7 +179,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
   // Generate tree positions with updated scaling and 8m player buffer
   const { pine218Positions, stylizedPositions, playerPosition } = useMemo(() => {
-    console.log('Generating tree positions with LOCAL GLB MODELS and updated scaling for', chunks.length, 'chunks');
+    console.log('Generating tree positions with Netlify models and updated scaling for', chunks.length, 'chunks');
     
     const pine218Trees = [];
     const stylizedTrees = [];
@@ -293,7 +197,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
         let validPosition = false;
-        let x, z, terrainHeight, treeType, scale, rotation, yOffset, finalY;
+        let x, z, terrainHeight, treeType, scale, rotation, finalY;
         
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
@@ -313,15 +217,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Determine tree type based on 50/50 distribution
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // Get appropriate scale for tree type with NEW SCALING
+          // Get appropriate scale for tree type
           scale = getScaleForTreeType(treeType, treeSeed + 3);
           
-          // Randomize Y-axis rotation (0°–360°)
+          // Random Y-axis rotation (0°–360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
-          // Calculate Y-offset - tree base must align with terrain
-          yOffset = getYOffsetForTreeType(treeType, scale);
-          finalY = terrainHeight + yOffset;
+          // Place tree base on terrain
+          finalY = terrainHeight;
           
           // Check minimum distance from existing trees
           validPosition = allPositions.every(pos => {
@@ -344,7 +247,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             stylizedTrees.push(position);
           }
           
-          console.log(`${treeType} tree (LOCAL GLB) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} ${treeType === 'stylized' ? '(TRUNK WIDTH REDUCED)' : ''}`);
+          console.log(`${treeType} tree (Netlify) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} rotation ${(rotation * 180 / Math.PI).toFixed(0)}°`);
         } else {
           console.log(`Failed to place tree after ${maxAttempts} attempts in chunk ${chunk.id}`);
         }
@@ -356,11 +259,11 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const stylizedCount = stylizedTrees.length;
     const total = allPositions.length;
     
-    console.log(`Total trees generated from LOCAL GLB files: ${total}`);
-    console.log(`Pine 218 trees (scale 2.5-3.0): ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
-    console.log(`Stylized trees (scale 2.8-3.3, TRUNK WIDTH REDUCED): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Total trees generated from Netlify: ${total}`);
+    console.log(`Pine 218 trees (scale 2.8-3.3): ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Stylized trees (scale 2.5-3.0): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     
-    // Player position for LOD calculations (approximate center of chunks)
+    // Player position for LOD calculations
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
@@ -374,7 +277,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   return (
     <group name="TreeGroup">
       <Suspense fallback={null}>
-        {/* Instanced Pine 218 Trees from Local Files */}
+        {/* Instanced Pine 218 Trees from Netlify */}
         {pine218Positions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.pine218}
@@ -384,7 +287,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           />
         )}
         
-        {/* Instanced Stylized Trees from Local Files with Reduced Trunk Width */}
+        {/* Instanced Stylized Trees from Netlify */}
         {stylizedPositions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.stylized}
@@ -398,14 +301,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   );
 };
 
-// Preload models for better performance - updated for local GLB files
-console.log('Preloading LOCAL GLB tree models...');
+// Preload models for better performance
+console.log('Preloading Netlify GLB tree models...');
 Object.entries(TREE_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded ${type} tree model from LOCAL FILES:`, url);
+    console.log(`Preloaded ${type} tree model from Netlify:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} tree model from LOCAL FILES:`, error);
+    console.warn(`Failed to preload ${type} tree model from Netlify:`, error);
   }
 });
 
