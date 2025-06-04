@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -6,8 +7,8 @@ import { useFrame } from '@react-three/fiber';
 
 // Tree model URLs from new Netlify deployment
 const TREE_MODELS = {
-  pine218: 'https://glittery-taiyaki-0da13c.netlify.app/pine_tree_218poly.glb',
-  stylized: 'https://glittery-taiyaki-0da13c.netlify.app/stylized_tree.glb'
+  pine218: 'https://bucolic-crostata-18dca7.netlify.app/pine_tree_218poly.glb',
+  stylized: 'https://bucolic-crostata-18dca7.netlify.app/stylized_tree.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {

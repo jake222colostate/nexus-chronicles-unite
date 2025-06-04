@@ -6,9 +6,9 @@ import * as THREE from 'three';
 
 // Wizard staff model URLs from new Netlify deployment
 const STAFF_MODELS = {
-  base: 'https://glittery-taiyaki-0da13c.netlify.app/mage_staff.glb',
-  upgrade1: 'https://glittery-taiyaki-0da13c.netlify.app/magical_staff.glb',
-  upgrade2: 'https://glittery-taiyaki-0da13c.netlify.app/stylized_magic_staff_of_water_game_ready.glb'
+  base: 'https://bucolic-crostata-18dca7.netlify.app/mage_staff.glb',
+  upgrade1: 'https://bucolic-crostata-18dca7.netlify.app/magical_staff.glb',
+  upgrade2: 'https://bucolic-crostata-18dca7.netlify.app/stylized_magic_staff_of_water_game_ready.glb'
 } as const;
 
 interface MagicStaffWeaponSystemProps {
