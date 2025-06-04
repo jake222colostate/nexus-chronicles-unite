@@ -188,7 +188,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
         }
         
         if (validPosition && x !== undefined && z !== undefined && y !== undefined && scale !== undefined && rotation !== undefined && modelUrl !== undefined) {
-          positions.push({ x, z, y, scale, rotation, modelUrl, chunkId: chunk.id });
+          positions.push({ x, z, y, scale, rotation, modelUrl, chunkId: seed });
           console.log(`Tree ${i} placed at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
         } else {
           console.warn(`Failed to place tree ${i} in chunk ${chunk.id} after ${maxAttempts} attempts`);
