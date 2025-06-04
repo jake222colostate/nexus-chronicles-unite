@@ -5,11 +5,11 @@ import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Tree model URLs from Netlify deployment
+// Use local GLB files instead of broken external URLs
 const TREE_MODELS = {
-  realistic: 'https://stately-liger-80d127.netlify.app/realistic_tree.glb',
-  stylized: 'https://stately-liger-80d127.netlify.app/stylized_tree.glb',
-  pine: 'https://stately-liger-80d127.netlify.app/pine_tree_218poly.glb'
+  realistic: '/stylized_tree.glb', // Using stylized as realistic fallback
+  stylized: '/stylized_tree.glb',
+  pine: '/pine_tree_218poly.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -99,6 +99,68 @@ const getYAdjustment = (treeType: 'realistic' | 'stylized' | 'pine'): number => 
   return treeType === 'stylized' ? -0.25 : 0;
 };
 
+// Fallback tree component using basic geometry
+const FallbackTree: React.FC<{
+  position: [number, number, number];
+  scale: number;
+  rotation: number;
+  treeType: 'realistic' | 'stylized' | 'pine';
+}> = ({ position, scale, rotation, treeType }) => {
+  const getTreeGeometry = () => {
+    switch (treeType) {
+      case 'pine':
+        return (
+          <group>
+            <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.1, 0.15, 1]} />
+              <meshLambertMaterial color="#8B4513" />
+            </mesh>
+            <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
+              <coneGeometry args={[0.6, 1.5, 8]} />
+              <meshLambertMaterial color="#013220" />
+            </mesh>
+          </group>
+        );
+      case 'stylized':
+        return (
+          <group>
+            <mesh position={[0, 0.6, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.12, 0.18, 1.2]} />
+              <meshLambertMaterial color="#8B4513" />
+            </mesh>
+            <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
+              <sphereGeometry args={[0.8, 12, 8]} />
+              <meshLambertMaterial color="#228B22" />
+            </mesh>
+          </group>
+        );
+      default: // realistic
+        return (
+          <group>
+            <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[0.15, 0.2, 1.6]} />
+              <meshLambertMaterial color="#8B4513" />
+            </mesh>
+            <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
+              <sphereGeometry args={[1.0, 12, 8]} />
+              <meshLambertMaterial color="#228B22" />
+            </mesh>
+          </group>
+        );
+    }
+  };
+
+  return (
+    <group 
+      position={position} 
+      scale={[scale, scale, scale]} 
+      rotation={[0, rotation, 0]}
+    >
+      {getTreeGeometry()}
+    </group>
+  );
+};
+
 // Individual tree instance component
 const TreeInstance: React.FC<{
   modelUrl: string;
@@ -107,45 +169,57 @@ const TreeInstance: React.FC<{
   rotation: number;
   treeType: 'realistic' | 'stylized' | 'pine';
 }> = ({ modelUrl, position, scale, rotation, treeType }) => {
-  let gltfResult = null;
-  let loadError = false;
-  
   try {
-    gltfResult = useGLTF(modelUrl);
-  } catch (error) {
-    console.warn(`Failed to load ${treeType} tree model:`, error);
-    loadError = true;
-  }
+    const { scene } = useGLTF(modelUrl);
+    
+    if (!scene) {
+      console.warn(`Tree model not loaded for ${treeType}, using fallback`);
+      return (
+        <FallbackTree 
+          position={position} 
+          scale={scale} 
+          rotation={rotation} 
+          treeType={treeType}
+        />
+      );
+    }
 
-  if (loadError || !gltfResult?.scene) {
-    return null; // Skip on load failure as requested
-  }
-
-  // Clone and ensure all meshes are visible
-  const clonedScene = useMemo(() => {
-    const scene = gltfResult.scene.clone();
-    scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-        child.visible = true; // Ensure visibility
-        if (child.material && 'needsUpdate' in child.material) {
-          child.material.needsUpdate = true;
+    // Clone and ensure all meshes are visible
+    const clonedScene = useMemo(() => {
+      const sceneClone = scene.clone();
+      sceneClone.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.visible = true; // Ensure visibility
+          if (child.material && 'needsUpdate' in child.material) {
+            child.material.needsUpdate = true;
+          }
         }
-      }
-    });
-    return scene;
-  }, [gltfResult.scene]);
+      });
+      return sceneClone;
+    }, [scene]);
 
-  return (
-    <group 
-      position={position} 
-      scale={[scale, scale, scale]} 
-      rotation={[0, rotation, 0]}
-    >
-      <primitive object={clonedScene} />
-    </group>
-  );
+    return (
+      <group 
+        position={position} 
+        scale={[scale, scale, scale]} 
+        rotation={[0, rotation, 0]}
+      >
+        <primitive object={clonedScene} />
+      </group>
+    );
+  } catch (error) {
+    console.warn(`Failed to load ${treeType} tree model, using fallback:`, error);
+    return (
+      <FallbackTree 
+        position={position} 
+        scale={scale} 
+        rotation={rotation} 
+        treeType={treeType}
+      />
+    );
+  }
 };
 
 // Performance-optimized instanced tree group
@@ -286,12 +360,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   );
 };
 
-// Preload models for better performance
+// Preload models for better performance - with error handling
 Object.values(TREE_MODELS).forEach(url => {
   try {
     useGLTF.preload(url);
+    console.log(`Preloading tree model: ${url}`);
   } catch (error) {
-    console.warn(`Failed to preload tree model:`, error);
+    console.warn(`Failed to preload tree model ${url}, will use fallback:`, error);
   }
 });
 
