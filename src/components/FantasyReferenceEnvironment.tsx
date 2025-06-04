@@ -135,7 +135,7 @@ export const FantasyReferenceEnvironment: React.FC<FantasyReferenceEnvironmentPr
       
       {/* Hyper-realistic mountains */}
       <ProceduralMountainTerrain
-        chunks={chunks.slice(0, 25)}
+        chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
       />

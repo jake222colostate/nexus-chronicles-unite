@@ -62,11 +62,11 @@ export const EnvironmentSystem: React.FC<EnvironmentSystemProps> = ({
       )}
       
       {/* Simplified terrain for sci-fi realm */}
-      <PixelTerrainSystem 
-        tier={currentTier} 
-        opacity={transitionOpacity} 
+      <PixelTerrainSystem
+        tier={currentTier}
+        opacity={transitionOpacity}
         excludeTrees={excludeTrees}
-        excludeMountains={realm === 'fantasy'}
+        excludeMountains={false}
       />
       
       {/* Minimal fog only for fantasy realm */}
