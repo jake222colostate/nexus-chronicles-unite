@@ -264,44 +264,21 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
+  // ALL HOOKS MUST BE AT THE TOP - BEFORE ANY CONDITIONAL LOGIC
   const [isReady, setIsReady] = useState(false);
   const [realmSwitchDelay, setRealmSwitchDelay] = useState(false);
   const previousRealm = useRef<'fantasy' | 'scifi'>(realm);
 
-  // Handle realm switching with delay and cleanup
-  useEffect(() => {
-    if (previousRealm.current !== realm) {
-      console.log(`EnhancedTreeDistribution: Realm switch detected (${previousRealm.current} -> ${realm})`);
-      
-      if (realm === 'fantasy') {
-        // Clear existing trees and add delay before regenerating
-        setIsReady(false);
-        setRealmSwitchDelay(true);
-        
-        const delayTimeout = setTimeout(() => {
-          console.log('EnhancedTreeDistribution: Post-transition delay complete, regenerating trees');
-          setRealmSwitchDelay(false);
-          setIsReady(true);
-        }, 350); // 350ms delay as requested
-        
-        return () => clearTimeout(delayTimeout);
-      } else {
-        setIsReady(false);
-      }
-      
-      previousRealm.current = realm;
-    } else if (realm === 'fantasy' && !realmSwitchDelay) {
-      setIsReady(true);
-    }
-  }, [realm, realmSwitchDelay]);
-
-  // Only render for fantasy realm when ready
-  if (realm !== 'fantasy' || !isReady || realmSwitchDelay) {
-    return null;
-  }
-
-  // Generate tree positions with optimized algorithm
+  // Generate tree positions with optimized algorithm - MOVED TO TOP
   const { treePositions, playerPosition } = useMemo(() => {
+    // Only generate if ready and in fantasy realm
+    if (realm !== 'fantasy' || !isReady || realmSwitchDelay) {
+      return {
+        treePositions: [],
+        playerPosition: new THREE.Vector3(0, 0, 0)
+      };
+    }
+
     console.log('EnhancedTreeDistribution: Generating tree positions for', chunks.length, 'chunks');
     const trees = [];
     const minDistance = 3; // 3m minimum distance
@@ -374,7 +351,40 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       treePositions: trees,
       playerPosition: new THREE.Vector3(avgX, 0, avgZ)
     };
-  }, [chunks.map(c => c.id).join(','), chunkSize]);
+  }, [chunks.map(c => c.id).join(','), chunkSize, realm, isReady, realmSwitchDelay]);
+
+  // Handle realm switching with delay and cleanup
+  useEffect(() => {
+    if (previousRealm.current !== realm) {
+      console.log(`EnhancedTreeDistribution: Realm switch detected (${previousRealm.current} -> ${realm})`);
+      
+      if (realm === 'fantasy') {
+        // Clear existing trees and add delay before regenerating
+        setIsReady(false);
+        setRealmSwitchDelay(true);
+        
+        const delayTimeout = setTimeout(() => {
+          console.log('EnhancedTreeDistribution: Post-transition delay complete, regenerating trees');
+          setRealmSwitchDelay(false);
+          setIsReady(true);
+        }, 350); // 350ms delay as requested
+        
+        return () => clearTimeout(delayTimeout);
+      } else {
+        setIsReady(false);
+      }
+      
+      previousRealm.current = realm;
+    } else if (realm === 'fantasy' && !realmSwitchDelay) {
+      setIsReady(true);
+    }
+  }, [realm, realmSwitchDelay]);
+
+  // CONDITIONAL RETURNS AFTER ALL HOOKS
+  // Only render for fantasy realm when ready
+  if (realm !== 'fantasy' || !isReady || realmSwitchDelay) {
+    return null;
+  }
 
   return (
     <Suspense fallback={null}>
