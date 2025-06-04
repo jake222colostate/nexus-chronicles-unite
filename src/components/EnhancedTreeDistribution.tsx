@@ -34,7 +34,7 @@ const TreeInstance: React.FC<{
     const { scene } = useGLTF(modelUrl);
     
     if (!scene) {
-      console.error(`Tree model not loaded for ${treeType}, skipping placement`);
+      console.log(`Tree model not loaded for ${treeType}, skipping placement`);
       return null;
     }
 
@@ -43,12 +43,12 @@ const TreeInstance: React.FC<{
     // Clone the scene to create unique instances
     const clonedScene = scene.clone();
     
-    // Ensure all meshes maintain original materials and textures
+    // Preserve original materials and textures
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        // Maintain original materials - don't modify
+        // Preserve original materials - don't modify
         if (child.material) {
           child.material.needsUpdate = true;
         }
@@ -61,7 +61,7 @@ const TreeInstance: React.FC<{
       </group>
     );
   } catch (error) {
-    console.error(`Failed to load tree model for ${treeType}, skipping placement:`, error);
+    console.log(`Failed to load tree model for ${treeType}, skipping placement:`, error);
     return null;
   }
 };
@@ -107,7 +107,7 @@ const getTreeTypeByDistribution = (seed: number): 'stylized' | 'pine218' => {
   }
 };
 
-// Get scale range based on corrected tree type scaling
+// Get scale range based on final tree type scaling
 const getScaleForTreeType = (treeType: 'stylized' | 'pine218', seed: number): number => {
   const random = seededRandom(seed);
   
@@ -115,7 +115,7 @@ const getScaleForTreeType = (treeType: 'stylized' | 'pine218', seed: number): nu
     case 'stylized':
       return 0.9 + random * 0.2; // 0.9 to 1.1
     case 'pine218':
-      return 3.0 + random * 1.0; // 3.0 to 4.0 (heavily upscaled to match stylized tree height)
+      return 6.0 + random * 1.5; // 6.0 to 7.5
     default:
       return 0.9 + random * 0.2;
   }
@@ -134,7 +134,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     return null;
   }
 
-  // Generate tree positions with jittered placement and proper spacing
+  // Generate tree positions with jittered placement and 3m spacing
   const treePositions = useMemo(() => {
     console.log('Generating tree positions for', chunks.length, 'chunks');
     const positions = [];

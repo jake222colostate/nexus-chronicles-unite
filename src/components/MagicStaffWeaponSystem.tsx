@@ -4,22 +4,22 @@ import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-// Magic staff model URLs
+// Final magic staff model URLs
 const STAFF_MODELS = {
-  starter: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/mage_staff.glb',
-  upgrade1: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/magical_staff.glb',
-  upgrade2: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_magic_staff_of_water_game_ready.glb'
+  base: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/staffs/mage_staff.glb',
+  upgrade1: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/staffs/magical_staff.glb',
+  upgrade2: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/staffs/stylized_magic_staff_of_water_game_ready.glb'
 } as const;
 
 interface MagicStaffWeaponSystemProps {
-  upgradeLevel: number; // 0 = starter, 1 = upgrade1, 2 = upgrade2
+  upgradeLevel: number; // 0 = base, 1 = upgrade1, 2 = upgrade2
   visible?: boolean;
 }
 
 // Individual staff component
 const StaffInstance: React.FC<{
   modelUrl: string;
-  staffType: 'starter' | 'upgrade1' | 'upgrade2';
+  staffType: 'base' | 'upgrade1' | 'upgrade2';
   visible: boolean;
 }> = ({ modelUrl, staffType, visible }) => {
   const staffRef = useRef<THREE.Group>(null);
@@ -28,7 +28,7 @@ const StaffInstance: React.FC<{
     const { scene } = useGLTF(modelUrl);
     
     if (!scene) {
-      console.error(`Staff model not loaded for ${staffType}, skipping`);
+      console.log(`Staff model not loaded for ${staffType}, skipping`);
       return null;
     }
 
@@ -38,11 +38,12 @@ const StaffInstance: React.FC<{
     const clonedScene = useMemo(() => {
       const clone = scene.clone();
       
-      // Maintain original materials and textures
+      // Preserve original materials and textures
       clone.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.castShadow = true;
           child.receiveShadow = true;
+          // Preserve original materials - don't modify
           if (child.material) {
             child.material.needsUpdate = true;
           }
@@ -52,51 +53,25 @@ const StaffInstance: React.FC<{
       return clone;
     }, [scene]);
 
-    // Staff positioning and scaling based on type
-    const getStaffTransform = (type: 'starter' | 'upgrade1' | 'upgrade2') => {
-      switch (type) {
-        case 'starter':
-          return {
-            position: [0.5, -1.0, -0.8] as [number, number, number],
-            rotation: [0.1, Math.PI / 6, 0.1] as [number, number, number],
-            scale: [1.0, 1.0, 1.0] as [number, number, number]
-          };
-        case 'upgrade1':
-          return {
-            position: [0.5, -1.0, -0.8] as [number, number, number],
-            rotation: [0.1, Math.PI / 6, 0.1] as [number, number, number],
-            scale: [1.1, 1.1, 1.1] as [number, number, number]
-          };
-        case 'upgrade2':
-          return {
-            position: [0.5, -1.0, -0.8] as [number, number, number],
-            rotation: [0.1, Math.PI / 6, 0.1] as [number, number, number],
-            scale: [1.2, 1.2, 1.2] as [number, number, number]
-          };
-        default:
-          return {
-            position: [0.5, -1.0, -0.8] as [number, number, number],
-            rotation: [0.1, Math.PI / 6, 0.1] as [number, number, number],
-            scale: [1.0, 1.0, 1.0] as [number, number, number]
-          };
-      }
-    };
-
-    const transform = getStaffTransform(staffType);
+    // Final positioning: X = 0.3, Y = -0.4, Z = 0.8 relative to camera
+    const position: [number, number, number] = [0.3, -0.4, 0.8];
     
+    // Rotate to aim diagonally forward in natural grip pose
+    const rotation: [number, number, number] = [0.1, Math.PI / 8, 0.1];
+
     return (
       <group 
         ref={staffRef}
         visible={visible}
-        position={transform.position}
-        rotation={transform.rotation}
-        scale={transform.scale}
+        position={position}
+        rotation={rotation}
+        scale={[1.0, 1.0, 1.0]}
       >
         <primitive object={clonedScene} />
       </group>
     );
   } catch (error) {
-    console.error(`Failed to load staff model for ${staffType}, skipping:`, error);
+    console.log(`Failed to load staff model for ${staffType}, skipping:`, error);
     return null;
   }
 };
@@ -112,15 +87,15 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   const currentStaffType = useMemo(() => {
     if (upgradeLevel >= 2) return 'upgrade2';
     if (upgradeLevel >= 1) return 'upgrade1';
-    return 'starter';
+    return 'base';
   }, [upgradeLevel]);
 
   console.log(`MagicStaffWeaponSystem: Current upgrade level ${upgradeLevel}, using ${currentStaffType} staff`);
 
-  // Attach weapon to camera (right hand position)
+  // Attach weapon to camera (first-person POV)
   useFrame(() => {
     if (weaponGroupRef.current && camera) {
-      // Position the weapon group relative to the camera
+      // Position the weapon group relative to the camera for first-person view
       weaponGroupRef.current.position.copy(camera.position);
       weaponGroupRef.current.rotation.copy(camera.rotation);
     }
@@ -139,9 +114,9 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     <group ref={weaponGroupRef} name="MagicStaffWeaponSystem">
       {/* Render all staff models but only show the current one */}
       <StaffInstance
-        modelUrl={STAFF_MODELS.starter}
-        staffType="starter"
-        visible={currentStaffType === 'starter'}
+        modelUrl={STAFF_MODELS.base}
+        staffType="base"
+        visible={currentStaffType === 'base'}
       />
       <StaffInstance
         modelUrl={STAFF_MODELS.upgrade1}
@@ -164,6 +139,6 @@ Object.entries(STAFF_MODELS).forEach(([type, url]) => {
     useGLTF.preload(url);
     console.log(`Preloaded ${type} staff model from:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} staff model:`, error);
+    console.log(`Failed to preload ${type} staff model:`, error);
   }
 });
