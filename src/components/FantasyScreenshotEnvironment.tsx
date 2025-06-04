@@ -1,28 +1,61 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { FantasyEnvironmentOrchestrator } from './FantasyEnvironmentOrchestrator';
-import { Vector3 } from 'three';
+import { MagicalFantasySkybox } from './MagicalFantasySkybox';
+import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
+import { CleanPathSystem } from './CleanPathSystem';
+import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
+import { GLBTreeDistributionSystem } from './GLBTreeDistributionSystem';
+import * as THREE from 'three';
 
 interface FantasyScreenshotEnvironmentProps {
   chunks: ChunkData[];
   chunkSize: number;
   realm: 'fantasy' | 'scifi';
-  playerPosition?: Vector3;
+  playerPosition?: THREE.Vector3;
 }
 
 export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> = ({
   chunks,
   chunkSize,
   realm,
-  playerPosition = new Vector3(0, 0, 0)
+  playerPosition = new THREE.Vector3(0, 0, 0)
 }) => {
+  // Only render for fantasy realm
+  if (realm !== 'fantasy') {
+    return null;
+  }
+
   return (
-    <FantasyEnvironmentOrchestrator 
-      chunks={chunks}
-      chunkSize={chunkSize}
-      realm={realm}
-      playerPosition={playerPosition}
-    />
+    <group>
+      {/* Magical skybox */}
+      <MagicalFantasySkybox />
+      
+      {/* Ground plane */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, -150]} receiveShadow>
+        <planeGeometry args={[200, 600]} />
+        <meshLambertMaterial color="#2E7D32" />
+      </mesh>
+      
+      {/* Path system */}
+      <CleanPathSystem chunks={chunks.slice(0, 30)} chunkSize={chunkSize} realm={realm} />
+      
+      {/* Hyper-realistic mountains */}
+      <ProceduralMountainTerrain
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
+      
+      {/* New GLB Tree Distribution System */}
+      <GLBTreeDistributionSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
+      
+      {/* Optimized lighting */}
+      <ImprovedFantasyLighting />
+    </group>
   );
 };
