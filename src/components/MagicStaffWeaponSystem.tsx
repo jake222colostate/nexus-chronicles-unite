@@ -31,7 +31,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     gltfResult = null;
   }
 
-  // Attach weapon to camera (first-person POV) with exact user specifications
+  // Attach weapon to camera (first-person POV) with fixed bottom-right positioning
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible) {
       // Position relative to camera for first-person view
@@ -43,18 +43,18 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Exact right-hand staff positioning as specified: X = 0.45, Y = -0.3, Z = 0.6
+      // Fixed bottom-right staff positioning: X = -0.4, Y = -0.3, Z = 0.6
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.45))   // Right-hand offset
+        .add(cameraRight.clone().multiplyScalar(-0.4))   // Bottom-right offset (negative X for right side)
         .add(cameraUp.clone().multiplyScalar(-0.3))       // Lower position
         .add(cameraForward.clone().multiplyScalar(0.6));  // Forward distance
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Exact rotation for right-hand grip: Y = -20°, Z = 30°
+      // Fixed rotation for right-hand grip: Y = 25°, Z = -30° (X = 0°)
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-20 * Math.PI / 180);  // -20° Y rotation
-      weaponGroupRef.current.rotateZ(30 * Math.PI / 180);   // 30° Z rotation
+      weaponGroupRef.current.rotateY(25 * Math.PI / 180);   // 25° Y rotation
+      weaponGroupRef.current.rotateZ(-30 * Math.PI / 180);  // -30° Z rotation
     }
   });
 
@@ -80,13 +80,13 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   });
 
-  console.log(`Successfully rendering staff from new Netlify (position: X=0.45, Y=-0.3, Z=0.6, rotations: Y=-20°, Z=30°, scale: 0.7×)`);
+  console.log(`Successfully rendering staff from new Netlify (position: X=-0.4, Y=-0.3, Z=0.6, rotations: Y=25°, Z=-30°, scale: 0.75×)`);
 
   return (
     <group ref={weaponGroupRef}>
       <primitive 
         object={clonedScene} 
-        scale={[0.7, 0.7, 0.7]} // Uniform 0.7× scale as specified
+        scale={[0.75, 0.75, 0.75]} // Uniform 0.75× scale as specified
       />
     </group>
   );

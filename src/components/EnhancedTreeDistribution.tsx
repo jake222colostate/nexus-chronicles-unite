@@ -7,7 +7,7 @@ import { useFrame } from '@react-three/fiber';
 
 // Tree model URLs from new Netlify deployment
 const TREE_MODELS = {
-  stylized: 'https://stately-liger-80d127.netlify.app/stylized_tree.glb',
+  realistic: 'https://stately-liger-80d127.netlify.app/realistic_tree.glb',
   pine218: 'https://stately-liger-80d127.netlify.app/pine_tree_218poly.glb'
 } as const;
 
@@ -70,19 +70,20 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < safetyBuffer;
 };
 
-// Determine tree type based on 60/40 distribution (60% stylized, 40% pine)
-const getTreeTypeByDistribution = (seed: number): 'stylized' | 'pine218' => {
+// Determine tree type based on 60/40 distribution (60% realistic, 40% pine)
+const getTreeTypeByDistribution = (seed: number): 'realistic' | 'pine218' => {
   const random = seededRandom(seed);
-  return random < 0.6 ? 'stylized' : 'pine218'; // 60% stylized, 40% pine
+  return random < 0.6 ? 'realistic' : 'pine218'; // 60% realistic, 40% pine
 };
 
 // Updated scale ranges with new specifications
-const getScaleForTreeType = (treeType: 'stylized' | 'pine218'): number => {
+const getScaleForTreeType = (treeType: 'realistic' | 'pine218', seed: number): number => {
   switch (treeType) {
-    case 'stylized':
-      return 0.55; // Uniform scale 0.55× for realistic trunk-canopy proportion
+    case 'realistic':
+      // Scale range 0.8× – 1.0×
+      return 0.8 + seededRandom(seed) * 0.2;
     case 'pine218':
-      return 0.85; // Uniform scale 0.85× to appear slightly smaller than stylized
+      return 0.85; // Uniform scale 0.85×
     default:
       return 1.0;
   }
@@ -91,7 +92,7 @@ const getScaleForTreeType = (treeType: 'stylized' | 'pine218'): number => {
 // Performance-optimized instanced tree component
 const InstancedTreeGroup: React.FC<{
   modelUrl: string;
-  treeType: 'stylized' | 'pine218';
+  treeType: 'realistic' | 'pine218';
   positions: Array<{ x: number; y: number; z: number; scale: number; rotation: number; }>;
   playerPosition: THREE.Vector3;
 }> = ({ modelUrl, treeType, positions, playerPosition }) => {
@@ -161,7 +162,7 @@ const InstancedTreeGroup: React.FC<{
     return null;
   }
 
-  console.log(`Successfully rendering ${treeType} from new Netlify - ${positions.length} instances (scale: ${treeType === 'stylized' ? '0.55×' : '0.85×'})`);
+  console.log(`Successfully rendering ${treeType} from new Netlify - ${positions.length} instances (scale: ${treeType === 'realistic' ? '0.8×-1.0×' : '0.85×'})`);
 
   return (
     <instancedMesh
@@ -178,7 +179,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using new Netlify URLs with 60/40 distribution and new scaling');
+  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using new Netlify URLs with 60/40 distribution (realistic/pine) and new scaling');
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -187,10 +188,10 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   }
 
   // Generate tree positions with updated scaling and spacing requirements - memoized properly
-  const { stylizedPositions, pine218Positions, playerPosition } = useMemo(() => {
-    console.log('Generating tree positions with new Netlify models, 60/40 distribution, uniform scaling, and 3m spacing');
+  const { realisticPositions, pine218Positions, playerPosition } = useMemo(() => {
+    console.log('Generating tree positions with new Netlify models, 60/40 distribution (realistic/pine), variable scaling, and 3m spacing');
     
-    const stylizedTrees = [];
+    const realisticTrees = [];
     const pineTrees = [];
     const minDistance = 3; // 3 meter minimum spacing
     const maxAttempts = 30;
@@ -226,8 +227,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Determine tree type based on 60/40 distribution
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // Get appropriate uniform scale for tree type
-          scale = getScaleForTreeType(treeType);
+          // Get appropriate scale for tree type
+          scale = getScaleForTreeType(treeType, treeSeed + 3);
           
           // Random Y-axis rotation (0°–360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
@@ -250,8 +251,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           const position = { x, y: finalY, z, scale, rotation };
           allPositions.push(position);
           
-          if (treeType === 'stylized') {
-            stylizedTrees.push(position);
+          if (treeType === 'realistic') {
+            realisticTrees.push(position);
           } else {
             pineTrees.push(position);
           }
@@ -264,12 +265,12 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     });
     
     // Log distribution statistics
-    const stylizedCount = stylizedTrees.length;
+    const realisticCount = realisticTrees.length;
     const pineCount = pineTrees.length;
     const total = allPositions.length;
     
     console.log(`Total trees generated from new Netlify: ${total}`);
-    console.log(`Stylized trees (scale 0.55×): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Realistic trees (scale 0.8×-1.0×): ${realisticCount} (${total > 0 ? ((realisticCount/total)*100).toFixed(1) : 0}%)`);
     console.log(`Pine 218 trees (scale 0.85×): ${pineCount} (${total > 0 ? ((pineCount/total)*100).toFixed(1) : 0}%)`);
     
     // Player position for LOD calculations
@@ -277,7 +278,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
     return {
-      stylizedPositions: stylizedTrees,
+      realisticPositions: realisticTrees,
       pine218Positions: pineTrees,
       playerPosition: new THREE.Vector3(avgX, 0, avgZ)
     };
@@ -286,12 +287,12 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   return (
     <group name="TreeGroup">
       <Suspense fallback={null}>
-        {/* Instanced Stylized Trees from new Netlify (60%) */}
-        {stylizedPositions.length > 0 && (
+        {/* Instanced Realistic Trees from new Netlify (60%) */}
+        {realisticPositions.length > 0 && (
           <InstancedTreeGroup
-            modelUrl={TREE_MODELS.stylized}
-            treeType="stylized"
-            positions={stylizedPositions}
+            modelUrl={TREE_MODELS.realistic}
+            treeType="realistic"
+            positions={realisticPositions}
             playerPosition={playerPosition}
           />
         )}
