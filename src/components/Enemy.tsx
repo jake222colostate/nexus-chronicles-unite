@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Vector3 } from 'three';
+import { Group, Vector3 } from 'three';
 
 interface EnemyProps {
   position: [number, number, number];
@@ -14,12 +14,12 @@ export const Enemy: React.FC<EnemyProps> = ({
   playerPosition, 
   onReachPlayer 
 }) => {
-  const meshRef = useRef<Mesh>(null);
+  const groupRef = useRef<Group>(null);
   const currentPosition = useRef(new Vector3(...position));
   const speed = 2; // units per second
 
   useFrame((_, delta) => {
-    if (!meshRef.current) return;
+    if (!groupRef.current) return;
 
     // Calculate direction toward player
     const direction = new Vector3()
@@ -30,8 +30,8 @@ export const Enemy: React.FC<EnemyProps> = ({
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Update mesh position
-    meshRef.current.position.copy(currentPosition.current);
+    // Update group position
+    groupRef.current.position.copy(currentPosition.current);
 
     // Check if enemy reached player (within 2 units)
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
@@ -41,7 +41,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   });
 
   return (
-    <group ref={meshRef} position={position} castShadow receiveShadow>
+    <group ref={groupRef} position={position} castShadow receiveShadow>
       {/* Body */}
       <mesh position={[0, -1, 0]}>
         <cylinderGeometry args={[0.3, 0.6, 1.5, 8]} />
