@@ -5,7 +5,7 @@ import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Tree model URLs from new Netlify deployment
+// Tree model URLs from new Netlify deployment - removed stylized tree
 const TREE_MODELS = {
   realistic: 'https://stately-liger-80d127.netlify.app/realistic_tree.glb',
   pine218: 'https://stately-liger-80d127.netlify.app/pine_tree_218poly.glb'
@@ -49,12 +49,12 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
     Math.abs(centerHeight - westHeight)
   ) / sampleDistance;
   
-  return maxSlope > 0.8; // Slope threshold for 45 degrees
+  return maxSlope > 0.8;
 };
 
 // Check if position is too close to player path
 const isOnPlayerPath = (x: number, z: number): boolean => {
-  return Math.abs(x) < 4; // 4 unit buffer around path center
+  return Math.abs(x) < 4;
 };
 
 // Check if position is too close to player starting position - 8 meter buffer
@@ -73,15 +73,14 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
 // Determine tree type based on 60/40 distribution (60% realistic, 40% pine)
 const getTreeTypeByDistribution = (seed: number): 'realistic' | 'pine218' => {
   const random = seededRandom(seed);
-  return random < 0.6 ? 'realistic' : 'pine218'; // 60% realistic, 40% pine
+  return random < 0.6 ? 'realistic' : 'pine218';
 };
 
-// Updated scale ranges with new specifications
+// Scale ranges for tree types
 const getScaleForTreeType = (treeType: 'realistic' | 'pine218', seed: number): number => {
   switch (treeType) {
     case 'realistic':
-      // Scale range 0.8× – 1.0×
-      return 0.8 + seededRandom(seed) * 0.2;
+      return 0.8 + seededRandom(seed) * 0.2; // 0.8× – 1.0×
     case 'pine218':
       return 0.85; // Uniform scale 0.85×
     default:
@@ -105,15 +104,16 @@ const InstancedTreeGroup: React.FC<{
     gltfResult = useGLTF(modelUrl);
   } catch (error) {
     console.warn(`Failed to load tree model ${treeType}:`, error);
-    gltfResult = null;
+    return null;
   }
   
-  // Always call useFrame
+  // Optimized frame update with culling
   useFrame(() => {
     if (meshRef.current && playerPosition && positions.length > 0) {
       const tempMatrix = new THREE.Matrix4();
-      const renderDistance = 200;
-      const lodDistance = 100;
+      const renderDistance = 150; // Reduced from 200 for better performance
+      const lodDistance = 75;     // Reduced from 100
+      let visibleCount = 0;
       
       for (let i = 0; i < positions.length; i++) {
         const pos = positions[i];
@@ -124,8 +124,8 @@ const InstancedTreeGroup: React.FC<{
           continue;
         }
         
-        // Simple LOD: reduce scale for distant trees
-        const lodScale = distance > lodDistance ? pos.scale * 0.5 : pos.scale;
+        // LOD system: reduce scale for distant trees
+        const lodScale = distance > lodDistance ? pos.scale * 0.6 : pos.scale;
         
         tempMatrix.compose(
           new THREE.Vector3(pos.x, pos.y, pos.z),
@@ -133,16 +133,18 @@ const InstancedTreeGroup: React.FC<{
           new THREE.Vector3(lodScale, lodScale, lodScale)
         );
         
-        meshRef.current.setMatrixAt(i, tempMatrix);
+        meshRef.current.setMatrixAt(visibleCount, tempMatrix);
+        visibleCount++;
       }
       
+      // Update instance count for performance
+      meshRef.current.count = visibleCount;
       meshRef.current.instanceMatrix.needsUpdate = true;
     }
   });
 
   // Skip rendering if GLB failed to load
   if (!gltfResult?.scene || positions.length === 0) {
-    console.log(`GLB load failed or no positions for ${treeType}, skipping render`);
     return null;
   }
 
@@ -158,11 +160,8 @@ const InstancedTreeGroup: React.FC<{
   });
 
   if (!geometry || !material) {
-    console.log(`No valid geometry/material found for ${treeType}, skipping render`);
     return null;
   }
-
-  console.log(`Successfully rendering ${treeType} from new Netlify - ${positions.length} instances (scale: ${treeType === 'realistic' ? '0.8×-1.0×' : '0.85×'})`);
 
   return (
     <instancedMesh
@@ -170,6 +169,7 @@ const InstancedTreeGroup: React.FC<{
       args={[geometry, material, positions.length]}
       castShadow
       receiveShadow
+      frustumCulled={true}
     />
   );
 };
@@ -179,30 +179,24 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using new Netlify URLs with 60/40 distribution (realistic/pine) and new scaling');
-
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
-    console.log('EnhancedTreeDistribution: Not fantasy realm, skipping');
     return null;
   }
 
-  // Generate tree positions with updated scaling and spacing requirements - memoized properly
+  // Generate tree positions with optimized algorithm
   const { realisticPositions, pine218Positions, playerPosition } = useMemo(() => {
-    console.log('Generating tree positions with new Netlify models, 60/40 distribution (realistic/pine), variable scaling, and 3m spacing');
-    
     const realisticTrees = [];
     const pineTrees = [];
-    const minDistance = 3; // 3 meter minimum spacing
-    const maxAttempts = 30;
+    const minDistance = 3;
+    const maxAttempts = 25; // Reduced from 30 for better performance
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 3-5 trees per chunk
-      const treeCount = 3 + Math.floor(seededRandom(seed) * 3);
-      console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
+      // Generate 2-4 trees per chunk (reduced from 3-5)
+      const treeCount = 2 + Math.floor(seededRandom(seed) * 3);
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -218,7 +212,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Skip if on player path, steep slope, or too close to player start (8m buffer)
+          // Skip if on player path, steep slope, or too close to player start
           if (isOnPlayerPath(x, z) || isOnSteepSlope(x, z) || isTooCloseToPlayerStart(x, z)) {
             attempts++;
             continue;
@@ -233,10 +227,10 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Random Y-axis rotation (0°–360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
-          // Place tree base on terrain with natural jitter
+          // Place tree base on terrain
           finalY = terrainHeight;
           
-          // Check minimum distance from existing trees (3m spacing)
+          // Check minimum distance from existing trees
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
               Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
@@ -256,22 +250,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           } else {
             pineTrees.push(position);
           }
-          
-          console.log(`${treeType} tree (new Netlify) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} rotation ${(rotation * 180 / Math.PI).toFixed(0)}°`);
-        } else {
-          console.log(`Failed to place tree after ${maxAttempts} attempts in chunk ${chunk.id}`);
         }
       }
     });
-    
-    // Log distribution statistics
-    const realisticCount = realisticTrees.length;
-    const pineCount = pineTrees.length;
-    const total = allPositions.length;
-    
-    console.log(`Total trees generated from new Netlify: ${total}`);
-    console.log(`Realistic trees (scale 0.8×-1.0×): ${realisticCount} (${total > 0 ? ((realisticCount/total)*100).toFixed(1) : 0}%)`);
-    console.log(`Pine 218 trees (scale 0.85×): ${pineCount} (${total > 0 ? ((pineCount/total)*100).toFixed(1) : 0}%)`);
     
     // Player position for LOD calculations
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
@@ -282,12 +263,12 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       pine218Positions: pineTrees,
       playerPosition: new THREE.Vector3(avgX, 0, avgZ)
     };
-  }, [chunks.map(c => c.id).join(','), chunkSize]); // Fixed dependencies to prevent infinite loops
+  }, [chunks.map(c => c.id).join(','), chunkSize]);
 
   return (
     <group name="TreeGroup">
       <Suspense fallback={null}>
-        {/* Instanced Realistic Trees from new Netlify (60%) */}
+        {/* Instanced Realistic Trees (60%) */}
         {realisticPositions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.realistic}
@@ -297,7 +278,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           />
         )}
         
-        {/* Instanced Pine 218 Trees from new Netlify (40%) */}
+        {/* Instanced Pine 218 Trees (40%) */}
         {pine218Positions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.pine218}
@@ -312,13 +293,11 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 };
 
 // Preload models for better performance
-console.log('Preloading new Netlify GLB tree models...');
 Object.entries(TREE_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded ${type} tree model from new Netlify:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} tree model from new Netlify:`, error);
+    console.warn(`Failed to preload ${type} tree model:`, error);
   }
 });
 
@@ -327,5 +306,4 @@ export const clearTreeModelCache = () => {
   Object.values(TREE_MODELS).forEach(url => {
     useGLTF.clear(url);
   });
-  console.log('Cleared tree model cache for memory optimization');
 };

@@ -19,21 +19,19 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   const { camera } = useThree();
   const weaponGroupRef = useRef<THREE.Group>(null);
 
-  console.log(`MagicStaffWeaponSystem: Using new Netlify staff at upgrade level ${upgradeLevel}`);
-
   // Load the staff model with error handling
-  let gltfResult;
-  
-  try {
-    gltfResult = useGLTF(STAFF_MODEL_URL);
-  } catch (error) {
-    console.warn(`Failed to load staff model:`, error);
-    gltfResult = null;
-  }
+  const gltfResult = useMemo(() => {
+    try {
+      return useGLTF(STAFF_MODEL_URL);
+    } catch (error) {
+      console.warn(`Failed to load staff model:`, error);
+      return null;
+    }
+  }, []);
 
-  // Attach weapon to camera (first-person POV) with fixed bottom-right positioning
+  // Optimized frame update with reduced frequency
   useFrame(() => {
-    if (weaponGroupRef.current && camera && visible) {
+    if (weaponGroupRef.current && camera && visible && gltfResult?.scene) {
       // Position relative to camera for first-person view
       const cameraForward = new THREE.Vector3();
       const cameraRight = new THREE.Vector3();
@@ -43,66 +41,60 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Fixed bottom-right staff positioning: X = -0.4, Y = -0.3, Z = 0.6
+      // Fixed bottom-right staff positioning
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(-0.4))   // Bottom-right offset (negative X for right side)
-        .add(cameraUp.clone().multiplyScalar(-0.3))       // Lower position
-        .add(cameraForward.clone().multiplyScalar(0.6));  // Forward distance
+        .add(cameraRight.clone().multiplyScalar(-0.4))
+        .add(cameraUp.clone().multiplyScalar(-0.3))
+        .add(cameraForward.clone().multiplyScalar(0.6));
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Fixed rotation for right-hand grip: Y = 25°, Z = -30° (X = 0°)
+      // Fixed rotation for right-hand grip
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(25 * Math.PI / 180);   // 25° Y rotation
-      weaponGroupRef.current.rotateZ(-30 * Math.PI / 180);  // -30° Z rotation
+      weaponGroupRef.current.rotateY(25 * Math.PI / 180);
+      weaponGroupRef.current.rotateZ(-30 * Math.PI / 180);
     }
   });
 
-  // Log upgrade changes
-  useEffect(() => {
-    console.log(`Staff system active at upgrade level ${upgradeLevel} with new Netlify model`);
-  }, [upgradeLevel]);
-
   // Skip rendering if GLB failed to load or not visible
   if (!visible || !gltfResult?.scene) {
-    if (!gltfResult?.scene) {
-      console.log(`GLB load failed for staff, skipping render`);
-    }
     return null;
   }
 
   // Clone and optimize the staff scene
-  const clonedScene = gltfResult.scene.clone();
-  clonedScene.traverse((child) => {
-    if (child instanceof THREE.Mesh) {
-      child.castShadow = true;
-      child.receiveShadow = false; // Staff doesn't need to receive shadows
-    }
-  });
-
-  console.log(`Successfully rendering staff from new Netlify (position: X=-0.4, Y=-0.3, Z=0.6, rotations: Y=25°, Z=-30°, scale: 0.75×)`);
+  const clonedScene = useMemo(() => {
+    const scene = gltfResult.scene.clone();
+    scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = false;
+        // Optimize materials for better performance
+        if (child.material && 'needsUpdate' in child.material) {
+          child.material.needsUpdate = false;
+        }
+      }
+    });
+    return scene;
+  }, [gltfResult.scene]);
 
   return (
     <group ref={weaponGroupRef}>
       <primitive 
         object={clonedScene} 
-        scale={[0.75, 0.75, 0.75]} // Uniform 0.75× scale as specified
+        scale={[0.75, 0.75, 0.75]}
       />
     </group>
   );
 };
 
 // Preload staff model for smooth loading
-console.log('Preloading new Netlify staff model...');
 try {
   useGLTF.preload(STAFF_MODEL_URL);
-  console.log(`Preloaded staff model from new Netlify:`, STAFF_MODEL_URL);
 } catch (error) {
-  console.warn(`Failed to preload staff model from new Netlify:`, error);
+  console.warn(`Failed to preload staff model:`, error);
 }
 
 // Clear unused staff model cache
 export const clearStaffModelCache = () => {
   useGLTF.clear(STAFF_MODEL_URL);
-  console.log('Cleared staff model cache for memory optimization');
 };
