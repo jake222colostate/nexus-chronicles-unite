@@ -1,11 +1,12 @@
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useRef, useState, useCallback } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { FantasyScreenshotEnvironment } from './FantasyScreenshotEnvironment';
-import { EnemySystem } from './EnemySystem';
+import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
+import { WizardStaffWeapon } from './WizardStaffWeapon';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -16,6 +17,8 @@ interface Fantasy3DSceneProps {
   onTierProgression: () => void;
   chunkSize: number;
   renderDistance: number;
+  onEnemyCountChange?: (count: number) => void;
+  onEnemyKilled?: () => void;
 }
 
 export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
@@ -23,8 +26,28 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   onPositionChange,
   realm,
   chunkSize,
-  renderDistance
+  renderDistance,
+  onEnemyCountChange,
+  onEnemyKilled
 }) => {
+  const enemySystemRef = useRef<EnemySystemHandle>(null);
+  const [enemies, setEnemies] = useState<EnemyData[]>([]);
+
+  const handleEnemiesChange = useCallback(
+    (list: EnemyData[]) => {
+      setEnemies(list);
+      if (onEnemyCountChange) onEnemyCountChange(list.length);
+    },
+    [onEnemyCountChange]
+  );
+
+  const handleEnemyHit = useCallback(
+    (id: string) => {
+      enemySystemRef.current?.damageEnemy(id, 1);
+      if (onEnemyKilled) onEnemyKilled();
+    },
+    [onEnemyKilled]
+  );
   return (
     <Suspense fallback={null}>
       {/* Camera controller with proper character height */}
@@ -53,11 +76,16 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       </ChunkSystem>
 
       {/* Enemy System - spawns enemies ahead of player */}
-      <EnemySystem 
+      <EnemySystem
+        ref={enemySystemRef}
         playerPosition={cameraPosition}
         maxEnemies={5}
         spawnDistance={100}
+        onEnemiesChange={handleEnemiesChange}
       />
+
+      {/* Wizard Staff Weapon */}
+      <WizardStaffWeapon enemies={enemies} onEnemyHit={handleEnemyHit} />
 
       {/* Simplified contact shadows */}
       <ContactShadows 

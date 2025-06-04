@@ -1,5 +1,12 @@
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  forwardRef
+} from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import { Enemy } from './Enemy';
@@ -8,22 +15,33 @@ interface EnemySystemProps {
   playerPosition: Vector3;
   maxEnemies?: number;
   spawnDistance?: number;
+  onEnemiesChange?: (enemies: EnemyData[]) => void;
 }
 
-interface EnemyData {
+export interface EnemyData {
   id: string;
   position: [number, number, number];
   spawnTime: number;
+  health: number;
 }
 
-export const EnemySystem: React.FC<EnemySystemProps> = ({ 
-  playerPosition, 
-  maxEnemies = 5,
-  spawnDistance = 100 
-}) => {
+export interface EnemySystemHandle {
+  damageEnemy: (enemyId: string, damage: number) => void;
+}
+export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
+  (
+    { playerPosition, maxEnemies = 5, spawnDistance = 100, onEnemiesChange },
+    ref
+  ) => {
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
   const lastSpawnTime = useRef(0);
   const spawnInterval = 3000; // 3 seconds between spawns
+
+  useEffect(() => {
+    if (onEnemiesChange) {
+      onEnemiesChange(enemies);
+    }
+  }, [enemies, onEnemiesChange]);
 
   // Spawn new enemy ahead of player
   const spawnEnemy = useCallback(() => {
@@ -52,7 +70,8 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
         position: [spawnX, 1, spawnZ], // Y=1 to place on ground
-        spawnTime: now
+        spawnTime: now,
+        health: 1
       };
 
       console.log(`EnemySystem: Spawning enemy at position [${spawnX}, 1, ${spawnZ}], player at [${playerPosition.x}, ${playerPosition.y}, ${playerPosition.z}]`);
@@ -67,6 +86,20 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
     console.log(`EnemySystem: Removing enemy ${enemyId}`);
     setEnemies(prev => prev.filter(enemy => enemy.id !== enemyId));
   }, []);
+
+  const damageEnemy = useCallback((enemyId: string, damage: number) => {
+    setEnemies(prev => {
+      return prev
+        .map(enemy =>
+          enemy.id === enemyId
+            ? { ...enemy, health: enemy.health - damage }
+            : enemy
+        )
+        .filter(enemy => enemy.health > 0);
+    });
+  }, []);
+
+  useImperativeHandle(ref, () => ({ damageEnemy }));
 
   // Spawn enemies periodically and clean up old ones
   useFrame(() => {
@@ -109,4 +142,4 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
       ))}
     </group>
   );
-};
+});

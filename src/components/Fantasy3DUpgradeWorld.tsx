@@ -14,6 +14,8 @@ interface Fantasy3DUpgradeWorldProps {
   gameState?: any;
   realm?: 'fantasy' | 'scifi';
   onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
+  onEnemyCountChange?: (count: number) => void;
+  onEnemyKilled?: () => void;
 }
 
 export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
@@ -22,7 +24,9 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   onTapEffectComplete,
   gameState,
   realm = 'fantasy',
-  onPlayerPositionUpdate
+  onPlayerPositionUpdate,
+  onEnemyCountChange,
+  onEnemyKilled
 }) => {
   const {
     cameraPosition,
@@ -71,6 +75,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           onTierProgression={handleTierProgression}
           chunkSize={CHUNK_SIZE}
           renderDistance={RENDER_DISTANCE}
+          onEnemyCountChange={onEnemyCountChange}
+          onEnemyKilled={onEnemyKilled}
         />
 
         <Fantasy3DUpgradePedestals
