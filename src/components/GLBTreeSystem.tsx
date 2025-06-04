@@ -1,8 +1,7 @@
 
-import React, { useMemo, useRef, useState, useEffect, Suspense } from 'react';
+import React, { useMemo, useRef, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
-import { Vector3 } from 'three';
+import * as THREE from 'three';
 import { ChunkData } from './ChunkSystem';
 
 interface GLBTreeSystemProps {
@@ -11,8 +10,12 @@ interface GLBTreeSystemProps {
   realm: 'fantasy' | 'scifi';
 }
 
-// Using a known working GLB file from a reliable source
-const TREE_MODEL_URL = 'https://threejs.org/examples/models/gltf/Tree/tree.gltf';
+// Local GLB tree models bundled with the project
+const TREE_MODELS = {
+  stylized: '/stylized_tree.glb',
+  pine218: '/pine_tree_218poly.glb',
+  pineLow: '/lowpoly_pine_tree.glb'
+} as const;
 
 // Simple seeded random number generator
 const seededRandom = (seed: number) => {
@@ -51,37 +54,35 @@ const FallbackTree: React.FC<{ position: [number, number, number]; scale: number
 };
 
 // Individual tree component with proper GLB handling and fallback
-const GLBTree: React.FC<{ position: [number, number, number]; scale: number; rotation: number }> = ({
-  position,
-  scale,
-  rotation
-}) => {
-  const [useGLB, setUseGLB] = useState(true);
-  
+const GLBTree: React.FC<{
+  modelUrl: string;
+  position: [number, number, number];
+  scale: number;
+  rotation: number;
+}> = ({ modelUrl, position, scale, rotation }) => {
   try {
-    const { scene } = useGLTF(TREE_MODEL_URL);
-    
-    console.log('GLB Tree loaded successfully - Position:', position);
-    
+    const { scene } = useGLTF(modelUrl);
+
     if (!scene) {
       console.warn('Tree scene not loaded, using fallback');
       return <FallbackTree position={position} scale={scale} rotation={rotation} />;
     }
 
-    // Clone the scene to avoid sharing geometry between instances
-    const clonedScene = scene.clone();
-    
+    // Clone the scene so each instance can be transformed independently
+    const clonedScene = useMemo(() => scene.clone(), [scene]);
+
+    // Ensure shadows work for all meshes
+    clonedScene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        if (child.material) child.material.needsUpdate = true;
+      }
+    });
+
     return (
-      <group
-        position={position}
-        scale={[scale, scale, scale]}
-        rotation={[0, rotation, 0]}
-      >
-        <primitive 
-          object={clonedScene} 
-          castShadow 
-          receiveShadow 
-        />
+      <group position={position} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
+        <primitive object={clonedScene} />
       </group>
     );
   } catch (error) {
@@ -108,7 +109,14 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
   // Generate tree positions for each chunk
   const treePositions = useMemo(() => {
     console.log('Generating tree positions for', chunks.length, 'chunks');
-    const positions = [];
+    const positions: Array<{
+      x: number;
+      z: number;
+      scale: number;
+      rotation: number;
+      modelUrl: string;
+      chunkId: number;
+    }> = [];
     const minDistance = 5; // Reduced for better coverage
     const maxAttempts = 30;
 
@@ -122,7 +130,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
         let validPosition = false;
-        let x, z, scale, rotation;
+        let x, z, scale, rotation, modelUrl;
         
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 67;
@@ -131,9 +139,17 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
           x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
-          // Varied scale and rotation for natural look
-          scale = 0.5 + seededRandom(treeSeed + 2) * 0.8; // Smaller scale range
-          rotation = seededRandom(treeSeed + 3) * Math.PI * 2;
+          // Randomly select a tree model
+          const modelKeys = Object.keys(TREE_MODELS) as Array<keyof typeof TREE_MODELS>;
+          const modelIndex = Math.floor(seededRandom(treeSeed + 2) * modelKeys.length);
+          const treeKey = modelKeys[modelIndex];
+          modelUrl = TREE_MODELS[treeKey];
+
+          // Base scale per model for consistent sizing
+          const baseScale = treeKey === 'stylized' ? 1 : treeKey === 'pine218' ? 0.9 : 0.8;
+          const variation = 0.85 + seededRandom(treeSeed + 3) * 0.3;
+          scale = baseScale * variation;
+          rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
           // Check distance from existing trees
           validPosition = true;
@@ -151,7 +167,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
         }
         
         if (validPosition) {
-          positions.push({ x, z, scale, rotation, chunkId: chunk.id });
+          positions.push({ x, z, scale, rotation, modelUrl, chunkId: chunk.id });
           console.log(`Tree ${i} placed at (${x.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
         } else {
           console.warn(`Failed to place tree ${i} in chunk ${chunk.id} after ${maxAttempts} attempts`);
@@ -166,26 +182,27 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
   return (
     <group ref={groupRef}>
       <Suspense fallback={null}>
-        {treePositions.map((pos, index) => {
-          console.log(`Rendering tree ${index} at position:`, [pos.x, 0, pos.z]);
-          return (
-            <GLBTree
-              key={`glb-tree-${pos.chunkId}-${index}`}
-              position={[pos.x, 0, pos.z]} // Changed Y to 0 instead of -1
-              scale={pos.scale}
-              rotation={pos.rotation}
-            />
-          );
-        })}
+        {treePositions.map((pos, index) => (
+          <GLBTree
+            key={`glb-tree-${pos.chunkId}-${index}`}
+            modelUrl={pos.modelUrl}
+            position={[pos.x, 0, pos.z]}
+            scale={pos.scale}
+            rotation={pos.rotation}
+          />
+        ))}
       </Suspense>
     </group>
   );
 };
 
 // Preload the model for better performance, but handle errors gracefully
-console.log('Attempting to preload GLB tree model:', TREE_MODEL_URL);
-try {
-  useGLTF.preload(TREE_MODEL_URL);
-} catch (error) {
-  console.warn('Failed to preload GLB model, will use fallback trees:', error);
-}
+console.log('Attempting to preload GLB tree models...');
+Object.values(TREE_MODELS).forEach((url) => {
+  try {
+    useGLTF.preload(url);
+    console.log('Preloaded tree model:', url);
+  } catch (error) {
+    console.warn('Failed to preload GLB model:', url, error);
+  }
+});
