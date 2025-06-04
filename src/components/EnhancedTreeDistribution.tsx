@@ -1,13 +1,14 @@
+
 import React, { useMemo, Suspense, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Updated tree model URLs - using new Dropbox raw URLs
+// Using local GLB tree models bundled with the project
 const TREE_MODELS = {
-  pine218: 'https://www.dropbox.com/scl/fi/2spn34tx54usj8k83ztb9/pine_tree_218poly-1.glb?raw=1',
-  stylized: 'https://www.dropbox.com/scl/fi/f4nb2nxeh3h7jgq22fsnp/stylized_tree-1.glb?raw=1'
+  pine218: '/pine_tree_218poly.glb',
+  stylized: '/stylized_tree.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -247,7 +248,7 @@ const InstancedTreeGroup: React.FC<{
     return null;
   }
 
-  console.log(`Successfully rendering ${treeType} with FIXED trunk proportions - ${positions.length} instances`);
+  console.log(`Successfully rendering ${treeType} with LOCAL GLB files - ${positions.length} instances`);
 
   return (
     <instancedMesh
@@ -264,7 +265,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using Dropbox URLs');
+  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using LOCAL GLB files');
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -274,7 +275,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
   // Generate tree positions with updated scaling and 8m player buffer
   const { pine218Positions, stylizedPositions, playerPosition } = useMemo(() => {
-    console.log('Generating tree positions with NEW DROPBOX MODELS and updated scaling for', chunks.length, 'chunks');
+    console.log('Generating tree positions with LOCAL GLB MODELS and updated scaling for', chunks.length, 'chunks');
     
     const pine218Trees = [];
     const stylizedTrees = [];
@@ -343,7 +344,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             stylizedTrees.push(position);
           }
           
-          console.log(`${treeType} tree (DROPBOX) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} ${treeType === 'stylized' ? '(TRUNK WIDTH REDUCED)' : ''}`);
+          console.log(`${treeType} tree (LOCAL GLB) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} ${treeType === 'stylized' ? '(TRUNK WIDTH REDUCED)' : ''}`);
         } else {
           console.log(`Failed to place tree after ${maxAttempts} attempts in chunk ${chunk.id}`);
         }
@@ -355,7 +356,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const stylizedCount = stylizedTrees.length;
     const total = allPositions.length;
     
-    console.log(`Total trees generated from DROPBOX: ${total}`);
+    console.log(`Total trees generated from LOCAL GLB files: ${total}`);
     console.log(`Pine 218 trees (scale 2.5-3.0): ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
     console.log(`Stylized trees (scale 2.8-3.3, TRUNK WIDTH REDUCED): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     
@@ -373,7 +374,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   return (
     <group name="TreeGroup">
       <Suspense fallback={null}>
-        {/* Instanced Pine 218 Trees from Dropbox */}
+        {/* Instanced Pine 218 Trees from Local Files */}
         {pine218Positions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.pine218}
@@ -383,7 +384,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           />
         )}
         
-        {/* Instanced Stylized Trees from Dropbox with Reduced Trunk Width */}
+        {/* Instanced Stylized Trees from Local Files with Reduced Trunk Width */}
         {stylizedPositions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.stylized}
@@ -397,14 +398,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   );
 };
 
-// Preload models for better performance - updated for Dropbox URLs
-console.log('Preloading DROPBOX GLB tree models...');
+// Preload models for better performance - updated for local GLB files
+console.log('Preloading LOCAL GLB tree models...');
 Object.entries(TREE_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded ${type} tree model from DROPBOX:`, url);
+    console.log(`Preloaded ${type} tree model from LOCAL FILES:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} tree model from DROPBOX:`, error);
+    console.warn(`Failed to preload ${type} tree model from LOCAL FILES:`, error);
   }
 });
 
