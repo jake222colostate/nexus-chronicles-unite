@@ -53,23 +53,48 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4; // 4 unit buffer around path center
 };
 
+// NEW: Check if position is too close to player starting position
+const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
+  const playerStartX = 0; // Player starts at origin
+  const playerStartZ = -10; // Player starts at z = -10
+  const safetyBuffer = 8; // 8m buffer around player
+  
+  const distance = Math.sqrt(
+    Math.pow(x - playerStartX, 2) + Math.pow(z - playerStartZ, 2)
+  );
+  
+  return distance < safetyBuffer;
+};
+
 // Determine tree type based on 50/50 distribution
 const getTreeTypeByDistribution = (seed: number): 'pine218' | 'stylized' => {
   const random = seededRandom(seed);
   return random < 0.5 ? 'pine218' : 'stylized';
 };
 
-// Updated scale ranges - fixed stylized tree sizing
+// Updated scale ranges - balanced sizing
 const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): number => {
   const random = seededRandom(seed);
   
   switch (treeType) {
     case 'pine218':
-      return 3.0 + random * 0.8; // 3.0 to 3.8
+      return 2.5 + random * 0.5; // 2.5 to 3.0
     case 'stylized':
-      return 5.5 + random * 1.0; // 5.5 to 6.5 (significantly increased)
+      return 2.5 + random * 0.5; // 2.5 to 3.0 (balanced sizing)
     default:
       return 1.0;
+  }
+};
+
+// NEW: Get Y-offset to fix pivot positioning
+const getYOffsetForTreeType = (treeType: 'pine218' | 'stylized', scale: number): number => {
+  switch (treeType) {
+    case 'pine218':
+      return 0; // Pine tree has proper base pivot
+    case 'stylized':
+      return scale * 2.0; // Stylized tree origin is at top, offset to place base on ground
+    default:
+      return 0;
   }
 };
 
@@ -159,14 +184,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     return null;
   }
 
-  // Generate tree positions with optimized batching
+  // Generate tree positions with optimized batching and proper pivot fixes
   const { pine218Positions, stylizedPositions, playerPosition } = useMemo(() => {
     console.log('Generating optimized tree positions for', chunks.length, 'chunks');
     
     const pine218Trees = [];
     const stylizedTrees = [];
-    const minDistance = 3; // 3 meter minimum spacing
-    const maxAttempts = 25;
+    const minDistance = 3; // 3 meter minimum spacing between trees
+    const maxAttempts = 30; // Increased attempts for better placement
     const allPositions = [];
 
     chunks.forEach(chunk => {
@@ -179,7 +204,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
         let validPosition = false;
-        let x, z, terrainHeight, treeType, scale, rotation;
+        let x, z, terrainHeight, treeType, scale, rotation, yOffset, finalY;
         
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
@@ -190,8 +215,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Skip if on player path or steep slope
-          if (isOnPlayerPath(x, z) || isOnSteepSlope(x, z)) {
+          // Skip if on player path, steep slope, or too close to player start
+          if (isOnPlayerPath(x, z) || isOnSteepSlope(x, z) || isTooCloseToPlayerStart(x, z)) {
             attempts++;
             continue;
           }
@@ -205,7 +230,11 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Random Y-axis rotation (0° to 360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
-          // Check 3-meter minimum distance from existing trees
+          // FIXED: Calculate Y-offset to fix pivot positioning
+          yOffset = getYOffsetForTreeType(treeType, scale);
+          finalY = terrainHeight + yOffset;
+          
+          // Check minimum distance from existing trees
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
               Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
@@ -217,7 +246,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         }
         
         if (validPosition) {
-          const position = { x, y: terrainHeight, z, scale, rotation };
+          const position = { x, y: finalY, z, scale, rotation };
           allPositions.push(position);
           
           if (treeType === 'pine218') {
@@ -226,7 +255,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             stylizedTrees.push(position);
           }
           
-          console.log(`${treeType} tree placed at (${x.toFixed(2)}, ${terrainHeight.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
+          console.log(`${treeType} tree placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} and Y-offset ${yOffset.toFixed(2)}`);
+        } else {
+          console.log(`Failed to place tree after ${maxAttempts} attempts in chunk ${chunk.id}`);
         }
       }
     });
@@ -278,7 +309,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   );
 };
 
-// Preload models for better performance and clear unused models
+// Preload models for better performance
 console.log('Preloading optimized GLB tree models...');
 Object.entries(TREE_MODELS).forEach(([type, url]) => {
   try {
