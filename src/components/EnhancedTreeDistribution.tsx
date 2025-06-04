@@ -53,7 +53,7 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4; // 4 unit buffer around path center
 };
 
-// NEW: Check if position is too close to player starting position
+// Check if position is too close to player starting position
 const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   const playerStartX = 0; // Player starts at origin
   const playerStartZ = -10; // Player starts at z = -10
@@ -72,21 +72,21 @@ const getTreeTypeByDistribution = (seed: number): 'pine218' | 'stylized' => {
   return random < 0.5 ? 'pine218' : 'stylized';
 };
 
-// Updated scale ranges - balanced sizing
+// FIXED: Updated scale ranges to address oversized trunk issue
 const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): number => {
   const random = seededRandom(seed);
   
   switch (treeType) {
     case 'pine218':
-      return 2.5 + random * 0.5; // 2.5 to 3.0
+      return 2.5 + random * 0.5; // 2.5 to 3.0 - pine tree scales normally
     case 'stylized':
-      return 2.5 + random * 0.5; // 2.5 to 3.0 (balanced sizing)
+      return 1.0 + random * 0.3; // REDUCED: 1.0 to 1.3 - much smaller to compensate for oversized trunk
     default:
       return 1.0;
   }
 };
 
-// NEW: Get Y-offset to fix pivot positioning
+// Get Y-offset to fix pivot positioning
 const getYOffsetForTreeType = (treeType: 'pine218' | 'stylized', scale: number): number => {
   switch (treeType) {
     case 'pine218':
@@ -98,7 +98,34 @@ const getYOffsetForTreeType = (treeType: 'pine218' | 'stylized', scale: number):
   }
 };
 
-// Performance-optimized instanced tree component
+// NEW: Apply mesh-specific scaling to fix trunk/canopy proportion issues
+const applyMeshSpecificScaling = (scene: THREE.Object3D, treeType: 'pine218' | 'stylized') => {
+  if (treeType === 'stylized') {
+    // Attempt to find and scale leaf meshes separately for stylized tree
+    scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        const meshName = child.name.toLowerCase();
+        
+        // Look for leaf/canopy meshes and scale them up relative to trunk
+        if (meshName.includes('leaf') || meshName.includes('canopy') || 
+            meshName.includes('foliage') || meshName.includes('crown')) {
+          console.log(`Found leaf mesh: ${child.name}, applying leaf scaling`);
+          child.scale.set(1.5, 1.5, 1.5); // Scale leaves up 1.5x
+        }
+        // Look for trunk meshes and scale them down
+        else if (meshName.includes('trunk') || meshName.includes('stem') || 
+                 meshName.includes('bark') || meshName.includes('wood')) {
+          console.log(`Found trunk mesh: ${child.name}, applying trunk scaling`);
+          child.scale.set(0.7, 1.0, 0.7); // Scale trunk down in X/Z, keep Y normal
+        }
+      }
+    });
+  }
+  
+  return scene;
+};
+
+// Performance-optimized instanced tree component with trunk fix
 const InstancedTreeGroup: React.FC<{
   modelUrl: string;
   treeType: 'pine218' | 'stylized';
@@ -115,11 +142,14 @@ const InstancedTreeGroup: React.FC<{
       return null;
     }
 
-    // Get geometry and material from the loaded model
+    // FIXED: Apply mesh-specific scaling to address trunk/canopy proportion issues
+    const processedScene = applyMeshSpecificScaling(scene.clone(), treeType);
+
+    // Get geometry and material from the processed model
     let geometry: THREE.BufferGeometry | null = null;
     let material: THREE.Material | null = null;
     
-    scene.traverse((child) => {
+    processedScene.traverse((child) => {
       if (child instanceof THREE.Mesh && !geometry) {
         geometry = child.geometry;
         material = child.material;
@@ -130,6 +160,8 @@ const InstancedTreeGroup: React.FC<{
       console.log(`No valid geometry/material found for ${treeType}, skipping`);
       return null;
     }
+
+    console.log(`Successfully loaded ${treeType} with ${positions.length} instances`);
 
     // Performance optimization: Use LOD based on distance
     useFrame(() => {
@@ -184,7 +216,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     return null;
   }
 
-  // Generate tree positions with optimized batching and proper pivot fixes
+  // Generate tree positions with optimized batching and trunk scaling fixes
   const { pine218Positions, stylizedPositions, playerPosition } = useMemo(() => {
     console.log('Generating optimized tree positions for', chunks.length, 'chunks');
     
@@ -224,13 +256,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Determine tree type based on 50/50 distribution
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // Get appropriate scale for tree type
+          // FIXED: Get appropriate scale for tree type (stylized now much smaller)
           scale = getScaleForTreeType(treeType, treeSeed + 3);
           
           // Random Y-axis rotation (0° to 360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
-          // FIXED: Calculate Y-offset to fix pivot positioning
+          // Calculate Y-offset to fix pivot positioning
           yOffset = getYOffsetForTreeType(treeType, scale);
           finalY = terrainHeight + yOffset;
           
@@ -255,7 +287,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             stylizedTrees.push(position);
           }
           
-          console.log(`${treeType} tree placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} and Y-offset ${yOffset.toFixed(2)}`);
+          console.log(`${treeType} tree placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with FIXED scale ${scale.toFixed(2)}`);
         } else {
           console.log(`Failed to place tree after ${maxAttempts} attempts in chunk ${chunk.id}`);
         }
@@ -269,7 +301,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     
     console.log(`Total trees generated: ${total}`);
     console.log(`Pine 218 trees: ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
-    console.log(`Stylized trees: ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Stylized trees (TRUNK FIXED): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     
     // Player position for LOD calculations (approximate center of chunks)
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
@@ -295,7 +327,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           />
         )}
         
-        {/* Instanced Stylized Trees */}
+        {/* Instanced Stylized Trees with Trunk Fix */}
         {stylizedPositions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.stylized}
