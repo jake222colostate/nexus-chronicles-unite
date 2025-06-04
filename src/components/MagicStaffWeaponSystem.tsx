@@ -4,7 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Staff model URL from new Netlify deployment
+// Staff model URL from Netlify deployment
 const STAFF_MODEL_URL = 'https://stately-liger-80d127.netlify.app/mage_staff.glb';
 
 interface MagicStaffWeaponSystemProps {
@@ -29,10 +29,10 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   }, []);
 
-  // Optimized frame update with reduced frequency
+  // Fixed staff positioning for right-hand view
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && gltfResult?.scene) {
-      // Position relative to camera for first-person view
+      // Get camera vectors for positioning
       const cameraForward = new THREE.Vector3();
       const cameraRight = new THREE.Vector3();
       const cameraUp = new THREE.Vector3();
@@ -41,18 +41,20 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Fixed bottom-right staff positioning
+      // Fixed right-hand staff positioning as specified
+      // Position: X = 0.35, Y = -0.25, Z = 0.55
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(-0.4))
-        .add(cameraUp.clone().multiplyScalar(-0.3))
-        .add(cameraForward.clone().multiplyScalar(0.6));
+        .add(cameraRight.clone().multiplyScalar(0.35))    // X = 0.35 (right)
+        .add(cameraUp.clone().multiplyScalar(-0.25))       // Y = -0.25 (down)
+        .add(cameraForward.clone().multiplyScalar(0.55));  // Z = 0.55 (forward)
       
       weaponGroupRef.current.position.copy(staffPosition);
       
       // Fixed rotation for right-hand grip
+      // Rotation: Y = -35°, Z = 20°
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(25 * Math.PI / 180);
-      weaponGroupRef.current.rotateZ(-30 * Math.PI / 180);
+      weaponGroupRef.current.rotateY(-35 * Math.PI / 180); // Y = -35°
+      weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20°
     }
   });
 

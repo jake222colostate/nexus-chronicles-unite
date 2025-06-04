@@ -5,9 +5,10 @@ import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Tree model URLs from new Netlify deployment - removed stylized tree
+// Tree model URLs from Netlify deployment with all three types
 const TREE_MODELS = {
   realistic: 'https://stately-liger-80d127.netlify.app/realistic_tree.glb',
+  stylized: 'https://stately-liger-80d127.netlify.app/stylized_tree.glb',
   pine218: 'https://stately-liger-80d127.netlify.app/pine_tree_218poly.glb'
 } as const;
 
@@ -70,19 +71,28 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < safetyBuffer;
 };
 
-// Determine tree type based on 60/40 distribution (60% realistic, 40% pine)
-const getTreeTypeByDistribution = (seed: number): 'realistic' | 'pine218' => {
+// Determine tree type based on new distribution (50% realistic, 30% stylized, 20% pine)
+const getTreeTypeByDistribution = (seed: number): 'realistic' | 'stylized' | 'pine218' => {
   const random = seededRandom(seed);
-  return random < 0.6 ? 'realistic' : 'pine218';
+  if (random < 0.5) {
+    return 'realistic'; // 50%
+  } else if (random < 0.8) {
+    return 'stylized'; // 30%
+  } else {
+    return 'pine218'; // 20%
+  }
 };
 
-// Scale ranges for tree types
-const getScaleForTreeType = (treeType: 'realistic' | 'pine218', seed: number): number => {
+// Scale ranges for tree types per specifications
+const getScaleForTreeType = (treeType: 'realistic' | 'stylized' | 'pine218', seed: number): number => {
+  const random = seededRandom(seed);
   switch (treeType) {
     case 'realistic':
-      return 0.8 + seededRandom(seed) * 0.2; // 0.8× – 1.0×
+      return 0.7 + random * 0.2; // 0.7× – 0.9×
+    case 'stylized':
+      return 1.4 + random * 0.2; // 1.4× – 1.6×
     case 'pine218':
-      return 0.85; // Uniform scale 0.85×
+      return 0.55 + random * 0.1; // 0.55× – 0.65×
     default:
       return 1.0;
   }
@@ -91,7 +101,7 @@ const getScaleForTreeType = (treeType: 'realistic' | 'pine218', seed: number): n
 // Performance-optimized instanced tree component
 const InstancedTreeGroup: React.FC<{
   modelUrl: string;
-  treeType: 'realistic' | 'pine218';
+  treeType: 'realistic' | 'stylized' | 'pine218';
   positions: Array<{ x: number; y: number; z: number; scale: number; rotation: number; }>;
   playerPosition: THREE.Vector3;
 }> = ({ modelUrl, treeType, positions, playerPosition }) => {
@@ -111,8 +121,8 @@ const InstancedTreeGroup: React.FC<{
   useFrame(() => {
     if (meshRef.current && playerPosition && positions.length > 0) {
       const tempMatrix = new THREE.Matrix4();
-      const renderDistance = 150; // Reduced from 200 for better performance
-      const lodDistance = 75;     // Reduced from 100
+      const renderDistance = 150;
+      const lodDistance = 75;
       let visibleCount = 0;
       
       for (let i = 0; i < positions.length; i++) {
@@ -185,17 +195,18 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   }
 
   // Generate tree positions with optimized algorithm
-  const { realisticPositions, pine218Positions, playerPosition } = useMemo(() => {
+  const { realisticPositions, stylizedPositions, pine218Positions, playerPosition } = useMemo(() => {
     const realisticTrees = [];
+    const stylizedTrees = [];
     const pineTrees = [];
-    const minDistance = 3;
-    const maxAttempts = 25; // Reduced from 30 for better performance
+    const minDistance = 3; // 3m minimum distance as specified
+    const maxAttempts = 25;
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 2-4 trees per chunk (reduced from 3-5)
+      // Generate 2-4 trees per chunk
       const treeCount = 2 + Math.floor(seededRandom(seed) * 3);
       
       for (let i = 0; i < treeCount; i++) {
@@ -218,7 +229,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             continue;
           }
           
-          // Determine tree type based on 60/40 distribution
+          // Determine tree type based on new distribution
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
           // Get appropriate scale for tree type
@@ -230,7 +241,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Place tree base on terrain
           finalY = terrainHeight;
           
-          // Check minimum distance from existing trees
+          // Check minimum distance from existing trees (3m as specified)
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
               Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
@@ -247,6 +258,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           
           if (treeType === 'realistic') {
             realisticTrees.push(position);
+          } else if (treeType === 'stylized') {
+            stylizedTrees.push(position);
           } else {
             pineTrees.push(position);
           }
@@ -260,6 +273,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     
     return {
       realisticPositions: realisticTrees,
+      stylizedPositions: stylizedTrees,
       pine218Positions: pineTrees,
       playerPosition: new THREE.Vector3(avgX, 0, avgZ)
     };
@@ -268,7 +282,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   return (
     <group name="TreeGroup">
       <Suspense fallback={null}>
-        {/* Instanced Realistic Trees (60%) */}
+        {/* Instanced Realistic Trees (50%) */}
         {realisticPositions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.realistic}
@@ -278,7 +292,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           />
         )}
         
-        {/* Instanced Pine 218 Trees (40%) */}
+        {/* Instanced Stylized Trees (30%) */}
+        {stylizedPositions.length > 0 && (
+          <InstancedTreeGroup
+            modelUrl={TREE_MODELS.stylized}
+            treeType="stylized"
+            positions={stylizedPositions}
+            playerPosition={playerPosition}
+          />
+        )}
+        
+        {/* Instanced Pine 218 Trees (20%) */}
         {pine218Positions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.pine218}
