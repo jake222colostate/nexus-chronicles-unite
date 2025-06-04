@@ -41,19 +41,28 @@ export const Enemy: React.FC<EnemyProps> = ({
   });
 
   return (
-    <mesh 
-      ref={meshRef} 
-      position={position}
-      castShadow
-      receiveShadow
-    >
-      {/* Tall rectangular enemy */}
-      <boxGeometry args={[1, 4, 0.5]} />
-      <meshStandardMaterial 
-        color="#8B0000" 
-        emissive="#330000"
-        emissiveIntensity={0.2}
-      />
-    </mesh>
+    <group ref={meshRef} position={position} castShadow receiveShadow>
+      {/* Body */}
+      <mesh position={[0, -1, 0]}>
+        <cylinderGeometry args={[0.3, 0.6, 1.5, 8]} />
+        <meshStandardMaterial color="#552222" />
+      </mesh>
+
+      {/* Head */}
+      <mesh position={[0, 0.5, 0]}>
+        <sphereGeometry args={[0.5, 16, 16]} />
+        <meshStandardMaterial color="#dd3344" />
+      </mesh>
+
+      {/* Horns */}
+      <mesh position={[0.35, 0.9, 0]} rotation={[0, 0, Math.PI / 8]}>
+        <coneGeometry args={[0.2, 0.5, 8]} />
+        <meshStandardMaterial color="#ffd700" />
+      </mesh>
+      <mesh position={[-0.35, 0.9, 0]} rotation={[0, 0, -Math.PI / 8]}>
+        <coneGeometry args={[0.2, 0.5, 8]} />
+        <meshStandardMaterial color="#ffd700" />
+      </mesh>
+    </group>
   );
 };

@@ -77,12 +77,15 @@ export const EnemySystem: React.FC<EnemySystemProps> = ({
     setEnemies(prev => {
       const filtered = prev.filter(enemy => {
         const enemyZ = enemy.position[2];
-        const distanceBehindPlayer = playerPosition.z - enemyZ;
-        
-        // Remove if more than 50 units behind player
-        const shouldKeep = distanceBehindPlayer < 50;
+        // Positive value indicates the enemy is behind the player
+        const distanceBehindPlayer = enemyZ - playerPosition.z;
+
+        // Remove if more than 50 units behind the player
+        const shouldKeep = distanceBehindPlayer <= 50;
         if (!shouldKeep) {
-          console.log(`EnemySystem: Cleaning up enemy at Z=${enemyZ}, player at Z=${playerPosition.z}, distance behind: ${distanceBehindPlayer}`);
+          console.log(
+            `EnemySystem: Cleaning up enemy at Z=${enemyZ}, player at Z=${playerPosition.z}, distance behind: ${distanceBehindPlayer}`
+          );
         }
         return shouldKeep;
       });
