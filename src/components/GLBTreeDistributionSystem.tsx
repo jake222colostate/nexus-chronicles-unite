@@ -23,54 +23,7 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Fallback tree components for when models fail to load
-const FallbackPineTree: React.FC<{ 
-  position: [number, number, number]; 
-  scale: number; 
-  rotation: number;
-}> = ({ position, scale, rotation }) => {
-  return (
-    <group position={position} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.05, 0.08, 1]} />
-        <meshLambertMaterial color="#654321" />
-      </mesh>
-      <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
-        <coneGeometry args={[0.4, 0.9, 8]} />
-        <meshLambertMaterial color="#013220" />
-      </mesh>
-      <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-        <coneGeometry args={[0.3, 0.7, 8]} />
-        <meshLambertMaterial color="#228B22" />
-      </mesh>
-    </group>
-  );
-};
-
-const FallbackStylizedTree: React.FC<{ 
-  position: [number, number, number]; 
-  scale: number; 
-  rotation: number;
-}> = ({ position, scale, rotation }) => {
-  return (
-    <group position={position} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.06, 0.09, 0.8]} />
-        <meshLambertMaterial color="#8B4513" />
-      </mesh>
-      <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
-        <sphereGeometry args={[0.6, 12, 8]} />
-        <meshLambertMaterial color="#228B22" />
-      </mesh>
-      <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
-        <sphereGeometry args={[0.45, 10, 6]} />
-        <meshLambertMaterial color="#32CD32" />
-      </mesh>
-    </group>
-  );
-};
-
-// Individual tree component with GLB loading and fallback
+// Individual tree component with GLB loading only - no fallbacks
 const GLBTreeInstance: React.FC<{
   modelUrl: string;
   treeType: 'pine' | 'stylizedA' | 'stylizedB';
@@ -82,25 +35,41 @@ const GLBTreeInstance: React.FC<{
     const { scene } = useGLTF(modelUrl);
     
     if (!scene) {
-      console.warn(`GLB tree model not loaded for ${treeType}, using fallback`);
-      return treeType === 'pine' ? 
-        <FallbackPineTree position={position} scale={scale} rotation={rotation} /> :
-        <FallbackStylizedTree position={position} scale={scale} rotation={rotation} />;
+      console.warn(`GLB tree model not loaded for ${treeType}`);
+      return null;
     }
 
     // Clone the scene to create unique instances
-    const clonedScene = scene.clone();
-    
-    // Ensure all meshes have proper materials and shadows
-    clonedScene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-        if (child.material) {
-          child.material.needsUpdate = true;
+    const clonedScene = useMemo(() => {
+      const sceneClone = scene.clone();
+      
+      // Ensure all meshes have proper materials and shadows
+      sceneClone.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          child.visible = true;
+          child.frustumCulled = false;
+          
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach(mat => {
+                mat.transparent = false;
+                mat.opacity = 1.0;
+                mat.side = THREE.DoubleSide;
+                mat.needsUpdate = true;
+              });
+            } else {
+              child.material.transparent = false;
+              child.material.opacity = 1.0;
+              child.material.side = THREE.DoubleSide;
+              child.material.needsUpdate = true;
+            }
+          }
         }
-      }
-    });
+      });
+      return sceneClone;
+    }, [scene]);
     
     return (
       <group position={position} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
@@ -108,10 +77,8 @@ const GLBTreeInstance: React.FC<{
       </group>
     );
   } catch (error) {
-    console.error(`Failed to load GLB tree model for ${treeType}, using fallback:`, error);
-    return treeType === 'pine' ? 
-      <FallbackPineTree position={position} scale={scale} rotation={rotation} /> :
-      <FallbackStylizedTree position={position} scale={scale} rotation={rotation} />;
+    console.error(`Failed to load GLB tree model for ${treeType}:`, error);
+    return null;
   }
 };
 
@@ -137,17 +104,17 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
     Math.abs(centerHeight - westHeight)
   ) / sampleDistance;
   
-  return maxSlope > 0.8; // Adjusted slope threshold
+  return maxSlope > 0.8;
 };
 
 // Check if position is too close to player path
 const isOnPlayerPath = (x: number, z: number): boolean => {
-  return Math.abs(x) < 4; // 4 unit buffer around path center
+  return Math.abs(x) < 4;
 };
 
 // Check if position conflicts with mountain areas
 const isInMountainArea = (x: number, z: number): boolean => {
-  return Math.abs(x) > 15; // Keep trees away from mountain areas (x > 15 or x < -15)
+  return Math.abs(x) > 15;
 };
 
 // Determine tree type based on distribution percentages
@@ -180,14 +147,14 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
   const treePositions = useMemo(() => {
     console.log('Generating distributed tree positions for', chunks.length, 'chunks');
     const positions = [];
-    const minDistance = 4; // Reduced minimum distance
-    const maxAttempts = 20; // Reduced attempts for performance
+    const minDistance = 4;
+    const maxAttempts = 20;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate fewer trees per chunk to avoid overcrowding
-      const treeCount = 2 + Math.floor(seededRandom(seed) * 3); // 2-4 trees per chunk
+      // Generate 2-4 trees per chunk
+      const treeCount = 2 + Math.floor(seededRandom(seed) * 3);
       console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
       
       for (let i = 0; i < treeCount; i++) {
@@ -199,7 +166,7 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
           const treeSeed = seed + i * 123;
           
           // More constrained positioning to avoid mountains
-          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.5; // Reduced spread
+          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.5;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.5;
           
           terrainHeight = getTerrainHeight(x, z);
@@ -213,7 +180,7 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
           // Determine tree type based on distribution percentages
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // Much smaller scaling - trees should be decorative, not dominant
+          // Scale trees appropriately
           scale = 0.2 + seededRandom(treeSeed + 3) * 0.15; // 0.2 to 0.35 scale
           
           // Y-axis random rotation (0°–360°)
@@ -272,7 +239,7 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
               treeType={pos.treeType}
               position={[pos.x, pos.y, pos.z]}
               scale={pos.scale}
-              rotation={pos.rotation}
+              rotation={rotation}
             />
           );
         })}
@@ -281,13 +248,13 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
   );
 };
 
-// Preload models for better performance, but handle errors gracefully
+// Preload models for better performance
 console.log('Attempting to preload GLB tree models...');
 Object.entries(TREE_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
     console.log(`Preloaded ${type} tree model from:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} tree model, will use fallback:`, error);
+    console.warn(`Failed to preload ${type} tree model:`, error);
   }
 });
