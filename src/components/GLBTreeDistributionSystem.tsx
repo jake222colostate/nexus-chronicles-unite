@@ -4,11 +4,11 @@ import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-// GLB Tree model URLs
+// GLB Tree model URLs - using the actual .glb files from your repository
 const TREE_MODELS = {
-  pine: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/lowpoly_pine_tree.glb',
-  stylizedA: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree.glb',
-  stylizedB: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree.glb'
+  pine: '/lowpoly_pine_tree.glb',
+  stylizedA: '/stylized_tree.glb',
+  stylizedB: '/stylized_tree.glb'
 };
 
 interface GLBTreeDistributionSystemProps {
