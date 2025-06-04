@@ -7,6 +7,7 @@ import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { FantasyScreenshotEnvironment } from './FantasyScreenshotEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
+import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -28,10 +29,14 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   chunkSize,
   renderDistance,
   onEnemyCountChange,
-  onEnemyKilled
+  onEnemyKilled,
+  maxUnlockedUpgrade
 }) => {
   const enemySystemRef = useRef<EnemySystemHandle>(null);
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
+
+  // Calculate weapon upgrade level based on maxUnlockedUpgrade
+  const weaponUpgradeLevel = Math.min(Math.floor(maxUnlockedUpgrade / 3), 2); // 0-2 based on upgrade progression
 
   const handleEnemiesChange = useCallback(
     (list: EnemyData[]) => {
@@ -48,6 +53,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     },
     [onEnemyKilled]
   );
+
   return (
     <Suspense fallback={null}>
       {/* Camera controller with proper character height */}
@@ -86,6 +92,12 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
       {/* Wizard Staff Weapon */}
       <WizardStaffWeapon enemies={enemies} onEnemyHit={handleEnemyHit} />
+
+      {/* Magic Staff Weapon System - New upgraded weapon system */}
+      <MagicStaffWeaponSystem
+        upgradeLevel={weaponUpgradeLevel}
+        visible={true}
+      />
 
       {/* Simplified contact shadows */}
       <ContactShadows 

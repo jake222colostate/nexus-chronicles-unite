@@ -1,9 +1,10 @@
+
 import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-// External GLB tree model URLs from the repository - updated lineup
+// Final tree model URLs
 const TREE_MODELS = {
   stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree.glb',
   pine218: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/pine_tree_218poly.glb'
@@ -95,7 +96,7 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4; // 4 unit buffer around path center
 };
 
-// Determine tree type based on updated distribution: 50% Stylized, 50% Pine 218
+// Determine tree type based on 50/50 distribution
 const getTreeTypeByDistribution = (seed: number): 'stylized' | 'pine218' => {
   const random = seededRandom(seed);
   
@@ -106,17 +107,17 @@ const getTreeTypeByDistribution = (seed: number): 'stylized' | 'pine218' => {
   }
 };
 
-// Get scale range based on updated tree type scaling
+// Get scale range based on corrected tree type scaling
 const getScaleForTreeType = (treeType: 'stylized' | 'pine218', seed: number): number => {
   const random = seededRandom(seed);
   
   switch (treeType) {
     case 'stylized':
-      return 0.85 + random * 0.15; // 0.85 to 1.0
+      return 0.9 + random * 0.2; // 0.9 to 1.1
     case 'pine218':
-      return 1.8 + random * 0.4; // 1.8 to 2.2 (upscaled to match stylized tree height)
+      return 3.0 + random * 1.0; // 3.0 to 4.0 (heavily upscaled to match stylized tree height)
     default:
-      return 0.85 + random * 0.15;
+      return 0.9 + random * 0.2;
   }
 };
 
@@ -133,17 +134,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     return null;
   }
 
-  // Generate tree positions with enhanced distribution rules
+  // Generate tree positions with jittered placement and proper spacing
   const treePositions = useMemo(() => {
-    console.log('Generating enhanced tree positions for', chunks.length, 'chunks');
+    console.log('Generating tree positions for', chunks.length, 'chunks');
     const positions = [];
-    const minDistance = 3; // 3 meter minimum spacing as requested
+    const minDistance = 3; // 3 meter minimum spacing
     const maxAttempts = 25;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 3-5 trees per chunk for good coverage
+      // Generate 3-5 trees per chunk
       const treeCount = 3 + Math.floor(seededRandom(seed) * 3);
       console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
       
@@ -153,9 +154,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         let x, z, terrainHeight, treeType, scale, rotation;
         
         while (!validPosition && attempts < maxAttempts) {
-          const treeSeed = seed + i * 157; // Different multiplier for variety
+          const treeSeed = seed + i * 157;
           
-          // Position jittering - random placement within chunk bounds
+          // Random jittered placement within chunk bounds
           x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
@@ -167,13 +168,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             continue;
           }
           
-          // Determine tree type based on updated distribution percentages
+          // Determine tree type based on 50/50 distribution
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
           // Get appropriate scale for tree type
           scale = getScaleForTreeType(treeType, treeSeed + 3);
           
-          // Y-axis random rotation (0° to 360°) as requested
+          // Random Y-axis rotation (0° to 360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
           // Check 3-meter minimum distance from existing trees
@@ -207,7 +208,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const pine218Count = positions.filter(p => p.treeType === 'pine218').length;
     const total = positions.length;
     
-    console.log(`Total enhanced trees generated: ${total}`);
+    console.log(`Total trees generated: ${total}`);
     console.log(`Stylized trees: ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     console.log(`Pine 218 trees: ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
     
@@ -219,10 +220,10 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       <Suspense fallback={null}>
         {treePositions.map((pos, index) => {
           const modelUrl = TREE_MODELS[pos.treeType];
-          console.log(`Rendering enhanced ${pos.treeType} tree ${index} at position:`, [pos.x, pos.y, pos.z]);
+          console.log(`Rendering ${pos.treeType} tree ${index} at position:`, [pos.x, pos.y, pos.z]);
           return (
             <TreeInstance
-              key={`enhanced-tree-${pos.chunkId}-${index}`}
+              key={`tree-${pos.chunkId}-${index}`}
               modelUrl={modelUrl}
               treeType={pos.treeType}
               position={[pos.x, pos.y, pos.z]}
@@ -237,12 +238,12 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 };
 
 // Preload models for better performance
-console.log('Attempting to preload enhanced GLB tree models...');
+console.log('Preloading GLB tree models...');
 Object.entries(TREE_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded enhanced ${type} tree model from:`, url);
+    console.log(`Preloaded ${type} tree model from:`, url);
   } catch (error) {
-    console.warn(`Failed to preload enhanced ${type} tree model, will use fallback:`, error);
+    console.warn(`Failed to preload ${type} tree model:`, error);
   }
 });

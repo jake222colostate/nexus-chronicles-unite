@@ -1,0 +1,169 @@
+
+import React, { useMemo, useRef, useEffect } from 'react';
+import { useGLTF } from '@react-three/drei';
+import { useFrame, useThree } from '@react-three/fiber';
+import * as THREE from 'three';
+
+// Magic staff model URLs
+const STAFF_MODELS = {
+  starter: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/mage_staff.glb',
+  upgrade1: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/magical_staff.glb',
+  upgrade2: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_magic_staff_of_water_game_ready.glb'
+} as const;
+
+interface MagicStaffWeaponSystemProps {
+  upgradeLevel: number; // 0 = starter, 1 = upgrade1, 2 = upgrade2
+  visible?: boolean;
+}
+
+// Individual staff component
+const StaffInstance: React.FC<{
+  modelUrl: string;
+  staffType: 'starter' | 'upgrade1' | 'upgrade2';
+  visible: boolean;
+}> = ({ modelUrl, staffType, visible }) => {
+  const staffRef = useRef<THREE.Group>(null);
+  
+  try {
+    const { scene } = useGLTF(modelUrl);
+    
+    if (!scene) {
+      console.error(`Staff model not loaded for ${staffType}, skipping`);
+      return null;
+    }
+
+    console.log(`Successfully loaded ${staffType} staff`);
+    
+    // Clone the scene to create unique instance
+    const clonedScene = useMemo(() => {
+      const clone = scene.clone();
+      
+      // Maintain original materials and textures
+      clone.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+      
+      return clone;
+    }, [scene]);
+
+    // Staff positioning and scaling based on type
+    const getStaffTransform = (type: 'starter' | 'upgrade1' | 'upgrade2') => {
+      switch (type) {
+        case 'starter':
+          return {
+            position: [0.5, -1.0, -0.8] as [number, number, number],
+            rotation: [0.1, Math.PI / 6, 0.1] as [number, number, number],
+            scale: [1.0, 1.0, 1.0] as [number, number, number]
+          };
+        case 'upgrade1':
+          return {
+            position: [0.5, -1.0, -0.8] as [number, number, number],
+            rotation: [0.1, Math.PI / 6, 0.1] as [number, number, number],
+            scale: [1.1, 1.1, 1.1] as [number, number, number]
+          };
+        case 'upgrade2':
+          return {
+            position: [0.5, -1.0, -0.8] as [number, number, number],
+            rotation: [0.1, Math.PI / 6, 0.1] as [number, number, number],
+            scale: [1.2, 1.2, 1.2] as [number, number, number]
+          };
+        default:
+          return {
+            position: [0.5, -1.0, -0.8] as [number, number, number],
+            rotation: [0.1, Math.PI / 6, 0.1] as [number, number, number],
+            scale: [1.0, 1.0, 1.0] as [number, number, number]
+          };
+      }
+    };
+
+    const transform = getStaffTransform(staffType);
+    
+    return (
+      <group 
+        ref={staffRef}
+        visible={visible}
+        position={transform.position}
+        rotation={transform.rotation}
+        scale={transform.scale}
+      >
+        <primitive object={clonedScene} />
+      </group>
+    );
+  } catch (error) {
+    console.error(`Failed to load staff model for ${staffType}, skipping:`, error);
+    return null;
+  }
+};
+
+export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
+  upgradeLevel,
+  visible = true
+}) => {
+  const { camera } = useThree();
+  const weaponGroupRef = useRef<THREE.Group>(null);
+
+  // Determine current staff type based on upgrade level
+  const currentStaffType = useMemo(() => {
+    if (upgradeLevel >= 2) return 'upgrade2';
+    if (upgradeLevel >= 1) return 'upgrade1';
+    return 'starter';
+  }, [upgradeLevel]);
+
+  console.log(`MagicStaffWeaponSystem: Current upgrade level ${upgradeLevel}, using ${currentStaffType} staff`);
+
+  // Attach weapon to camera (right hand position)
+  useFrame(() => {
+    if (weaponGroupRef.current && camera) {
+      // Position the weapon group relative to the camera
+      weaponGroupRef.current.position.copy(camera.position);
+      weaponGroupRef.current.rotation.copy(camera.rotation);
+    }
+  });
+
+  // Log upgrade changes
+  useEffect(() => {
+    console.log(`Staff upgraded to: ${currentStaffType} (level ${upgradeLevel})`);
+  }, [currentStaffType, upgradeLevel]);
+
+  if (!visible) {
+    return null;
+  }
+
+  return (
+    <group ref={weaponGroupRef} name="MagicStaffWeaponSystem">
+      {/* Render all staff models but only show the current one */}
+      <StaffInstance
+        modelUrl={STAFF_MODELS.starter}
+        staffType="starter"
+        visible={currentStaffType === 'starter'}
+      />
+      <StaffInstance
+        modelUrl={STAFF_MODELS.upgrade1}
+        staffType="upgrade1"
+        visible={currentStaffType === 'upgrade1'}
+      />
+      <StaffInstance
+        modelUrl={STAFF_MODELS.upgrade2}
+        staffType="upgrade2"
+        visible={currentStaffType === 'upgrade2'}
+      />
+    </group>
+  );
+};
+
+// Preload all staff models for seamless swapping
+console.log('Preloading magic staff models...');
+Object.entries(STAFF_MODELS).forEach(([type, url]) => {
+  try {
+    useGLTF.preload(url);
+    console.log(`Preloaded ${type} staff model from:`, url);
+  } catch (error) {
+    console.warn(`Failed to preload ${type} staff model:`, error);
+  }
+});

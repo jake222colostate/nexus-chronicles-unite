@@ -1,4 +1,3 @@
-
 import React, { useEffect, useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -13,6 +12,8 @@ interface WizardStaffProps {
   [key: string]: any;
 }
 
+// This component is now deprecated in favor of MagicStaffWeaponSystem
+// Keeping for backward compatibility but will be hidden by default
 export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
   const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/weapons_enemies/main/wizard_staff.glb');
   
@@ -21,7 +22,7 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
     position, 
     rotation, 
     scale, 
-    visible, 
+    visible = false, // Hidden by default since we now use MagicStaffWeaponSystem
     castShadow, 
     receiveShadow,
     ...otherProps 
@@ -46,7 +47,7 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
     // Optimize the scene only once
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        child.visible = true;
+        child.visible = visible || false;
         child.castShadow = true;
         child.receiveShadow = true;
         
@@ -58,12 +59,17 @@ export const WizardStaff: React.FC<WizardStaffProps> = React.memo((props) => {
     });
     
     return clone;
-  }, [scene]);
+  }, [scene, visible]);
 
   // Simplified debug logging - only run once
   useEffect(() => {
-    console.log('WizardStaff optimized and ready');
+    console.log('WizardStaff component (deprecated) - use MagicStaffWeaponSystem instead');
   }, []);
+
+  // Don't render if not visible
+  if (!visible) {
+    return null;
+  }
 
   return (
     <primitive 
