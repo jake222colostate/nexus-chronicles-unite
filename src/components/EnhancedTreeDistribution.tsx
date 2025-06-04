@@ -6,9 +6,9 @@ import * as THREE from 'three';
 
 // External GLB tree model URLs from the repository
 const TREE_MODELS = {
+  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree.glb',
   pineA: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/lowpoly_pine_tree.glb',
-  pineB: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/pine_tree_218poly.glb',
-  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree.glb'
+  pineB: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/pine_tree_218poly.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -26,7 +26,7 @@ const seededRandom = (seed: number) => {
 // Individual tree component with GLB loading - no fallbacks
 const TreeInstance: React.FC<{
   modelUrl: string;
-  treeType: 'pineA' | 'pineB' | 'stylized';
+  treeType: 'stylized' | 'pineA' | 'pineB';
   position: [number, number, number];
   scale: number;
   rotation: number;
@@ -97,16 +97,32 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4; // 4 unit buffer around path center
 };
 
-// Determine tree type based on distribution percentages: 40% Pine A, 30% Pine B, 30% Stylized
-const getTreeTypeByDistribution = (seed: number): 'pineA' | 'pineB' | 'stylized' => {
+// Determine tree type based on distribution percentages: 40% Stylized, 30% Pine A, 30% Pine B
+const getTreeTypeByDistribution = (seed: number): 'stylized' | 'pineA' | 'pineB' => {
   const random = seededRandom(seed);
   
   if (random < 0.4) {
-    return 'pineA'; // 40%
+    return 'stylized'; // 40%
   } else if (random < 0.7) {
-    return 'pineB'; // 30%
+    return 'pineA'; // 30%
   } else {
-    return 'stylized'; // 30%
+    return 'pineB'; // 30%
+  }
+};
+
+// Get scale range based on tree type
+const getScaleForTreeType = (treeType: 'stylized' | 'pineA' | 'pineB', seed: number): number => {
+  const random = seededRandom(seed);
+  
+  switch (treeType) {
+    case 'stylized':
+      return 0.85 + random * 0.2; // 0.85 to 1.05
+    case 'pineA':
+      return 0.2 + random * 0.15; // 0.2 to 0.35 (aggressive downscale)
+    case 'pineB':
+      return 0.85 + random * 0.2; // 0.85 to 1.05
+    default:
+      return 0.85 + random * 0.2;
   }
 };
 
@@ -160,8 +176,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Determine tree type based on distribution percentages
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // Randomize scale from 0.6× to 0.9× as requested
-          scale = 0.6 + seededRandom(treeSeed + 3) * 0.3; // 0.6 to 0.9
+          // Get appropriate scale for tree type
+          scale = getScaleForTreeType(treeType, treeSeed + 3);
           
           // Y-axis random rotation (0° to 360°) as requested
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
@@ -193,15 +209,15 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     });
     
     // Log distribution statistics
+    const stylizedCount = positions.filter(p => p.treeType === 'stylized').length;
     const pineACount = positions.filter(p => p.treeType === 'pineA').length;
     const pineBCount = positions.filter(p => p.treeType === 'pineB').length;
-    const stylizedCount = positions.filter(p => p.treeType === 'stylized').length;
     const total = positions.length;
     
     console.log(`Total enhanced trees generated: ${total}`);
+    console.log(`Stylized trees: ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     console.log(`Pine A trees: ${pineACount} (${total > 0 ? ((pineACount/total)*100).toFixed(1) : 0}%)`);
     console.log(`Pine B trees: ${pineBCount} (${total > 0 ? ((pineBCount/total)*100).toFixed(1) : 0}%)`);
-    console.log(`Stylized trees: ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     
     return positions;
   }, [chunks, chunkSize]);
