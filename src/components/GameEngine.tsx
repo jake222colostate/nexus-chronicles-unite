@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
@@ -48,6 +48,8 @@ const GameEngine: React.FC = () => {
     switchRealm
   } = useUIStateManager(gameState);
 
+  const [enemyCount, setEnemyCount] = useState(0);
+
   // Create stable references to prevent infinite re-renders
   const stablePlayerPosition = useMemo(() => ({
     x: playerPosition.x,
@@ -95,6 +97,10 @@ const GameEngine: React.FC = () => {
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
     // Removed state update to prevent infinite loops - position tracking handled elsewhere
     console.log('Player position updated:', position);
+  }, []);
+
+  const handleEnemyCountChange = useCallback((count: number) => {
+    setEnemyCount(count);
   }, []);
 
   const handleJourneyUpdate = useCallback((distance: number) => {
@@ -200,7 +206,7 @@ const GameEngine: React.FC = () => {
         energyPerSecond={stableGameState.energyPerSecond}
         onHelpClick={handleShowHelp}
         onCombatUpgradesClick={handleShowCombatUpgrades}
-        enemyCount={0}
+        enemyCount={enemyCount}
       />
 
       {/* Main Game Area */}
@@ -220,6 +226,7 @@ const GameEngine: React.FC = () => {
           showTapEffect={showTapEffect}
           onTapEffectComplete={handleTapEffectComplete}
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
+          onEnemyCountChange={handleEnemyCountChange}
         />
 
         {/* Realm Transition Effect */}

@@ -1,8 +1,8 @@
 
 import React, { useMemo } from 'react';
 import { ChunkData } from './ChunkSystem';
-import { FantasyDuskSkybox } from './FantasyDuskSkybox';
-import { BoundaryMountainSystem } from './BoundaryMountainSystem';
+import { MagicalFantasySkybox } from './MagicalFantasySkybox';
+import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
 import { CleanPathSystem } from './CleanPathSystem';
 import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
 import * as THREE from 'three';
@@ -124,8 +124,8 @@ export const FantasyReferenceEnvironment: React.FC<FantasyReferenceEnvironmentPr
 
   return (
     <group>
-      {/* Skybox */}
-      <FantasyDuskSkybox />
+      {/* Magical skybox */}
+      <MagicalFantasySkybox />
       
       {/* Optimized ground plane */}
       {groundPlane}
@@ -133,8 +133,12 @@ export const FantasyReferenceEnvironment: React.FC<FantasyReferenceEnvironmentPr
       {/* Path system */}
       <CleanPathSystem chunks={chunks.slice(0, 30)} chunkSize={chunkSize} realm={realm} />
       
-      {/* Mountain system with reduced chunks */}
-      <BoundaryMountainSystem chunks={chunks.slice(0, 25)} chunkSize={chunkSize} realm={realm} />
+      {/* Hyper-realistic mountains */}
+      <ProceduralMountainTerrain
+        chunks={chunks.slice(0, 25)}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
       
       {/* Optimized lighting */}
       <ImprovedFantasyLighting />
