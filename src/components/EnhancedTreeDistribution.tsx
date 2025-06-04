@@ -7,8 +7,8 @@ import * as THREE from 'three';
 // External GLB tree model URLs from the repository
 const TREE_MODELS = {
   pine: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/lowpoly_pine_tree.glb',
-  stylizedA: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree_A.glb',
-  stylizedB: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree_B.glb'
+  stylizedA: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree.glb',
+  stylizedB: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/stylized_tree.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -23,48 +23,7 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Fallback tree components for when models fail to load
-const FallbackPineTree: React.FC<{ 
-  position: [number, number, number]; 
-  scale: number; 
-  rotation: number;
-}> = ({ position, scale, rotation }) => {
-  return (
-    <group position={position} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 1, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.05, 0.08, 1]} />
-        <meshLambertMaterial color="#654321" />
-      </mesh>
-      <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
-        <coneGeometry args={[0.4, 0.9, 8]} />
-        <meshLambertMaterial color="#013220" />
-      </mesh>
-    </group>
-  );
-};
-
-const FallbackStylizedTree: React.FC<{ 
-  position: [number, number, number]; 
-  scale: number; 
-  rotation: number;
-  variant: 'A' | 'B';
-}> = ({ position, scale, rotation, variant }) => {
-  const color = variant === 'A' ? '#228B22' : '#32CD32';
-  return (
-    <group position={position} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
-      <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.06, 0.09, 0.8]} />
-        <meshLambertMaterial color="#8B4513" />
-      </mesh>
-      <mesh position={[0, 0.9, 0]} castShadow receiveShadow>
-        <sphereGeometry args={[0.6, 12, 8]} />
-        <meshLambertMaterial color={color} />
-      </mesh>
-    </group>
-  );
-};
-
-// Individual tree component with GLB loading and fallback
+// Individual tree component with GLB loading - no fallbacks
 const TreeInstance: React.FC<{
   modelUrl: string;
   treeType: 'pine' | 'stylizedA' | 'stylizedB';
@@ -76,17 +35,8 @@ const TreeInstance: React.FC<{
     const { scene } = useGLTF(modelUrl);
     
     if (!scene) {
-      console.warn(`Tree model not loaded for ${treeType}, using fallback`);
-      if (treeType === 'pine') {
-        return <FallbackPineTree position={position} scale={scale} rotation={rotation} />;
-      } else {
-        return <FallbackStylizedTree 
-          position={position} 
-          scale={scale} 
-          rotation={rotation} 
-          variant={treeType === 'stylizedA' ? 'A' : 'B'} 
-        />;
-      }
+      console.error(`Tree model not loaded for ${treeType}, skipping placement`);
+      return null;
     }
 
     console.log(`Successfully loaded ${treeType} tree at position:`, position);
@@ -94,11 +44,12 @@ const TreeInstance: React.FC<{
     // Clone the scene to create unique instances
     const clonedScene = scene.clone();
     
-    // Ensure all meshes have proper materials and shadows
+    // Ensure all meshes maintain original materials and textures
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
+        // Maintain original materials - don't modify
         if (child.material) {
           child.material.needsUpdate = true;
         }
@@ -111,17 +62,8 @@ const TreeInstance: React.FC<{
       </group>
     );
   } catch (error) {
-    console.error(`Failed to load tree model for ${treeType}, using fallback:`, error);
-    if (treeType === 'pine') {
-      return <FallbackPineTree position={position} scale={scale} rotation={rotation} />;
-    } else {
-      return <FallbackStylizedTree 
-        position={position} 
-        scale={scale} 
-        rotation={rotation} 
-        variant={treeType === 'stylizedA' ? 'A' : 'B'} 
-      />;
-    }
+    console.error(`Failed to load tree model for ${treeType}, skipping placement:`, error);
+    return null;
   }
 };
 
@@ -265,7 +207,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   }, [chunks, chunkSize]);
 
   return (
-    <group name="EnhancedTreeGroup">
+    <group name="TreeGroup">
       <Suspense fallback={null}>
         {treePositions.map((pos, index) => {
           const modelUrl = TREE_MODELS[pos.treeType];
