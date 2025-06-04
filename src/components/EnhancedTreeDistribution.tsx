@@ -1,14 +1,13 @@
-
 import React, { useMemo, Suspense, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Updated tree model URLs from your specifications
+// Updated tree model URLs - using new Dropbox raw URLs
 const TREE_MODELS = {
-  pine218: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/env/pine_tree_218poly.glb',
-  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/env/stylized_tree%20(1).glb'
+  pine218: 'https://www.dropbox.com/scl/fi/2spn34tx54usj8k83ztb9/pine_tree_218poly-1.glb?raw=1',
+  stylized: 'https://www.dropbox.com/scl/fi/f4nb2nxeh3h7jgq22fsnp/stylized_tree-1.glb?raw=1'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -53,11 +52,11 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
   return Math.abs(x) < 4; // 4 unit buffer around path center
 };
 
-// Check if position is too close to player starting position
+// Check if position is too close to player starting position - updated to 8 meter buffer
 const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   const playerStartX = 0; // Player starts at origin
   const playerStartZ = -10; // Player starts at z = -10
-  const safetyBuffer = 8; // 8m buffer around player
+  const safetyBuffer = 8; // Updated to 8m buffer around player
   
   const distance = Math.sqrt(
     Math.pow(x - playerStartX, 2) + Math.pow(z - playerStartZ, 2)
@@ -72,15 +71,15 @@ const getTreeTypeByDistribution = (seed: number): 'pine218' | 'stylized' => {
   return random < 0.5 ? 'pine218' : 'stylized';
 };
 
-// Updated scale ranges
+// Updated scale ranges according to new specifications
 const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): number => {
   const random = seededRandom(seed);
   
   switch (treeType) {
     case 'pine218':
-      return 2.5 + random * 0.5; // 2.5 to 3.0 - pine tree scales normally
+      return 2.5 + random * 0.5; // 2.5 to 3.0 scale
     case 'stylized':
-      return 1.0 + random * 0.3; // 1.0 to 1.3 - base scale for stylized tree
+      return 2.8 + random * 0.5; // 2.8 to 3.3 scale
     default:
       return 1.0;
   }
@@ -98,7 +97,7 @@ const getYOffsetForTreeType = (treeType: 'pine218' | 'stylized', scale: number):
   }
 };
 
-// FIXED: Apply proper trunk proportion corrections for stylized tree
+// Updated trunk proportion fixes for stylized tree with new scaling
 const applyTrunkProportionFix = (scene: THREE.Object3D, treeType: 'pine218' | 'stylized') => {
   if (treeType === 'stylized') {
     let hasSeparateMeshes = false;
@@ -125,21 +124,21 @@ const applyTrunkProportionFix = (scene: THREE.Object3D, treeType: 'pine218' | 's
     hasSeparateMeshes = trunkMeshFound && canopyMeshFound;
     
     if (hasSeparateMeshes) {
-      // CASE 1: Separate trunk and canopy meshes - apply independent scaling
-      console.log('Stylized tree has separate meshes - applying independent scaling');
+      // CASE 1: Separate trunk and canopy meshes - reduce trunk width while keeping canopy
+      console.log('Stylized tree has separate meshes - reducing trunk width');
       
       scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           const meshName = child.name.toLowerCase();
           
-          // Scale trunk mesh: X=0.4, Y=0.4, Z=0.4 (reduce thickness and height)
+          // Reduce trunk width: X=0.3, Y=0.8, Z=0.3 (thinner trunk, slightly shorter)
           if (meshName.includes('trunk') || meshName.includes('stem') || 
               meshName.includes('bark') || meshName.includes('wood')) {
-            console.log(`Applying trunk scaling to: ${child.name}`);
-            child.scale.set(0.4, 0.4, 0.4);
+            console.log(`Applying trunk width reduction to: ${child.name}`);
+            child.scale.set(0.3, 0.8, 0.3);
           }
           
-          // Keep canopy scale unchanged to preserve appearance
+          // Keep canopy scale unchanged to maintain visual impact
           else if (meshName.includes('leaf') || meshName.includes('canopy') || 
                    meshName.includes('foliage') || meshName.includes('crown')) {
             console.log(`Keeping canopy scale unchanged: ${child.name}`);
@@ -148,22 +147,22 @@ const applyTrunkProportionFix = (scene: THREE.Object3D, treeType: 'pine218' | 's
         }
       });
     } else {
-      // CASE 2: Single mesh - apply non-uniform scaling transformation
-      console.log('Stylized tree is single mesh - applying non-uniform scaling');
+      // CASE 2: Single mesh - apply reduced trunk scaling
+      console.log('Stylized tree is single mesh - applying trunk-focused scaling');
       
       scene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          // Apply non-uniform scaling: Y=0.65 (compress vertical), X/Z=0.6 (compress width/depth)
-          console.log(`Applying non-uniform scaling to single mesh: ${child.name}`);
-          child.scale.set(0.6, 0.65, 0.6);
+          // Apply trunk-focused scaling: Y=0.85 (slightly shorter), X/Z=0.4 (much thinner)
+          console.log(`Applying trunk-focused scaling to single mesh: ${child.name}`);
+          child.scale.set(0.4, 0.85, 0.4);
           
-          // Adjust position to ensure canopy stays visually aligned to the top
+          // Adjust position to maintain canopy alignment
           const geometry = child.geometry;
           if (geometry && geometry.boundingBox) {
             geometry.computeBoundingBox();
             const bbox = geometry.boundingBox;
             const originalHeight = bbox.max.y - bbox.min.y;
-            const newHeight = originalHeight * 0.65;
+            const newHeight = originalHeight * 0.85;
             const heightDifference = originalHeight - newHeight;
             
             // Move the mesh up by half the height difference to keep top aligned
@@ -272,7 +271,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length);
+  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using Dropbox URLs');
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -280,9 +279,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     return null;
   }
 
-  // Generate tree positions with trunk proportion fixes
+  // Generate tree positions with updated scaling and 8m player buffer
   const { pine218Positions, stylizedPositions, playerPosition } = useMemo(() => {
-    console.log('Generating tree positions with FIXED trunk proportions for', chunks.length, 'chunks');
+    console.log('Generating tree positions with NEW DROPBOX MODELS and updated scaling for', chunks.length, 'chunks');
     
     const pine218Trees = [];
     const stylizedTrees = [];
@@ -311,7 +310,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Skip if on player path, steep slope, or too close to player start
+          // Skip if on player path, steep slope, or too close to player start (8m buffer)
           if (isOnPlayerPath(x, z) || isOnSteepSlope(x, z) || isTooCloseToPlayerStart(x, z)) {
             attempts++;
             continue;
@@ -320,7 +319,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Determine tree type based on 50/50 distribution
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // Get appropriate scale for tree type
+          // Get appropriate scale for tree type with NEW SCALING
           scale = getScaleForTreeType(treeType, treeSeed + 3);
           
           // Randomize Y-axis rotation (0°–360°)
@@ -351,7 +350,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             stylizedTrees.push(position);
           }
           
-          console.log(`${treeType} tree placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} ${treeType === 'stylized' ? '(TRUNK PROPORTIONS FIXED)' : ''}`);
+          console.log(`${treeType} tree (DROPBOX) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} ${treeType === 'stylized' ? '(TRUNK WIDTH REDUCED)' : ''}`);
         } else {
           console.log(`Failed to place tree after ${maxAttempts} attempts in chunk ${chunk.id}`);
         }
@@ -363,9 +362,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const stylizedCount = stylizedTrees.length;
     const total = allPositions.length;
     
-    console.log(`Total trees generated: ${total}`);
-    console.log(`Pine 218 trees: ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
-    console.log(`Stylized trees (TRUNK PROPORTIONS FIXED): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Total trees generated from DROPBOX: ${total}`);
+    console.log(`Pine 218 trees (scale 2.5-3.0): ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
+    console.log(`Stylized trees (scale 2.8-3.3, TRUNK WIDTH REDUCED): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     
     // Player position for LOD calculations (approximate center of chunks)
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
@@ -381,7 +380,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   return (
     <group name="TreeGroup">
       <Suspense fallback={null}>
-        {/* Instanced Pine 218 Trees */}
+        {/* Instanced Pine 218 Trees from Dropbox */}
         {pine218Positions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.pine218}
@@ -391,7 +390,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           />
         )}
         
-        {/* Instanced Stylized Trees with Fixed Trunk Proportions */}
+        {/* Instanced Stylized Trees from Dropbox with Reduced Trunk Width */}
         {stylizedPositions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.stylized}
@@ -405,14 +404,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   );
 };
 
-// Preload models for better performance
-console.log('Preloading GLB tree models...');
+// Preload models for better performance - updated for Dropbox URLs
+console.log('Preloading DROPBOX GLB tree models...');
 Object.entries(TREE_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded ${type} tree model from:`, url);
+    console.log(`Preloaded ${type} tree model from DROPBOX:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} tree model:`, error);
+    console.warn(`Failed to preload ${type} tree model from DROPBOX:`, error);
   }
 });
 
