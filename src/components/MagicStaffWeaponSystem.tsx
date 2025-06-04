@@ -4,8 +4,12 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Staff model URL from Netlify deployment
-const STAFF_MODEL_URL = 'https://stately-liger-80d127.netlify.app/mage_staff.glb';
+// Staff model URLs from Netlify deployment with three upgrade levels
+const STAFF_MODELS = {
+  default: 'https://stately-liger-80d127.netlify.app/mage_staff.glb',
+  upgrade: 'https://stately-liger-80d127.netlify.app/magical_staff.glb',
+  final: 'https://stately-liger-80d127.netlify.app/stylized_magic_staff_of_water_game_ready.glb'
+} as const;
 
 interface MagicStaffWeaponSystemProps {
   upgradeLevel: number;
@@ -19,17 +23,24 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   const { camera } = useThree();
   const weaponGroupRef = useRef<THREE.Group>(null);
 
-  // Load the staff model with error handling
+  // Determine which staff model to use based on upgrade level
+  const currentStaffModel = useMemo(() => {
+    if (upgradeLevel >= 2) return STAFF_MODELS.final;
+    if (upgradeLevel >= 1) return STAFF_MODELS.upgrade;
+    return STAFF_MODELS.default;
+  }, [upgradeLevel]);
+
+  // Load the current staff model with error handling
   const gltfResult = useMemo(() => {
     try {
-      return useGLTF(STAFF_MODEL_URL);
+      return useGLTF(currentStaffModel);
     } catch (error) {
       console.warn(`Failed to load staff model:`, error);
       return null;
     }
-  }, []);
+  }, [currentStaffModel]);
 
-  // Fixed staff positioning for right-hand view
+  // Fixed staff positioning for right-hand view with your exact specifications
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && gltfResult?.scene) {
       // Get camera vectors for positioning
@@ -41,7 +52,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Fixed right-hand staff positioning as specified
+      // Your exact positioning specifications:
       // Position: X = 0.35, Y = -0.25, Z = 0.55
       const staffPosition = camera.position.clone()
         .add(cameraRight.clone().multiplyScalar(0.35))    // X = 0.35 (right)
@@ -50,11 +61,11 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Fixed rotation for right-hand grip
-      // Rotation: Y = -35°, Z = 20°
+      // Your exact rotation specifications:
+      // Rotation Y: -35°, Rotation Z: 25°
       weaponGroupRef.current.rotation.copy(camera.rotation);
       weaponGroupRef.current.rotateY(-35 * Math.PI / 180); // Y = -35°
-      weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20°
+      weaponGroupRef.current.rotateZ(25 * Math.PI / 180);  // Z = 25°
     }
   });
 
@@ -83,20 +94,24 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     <group ref={weaponGroupRef}>
       <primitive 
         object={clonedScene} 
-        scale={[0.75, 0.75, 0.75]}
+        scale={[0.55, 0.55, 0.55]}
       />
     </group>
   );
 };
 
-// Preload staff model for smooth loading
-try {
-  useGLTF.preload(STAFF_MODEL_URL);
-} catch (error) {
-  console.warn(`Failed to preload staff model:`, error);
-}
+// Preload all staff models for smooth loading
+Object.values(STAFF_MODELS).forEach(url => {
+  try {
+    useGLTF.preload(url);
+  } catch (error) {
+    console.warn(`Failed to preload staff model:`, error);
+  }
+});
 
 // Clear unused staff model cache
 export const clearStaffModelCache = () => {
-  useGLTF.clear(STAFF_MODEL_URL);
+  Object.values(STAFF_MODELS).forEach(url => {
+    useGLTF.clear(url);
+  });
 };

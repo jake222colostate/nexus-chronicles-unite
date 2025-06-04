@@ -1,15 +1,12 @@
+
 import React, { useMemo, Suspense, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Tree model URLs from Netlify deployment with all three types
-const TREE_MODELS = {
-  realistic: 'https://stately-liger-80d127.netlify.app/realistic_tree.glb',
-  stylized: 'https://stately-liger-80d127.netlify.app/stylized_tree.glb',
-  pine218: 'https://stately-liger-80d127.netlify.app/pine_tree_218poly.glb'
-} as const;
+// Single tree model URL from Netlify deployment
+const TREE_MODEL_URL = 'https://stately-liger-80d127.netlify.app/stylized_tree.glb';
 
 interface EnhancedTreeDistributionProps {
   chunks: ChunkData[];
@@ -70,40 +67,17 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < safetyBuffer;
 };
 
-// Determine tree type based on new distribution (50% realistic, 30% stylized, 20% pine)
-const getTreeTypeByDistribution = (seed: number): 'realistic' | 'stylized' | 'pine218' => {
+// Scale range for stylized trees (0.6× – 0.8×)
+const getTreeScale = (seed: number): number => {
   const random = seededRandom(seed);
-  if (random < 0.5) {
-    return 'realistic'; // 50%
-  } else if (random < 0.8) {
-    return 'stylized'; // 30%
-  } else {
-    return 'pine218'; // 20%
-  }
-};
-
-// Scale ranges for tree types per specifications
-const getScaleForTreeType = (treeType: 'realistic' | 'stylized' | 'pine218', seed: number): number => {
-  const random = seededRandom(seed);
-  switch (treeType) {
-    case 'realistic':
-      return 0.7 + random * 0.2; // 0.7× – 0.9×
-    case 'stylized':
-      return 1.4 + random * 0.2; // 1.4× – 1.6×
-    case 'pine218':
-      return 0.55 + random * 0.1; // 0.55× – 0.65×
-    default:
-      return 1.0;
-  }
+  return 0.6 + random * 0.2; // 0.6× – 0.8×
 };
 
 // Performance-optimized instanced tree component
 const InstancedTreeGroup: React.FC<{
-  modelUrl: string;
-  treeType: 'realistic' | 'stylized' | 'pine218';
   positions: Array<{ x: number; y: number; z: number; scale: number; rotation: number; }>;
   playerPosition: THREE.Vector3;
-}> = ({ modelUrl, treeType, positions, playerPosition }) => {
+}> = ({ positions, playerPosition }) => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   
   // Load GLB with error handling - ALWAYS call hooks before any conditional logic
@@ -111,9 +85,9 @@ const InstancedTreeGroup: React.FC<{
   let loadError = false;
   
   try {
-    gltfResult = useGLTF(modelUrl);
+    gltfResult = useGLTF(TREE_MODEL_URL);
   } catch (error) {
-    console.warn(`Failed to load tree model ${treeType}:`, error);
+    console.warn(`Failed to load stylized tree model:`, error);
     loadError = true;
   }
   
@@ -198,10 +172,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   }
 
   // Generate tree positions with optimized algorithm
-  const { realisticPositions, stylizedPositions, pine218Positions, playerPosition } = useMemo(() => {
-    const realisticTrees = [];
-    const stylizedTrees = [];
-    const pineTrees = [];
+  const { treePositions, playerPosition } = useMemo(() => {
+    const trees = [];
     const minDistance = 3; // 3m minimum distance as specified
     const maxAttempts = 25;
     const allPositions = [];
@@ -215,7 +187,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
         let validPosition = false;
-        let x, z, terrainHeight, treeType, scale, rotation, finalY;
+        let x, z, terrainHeight, scale, rotation, finalY;
         
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
@@ -232,11 +204,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             continue;
           }
           
-          // Determine tree type based on new distribution
-          treeType = getTreeTypeByDistribution(treeSeed + 2);
-          
-          // Get appropriate scale for tree type
-          scale = getScaleForTreeType(treeType, treeSeed + 3);
+          // Get appropriate scale for stylized tree (0.6× – 0.8×)
+          scale = getTreeScale(treeSeed + 3);
           
           // Random Y-axis rotation (0°–360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
@@ -258,14 +227,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         if (validPosition) {
           const position = { x, y: finalY, z, scale, rotation };
           allPositions.push(position);
-          
-          if (treeType === 'realistic') {
-            realisticTrees.push(position);
-          } else if (treeType === 'stylized') {
-            stylizedTrees.push(position);
-          } else {
-            pineTrees.push(position);
-          }
+          trees.push(position);
         }
       }
     });
@@ -275,9 +237,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
     return {
-      realisticPositions: realisticTrees,
-      stylizedPositions: stylizedTrees,
-      pine218Positions: pineTrees,
+      treePositions: trees,
       playerPosition: new THREE.Vector3(avgX, 0, avgZ)
     };
   }, [chunks.map(c => c.id).join(','), chunkSize]);
@@ -285,32 +245,10 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   return (
     <group name="TreeGroup">
       <Suspense fallback={null}>
-        {/* Instanced Realistic Trees (50%) */}
-        {realisticPositions.length > 0 && (
+        {/* Instanced Stylized Trees (100%) */}
+        {treePositions.length > 0 && (
           <InstancedTreeGroup
-            modelUrl={TREE_MODELS.realistic}
-            treeType="realistic"
-            positions={realisticPositions}
-            playerPosition={playerPosition}
-          />
-        )}
-        
-        {/* Instanced Stylized Trees (30%) */}
-        {stylizedPositions.length > 0 && (
-          <InstancedTreeGroup
-            modelUrl={TREE_MODELS.stylized}
-            treeType="stylized"
-            positions={stylizedPositions}
-            playerPosition={playerPosition}
-          />
-        )}
-        
-        {/* Instanced Pine 218 Trees (20%) */}
-        {pine218Positions.length > 0 && (
-          <InstancedTreeGroup
-            modelUrl={TREE_MODELS.pine218}
-            treeType="pine218"
-            positions={pine218Positions}
+            positions={treePositions}
             playerPosition={playerPosition}
           />
         )}
@@ -319,18 +257,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   );
 };
 
-// Preload models for better performance
-Object.entries(TREE_MODELS).forEach(([type, url]) => {
-  try {
-    useGLTF.preload(url);
-  } catch (error) {
-    console.warn(`Failed to preload ${type} tree model:`, error);
-  }
-});
+// Preload model for better performance
+try {
+  useGLTF.preload(TREE_MODEL_URL);
+} catch (error) {
+  console.warn(`Failed to preload stylized tree model:`, error);
+}
 
 // Clear unused model cache
 export const clearTreeModelCache = () => {
-  Object.values(TREE_MODELS).forEach(url => {
-    useGLTF.clear(url);
-  });
+  useGLTF.clear(TREE_MODEL_URL);
 };
