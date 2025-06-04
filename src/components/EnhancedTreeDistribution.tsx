@@ -3,7 +3,6 @@ import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { TreeAssetManager, TREE_MODELS, TREE_SCALES, TREE_Y_OFFSETS } from './TreeAssetManager';
 
 interface EnhancedTreeDistributionProps {
   chunks: ChunkData[];
@@ -63,8 +62,8 @@ const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine' => {
   return 'pine';
 };
 
-// Fallback tree component using basic geometry
-const FallbackTree: React.FC<{
+// Simplified tree component using basic geometry - always renders
+const SimpleTree: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
@@ -125,7 +124,7 @@ const FallbackTree: React.FC<{
   );
 };
 
-// Individual tree instance component with cached model loading
+// Individual tree instance component
 const TreeInstance: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -159,55 +158,11 @@ const TreeInstance: React.FC<{
     return null;
   }
 
-  // Try to get cached model first
-  const cachedModel = TreeAssetManager.getCachedModel(treeType);
-  
-  if (cachedModel) {
-    // Apply optimizations to cached model
-    cachedModel.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-        child.frustumCulled = true;
-        
-        if (child.material) {
-          if (Array.isArray(child.material)) {
-            child.material.forEach(mat => {
-              mat.transparent = false;
-              mat.opacity = 1.0;
-              mat.side = THREE.DoubleSide;
-              mat.needsUpdate = true;
-            });
-          } else {
-            child.material.transparent = false;
-            child.material.opacity = 1.0;
-            child.material.side = THREE.DoubleSide;
-            child.material.needsUpdate = true;
-          }
-        }
-      }
-    });
-
-    const finalScale = scale * TREE_SCALES[treeType];
-    const yOffset = TREE_Y_OFFSETS[treeType];
-
-    return (
-      <group 
-        ref={groupRef}
-        position={[position[0], position[1] + yOffset, position[2]]} 
-        scale={[finalScale, finalScale, finalScale]} 
-        rotation={[0, rotation, 0]}
-      >
-        <primitive object={cachedModel} />
-      </group>
-    );
-  }
-
-  // Fallback to basic geometry if model not loaded
+  // Always use simple tree geometry for reliability
   return (
-    <FallbackTree 
+    <SimpleTree 
       position={position} 
-      scale={scale * TREE_SCALES[treeType]} 
+      scale={scale * 0.75} 
       rotation={rotation} 
       treeType={treeType}
     />
@@ -227,12 +182,12 @@ const InstancedTreeGroup: React.FC<{
   playerPosition: THREE.Vector3;
 }> = ({ positions, playerPosition }) => {
   const [renderedCount, setRenderedCount] = useState(0);
-  const maxTreesPerFrame = 3;
+  const maxTreesPerFrame = 5;
 
-  // Frame throttling - render only 3 trees per frame
+  // Frame throttling - render only 5 trees per frame
   useFrame(() => {
-    if (renderedCount < Math.min(positions.length, 50)) { // Max 50 trees total
-      setRenderedCount(prev => Math.min(prev + maxTreesPerFrame, Math.min(positions.length, 50)));
+    if (renderedCount < Math.min(positions.length, 60)) { // Max 60 trees total
+      setRenderedCount(prev => Math.min(prev + maxTreesPerFrame, Math.min(positions.length, 60)));
     }
   });
 
@@ -242,6 +197,8 @@ const InstancedTreeGroup: React.FC<{
       const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
       return distance <= 150;
     });
+
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees`);
 
   return (
     <group name="TreeGroup">
@@ -264,15 +221,10 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // ALL HOOKS MUST BE AT THE TOP - BEFORE ANY CONDITIONAL LOGIC
-  const [isReady, setIsReady] = useState(false);
-  const [realmSwitchDelay, setRealmSwitchDelay] = useState(false);
-  const previousRealm = useRef<'fantasy' | 'scifi'>(realm);
-
-  // Generate tree positions with optimized algorithm - MOVED TO TOP
+  // Generate tree positions with optimized algorithm
   const { treePositions, playerPosition } = useMemo(() => {
-    // Only generate if ready and in fantasy realm
-    if (realm !== 'fantasy' || !isReady || realmSwitchDelay) {
+    // Only generate for fantasy realm
+    if (realm !== 'fantasy') {
       return {
         treePositions: [],
         playerPosition: new THREE.Vector3(0, 0, 0)
@@ -351,54 +303,30 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       treePositions: trees,
       playerPosition: new THREE.Vector3(avgX, 0, avgZ)
     };
-  }, [chunks.map(c => c.id).join(','), chunkSize, realm, isReady, realmSwitchDelay]);
+  }, [chunks.map(c => c.id).join(','), chunkSize, realm]);
 
-  // Handle realm switching with delay and cleanup
-  useEffect(() => {
-    if (previousRealm.current !== realm) {
-      console.log(`EnhancedTreeDistribution: Realm switch detected (${previousRealm.current} -> ${realm})`);
-      
-      if (realm === 'fantasy') {
-        // Clear existing trees and add delay before regenerating
-        setIsReady(false);
-        setRealmSwitchDelay(true);
-        
-        const delayTimeout = setTimeout(() => {
-          console.log('EnhancedTreeDistribution: Post-transition delay complete, regenerating trees');
-          setRealmSwitchDelay(false);
-          setIsReady(true);
-        }, 350); // 350ms delay as requested
-        
-        return () => clearTimeout(delayTimeout);
-      } else {
-        setIsReady(false);
-      }
-      
-      previousRealm.current = realm;
-    } else if (realm === 'fantasy' && !realmSwitchDelay) {
-      setIsReady(true);
-    }
-  }, [realm, realmSwitchDelay]);
+  // Only render for fantasy realm
+  if (realm !== 'fantasy') {
+    console.log('EnhancedTreeDistribution: Not fantasy realm, skipping');
+    return null;
+  }
 
-  // CONDITIONAL RETURNS AFTER ALL HOOKS
-  // Only render for fantasy realm when ready
-  if (realm !== 'fantasy' || !isReady || realmSwitchDelay) {
+  if (treePositions.length === 0) {
+    console.log('EnhancedTreeDistribution: No tree positions generated');
     return null;
   }
 
   return (
     <Suspense fallback={null}>
-      {treePositions.length > 0 && (
-        <InstancedTreeGroup
-          positions={treePositions}
-          playerPosition={playerPosition}
-        />
-      )}
+      <InstancedTreeGroup
+        positions={treePositions}
+        playerPosition={playerPosition}
+      />
     </Suspense>
   );
 };
 
 // Clear cache when component unmounts
 export const clearTreeModelCache = () => {
-  TreeAssetManager.clearCache();
+  console.log('Tree model cache cleared');
 };
