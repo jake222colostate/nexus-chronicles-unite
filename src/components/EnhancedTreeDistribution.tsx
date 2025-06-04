@@ -5,10 +5,10 @@ import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Local tree model URLs
+// Updated tree model URLs from working Netlify deployment
 const TREE_MODELS = {
-  pine218: '/pine_tree_218poly.glb',
-  stylized: '/stylized_tree.glb'
+  pine218: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/pine_tree_218poly.glb',
+  stylized: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/stylized_tree.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -159,7 +159,7 @@ const InstancedTreeGroup: React.FC<{
     return null;
   }
 
-  console.log(`Successfully rendering ${treeType} from local files - ${positions.length} instances`);
+  console.log(`Successfully rendering ${treeType} from Netlify - ${positions.length} instances`);
 
   return (
     <instancedMesh
@@ -176,7 +176,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using local files');
+  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using updated Netlify URLs');
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -186,7 +186,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
   // Generate tree positions with updated scaling and 8m player buffer
   const { pine218Positions, stylizedPositions, playerPosition } = useMemo(() => {
-    console.log('Generating tree positions with Netlify models and updated scaling for', chunks.length, 'chunks');
+    console.log('Generating tree positions with updated Netlify models and scaling for', chunks.length, 'chunks');
     
     const pine218Trees = [];
     const stylizedTrees = [];
@@ -284,7 +284,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   return (
     <group name="TreeGroup">
       <Suspense fallback={null}>
-        {/* Instanced Pine 218 Trees from local files */}
+        {/* Instanced Pine 218 Trees from Netlify */}
         {pine218Positions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.pine218}
@@ -294,7 +294,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           />
         )}
         
-        {/* Instanced Stylized Trees from local files */}
+        {/* Instanced Stylized Trees from Netlify */}
         {stylizedPositions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.stylized}
@@ -309,13 +309,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 };
 
 // Preload models for better performance
-console.log('Preloading local GLB tree models...');
+console.log('Preloading updated Netlify GLB tree models...');
 Object.entries(TREE_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded ${type} tree model from local files:`, url);
+    console.log(`Preloaded ${type} tree model from Netlify:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} tree model from local files:`, error);
+    console.warn(`Failed to preload ${type} tree model from Netlify:`, error);
   }
 });
 

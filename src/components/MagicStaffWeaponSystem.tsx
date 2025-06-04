@@ -4,11 +4,11 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Local wizard staff model URLs
+// Updated wizard staff model URLs from working Netlify deployment
 const STAFF_MODELS = {
-  base: '/staffs/mage_staff.glb',
-  upgrade1: '/staffs/magical_staff.glb',
-  upgrade2: '/staffs/stylized_magic_staff_of_water_game_ready.glb'
+  base: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/mage_staff.glb',
+  upgrade1: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/magical_staff.glb',
+  upgrade2: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/stylized_magic_staff_of_water_game_ready.glb'
 } as const;
 
 interface MagicStaffWeaponSystemProps {
@@ -93,7 +93,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   });
 
-  console.log(`Successfully rendering ${currentStaffType} staff from local files`);
+  console.log(`Successfully rendering ${currentStaffType} staff from Netlify`);
 
   return (
     <group ref={weaponGroupRef}>
@@ -106,13 +106,13 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 };
 
 // Preload all staff models for smooth upgrades
-console.log('Preloading local wizard staff models...');
+console.log('Preloading updated Netlify wizard staff models...');
 Object.entries(STAFF_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded ${type} staff model from local files:`, url);
+    console.log(`Preloaded ${type} staff model from Netlify:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} staff model from local files:`, error);
+    console.warn(`Failed to preload ${type} staff model from Netlify:`, error);
   }
 });
 
