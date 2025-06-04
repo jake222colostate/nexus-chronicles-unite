@@ -1,6 +1,6 @@
-
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // Tree model URLs from updated Netlify deployment
 export const TREE_MODELS = {
@@ -53,9 +53,9 @@ class TreeAssetManagerSingleton {
       console.log(`TreeAssetManager: Preloading ${type} from ${url}`);
       useGLTF.preload(url);
       
-      // Load and cache the model
+      // Load and cache the model using correct GLTFLoader import
       const gltf = await new Promise<any>((resolve, reject) => {
-        const loader = new THREE.GLTFLoader();
+        const loader = new GLTFLoader();
         loader.load(url, resolve, undefined, reject);
       });
 

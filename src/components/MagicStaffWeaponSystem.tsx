@@ -1,8 +1,8 @@
-
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // Staff model URL from updated Netlify deployment
 const STAFF_MODEL_URL = 'https://6840b83a5870760bb84980de--stately-liger-80d127.netlify.app/mage_staff.glb';
@@ -49,8 +49,8 @@ class StaffModelCache {
     try {
       console.log('StaffModelCache: Loading staff model...');
       
-      // Use GLTFLoader directly for better control
-      const loader = new THREE.GLTFLoader();
+      // Use GLTFLoader with correct import
+      const loader = new GLTFLoader();
       const gltf = await new Promise<any>((resolve, reject) => {
         loader.load(STAFF_MODEL_URL, resolve, undefined, reject);
       });
