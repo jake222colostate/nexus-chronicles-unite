@@ -4,11 +4,11 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
-// Updated wizard staff model URLs from working Netlify deployment
+// Wizard staff model URLs from new Netlify deployment
 const STAFF_MODELS = {
-  base: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/mage_staff.glb',
-  upgrade1: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/magical_staff.glb',
-  upgrade2: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/stylized_magic_staff_of_water_game_ready.glb'
+  base: 'https://glittery-taiyaki-0da13c.netlify.app/mage_staff.glb',
+  upgrade1: 'https://glittery-taiyaki-0da13c.netlify.app/magical_staff.glb',
+  upgrade2: 'https://glittery-taiyaki-0da13c.netlify.app/stylized_magic_staff_of_water_game_ready.glb'
 } as const;
 
 interface MagicStaffWeaponSystemProps {
@@ -33,7 +33,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 
   console.log(`MagicStaffWeaponSystem: Current upgrade level ${upgradeLevel}, using ${currentStaffType} staff`);
 
-  // Load the appropriate staff model with error handling
+  // Load the appropriate staff model with error handling - no fallback
   const modelUrl = STAFF_MODELS[currentStaffType];
   let gltfResult;
   
@@ -44,7 +44,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     gltfResult = null;
   }
 
-  // Attach weapon to camera (first-person POV)
+  // Attach weapon to camera (first-person POV) with exact positioning
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible) {
       // Position relative to camera for first-person view
@@ -56,7 +56,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Staff positioning: X = 0.3, Y = -0.4, Z = 0.8 (camera-relative)
+      // Staff positioning with exact coordinates: X = 0.3, Y = -0.4, Z = 0.8 (camera-relative)
       const staffPosition = camera.position.clone()
         .add(cameraRight.clone().multiplyScalar(0.3))  // Right offset
         .add(cameraUp.clone().multiplyScalar(-0.4))     // Down offset
@@ -76,10 +76,10 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     console.log(`Staff upgraded to: ${currentStaffType} (level ${upgradeLevel})`);
   }, [currentStaffType, upgradeLevel]);
 
-  // Skip rendering if GLB failed to load or not visible
+  // Skip rendering if GLB failed to load or not visible - no fallback rendering
   if (!visible || !gltfResult?.scene) {
     if (!gltfResult?.scene) {
-      console.log(`GLB load failed for ${currentStaffType} staff, skipping render`);
+      console.log(`GLB load failed for ${currentStaffType} staff, skipping render - no fallback`);
     }
     return null;
   }
@@ -93,7 +93,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   });
 
-  console.log(`Successfully rendering ${currentStaffType} staff from Netlify`);
+  console.log(`Successfully rendering ${currentStaffType} staff from new Netlify`);
 
   return (
     <group ref={weaponGroupRef}>
@@ -106,13 +106,13 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 };
 
 // Preload all staff models for smooth upgrades
-console.log('Preloading updated Netlify wizard staff models...');
+console.log('Preloading new Netlify wizard staff models...');
 Object.entries(STAFF_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded ${type} staff model from Netlify:`, url);
+    console.log(`Preloaded ${type} staff model from new Netlify:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} staff model from Netlify:`, error);
+    console.warn(`Failed to preload ${type} staff model from new Netlify:`, error);
   }
 });
 

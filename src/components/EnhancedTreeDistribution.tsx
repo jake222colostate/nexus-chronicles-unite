@@ -1,14 +1,13 @@
-
 import React, { useMemo, Suspense, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Updated tree model URLs from working Netlify deployment
+// Tree model URLs from new Netlify deployment
 const TREE_MODELS = {
-  pine218: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/pine_tree_218poly.glb',
-  stylized: 'https://68409c3883c2113b93975f28--mellifluous-heliotrope-f11a73.netlify.app/stylized_tree.glb'
+  pine218: 'https://glittery-taiyaki-0da13c.netlify.app/pine_tree_218poly.glb',
+  stylized: 'https://glittery-taiyaki-0da13c.netlify.app/stylized_tree.glb'
 } as const;
 
 interface EnhancedTreeDistributionProps {
@@ -72,7 +71,7 @@ const getTreeTypeByDistribution = (seed: number): 'pine218' | 'stylized' => {
   return random < 0.5 ? 'pine218' : 'stylized';
 };
 
-// Updated scale ranges according to specifications
+// Updated scale ranges according to new specifications
 const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): number => {
   const random = seededRandom(seed);
   
@@ -95,7 +94,7 @@ const InstancedTreeGroup: React.FC<{
 }> = ({ modelUrl, treeType, positions, playerPosition }) => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   
-  // Load GLB with error handling
+  // Load GLB with error handling - no fallback geometry
   let gltfResult;
   
   try {
@@ -137,9 +136,9 @@ const InstancedTreeGroup: React.FC<{
     }
   });
 
-  // Skip rendering if GLB failed to load
+  // Skip rendering if GLB failed to load - no fallback geometry
   if (!gltfResult?.scene || positions.length === 0) {
-    console.log(`GLB load failed or no positions for ${treeType}, skipping render`);
+    console.log(`GLB load failed or no positions for ${treeType}, skipping render - no fallback`);
     return null;
   }
 
@@ -159,7 +158,7 @@ const InstancedTreeGroup: React.FC<{
     return null;
   }
 
-  console.log(`Successfully rendering ${treeType} from Netlify - ${positions.length} instances`);
+  console.log(`Successfully rendering ${treeType} from new Netlify - ${positions.length} instances`);
 
   return (
     <instancedMesh
@@ -176,7 +175,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using updated Netlify URLs');
+  console.log('EnhancedTreeDistribution render - Realm:', realm, 'Chunks:', chunks.length, 'Using new Netlify URLs');
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -184,9 +183,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     return null;
   }
 
-  // Generate tree positions with updated scaling and 8m player buffer
+  // Generate tree positions with new scaling and 8m player buffer
   const { pine218Positions, stylizedPositions, playerPosition } = useMemo(() => {
-    console.log('Generating tree positions with updated Netlify models and scaling for', chunks.length, 'chunks');
+    console.log('Generating tree positions with new Netlify models and exact scaling for', chunks.length, 'chunks');
     
     const pine218Trees = [];
     const stylizedTrees = [];
@@ -224,7 +223,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           // Determine tree type based on 50/50 distribution
           treeType = getTreeTypeByDistribution(treeSeed + 2);
           
-          // Get appropriate scale for tree type
+          // Get appropriate scale for tree type with new specifications
           scale = getScaleForTreeType(treeType, treeSeed + 3);
           
           // Random Y-axis rotation (0°–360°)
@@ -254,7 +253,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             stylizedTrees.push(position);
           }
           
-          console.log(`${treeType} tree (Netlify) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} rotation ${(rotation * 180 / Math.PI).toFixed(0)}°`);
+          console.log(`${treeType} tree (new Netlify) placed at (${x.toFixed(2)}, ${finalY.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} rotation ${(rotation * 180 / Math.PI).toFixed(0)}°`);
         } else {
           console.log(`Failed to place tree after ${maxAttempts} attempts in chunk ${chunk.id}`);
         }
@@ -266,7 +265,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const stylizedCount = stylizedTrees.length;
     const total = allPositions.length;
     
-    console.log(`Total trees generated from Netlify: ${total}`);
+    console.log(`Total trees generated from new Netlify: ${total}`);
     console.log(`Pine 218 trees (scale 2.8-3.3): ${pine218Count} (${total > 0 ? ((pine218Count/total)*100).toFixed(1) : 0}%)`);
     console.log(`Stylized trees (scale 2.5-3.0): ${stylizedCount} (${total > 0 ? ((stylizedCount/total)*100).toFixed(1) : 0}%)`);
     
@@ -284,7 +283,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   return (
     <group name="TreeGroup">
       <Suspense fallback={null}>
-        {/* Instanced Pine 218 Trees from Netlify */}
+        {/* Instanced Pine 218 Trees from new Netlify */}
         {pine218Positions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.pine218}
@@ -294,7 +293,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           />
         )}
         
-        {/* Instanced Stylized Trees from Netlify */}
+        {/* Instanced Stylized Trees from new Netlify */}
         {stylizedPositions.length > 0 && (
           <InstancedTreeGroup
             modelUrl={TREE_MODELS.stylized}
@@ -309,13 +308,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 };
 
 // Preload models for better performance
-console.log('Preloading updated Netlify GLB tree models...');
+console.log('Preloading new Netlify GLB tree models...');
 Object.entries(TREE_MODELS).forEach(([type, url]) => {
   try {
     useGLTF.preload(url);
-    console.log(`Preloaded ${type} tree model from Netlify:`, url);
+    console.log(`Preloaded ${type} tree model from new Netlify:`, url);
   } catch (error) {
-    console.warn(`Failed to preload ${type} tree model from Netlify:`, error);
+    console.warn(`Failed to preload ${type} tree model from new Netlify:`, error);
   }
 });
 
