@@ -23,7 +23,7 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Terrain height simulation function
+// Terrain height simulation function - always returns a number
 const getTerrainHeight = (x: number, z: number): number => {
   return Math.sin(x * 0.01) * Math.cos(z * 0.01) * 2 + 
          Math.sin(x * 0.005) * Math.cos(z * 0.005) * 3;
