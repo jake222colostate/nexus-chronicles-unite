@@ -107,15 +107,15 @@ const getTreeTypeByDistribution = (seed: number): 'pine218' | 'stylized' => {
   }
 };
 
-// Updated scale ranges for new specifications
+// Updated scale ranges - increased stylized tree scaling
 const getScaleForTreeType = (treeType: 'pine218' | 'stylized', seed: number): number => {
   const random = seededRandom(seed);
   
   switch (treeType) {
     case 'pine218':
-      return 3.5 + random * 0.5; // 3.5 to 4.0
+      return 3.5 + random * 0.5; // 3.5 to 4.0 (unchanged)
     case 'stylized':
-      return 1.6 + random * 0.3; // 1.6 to 1.9
+      return 2.5 + random * 0.5; // 2.5 to 3.0 (increased from 1.6-1.9)
     default:
       return 1.0;
   }
