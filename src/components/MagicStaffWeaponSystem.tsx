@@ -44,7 +44,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     gltfResult = null;
   }
 
-  // Attach weapon to camera (first-person POV) with exact positioning
+  // Attach weapon to camera (first-person POV) with right-hand positioning
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible) {
       // Position relative to camera for first-person view
@@ -56,18 +56,19 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Staff positioning with exact coordinates: X = 0.3, Y = -0.4, Z = 0.8 (camera-relative)
+      // RIGHT-HAND staff positioning: X = 0.5 (more right), Y = -0.3 (slightly up), Z = 0.6 (closer)
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.3))  // Right offset
-        .add(cameraUp.clone().multiplyScalar(-0.4))     // Down offset
-        .add(cameraForward.clone().multiplyScalar(0.8)); // Forward offset
+        .add(cameraRight.clone().multiplyScalar(0.5))   // Right-hand offset (increased)
+        .add(cameraUp.clone().multiplyScalar(-0.3))      // Slightly up from previous position
+        .add(cameraForward.clone().multiplyScalar(0.6)); // Closer to camera
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Rotate to face forward naturally
+      // Rotate for right-hand grip - more natural right-hand angle
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(Math.PI / 6); // Slight right-hand angle
-      weaponGroupRef.current.rotateX(-Math.PI / 12); // Slight downward tilt
+      weaponGroupRef.current.rotateY(-Math.PI / 8);  // Slight left rotation for right hand
+      weaponGroupRef.current.rotateX(-Math.PI / 16); // Slight downward tilt
+      weaponGroupRef.current.rotateZ(Math.PI / 12);  // Slight roll for natural grip
     }
   });
 
@@ -93,7 +94,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   });
 
-  console.log(`Successfully rendering ${currentStaffType} staff from new Netlify`);
+  console.log(`Successfully rendering ${currentStaffType} staff from new Netlify (right-hand position)`);
 
   return (
     <group ref={weaponGroupRef}>
