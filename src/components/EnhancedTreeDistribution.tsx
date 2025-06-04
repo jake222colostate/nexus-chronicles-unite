@@ -5,8 +5,12 @@ import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
-// Single tree model URL from Netlify deployment
-const TREE_MODEL_URL = 'https://stately-liger-80d127.netlify.app/stylized_tree.glb';
+// Tree model URLs from Netlify deployment
+const TREE_MODELS = {
+  realistic: 'https://stately-liger-80d127.netlify.app/realistic_tree.glb',
+  stylized: 'https://stately-liger-80d127.netlify.app/stylized_tree.glb',
+  pine: 'https://stately-liger-80d127.netlify.app/pine_tree_218poly.glb'
+} as const;
 
 interface EnhancedTreeDistributionProps {
   chunks: ChunkData[];
@@ -67,97 +71,122 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < safetyBuffer;
 };
 
-// Scale range for stylized trees (0.6× – 0.8×)
-const getTreeScale = (seed: number): number => {
+// Get tree type with 33% distribution
+const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine' => {
   const random = seededRandom(seed);
-  return 0.6 + random * 0.2; // 0.6× – 0.8×
+  if (random < 0.33) return 'realistic';
+  if (random < 0.66) return 'stylized';
+  return 'pine';
 };
 
-// Performance-optimized instanced tree component
-const InstancedTreeGroup: React.FC<{
-  positions: Array<{ x: number; y: number; z: number; scale: number; rotation: number; }>;
-  playerPosition: THREE.Vector3;
-}> = ({ positions, playerPosition }) => {
-  const meshRef = useRef<THREE.InstancedMesh>(null);
-  
-  // Load GLB with error handling - ALWAYS call hooks before any conditional logic
+// Get appropriate scale based on tree type
+const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine', seed: number): number => {
+  const random = seededRandom(seed);
+  switch (treeType) {
+    case 'realistic':
+      return 0.7 + random * 0.15; // 0.7 to 0.85
+    case 'stylized':
+      return 1.2 + random * 0.2; // 1.2 to 1.4
+    case 'pine':
+      return 0.45 + random * 0.15; // 0.45 to 0.6
+    default:
+      return 1.0;
+  }
+};
+
+// Get Y position adjustment for stylized trees
+const getYAdjustment = (treeType: 'realistic' | 'stylized' | 'pine'): number => {
+  return treeType === 'stylized' ? -0.25 : 0;
+};
+
+// Individual tree instance component
+const TreeInstance: React.FC<{
+  modelUrl: string;
+  position: [number, number, number];
+  scale: number;
+  rotation: number;
+  treeType: 'realistic' | 'stylized' | 'pine';
+}> = ({ modelUrl, position, scale, rotation, treeType }) => {
   let gltfResult = null;
   let loadError = false;
   
   try {
-    gltfResult = useGLTF(TREE_MODEL_URL);
+    gltfResult = useGLTF(modelUrl);
   } catch (error) {
-    console.warn(`Failed to load stylized tree model:`, error);
+    console.warn(`Failed to load ${treeType} tree model:`, error);
     loadError = true;
   }
-  
-  // ALWAYS call useFrame hook regardless of conditions
-  useFrame(() => {
-    // Only proceed if we have valid data and no errors
-    if (loadError || !gltfResult?.scene || !meshRef.current || !playerPosition || positions.length === 0) {
-      return;
-    }
-    
-    const tempMatrix = new THREE.Matrix4();
-    const renderDistance = 150;
-    const lodDistance = 75;
-    let visibleCount = 0;
-    
-    for (let i = 0; i < positions.length; i++) {
-      const pos = positions[i];
-      const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
-      
-      // Skip if outside render distance
-      if (distance > renderDistance) {
-        continue;
+
+  if (loadError || !gltfResult?.scene) {
+    return null; // Skip on load failure as requested
+  }
+
+  // Clone and ensure all meshes are visible
+  const clonedScene = useMemo(() => {
+    const scene = gltfResult.scene.clone();
+    scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        child.visible = true; // Ensure visibility
+        if (child.material && 'needsUpdate' in child.material) {
+          child.material.needsUpdate = true;
+        }
       }
-      
-      // LOD system: reduce scale for distant trees
-      const lodScale = distance > lodDistance ? pos.scale * 0.6 : pos.scale;
-      
-      tempMatrix.compose(
-        new THREE.Vector3(pos.x, pos.y, pos.z),
-        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), pos.rotation),
-        new THREE.Vector3(lodScale, lodScale, lodScale)
-      );
-      
-      meshRef.current.setMatrixAt(visibleCount, tempMatrix);
-      visibleCount++;
-    }
-    
-    // Update instance count for performance
-    meshRef.current.count = visibleCount;
-    meshRef.current.instanceMatrix.needsUpdate = true;
-  });
-
-  // After all hooks are called, handle conditional rendering
-  if (loadError || !gltfResult?.scene || positions.length === 0) {
-    return null;
-  }
-
-  // Get geometry and material from the model
-  let geometry: THREE.BufferGeometry | null = null;
-  let material: THREE.Material | null = null;
-  
-  gltfResult.scene.traverse((child) => {
-    if (child instanceof THREE.Mesh && !geometry) {
-      geometry = child.geometry;
-      material = child.material;
-    }
-  });
-
-  if (!geometry || !material) {
-    return null;
-  }
+    });
+    return scene;
+  }, [gltfResult.scene]);
 
   return (
-    <instancedMesh
-      ref={meshRef}
-      args={[geometry, material, positions.length]}
-      castShadow
-      receiveShadow
-      frustumCulled={true}
-    />
+    <group 
+      position={position} 
+      scale={[scale, scale, scale]} 
+      rotation={[0, rotation, 0]}
+    >
+      <primitive object={clonedScene} />
+    </group>
+  );
+};
+
+// Performance-optimized instanced tree group
+const InstancedTreeGroup: React.FC<{
+  positions: Array<{ 
+    x: number; 
+    y: number; 
+    z: number; 
+    scale: number; 
+    rotation: number; 
+    treeType: 'realistic' | 'stylized' | 'pine';
+  }>;
+  playerPosition: THREE.Vector3;
+}> = ({ positions, playerPosition }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  
+  // Filter positions by distance for performance
+  const visiblePositions = useMemo(() => {
+    const renderDistance = 150;
+    return positions.filter(pos => {
+      const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
+      return distance <= renderDistance;
+    });
+  }, [positions, playerPosition]);
+
+  return (
+    <group ref={groupRef} name="TreeGroup">
+      {visiblePositions.map((pos, index) => {
+        const modelUrl = TREE_MODELS[pos.treeType];
+        return (
+          <TreeInstance
+            key={`tree-${index}-${pos.treeType}`}
+            modelUrl={modelUrl}
+            position={[pos.x, pos.y, pos.z]}
+            scale={pos.scale}
+            rotation={pos.rotation}
+            treeType={pos.treeType}
+          />
+        );
+      })}
+    </group>
   );
 };
 
@@ -187,7 +216,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
         let validPosition = false;
-        let x, z, terrainHeight, scale, rotation, finalY;
+        let x, z, terrainHeight, treeType, scale, rotation, finalY;
         
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
@@ -204,14 +233,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             continue;
           }
           
-          // Get appropriate scale for stylized tree (0.6× – 0.8×)
-          scale = getTreeScale(treeSeed + 3);
+          // Get tree type with 33% distribution
+          treeType = getTreeType(treeSeed + 2);
+          
+          // Get appropriate scale for tree type
+          scale = getTreeScale(treeType, treeSeed + 3);
           
           // Random Y-axis rotation (0°–360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
-          // Place tree base on terrain
-          finalY = terrainHeight;
+          // Apply Y position adjustment for stylized trees
+          finalY = terrainHeight + getYAdjustment(treeType);
           
           // Check minimum distance from existing trees (3m as specified)
           validPosition = allPositions.every(pos => {
@@ -225,7 +257,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         }
         
         if (validPosition) {
-          const position = { x, y: finalY, z, scale, rotation };
+          const position = { x, y: finalY, z, scale, rotation, treeType };
           allPositions.push(position);
           trees.push(position);
         }
@@ -243,28 +275,29 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   }, [chunks.map(c => c.id).join(','), chunkSize]);
 
   return (
-    <group name="TreeGroup">
-      <Suspense fallback={null}>
-        {/* Instanced Stylized Trees (100%) */}
-        {treePositions.length > 0 && (
-          <InstancedTreeGroup
-            positions={treePositions}
-            playerPosition={playerPosition}
-          />
-        )}
-      </Suspense>
-    </group>
+    <Suspense fallback={null}>
+      {treePositions.length > 0 && (
+        <InstancedTreeGroup
+          positions={treePositions}
+          playerPosition={playerPosition}
+        />
+      )}
+    </Suspense>
   );
 };
 
-// Preload model for better performance
-try {
-  useGLTF.preload(TREE_MODEL_URL);
-} catch (error) {
-  console.warn(`Failed to preload stylized tree model:`, error);
-}
+// Preload models for better performance
+Object.values(TREE_MODELS).forEach(url => {
+  try {
+    useGLTF.preload(url);
+  } catch (error) {
+    console.warn(`Failed to preload tree model:`, error);
+  }
+});
 
 // Clear unused model cache
 export const clearTreeModelCache = () => {
-  useGLTF.clear(TREE_MODEL_URL);
+  Object.values(TREE_MODELS).forEach(url => {
+    useGLTF.clear(url);
+  });
 };
