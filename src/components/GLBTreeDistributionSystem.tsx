@@ -239,7 +239,7 @@ export const GLBTreeDistributionSystem: React.FC<GLBTreeDistributionSystemProps>
               treeType={pos.treeType}
               position={[pos.x, pos.y, pos.z]}
               scale={pos.scale}
-              rotation={rotation}
+              rotation={pos.rotation}
             />
           );
         })}
