@@ -3,6 +3,7 @@ import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
+import { TreeAssetManager, TREE_DISTRIBUTION, TREE_SCALES, TREE_Y_OFFSETS } from './TreeAssetManager';
 
 interface EnhancedTreeDistributionProps {
   chunks: ChunkData[];
@@ -54,77 +55,83 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 8;
 };
 
-// Get tree type with 33% distribution
+// Get tree type with specified distribution ratios
 const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine' => {
   const random = seededRandom(seed);
-  if (random < 0.33) return 'realistic';
-  if (random < 0.66) return 'stylized';
-  return 'pine';
+  if (random < TREE_DISTRIBUTION.pine) return 'pine'; // 40%
+  if (random < TREE_DISTRIBUTION.pine + TREE_DISTRIBUTION.stylized) return 'stylized'; // 30%
+  return 'realistic'; // 30%
 };
 
-// Simplified tree component using basic geometry - always renders
-const SimpleTree: React.FC<{
+// Get randomized scale based on tree type
+const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine', seed: number): number => {
+  const scaleConfig = TREE_SCALES[treeType];
+  const random = seededRandom(seed);
+  return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
+};
+
+// Tree component that loads GLB models
+const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
   treeType: 'realistic' | 'stylized' | 'pine';
 }> = ({ position, scale, rotation, treeType }) => {
-  const getTreeGeometry = () => {
-    switch (treeType) {
-      case 'pine':
-        return (
-          <group>
-            <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
-              <cylinderGeometry args={[0.1, 0.15, 1]} />
-              <meshLambertMaterial color="#8B4513" />
-            </mesh>
-            <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
-              <coneGeometry args={[0.6, 1.5, 8]} />
-              <meshLambertMaterial color="#013220" />
-            </mesh>
-          </group>
-        );
-      case 'stylized':
-        return (
-          <group>
-            <mesh position={[0, 0.6, 0]} castShadow receiveShadow>
-              <cylinderGeometry args={[0.12, 0.18, 1.2]} />
-              <meshLambertMaterial color="#8B4513" />
-            </mesh>
-            <mesh position={[0, 1.5, 0]} castShadow receiveShadow>
-              <sphereGeometry args={[0.8, 12, 8]} />
-              <meshLambertMaterial color="#228B22" />
-            </mesh>
-          </group>
-        );
-      default: // realistic
-        return (
-          <group>
-            <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
-              <cylinderGeometry args={[0.15, 0.2, 1.6]} />
-              <meshLambertMaterial color="#8B4513" />
-            </mesh>
-            <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-              <sphereGeometry args={[1.0, 12, 8]} />
-              <meshLambertMaterial color="#228B22" />
-            </mesh>
-          </group>
-        );
+  const [treeModel, setTreeModel] = useState<THREE.Object3D | null>(null);
+  const groupRef = useRef<THREE.Group>(null);
+
+  useEffect(() => {
+    // Try to get cached model first
+    const cachedModel = TreeAssetManager.getCachedModel(treeType);
+    if (cachedModel) {
+      setTreeModel(cachedModel);
+    } else {
+      // If not cached, try to load it
+      TreeAssetManager.preloadAllModels().then(() => {
+        const model = TreeAssetManager.getCachedModel(treeType);
+        if (model) {
+          setTreeModel(model);
+        }
+      });
     }
-  };
+  }, [treeType]);
+
+  // Apply Y offset for proper alignment
+  const adjustedPosition: [number, number, number] = [
+    position[0],
+    position[1] + TREE_Y_OFFSETS[treeType],
+    position[2]
+  ];
+
+  if (!treeModel) {
+    // Show placeholder while loading
+    return (
+      <group position={adjustedPosition} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
+        <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[0.1, 0.15, 1]} />
+          <meshLambertMaterial color="#8B4513" />
+        </mesh>
+        <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
+          <sphereGeometry args={[0.6, 8, 6]} />
+          <meshLambertMaterial color="#228B22" />
+        </mesh>
+      </group>
+    );
+  }
 
   return (
     <group 
-      position={position} 
+      ref={groupRef}
+      position={adjustedPosition} 
       scale={[scale, scale, scale]} 
       rotation={[0, rotation, 0]}
     >
-      {getTreeGeometry()}
+      <primitive object={treeModel} />
     </group>
   );
 };
 
-// Individual tree instance component
+// Individual tree instance component with distance culling
 const TreeInstance: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -133,24 +140,14 @@ const TreeInstance: React.FC<{
   playerPosition: THREE.Vector3;
 }> = ({ position, scale, rotation, treeType, playerPosition }) => {
   const [isVisible, setIsVisible] = useState(true);
-  const groupRef = useRef<THREE.Group>(null);
 
   // Performance culling based on distance
   useFrame(() => {
-    if (groupRef.current) {
-      const distance = playerPosition.distanceTo(new THREE.Vector3(...position));
-      const newVisibility = distance <= 150; // 150m culling distance
-      
-      if (newVisibility !== isVisible) {
-        setIsVisible(newVisibility);
-      }
-
-      // LOD scaling for distant trees
-      if (distance > 20) {
-        groupRef.current.visible = distance <= 50; // Hide very distant trees
-      } else {
-        groupRef.current.visible = true;
-      }
+    const distance = playerPosition.distanceTo(new THREE.Vector3(...position));
+    const newVisibility = distance <= 120; // 120m culling distance
+    
+    if (newVisibility !== isVisible) {
+      setIsVisible(newVisibility);
     }
   });
 
@@ -158,18 +155,17 @@ const TreeInstance: React.FC<{
     return null;
   }
 
-  // Always use simple tree geometry for reliability
   return (
-    <SimpleTree 
+    <GLBTree 
       position={position} 
-      scale={scale * 0.75} 
+      scale={scale} 
       rotation={rotation} 
       treeType={treeType}
     />
   );
 };
 
-// Performance-optimized tree group with frame throttling
+// Performance-optimized tree group
 const InstancedTreeGroup: React.FC<{
   positions: Array<{ 
     x: number; 
@@ -181,30 +177,18 @@ const InstancedTreeGroup: React.FC<{
   }>;
   playerPosition: THREE.Vector3;
 }> = ({ positions, playerPosition }) => {
-  const [renderedCount, setRenderedCount] = useState(0);
-  const maxTreesPerFrame = 5;
-
-  // Frame throttling - render only 5 trees per frame
-  useFrame(() => {
-    if (renderedCount < Math.min(positions.length, 60)) { // Max 60 trees total
-      setRenderedCount(prev => Math.min(prev + maxTreesPerFrame, Math.min(positions.length, 60)));
-    }
+  const visiblePositions = positions.filter(pos => {
+    const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
+    return distance <= 120;
   });
 
-  const visiblePositions = positions
-    .slice(0, renderedCount)
-    .filter(pos => {
-      const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
-      return distance <= 150;
-    });
-
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees`);
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees from GitHub models`);
 
   return (
-    <group name="TreeGroup">
-      {visiblePositions.map((pos, index) => (
+    <group name="GitHubTreeGroup">
+      {visiblePositions.slice(0, 50).map((pos, index) => (
         <TreeInstance
-          key={`tree-${index}-${pos.treeType}`}
+          key={`github-tree-${index}-${pos.treeType}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -221,7 +205,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with optimized algorithm
+  // Generate tree positions with new distribution ratios
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -231,17 +215,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating tree positions for', chunks.length, 'chunks');
+    console.log('EnhancedTreeDistribution: Generating tree positions with GitHub models for', chunks.length, 'chunks');
     const trees = [];
-    const minDistance = 3; // 3m minimum distance
-    const maxAttempts = 25;
+    const minDistance = 3; // 3m minimum spacing as specified
+    const maxAttempts = 30;
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 2-4 trees per chunk
-      const treeCount = 2 + Math.floor(seededRandom(seed) * 3);
+      // Generate 3-5 trees per chunk for good density
+      const treeCount = 3 + Math.floor(seededRandom(seed) * 3);
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -257,24 +241,24 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Skip invalid positions
+          // Skip invalid positions (paths, steep slopes, too close to start)
           if (isOnPlayerPath(x, z) || isOnSteepSlope(x, z) || isTooCloseToPlayerStart(x, z)) {
             attempts++;
             continue;
           }
           
-          // Get tree type with 33% distribution
+          // Get tree type with new distribution ratios
           treeType = getTreeType(treeSeed + 2);
           
-          // Base scale with some variation
-          scale = 0.8 + seededRandom(treeSeed + 3) * 0.4; // 0.8 to 1.2
+          // Get randomized scale based on tree type
+          scale = getTreeScale(treeType, treeSeed + 3);
           
-          // Random Y-axis rotation
+          // Random Y-axis rotation (0°–360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
           finalY = terrainHeight;
           
-          // Check minimum distance from existing trees
+          // Check minimum 3-meter distance from existing trees
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
               Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
@@ -297,7 +281,12 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with GitHub models`);
+    console.log('Tree distribution:', {
+      pine: trees.filter(t => t.treeType === 'pine').length,
+      stylized: trees.filter(t => t.treeType === 'stylized').length,
+      realistic: trees.filter(t => t.treeType === 'realistic').length
+    });
     
     return {
       treePositions: trees,
@@ -328,5 +317,6 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
 // Clear cache when component unmounts
 export const clearTreeModelCache = () => {
+  TreeAssetManager.clearCache();
   console.log('Tree model cache cleared');
 };

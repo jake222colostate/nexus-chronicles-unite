@@ -1,11 +1,16 @@
+
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Staff model URL from updated Netlify deployment
-const STAFF_MODEL_URL = 'https://6840b83a5870760bb84980de--stately-liger-80d127.netlify.app/mage_staff.glb';
+// Staff model URLs from GitHub repository
+const STAFF_MODELS = {
+  tier1: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/mage_staff.glb',
+  tier2: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/magical_staff.glb',
+  tier3: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/stylized_magic_staff_of_water_game_ready.glb'
+} as const;
 
 interface MagicStaffWeaponSystemProps {
   upgradeLevel: number;
@@ -15,9 +20,8 @@ interface MagicStaffWeaponSystemProps {
 // Persistent staff model cache
 class StaffModelCache {
   private static instance: StaffModelCache;
-  private cachedModel: THREE.Object3D | null = null;
-  private isLoading = false;
-  private loadPromise: Promise<THREE.Object3D> | null = null;
+  private cachedModels = new Map<string, THREE.Object3D>();
+  private loadingPromises = new Map<string, Promise<THREE.Object3D>>();
 
   static getInstance(): StaffModelCache {
     if (!StaffModelCache.instance) {
@@ -26,54 +30,53 @@ class StaffModelCache {
     return StaffModelCache.instance;
   }
 
-  async loadModel(): Promise<THREE.Object3D> {
-    if (this.cachedModel) {
-      return this.cachedModel.clone();
+  async loadModel(tier: keyof typeof STAFF_MODELS): Promise<THREE.Object3D> {
+    if (this.cachedModels.has(tier)) {
+      return this.cachedModels.get(tier)!.clone();
     }
 
-    if (this.loadPromise) {
-      const model = await this.loadPromise;
+    if (this.loadingPromises.has(tier)) {
+      const model = await this.loadingPromises.get(tier)!;
       return model.clone();
     }
 
-    if (!this.isLoading) {
-      this.isLoading = true;
-      this.loadPromise = this.loadStaffModel();
-    }
-
-    const model = await this.loadPromise!;
+    const loadPromise = this.loadStaffModel(tier);
+    this.loadingPromises.set(tier, loadPromise);
+    
+    const model = await loadPromise;
     return model.clone();
   }
 
-  private async loadStaffModel(): Promise<THREE.Object3D> {
+  private async loadStaffModel(tier: keyof typeof STAFF_MODELS): Promise<THREE.Object3D> {
+    const url = STAFF_MODELS[tier];
+    
     try {
-      console.log('StaffModelCache: Loading staff model...');
+      console.log(`StaffModelCache: Loading ${tier} staff from GitHub: ${url}`);
       
       // Use GLTFLoader with correct import
       const loader = new GLTFLoader();
       const gltf = await new Promise<any>((resolve, reject) => {
-        loader.load(STAFF_MODEL_URL, resolve, undefined, reject);
+        loader.load(url, resolve, undefined, reject);
       });
 
       if (gltf?.scene) {
-        this.cachedModel = gltf.scene;
-        this.optimizeModel(this.cachedModel);
-        console.log('StaffModelCache: Staff model loaded and cached successfully');
-        return this.cachedModel;
+        this.optimizeStaffModel(gltf.scene);
+        this.cachedModels.set(tier, gltf.scene);
+        console.log(`StaffModelCache: Successfully cached ${tier} staff from GitHub`);
+        return gltf.scene;
       } else {
         throw new Error('No scene found in GLB file');
       }
     } catch (error) {
-      console.error('StaffModelCache: Failed to load staff model:', error);
+      console.error(`StaffModelCache: Failed to load ${tier} staff from GitHub:`, error);
       // Create fallback staff
-      this.cachedModel = this.createFallbackStaff();
-      return this.cachedModel;
-    } finally {
-      this.isLoading = false;
+      const fallback = this.createFallbackStaff(tier);
+      this.cachedModels.set(tier, fallback);
+      return fallback;
     }
   }
 
-  private optimizeModel(model: THREE.Object3D): void {
+  private optimizeStaffModel(model: THREE.Object3D): void {
     model.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
@@ -99,22 +102,32 @@ class StaffModelCache {
     });
   }
 
-  private createFallbackStaff(): THREE.Object3D {
-    console.log('StaffModelCache: Creating fallback staff geometry');
+  private createFallbackStaff(tier: keyof typeof STAFF_MODELS): THREE.Object3D {
+    console.log(`StaffModelCache: Creating fallback ${tier} staff geometry`);
     const group = new THREE.Group();
+    
+    // Different fallback designs based on tier
+    const colors = {
+      tier1: { handle: '#8B4513', orb: '#4B0082' },
+      tier2: { handle: '#654321', orb: '#8A2BE2' },
+      tier3: { handle: '#2F4F4F', orb: '#00CED1' }
+    };
+    
+    const tierColors = colors[tier];
     
     // Staff handle
     const handleGeometry = new THREE.CylinderGeometry(0.02, 0.025, 1.5, 8);
-    const handleMaterial = new THREE.MeshLambertMaterial({ color: '#8B4513' });
+    const handleMaterial = new THREE.MeshLambertMaterial({ color: tierColors.handle });
     const handle = new THREE.Mesh(handleGeometry, handleMaterial);
     handle.position.y = 0.75;
     group.add(handle);
     
-    // Staff crystal/orb
-    const orbGeometry = new THREE.SphereGeometry(0.08, 12, 8);
+    // Staff crystal/orb - different sizes for different tiers
+    const orbSize = tier === 'tier1' ? 0.08 : tier === 'tier2' ? 0.1 : 0.12;
+    const orbGeometry = new THREE.SphereGeometry(orbSize, 12, 8);
     const orbMaterial = new THREE.MeshLambertMaterial({ 
-      color: '#4B0082', 
-      emissive: '#4B0082', 
+      color: tierColors.orb, 
+      emissive: tierColors.orb, 
       emissiveIntensity: 0.3 
     });
     const orb = new THREE.Mesh(orbGeometry, orbMaterial);
@@ -124,15 +137,23 @@ class StaffModelCache {
     return group;
   }
 
-  getCachedModel(): THREE.Object3D | null {
-    return this.cachedModel ? this.cachedModel.clone() : null;
+  getCachedModel(tier: keyof typeof STAFF_MODELS): THREE.Object3D | null {
+    return this.cachedModels.get(tier)?.clone() || null;
   }
 
   clearCache(): void {
-    this.cachedModel = null;
-    this.loadPromise = null;
-    this.isLoading = false;
+    this.cachedModels.clear();
+    this.loadingPromises.clear();
     console.log('StaffModelCache: Cache cleared');
+  }
+
+  async preloadAllStaffs(): Promise<void> {
+    console.log('StaffModelCache: Preloading all staff models from GitHub...');
+    const loadPromises = Object.keys(STAFF_MODELS).map(tier => 
+      this.loadModel(tier as keyof typeof STAFF_MODELS)
+    );
+    await Promise.allSettled(loadPromises);
+    console.log('StaffModelCache: All staff models preloaded');
   }
 }
 
@@ -145,18 +166,25 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   const [staffModel, setStaffModel] = React.useState<THREE.Object3D | null>(null);
   const staffCache = StaffModelCache.getInstance();
 
-  // Load staff model on mount
+  // Determine staff tier based on upgrade level
+  const staffTier = useMemo(() => {
+    if (upgradeLevel >= 2) return 'tier3';
+    if (upgradeLevel >= 1) return 'tier2';
+    return 'tier1';
+  }, [upgradeLevel]);
+
+  // Load staff model based on tier
   useEffect(() => {
     if (visible) {
-      staffCache.loadModel().then(model => {
+      staffCache.loadModel(staffTier).then(model => {
         setStaffModel(model);
       }).catch(error => {
         console.error('MagicStaffWeaponSystem: Failed to load staff model:', error);
         // Use fallback
-        setStaffModel(staffCache.getCachedModel());
+        setStaffModel(staffCache.getCachedModel(staffTier));
       });
     }
-  }, [visible, staffCache]);
+  }, [visible, staffTier, staffCache]);
 
   // First-person weapon positioning with exact specifications
   useFrame(() => {
@@ -171,19 +199,19 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
       // Exact positioning as specified:
-      // X: 0.55 (right side), Y: -0.25 (down), Z: 0.55 (forward)
+      // X: 0.45 (right side), Y: -0.3 (down), Z: 0.6 (forward)
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.55))    // X = 0.55
-        .add(cameraUp.clone().multiplyScalar(-0.25))       // Y = -0.25
-        .add(cameraForward.clone().multiplyScalar(0.55));  // Z = 0.55
+        .add(cameraRight.clone().multiplyScalar(0.45))    // X = 0.45
+        .add(cameraUp.clone().multiplyScalar(-0.3))        // Y = -0.3
+        .add(cameraForward.clone().multiplyScalar(0.6));   // Z = 0.6
       
       weaponGroupRef.current.position.copy(staffPosition);
       
       // Exact rotation as specified:
-      // Y: -30°, Z: 15°
+      // Y: -20°, Z: 30°
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-30 * Math.PI / 180); // Y = -30°
-      weaponGroupRef.current.rotateZ(15 * Math.PI / 180);  // Z = 15°
+      weaponGroupRef.current.rotateY(-20 * Math.PI / 180); // Y = -20°
+      weaponGroupRef.current.rotateZ(30 * Math.PI / 180);  // Z = 30°
     }
   });
 
@@ -192,20 +220,23 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return null;
   }
 
+  // Scale to fit screen without clipping
+  const staffScale = staffTier === 'tier1' ? 0.4 : staffTier === 'tier2' ? 0.45 : 0.5;
+
   return (
     <group ref={weaponGroupRef}>
       <primitive 
         object={staffModel} 
-        scale={[0.55, 0.55, 0.55]} // Scale = 0.55 as specified
+        scale={[staffScale, staffScale, staffScale]}
       />
     </group>
   );
 };
 
-// Preload staff model for immediate availability
+// Preload all staff models for immediate availability
 const staffCache = StaffModelCache.getInstance();
-staffCache.loadModel().catch(error => {
-  console.warn('MagicStaffWeaponSystem: Failed to preload staff model:', error);
+staffCache.preloadAllStaffs().catch(error => {
+  console.warn('MagicStaffWeaponSystem: Failed to preload staff models from GitHub:', error);
 });
 
 // Clear staff model cache
