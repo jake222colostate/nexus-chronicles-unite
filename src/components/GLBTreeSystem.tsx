@@ -142,7 +142,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
         let validPosition = false;
-        let x, z, y, scale, rotation, modelUrl;
+        let x: number, z: number, y: number, scale: number, rotation: number, modelUrl: string;
         
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 67;
@@ -157,8 +157,8 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
             continue;
           }
           
-          // Calculate terrain height for proper placement
-          y = getTerrainHeight(x, z);
+          // Calculate terrain height for proper placement - ensure it's a number
+          y = Number(getTerrainHeight(x, z));
           
           // Randomly select a tree model
           const modelKeys = Object.keys(TREE_MODELS) as Array<keyof typeof TREE_MODELS>;
@@ -187,7 +187,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
           attempts++;
         }
         
-        if (validPosition) {
+        if (validPosition && x !== undefined && z !== undefined && y !== undefined && scale !== undefined && rotation !== undefined && modelUrl !== undefined) {
           positions.push({ x, z, y, scale, rotation, modelUrl, chunkId: chunk.id });
           console.log(`Tree ${i} placed at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
         } else {
