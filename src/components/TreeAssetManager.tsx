@@ -5,8 +5,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // Tree model URLs from the local assets folder
 export const TREE_MODELS = {
-  realistic: '/assets/realistic_tree.glb',
-  pine: '/assets/pine_tree_218poly.glb'
+  realistic: new URL('../../public/assets/realistic_tree.glb', import.meta.url).href,
+  pine: new URL('../../public/assets/pine_tree_218poly.glb', import.meta.url).href
 } as const;
 
 // Distribution ratios as specified
