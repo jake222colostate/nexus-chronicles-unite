@@ -42,7 +42,7 @@ const FantasyRoadTile: React.FC<{
       return <FallbackRoadTile position={position} />;
     }
 
-    console.log('Fantasy road tile loaded successfully - Position:', position);
+
     
     // Clone the scene to avoid sharing geometry between instances
     const clonedScene = scene.clone();
@@ -81,17 +81,17 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyRoadSystem render - Realm:', realm, 'Chunks:', chunks.length);
+
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
-    console.log('FantasyRoadSystem: Not fantasy realm, skipping');
+
     return null;
   }
 
   // Generate road tile positions for each chunk
   const roadTilePositions = useMemo(() => {
-    console.log('Generating road tile positions for', chunks.length, 'chunks');
+
     const positions = [];
     const tileSize = 6; // Each tile is 6 units long
 
@@ -113,7 +113,7 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = ({
       }
     });
     
-    console.log(`Total fantasy road tiles generated: ${positions.length}`);
+
     return positions;
   }, [chunks, chunkSize]);
 
@@ -133,4 +133,3 @@ export const FantasyRoadSystem: React.FC<FantasyRoadSystemProps> = ({
 };
 
 // Don't preload the broken model
-console.log('FantasyRoadSystem: Using fallback geometry for road tiles');

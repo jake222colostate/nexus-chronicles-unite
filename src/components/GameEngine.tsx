@@ -96,7 +96,6 @@ const GameEngine: React.FC = () => {
   // Memoize all handlers to prevent re-renders
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
     // Removed state update to prevent infinite loops - position tracking handled elsewhere
-    console.log('Player position updated:', position);
   }, []);
 
   const handleEnemyCountChange = useCallback((count: number) => {
