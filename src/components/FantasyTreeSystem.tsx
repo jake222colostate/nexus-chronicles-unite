@@ -1,5 +1,7 @@
+
 import { useGLTF, Instances, Instance } from "@react-three/drei";
 import { useMemo } from "react";
+import * as THREE from 'three';
 
 interface FantasyTreeSystemProps {
   chunkCenterZ: number;
@@ -9,10 +11,26 @@ export default function FantasyTreeSystem({ chunkCenterZ }: FantasyTreeSystemPro
   const realistic = useGLTF("/assets/realistic_tree.glb");
   const pine = useGLTF("/assets/pine_tree_218poly.glb");
 
-  const realGeom = realistic.scene.children[0].geometry;
-  const realMat = realistic.scene.children[0].material;
-  const pineGeom = pine.scene.children[0].geometry;
-  const pineMat = pine.scene.children[0].material;
+  // Find the mesh objects and extract geometry/material with proper type casting
+  const realGeom = useMemo(() => {
+    const mesh = realistic.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.geometry;
+  }, [realistic.scene]);
+
+  const realMat = useMemo(() => {
+    const mesh = realistic.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.material;
+  }, [realistic.scene]);
+
+  const pineGeom = useMemo(() => {
+    const mesh = pine.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.geometry;
+  }, [pine.scene]);
+
+  const pineMat = useMemo(() => {
+    const mesh = pine.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.material;
+  }, [pine.scene]);
 
   const trees = useMemo(() => {
     const output: { x: number; z: number; type: "real" | "pine" }[] = [];
@@ -24,6 +42,11 @@ export default function FantasyTreeSystem({ chunkCenterZ }: FantasyTreeSystemPro
     }
     return output;
   }, [chunkCenterZ]);
+
+  // Return null if geometry/material not available yet
+  if (!realGeom || !realMat || !pineGeom || !pineMat) {
+    return null;
+  }
 
   return (
     <>
