@@ -81,7 +81,7 @@ export const Enemy: React.FC<EnemyProps> = ({
         <boxGeometry args={[1, 0.1, 0.1]} />
         <meshBasicMaterial color="red" />
       </mesh>
-      <mesh position={[-(1 - healthRatio) / 2, 1.5, 0.05]}>
+      <mesh position={[(1 - healthRatio) / 2, 1.5, 0.05]}>
         <boxGeometry args={[healthRatio, 0.1, 0.05]} />
         <meshBasicMaterial color="lime" />
       </mesh>
