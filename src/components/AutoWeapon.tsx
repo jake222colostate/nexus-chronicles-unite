@@ -129,7 +129,14 @@ export const AutoWeapon: React.FC<AutoWeaponProps> = ({
               zIndex: Math.floor(50 - projectile.z)
             }}
           >
-            <div className="text-xl text-yellow-400 drop-shadow-lg animate-pulse">🏹</div>
+            <div
+              className="w-4 h-4 rounded-full shadow-md"
+              style={{
+                background:
+                  'radial-gradient(circle at 30% 30%, #fff89e, #facc15 60%, #b45309)',
+                border: '1px solid rgba(250, 204, 21, 0.8)'
+              }}
+            />
           </div>
         );
       })}
