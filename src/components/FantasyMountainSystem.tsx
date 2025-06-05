@@ -42,7 +42,7 @@ interface MountainProps {
 }
 
 function Mountain({ url, position, scale, side }: MountainProps) {
-  console.log('Mountain: Loading from', url, 'at position:', position);
+
   
   try {
     const { scene } = useGLTF(url);
@@ -52,7 +52,7 @@ function Mountain({ url, position, scale, side }: MountainProps) {
       return <FallbackMountain position={position} scale={scale} side={side} />;
     }
     
-    console.log('Mountain: Successfully loaded GLB, rendering at position:', position, 'scale:', scale);
+
     const clonedScene = scene.clone();
     
     // Ensure all meshes in the scene have proper materials and shadows
@@ -84,34 +84,29 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyMountainSystem: Component mounted/rendered with:', {
-    realm,
-    chunksLength: chunks.length,
-    chunkSize
-  });
+
 
   // Early return check with logging
   if (realm !== 'fantasy') {
-    console.log('FantasyMountainSystem: Not fantasy realm, realm is:', realm);
     return null;
   }
 
-  console.log('FantasyMountainSystem: Realm is fantasy, proceeding with mountain generation');
+
 
   const mountainInstances = useMemo(() => {
-    console.log('FantasyMountainSystem useMemo - Realm:', realm, 'Chunks:', chunks.length);
+
     
     const instances: React.ReactNode[] = [];
     
     chunks.forEach((chunk, chunkIndex) => {
-      console.log(`FantasyMountainSystem: Processing chunk ${chunkIndex}: worldZ=${chunk.worldZ}`);
+
       
       // Create mountain instances tiled every 60 units along the Z-axis
       // Starting 30 units ahead for better coverage
       for (let zOffset = -30; zOffset < chunkSize + 20; zOffset += 60) {
         const finalZ = chunk.worldZ - zOffset;
         
-        console.log(`FantasyMountainSystem: Creating mountains for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
+
         
         // Left side mountains at x = -40, grounded at y = 0 (far from road)
         instances.push(
@@ -139,14 +134,14 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
       }
     });
     
-    console.log(`FantasyMountainSystem: Created ${instances.length} mountain instances`);
+
     return instances;
   }, [chunks, chunkSize, realm]);
 
-  console.log('FantasyMountainSystem: About to render', mountainInstances.length, 'mountain instances');
+
 
   return <>{mountainInstances}</>;
 };
 
 // Don't preload the broken models
-console.log('FantasyMountainSystem: Using fallback geometry for mountains');
+//

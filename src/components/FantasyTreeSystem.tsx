@@ -61,7 +61,7 @@ const FantasyTree: React.FC<{
       return <FallbackTree position={position} scale={scale} rotation={rotation} />;
     }
 
-    console.log('Fantasy tree loaded successfully - Position:', position);
+
     
     // Clone the scene to avoid sharing geometry between instances
     const clonedScene = scene.clone();
@@ -107,17 +107,17 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyTreeSystem render - Realm:', realm, 'Chunks:', chunks.length);
+
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
-    console.log('FantasyTreeSystem: Not fantasy realm, skipping');
+
     return null;
   }
 
   // Generate tree positions for each chunk
   const treePositions = useMemo(() => {
-    console.log('Generating tree positions for', chunks.length, 'chunks');
+
     const positions = [];
     const minDistance = 6; // Minimum distance between trees
     const maxAttempts = 25;
@@ -127,7 +127,7 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
       
       // Generate 3-5 trees per chunk in clusters within X-range ±30
       const treeCount = 3 + Math.floor(seededRandom(seed) * 3);
-      console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
+
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -162,21 +162,21 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
         
         if (validPosition) {
           positions.push({ x, z, scale, rotation, chunkId: chunk.id });
-          console.log(`Tree ${i} placed at (${x.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
+          
         } else {
           console.warn(`Failed to place tree ${i} in chunk ${chunk.id} after ${maxAttempts} attempts`);
         }
       }
     });
     
-    console.log(`Total fantasy trees generated: ${positions.length}`);
+
     return positions;
   }, [chunks, chunkSize]);
 
   return (
     <group>
       {treePositions.map((pos, index) => {
-        console.log(`Rendering fantasy tree ${index} at position:`, [pos.x, 0, pos.z]);
+
         return (
           <Suspense key={`fantasy-tree-${pos.chunkId}-${index}`} fallback={null}>
             <FantasyTree
@@ -192,4 +192,3 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
 };
 
 // Don't preload the broken model
-console.log('FantasyTreeSystem: Using fallback geometry for trees');
