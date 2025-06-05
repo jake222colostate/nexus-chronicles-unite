@@ -2,9 +2,11 @@
 import React, { useMemo } from 'react';
 import { useGLTF, Instances, Instance } from '@react-three/drei';
 import { Vector3 } from 'three';
+import * as THREE from 'three';
 
+// Use correct paths to existing GLB files
 const REALISTIC_TREE_PATH = '/assets/realistic_tree.glb';
-const PINE_TREE_PATH = '/assets/pine_tree.glb';
+const PINE_TREE_PATH = '/assets/pine_tree_218poly.glb'; // Use the existing pine tree file
 
 // Preload the GLB files for instant loading
 useGLTF.preload(REALISTIC_TREE_PATH);
@@ -18,11 +20,26 @@ export const FantasyRealisticTreeSystem: React.FC<FantasyRealisticTreeSystemProp
   const { scene: realTree } = useGLTF(REALISTIC_TREE_PATH);
   const { scene: pineTree } = useGLTF(PINE_TREE_PATH);
 
-  // Extract geometry and material from the loaded models
-  const realGeom = realTree.children[0]?.geometry;
-  const realMat = realTree.children[0]?.material;
-  const pineGeom = pineTree.children[0]?.geometry;
-  const pineMat = pineTree.children[0]?.material;
+  // Extract geometry and material from the loaded models with proper type casting
+  const realGeom = useMemo(() => {
+    const mesh = realTree.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.geometry;
+  }, [realTree]);
+
+  const realMat = useMemo(() => {
+    const mesh = realTree.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.material;
+  }, [realTree]);
+
+  const pineGeom = useMemo(() => {
+    const mesh = pineTree.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.geometry;
+  }, [pineTree]);
+
+  const pineMat = useMemo(() => {
+    const mesh = pineTree.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.material;
+  }, [pineTree]);
 
   const COUNT = 20;
   const OFFSET = 6;
@@ -59,6 +76,7 @@ export const FantasyRealisticTreeSystem: React.FC<FantasyRealisticTreeSystemProp
 
   // Return null if models haven't loaded yet
   if (!realGeom || !realMat || !pineGeom || !pineMat) {
+    console.log('FantasyRealisticTreeSystem: Models not loaded yet, returning null');
     return null;
   }
 
