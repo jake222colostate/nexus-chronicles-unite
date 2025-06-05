@@ -5,6 +5,7 @@ import { ChunkData } from './ChunkSystem';
 import { CleanPathSystem } from './CleanPathSystem';
 import { BoundaryMountainSystem } from './BoundaryMountainSystem';
 import { OptimizedFantasyMagicalTreeSystem } from './OptimizedFantasyMagicalTreeSystem';
+import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
 
 interface FantasyScreenshotEnvironmentProps {
   chunks: ChunkData[];
@@ -35,6 +36,9 @@ export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironment
 
   return (
     <Suspense fallback={null}>
+      {/* Add proper lighting first */}
+      <ImprovedFantasyLighting />
+      
       {/* Essential path system - always render */}
       <CleanPathSystem 
         chunks={nearChunks} 

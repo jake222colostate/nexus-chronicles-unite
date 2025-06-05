@@ -31,18 +31,16 @@ const SimpleMagicalTree: React.FC<{
   
   // Skip animation for distant trees
   useFrame((state) => {
-    if (!isNear) return;
+    if (!isNear || !treeRef.current) return;
     
-    if (treeRef.current) {
-      const time = state.clock.elapsedTime * 0.2 + seed;
-      treeRef.current.rotation.x = Math.sin(time * 0.3) * 0.01;
-      treeRef.current.rotation.z = Math.cos(time * 0.2) * 0.01;
-    }
+    const time = state.clock.elapsedTime * 0.2 + seed;
+    treeRef.current.rotation.x = Math.sin(time * 0.3) * 0.01;
+    treeRef.current.rotation.z = Math.cos(time * 0.2) * 0.01;
     
     if (glowRef.current && isMid) {
-      const time = state.clock.elapsedTime * 0.3 + seed;
+      const glowTime = state.clock.elapsedTime * 0.3 + seed;
       const material = glowRef.current.material as THREE.MeshBasicMaterial;
-      material.opacity = 0.1 + Math.sin(time) * 0.05;
+      material.opacity = 0.1 + Math.sin(glowTime) * 0.05;
     }
   });
 
@@ -110,7 +108,10 @@ export const OptimizedFantasyMagicalTreeSystem: React.FC<OptimizedFantasyMagical
   const treePositions = useMemo(() => {
     const positions = [];
     
-    chunks.forEach(chunk => {
+    // Stable chunk processing to prevent re-render loops
+    const stableChunks = chunks.slice(0, 8); // Fixed number to prevent changes
+    
+    stableChunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
       // Calculate distance to chunk
@@ -161,7 +162,7 @@ export const OptimizedFantasyMagicalTreeSystem: React.FC<OptimizedFantasyMagical
     return positions
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 25); // Hard limit to 25 trees total
-  }, [chunks, chunkSize, playerPosition]);
+  }, [chunks.length, chunkSize, Math.floor(playerPosition.x / 10), Math.floor(playerPosition.z / 10)]); // Stable dependencies
 
   return (
     <group>
