@@ -74,7 +74,6 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
 
   const handle3DUpgradePurchase = useCallback(() => {
     // Handle 3D upgrade purchase logic here
-    console.log('Purchasing 3D upgrade:', selected3DUpgrade);
     setSelected3DUpgrade(null);
   }, [selected3DUpgrade]);
 

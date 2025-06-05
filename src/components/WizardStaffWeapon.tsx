@@ -72,7 +72,7 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
 
   return (
     <group ref={staffGroup}>
-      <WizardStaff />
+      <WizardStaff visible />
       {projectiles.map(p => (
         <mesh
           key={p.id}
