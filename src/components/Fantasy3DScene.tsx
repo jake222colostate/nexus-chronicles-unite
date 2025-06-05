@@ -18,7 +18,8 @@ interface Fantasy3DSceneProps {
   chunkSize: number;
   renderDistance: number;
   onEnemyCountChange?: (count: number) => void;
-  onEnemyKilled?: () => void;
+  onEnemyKilled?: (reward: number) => void;
+  weaponStats: { damage: number; fireRate: number; range: number };
 }
 
 export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
@@ -29,6 +30,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   renderDistance,
   onEnemyCountChange,
   onEnemyKilled,
+  weaponStats,
   maxUnlockedUpgrade
 }) => {
   const enemySystemRef = useRef<EnemySystemHandle>(null);
@@ -46,9 +48,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   );
 
   const handleEnemyHit = useCallback(
-    (id: string) => {
-      enemySystemRef.current?.damageEnemy(id, 1);
-      if (onEnemyKilled) onEnemyKilled();
+    (id: string, damage: number) => {
+      const result = enemySystemRef.current?.damageEnemy(id, damage);
+      if (result?.killed && onEnemyKilled) onEnemyKilled(result.reward);
     },
     [onEnemyKilled]
   );
@@ -90,7 +92,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       />
 
       {/* Wizard Staff Weapon */}
-      <WizardStaffWeapon enemies={enemies} onEnemyHit={handleEnemyHit} />
+      <WizardStaffWeapon
+        enemies={enemies}
+        weaponStats={weaponStats}
+        onEnemyHit={handleEnemyHit}
+      />
 
       {/* Magic Staff Weapon System - New upgraded weapon system */}
       <MagicStaffWeaponSystem

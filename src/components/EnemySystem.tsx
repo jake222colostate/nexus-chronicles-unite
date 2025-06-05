@@ -23,10 +23,13 @@ export interface EnemyData {
   position: [number, number, number];
   spawnTime: number;
   health: number;
+  maxHealth: number;
+  reward: number;
+  type: 'demon' | 'orc';
 }
 
 export interface EnemySystemHandle {
-  damageEnemy: (enemyId: string, damage: number) => void;
+  damageEnemy: (enemyId: string, damage: number) => { killed: boolean; reward: number } | null;
 }
 export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   (
@@ -46,31 +49,34 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   // Spawn new enemy ahead of player
   const spawnEnemy = useCallback(() => {
     const now = Date.now();
-    
+
     if (now - lastSpawnTime.current < spawnInterval) {
       return;
     }
 
     setEnemies(prev => {
-      
       if (prev.length >= maxEnemies) {
         return prev;
       }
 
-      // Spawn enemy 100m ahead of player's Z position
       const spawnZ = playerPosition.z - spawnDistance;
-      
-      // Random X position near the path
-      const spawnX = (Math.random() - 0.5) * 20; // ±10 units from center
-      
+      const spawnX = (Math.random() - 0.5) * 20;
+
+      const distance = Math.abs(playerPosition.z);
+      const difficulty = Math.max(1, Math.floor(distance / 200) + 1);
+      const reward = 5 * difficulty;
+      const type: 'demon' | 'orc' = Math.random() < 0.5 ? 'demon' : 'orc';
+
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
-        position: [spawnX, 1, spawnZ], // Y=1 to place on ground
+        position: [spawnX, 1, spawnZ],
         spawnTime: now,
-        health: 1
+        health: difficulty,
+        maxHealth: difficulty,
+        reward,
+        type
       };
 
-      
       lastSpawnTime.current = now;
       return [...prev, newEnemy];
     });
@@ -82,15 +88,26 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   }, []);
 
   const damageEnemy = useCallback((enemyId: string, damage: number) => {
+    let result: { killed: boolean; reward: number } | null = null;
     setEnemies(prev => {
-      return prev
-        .map(enemy =>
-          enemy.id === enemyId
-            ? { ...enemy, health: enemy.health - damage }
-            : enemy
-        )
-        .filter(enemy => enemy.health > 0);
+      const updated: EnemyData[] = [];
+      for (const enemy of prev) {
+        if (enemy.id === enemyId) {
+          const newHealth = enemy.health - damage;
+          if (newHealth <= 0) {
+            result = { killed: true, reward: enemy.reward };
+            continue;
+          } else {
+            updated.push({ ...enemy, health: newHealth });
+            result = { killed: false, reward: 0 };
+          }
+        } else {
+          updated.push(enemy);
+        }
+      }
+      return updated;
     });
+    return result;
   }, []);
 
   useImperativeHandle(ref, () => ({ damageEnemy }));
@@ -130,7 +147,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
       {enemies.map((enemy) => (
         <Enemy
           key={enemy.id}
-          position={enemy.position}
+          data={enemy}
           playerPosition={playerPosition}
           onReachPlayer={() => removeEnemy(enemy.id)}
         />

@@ -1,21 +1,21 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3 } from 'three';
 
 interface EnemyProps {
-  position: [number, number, number];
+  data: import('./EnemySystem').EnemyData;
   playerPosition: Vector3;
   onReachPlayer?: () => void;
 }
 
-export const Enemy: React.FC<EnemyProps> = ({ 
-  position, 
-  playerPosition, 
-  onReachPlayer 
+export const Enemy: React.FC<EnemyProps> = ({
+  data,
+  playerPosition,
+  onReachPlayer
 }) => {
   const groupRef = useRef<Group>(null);
-  const currentPosition = useRef(new Vector3(...position));
+  const currentPosition = useRef(new Vector3(...data.position));
   const speed = 2; // units per second
 
   useFrame((_, delta) => {
@@ -40,28 +40,50 @@ export const Enemy: React.FC<EnemyProps> = ({
     }
   });
 
+  const healthRatio = data.health / data.maxHealth;
+
   return (
-    <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Body */}
-      <mesh position={[0, -1, 0]}>
-        <cylinderGeometry args={[0.3, 0.6, 1.5, 8]} />
-        <meshStandardMaterial color="#552222" />
-      </mesh>
+    <group ref={groupRef} position={data.position} castShadow receiveShadow>
+      {data.type === 'demon' ? (
+        <>
+          <mesh position={[0, -1, 0]}>
+            <cylinderGeometry args={[0.3, 0.6, 1.5, 8]} />
+            <meshStandardMaterial color="#552222" />
+          </mesh>
+          <mesh position={[0, 0.5, 0]}>
+            <sphereGeometry args={[0.5, 16, 16]} />
+            <meshStandardMaterial color="#dd3344" />
+          </mesh>
+          <mesh position={[0.35, 0.9, 0]} rotation={[0, 0, Math.PI / 8]}>
+            <coneGeometry args={[0.2, 0.5, 8]} />
+            <meshStandardMaterial color="#ffd700" />
+          </mesh>
+          <mesh position={[-0.35, 0.9, 0]} rotation={[0, 0, -Math.PI / 8]}>
+            <coneGeometry args={[0.2, 0.5, 8]} />
+            <meshStandardMaterial color="#ffd700" />
+          </mesh>
+        </>
+      ) : (
+        <>
+          <mesh position={[0, -1, 0]}>
+            <boxGeometry args={[0.8, 1.6, 0.6]} />
+            <meshStandardMaterial color="green" />
+          </mesh>
+          <mesh position={[0, 0.6, 0]}>
+            <sphereGeometry args={[0.4, 12, 12]} />
+            <meshStandardMaterial color="#88aa66" />
+          </mesh>
+        </>
+      )}
 
-      {/* Head */}
-      <mesh position={[0, 0.5, 0]}>
-        <sphereGeometry args={[0.5, 16, 16]} />
-        <meshStandardMaterial color="#dd3344" />
+      {/* Health bar */}
+      <mesh position={[0, 1.5, 0]}>
+        <boxGeometry args={[1, 0.1, 0.1]} />
+        <meshBasicMaterial color="red" />
       </mesh>
-
-      {/* Horns */}
-      <mesh position={[0.35, 0.9, 0]} rotation={[0, 0, Math.PI / 8]}>
-        <coneGeometry args={[0.2, 0.5, 8]} />
-        <meshStandardMaterial color="#ffd700" />
-      </mesh>
-      <mesh position={[-0.35, 0.9, 0]} rotation={[0, 0, -Math.PI / 8]}>
-        <coneGeometry args={[0.2, 0.5, 8]} />
-        <meshStandardMaterial color="#ffd700" />
+      <mesh position={[-(1 - healthRatio) / 2, 1.5, 0.05]}>
+        <boxGeometry args={[healthRatio, 0.1, 0.05]} />
+        <meshBasicMaterial color="lime" />
       </mesh>
     </group>
   );

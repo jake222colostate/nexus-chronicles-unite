@@ -80,6 +80,7 @@ const GameEngine: React.FC = () => {
   const {
     combatUpgrades,
     weaponUpgrades,
+    weaponStats,
     buyBuilding,
     performConvergence,
     purchaseUpgrade,
@@ -101,6 +102,14 @@ const GameEngine: React.FC = () => {
   const handleEnemyCountChange = useCallback((count: number) => {
     setEnemyCount(count);
   }, []);
+
+  const handleEnemyKilled = useCallback((reward: number) => {
+    setGameState(prev => ({
+      ...prev,
+      mana: prev.mana + reward,
+      enemiesKilled: prev.enemiesKilled + 1
+    }));
+  }, [setGameState]);
 
   const handleJourneyUpdate = useCallback((distance: number) => {
     const currentDistance = currentRealm === 'fantasy' ? stableGameState.fantasyJourneyDistance : stableGameState.scifiJourneyDistance;
@@ -226,6 +235,8 @@ const GameEngine: React.FC = () => {
           onTapEffectComplete={handleTapEffectComplete}
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
           onEnemyCountChange={handleEnemyCountChange}
+          onEnemyKilled={handleEnemyKilled}
+          weaponStats={weaponStats}
         />
 
         {/* Realm Transition Effect */}
