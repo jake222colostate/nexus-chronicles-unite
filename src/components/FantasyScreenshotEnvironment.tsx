@@ -4,7 +4,7 @@ import { Vector3 } from 'three';
 import { ChunkData } from './ChunkSystem';
 import { CleanPathSystem } from './CleanPathSystem';
 import { BoundaryMountainSystem } from './BoundaryMountainSystem';
-import { OptimizedFantasyMagicalTreeSystem } from './OptimizedFantasyMagicalTreeSystem';
+import { FantasyRealisticTreeSystem } from './FantasyRealisticTreeSystem';
 import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
 
 interface FantasyScreenshotEnvironmentProps {
@@ -34,6 +34,9 @@ export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironment
     return distance <= 120; // Further reduced render distance
   }).slice(0, 12); // Hard limit to 12 chunks maximum
 
+  // Calculate chunk center for tree system
+  const chunkCenter = new Vector3(0, 0, playerPosition.z);
+
   return (
     <Suspense fallback={null}>
       {/* Add proper lighting first */}
@@ -53,13 +56,8 @@ export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironment
         realm={realm} 
       />
       
-      {/* Optimized magical trees with LOD */}
-      <OptimizedFantasyMagicalTreeSystem 
-        chunks={nearChunks.slice(0, 8)} // Limit tree chunks
-        chunkSize={chunkSize} 
-        realm={realm} 
-        playerPosition={playerPosition}
-      />
+      {/* New realistic tree system with GLB models */}
+      <FantasyRealisticTreeSystem chunkCenter={chunkCenter} />
     </Suspense>
   );
 };
