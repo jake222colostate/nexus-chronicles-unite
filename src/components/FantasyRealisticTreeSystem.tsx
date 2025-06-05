@@ -4,9 +4,9 @@ import { useGLTF, Instances, Instance } from '@react-three/drei';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
 
-// Use correct paths to existing GLB files
-const REALISTIC_TREE_PATH = '/assets/realistic_tree.glb';
-const PINE_TREE_PATH = '/assets/pine_tree_218poly.glb';
+// Use correct paths to existing GLB files via URL so Vite bundles them
+const REALISTIC_TREE_PATH = new URL('../../public/assets/realistic_tree.glb', import.meta.url).href;
+const PINE_TREE_PATH = new URL('../../public/assets/pine_tree_218poly.glb', import.meta.url).href;
 
 // Preload the GLB files for instant loading
 useGLTF.preload(REALISTIC_TREE_PATH);

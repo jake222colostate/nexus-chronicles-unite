@@ -8,8 +8,8 @@ interface FantasyTreeSystemProps {
 }
 
 export default function FantasyTreeSystem({ chunkCenterZ }: FantasyTreeSystemProps) {
-  const realistic = useGLTF("/assets/realistic_tree.glb");
-  const pine = useGLTF("/assets/pine_tree_218poly.glb");
+  const realistic = useGLTF(new URL('../../public/assets/realistic_tree.glb', import.meta.url).href);
+  const pine = useGLTF(new URL('../../public/assets/pine_tree_218poly.glb', import.meta.url).href);
 
   // Find the mesh objects and extract geometry/material with proper type casting
   const realGeom = useMemo(() => {
@@ -76,5 +76,5 @@ export default function FantasyTreeSystem({ chunkCenterZ }: FantasyTreeSystemPro
   );
 }
 
-useGLTF.preload("/assets/realistic_tree.glb");
-useGLTF.preload("/assets/pine_tree_218poly.glb");
+useGLTF.preload(new URL('../../public/assets/realistic_tree.glb', import.meta.url).href);
+useGLTF.preload(new URL('../../public/assets/pine_tree_218poly.glb', import.meta.url).href);
