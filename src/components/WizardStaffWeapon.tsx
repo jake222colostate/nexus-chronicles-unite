@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
 import { WizardStaff } from './WizardStaff';
@@ -8,42 +8,54 @@ interface Projectile {
   id: string;
   position: Vector3;
   direction: Vector3;
+  damage: number;
 }
 
 interface WizardStaffWeaponProps {
   enemies: EnemyData[];
-  onEnemyHit: (enemyId: string) => void;
+  weaponStats: { damage: number; fireRate: number; range: number };
+  onEnemyHit: (enemyId: string, damage: number) => void;
 }
 
 export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
   enemies,
+  weaponStats,
   onEnemyHit
 }) => {
   const { camera } = useThree();
   const staffGroup = useRef<Group>(null);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
-
-  const shoot = useCallback(() => {
-    const direction = new Vector3();
-    camera.getWorldDirection(direction);
-    const origin = camera.position.clone().add(direction.clone().multiplyScalar(1));
+  const lastShot = useRef(0);
+  const shoot = useCallback((target: EnemyData) => {
+    const origin = camera.position.clone();
+    const targetPos = new Vector3(...target.position);
+    const direction = targetPos.sub(origin).normalize();
     setProjectiles(prev => [
       ...prev,
-      { id: `proj_${Date.now()}_${Math.random()}`, position: origin, direction }
-    ]);
-  }, [camera]);
-
-  useEffect(() => {
-    const handleMouseDown = (e: MouseEvent) => {
-      if (e.button === 0) {
-        shoot();
+      {
+        id: `proj_${Date.now()}_${Math.random()}`,
+        position: origin.clone(),
+        direction,
+        damage: weaponStats.damage
       }
-    };
-    window.addEventListener('mousedown', handleMouseDown);
-    return () => window.removeEventListener('mousedown', handleMouseDown);
-  }, [shoot]);
+    ]);
+  }, [camera, weaponStats.damage]);
 
   useFrame((_, delta) => {
+    const now = performance.now();
+    if (now - lastShot.current > weaponStats.fireRate) {
+      const target = enemies
+        .filter(e => new Vector3(...e.position).distanceTo(camera.position) <= weaponStats.range)
+        .sort((a, b) =>
+          new Vector3(...a.position).distanceTo(camera.position) -
+          new Vector3(...b.position).distanceTo(camera.position)
+        )[0];
+      if (target) {
+        shoot(target);
+        lastShot.current = now;
+      }
+    }
+
     setProjectiles(prev => {
       const updated: Projectile[] = [];
       for (const p of prev) {
@@ -52,12 +64,12 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
         for (const enemy of enemies) {
           const ePos = new Vector3(...enemy.position);
           if (newPos.distanceTo(ePos) < 1) {
-            onEnemyHit(enemy.id);
+            onEnemyHit(enemy.id, p.damage);
             hit = true;
             break;
           }
         }
-        if (!hit && camera.position.distanceTo(newPos) < 200) {
+        if (!hit && camera.position.distanceTo(newPos) < weaponStats.range * 1.5) {
           updated.push({ ...p, position: newPos });
         }
       }
