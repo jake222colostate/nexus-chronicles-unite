@@ -1,10 +1,11 @@
+
 import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-const FANTASY_MOUNTAIN_LEFT_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_mountain_left_draco.glb';
-const FANTASY_MOUNTAIN_RIGHT_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_mountain_right_draco.glb';
+const FANTASY_MOUNTAIN_LEFT_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_mountain_left.glb';
+const FANTASY_MOUNTAIN_RIGHT_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_mountain_right.glb';
 
 // Fallback mountain component using basic geometry
 const FallbackMountain: React.FC<{ 
@@ -41,17 +42,17 @@ interface MountainProps {
 }
 
 function Mountain({ url, position, scale, side }: MountainProps) {
-  console.log('Mountain: Loading Draco-compressed from', url, 'at position:', position);
+  console.log('Mountain: Loading from', url, 'at position:', position);
   
   try {
     const { scene } = useGLTF(url);
     
     if (!scene) {
-      console.warn('Mountain: Draco-compressed scene is null for URL:', url, 'using fallback');
+      console.warn('Mountain: Scene is null for URL:', url, 'using fallback');
       return <FallbackMountain position={position} scale={scale} side={side} />;
     }
     
-    console.log('Mountain: Successfully loaded Draco-compressed GLB, rendering at position:', position, 'scale:', scale);
+    console.log('Mountain: Successfully loaded GLB, rendering at position:', position, 'scale:', scale);
     const clonedScene = scene.clone();
     
     // Ensure all meshes in the scene have proper materials and shadows
@@ -67,7 +68,7 @@ function Mountain({ url, position, scale, side }: MountainProps) {
     
     return <primitive object={clonedScene} position={position} scale={scale} />;
   } catch (error) {
-    console.error(`Mountain: Failed to load Draco-compressed mountain model: ${url}, using fallback`, error);
+    console.error(`Mountain: Failed to load mountain model: ${url}, using fallback`, error);
     return <FallbackMountain position={position} scale={scale} side={side} />;
   }
 }
@@ -147,7 +148,5 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   return <>{mountainInstances}</>;
 };
 
-// Preload the Draco-compressed models
-useGLTF.preload(FANTASY_MOUNTAIN_LEFT_URL);
-useGLTF.preload(FANTASY_MOUNTAIN_RIGHT_URL);
-console.log('FantasyMountainSystem: Preloading Draco-compressed mountain models');
+// Don't preload the broken models
+console.log('FantasyMountainSystem: Using fallback geometry for mountains');

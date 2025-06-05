@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -25,10 +26,10 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   let scene = null;
   if (shouldLoadModel) {
     try {
-      const gltf = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain_draco.glb');
+      const gltf = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
       scene = gltf.scene;
     } catch (error) {
-      console.warn('Failed to load Draco-compressed fantasy mountain model:', error);
+      console.warn('Failed to load fantasy mountain model:', error);
     }
   }
   
@@ -141,8 +142,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   );
 };
 
-// Only preload the Draco-compressed model for fantasy realm
+// Only preload the model for fantasy realm
 if (typeof window !== 'undefined') {
-  useGLTF.preload('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain_draco.glb');
-  console.log('GLBMountainSystem: Preloading Draco-compressed mountain model');
+  useGLTF.preload('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain.glb');
 }

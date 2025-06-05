@@ -14,7 +14,7 @@ export const TreeComponent: React.FC<TreeComponentProps> = ({
   rotation = [0, 0, 0],
   scale = [1, 1, 1]
 }) => {
-  const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/tree_draco.glb');
+  const { scene } = useGLTF('https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/tree.glb');
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
@@ -56,6 +56,5 @@ export const TreeComponent: React.FC<TreeComponentProps> = ({
   );
 };
 
-// Preload the Draco-compressed model
-useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/tree_draco.glb');
-console.log('TreeComponent: Preloading Draco-compressed tree model');
+// Preload the model
+useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/tree.glb');

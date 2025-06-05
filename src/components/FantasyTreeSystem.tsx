@@ -1,9 +1,10 @@
+
 import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-const FANTASY_TREE_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_tree_draco.glb';
+const FANTASY_TREE_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_tree.glb';
 
 // Simple seeded random number generator
 const seededRandom = (seed: number) => {
@@ -56,11 +57,11 @@ const FantasyTree: React.FC<{
     const { scene } = useGLTF(FANTASY_TREE_URL);
     
     if (!scene) {
-      console.warn('Draco-compressed fantasy tree scene not loaded, using fallback');
+      console.warn('Fantasy tree scene not loaded, using fallback');
       return <FallbackTree position={position} scale={scale} rotation={rotation} />;
     }
 
-    console.log('Draco-compressed fantasy tree loaded successfully - Position:', position);
+    console.log('Fantasy tree loaded successfully - Position:', position);
     
     // Clone the scene to avoid sharing geometry between instances
     const clonedScene = scene.clone();
@@ -90,7 +91,7 @@ const FantasyTree: React.FC<{
       </group>
     );
   } catch (error) {
-    console.error('Failed to load Draco-compressed fantasy tree model, using fallback:', error);
+    console.error('Failed to load fantasy tree model, using fallback:', error);
     return <FallbackTree position={position} scale={scale} rotation={rotation} />;
   }
 };
@@ -190,6 +191,5 @@ export const FantasyTreeSystem: React.FC<FantasyTreeSystemProps> = ({
   );
 };
 
-// Preload the Draco-compressed model
-useGLTF.preload(FANTASY_TREE_URL);
-console.log('FantasyTreeSystem: Preloading Draco-compressed tree model');
+// Don't preload the broken model
+console.log('FantasyTreeSystem: Using fallback geometry for trees');
