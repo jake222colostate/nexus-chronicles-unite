@@ -1,13 +1,12 @@
-
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Tree model URLs from GitHub repository
+// Tree model URLs from GitHub repository - Updated to use Draco-compressed versions
 export const TREE_MODELS = {
-  realistic: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/realistic_tree.glb',
-  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/stylized_tree.glb',
-  pine: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/pine_tree_218poly.glb'
+  realistic: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/realistic_tree_draco.glb',
+  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/stylized_tree_draco.glb',
+  pine: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/pine_tree_218poly_draco.glb'
 } as const;
 
 // Distribution ratios as specified
@@ -42,7 +41,7 @@ class TreeAssetManagerSingleton {
   private preloadPromises = new Map<string, Promise<void>>();
 
   async preloadAllModels(): Promise<void> {
-    console.log('TreeAssetManager: Starting preload of all tree models from GitHub...');
+    console.log('TreeAssetManager: Starting preload of all Draco-compressed tree models from GitHub...');
     
     const preloadPromises = Object.entries(TREE_MODELS).map(async ([type, url]) => {
       if (!this.preloadPromises.has(type)) {
@@ -53,12 +52,12 @@ class TreeAssetManagerSingleton {
     });
 
     await Promise.allSettled(preloadPromises);
-    console.log('TreeAssetManager: GitHub model preload completed');
+    console.log('TreeAssetManager: Draco-compressed model preload completed');
   }
 
   private async preloadModel(type: keyof typeof TREE_MODELS, url: string): Promise<void> {
     try {
-      console.log(`TreeAssetManager: Preloading ${type} from GitHub: ${url}`);
+      console.log(`TreeAssetManager: Preloading Draco-compressed ${type} from GitHub: ${url}`);
       
       // Use GLTFLoader directly for better control
       const gltf = await new Promise<any>((resolve, reject) => {
@@ -74,10 +73,10 @@ class TreeAssetManagerSingleton {
           scene: gltf.scene,
           loaded: true
         });
-        console.log(`TreeAssetManager: Successfully cached ${type} model from GitHub`);
+        console.log(`TreeAssetManager: Successfully cached Draco-compressed ${type} model from GitHub`);
       }
     } catch (error) {
-      console.warn(`TreeAssetManager: Failed to preload ${type} from GitHub:`, error);
+      console.warn(`TreeAssetManager: Failed to preload Draco-compressed ${type} from GitHub:`, error);
       this.cache.set(type, {
         scene: this.createFallbackTree(type),
         loaded: false,
@@ -203,7 +202,7 @@ class TreeAssetManagerSingleton {
 
 export const TreeAssetManager = new TreeAssetManagerSingleton();
 
-// Initialize preloading
+// Initialize preloading of Draco-compressed models
 TreeAssetManager.preloadAllModels().catch(error => {
-  console.warn('TreeAssetManager: Initial GitHub preload failed:', error);
+  console.warn('TreeAssetManager: Initial Draco-compressed preload failed:', error);
 });
