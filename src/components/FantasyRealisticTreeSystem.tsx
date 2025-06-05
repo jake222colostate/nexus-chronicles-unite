@@ -6,7 +6,7 @@ import * as THREE from 'three';
 
 // Use correct paths to existing GLB files
 const REALISTIC_TREE_PATH = '/assets/realistic_tree.glb';
-const PINE_TREE_PATH = '/assets/pine_tree_218poly.glb'; // Use the existing pine tree file
+const PINE_TREE_PATH = '/assets/pine_tree_218poly.glb';
 
 // Preload the GLB files for instant loading
 useGLTF.preload(REALISTIC_TREE_PATH);
@@ -17,29 +17,47 @@ interface FantasyRealisticTreeSystemProps {
 }
 
 export const FantasyRealisticTreeSystem: React.FC<FantasyRealisticTreeSystemProps> = ({ chunkCenter }) => {
-  const { scene: realTree } = useGLTF(REALISTIC_TREE_PATH);
-  const { scene: pineTree } = useGLTF(PINE_TREE_PATH);
+  // Use error boundaries for GLB loading
+  let realTreeGLTF, pineTreeGLTF;
+  
+  try {
+    realTreeGLTF = useGLTF(REALISTIC_TREE_PATH);
+    pineTreeGLTF = useGLTF(PINE_TREE_PATH);
+  } catch (error) {
+    console.warn('Failed to load tree models:', error);
+    return null;
+  }
 
-  // Extract geometry and material from the loaded models with proper type casting
+  // Early return if models aren't loaded
+  if (!realTreeGLTF?.scene || !pineTreeGLTF?.scene) {
+    console.log('Tree models not yet loaded');
+    return null;
+  }
+
+  // Extract geometry and material with proper error handling
   const realGeom = useMemo(() => {
-    const mesh = realTree.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
-    return mesh?.geometry;
-  }, [realTree]);
+    if (!realTreeGLTF?.scene?.children) return null;
+    const mesh = realTreeGLTF.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.geometry || null;
+  }, [realTreeGLTF]);
 
   const realMat = useMemo(() => {
-    const mesh = realTree.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
-    return mesh?.material;
-  }, [realTree]);
+    if (!realTreeGLTF?.scene?.children) return null;
+    const mesh = realTreeGLTF.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.material || null;
+  }, [realTreeGLTF]);
 
   const pineGeom = useMemo(() => {
-    const mesh = pineTree.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
-    return mesh?.geometry;
-  }, [pineTree]);
+    if (!pineTreeGLTF?.scene?.children) return null;
+    const mesh = pineTreeGLTF.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.geometry || null;
+  }, [pineTreeGLTF]);
 
   const pineMat = useMemo(() => {
-    const mesh = pineTree.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
-    return mesh?.material;
-  }, [pineTree]);
+    if (!pineTreeGLTF?.scene?.children) return null;
+    const mesh = pineTreeGLTF.scene.children.find(child => child instanceof THREE.Mesh) as THREE.Mesh;
+    return mesh?.material || null;
+  }, [pineTreeGLTF]);
 
   const COUNT = 20;
   const OFFSET = 6;
@@ -74,9 +92,9 @@ export const FantasyRealisticTreeSystem: React.FC<FantasyRealisticTreeSystemProp
     return { leftTrees, rightTrees };
   }, [chunkCenter.z, COUNT, OFFSET]);
 
-  // Return null if models haven't loaded yet
+  // Return null if any required geometry/material is missing
   if (!realGeom || !realMat || !pineGeom || !pineMat) {
-    console.log('FantasyRealisticTreeSystem: Models not loaded yet, returning null');
+    console.log('FantasyRealisticTreeSystem: Required geometry or materials not loaded yet');
     return null;
   }
 
