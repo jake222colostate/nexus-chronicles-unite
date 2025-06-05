@@ -12,9 +12,14 @@ const STAFF_MODELS = {
   tier3: '/assets/stylized_magic_staff_of_water_game_ready.glb'
 } as const;
 
+import { EnemyData } from './EnemySystem';
+
 interface MagicStaffWeaponSystemProps {
   upgradeLevel: number;
   visible?: boolean;
+  enemies: EnemyData[];
+  weaponStats: { damage: number; fireRate: number; range: number };
+  onEnemyHit: (enemyId: string, damage: number) => void;
 }
 
 // Persistent staff model cache
@@ -153,12 +158,22 @@ class StaffModelCache {
 
 export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   upgradeLevel,
-  visible = true
+  visible = true,
+  enemies,
+  weaponStats,
+  onEnemyHit
 }) => {
   const { camera } = useThree();
   const weaponGroupRef = useRef<THREE.Group>(null);
   const [staffModel, setStaffModel] = React.useState<THREE.Object3D | null>(null);
   const staffCache = StaffModelCache.getInstance();
+  const [projectiles, setProjectiles] = React.useState<{
+    id: string;
+    position: THREE.Vector3;
+    direction: THREE.Vector3;
+    damage: number;
+  }[]>([]);
+  const lastShot = useRef(0);
 
   // Determine staff tier based on upgrade level
   const staffTier = useMemo(() => {
@@ -181,7 +196,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   }, [visible, staffTier, staffCache]);
 
   // First-person weapon positioning with exact specifications
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (weaponGroupRef.current && camera && visible && staffModel) {
       // Get camera vectors for positioning
       const cameraForward = new THREE.Vector3();
@@ -206,6 +221,53 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       weaponGroupRef.current.rotation.copy(camera.rotation);
       weaponGroupRef.current.rotateY(-20 * Math.PI / 180); // Y = -20°
       weaponGroupRef.current.rotateZ(30 * Math.PI / 180);  // Z = 30°
+
+      // Handle auto shooting
+      const now = performance.now();
+      if (now - lastShot.current > weaponStats.fireRate) {
+        const target = enemies
+          .filter(e => new THREE.Vector3(...e.position).distanceTo(camera.position) <= weaponStats.range)
+          .sort((a, b) =>
+            new THREE.Vector3(...a.position).distanceTo(camera.position) -
+            new THREE.Vector3(...b.position).distanceTo(camera.position)
+          )[0];
+        if (target) {
+          const origin = camera.position.clone();
+          const targetPos = new THREE.Vector3(...target.position);
+          const direction = targetPos.sub(origin).normalize();
+          setProjectiles(prev => [
+            ...prev,
+            {
+              id: `proj_${now}_${Math.random()}`,
+              position: origin.clone(),
+              direction,
+              damage: weaponStats.damage
+            }
+          ]);
+          lastShot.current = now;
+        }
+      }
+
+      // Move projectiles
+      setProjectiles(prev => {
+        const updated: typeof prev = [];
+        for (const p of prev) {
+          const newPos = p.position.clone().add(p.direction.clone().multiplyScalar(30 * delta));
+          let hit = false;
+          for (const enemy of enemies) {
+            const ePos = new THREE.Vector3(...enemy.position);
+            if (newPos.distanceTo(ePos) < 1) {
+              onEnemyHit(enemy.id, p.damage);
+              hit = true;
+              break;
+            }
+          }
+          if (!hit && camera.position.distanceTo(newPos) < weaponStats.range * 1.5) {
+            updated.push({ ...p, position: newPos });
+          }
+        }
+        return updated;
+      });
     }
   });
 
@@ -219,10 +281,20 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 
   return (
     <group ref={weaponGroupRef}>
-      <primitive 
-        object={staffModel} 
+      <primitive
+        object={staffModel}
         scale={[staffScale, staffScale, staffScale]}
       />
+      {projectiles.map(p => (
+        <mesh
+          key={p.id}
+          position={p.position.toArray() as [number, number, number]}
+          castShadow
+        >
+          <sphereGeometry args={[0.1, 6, 6]} />
+          <meshStandardMaterial color="yellow" emissive="yellow" />
+        </mesh>
+      ))}
     </group>
   );
 };

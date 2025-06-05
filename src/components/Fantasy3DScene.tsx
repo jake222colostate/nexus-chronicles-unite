@@ -5,7 +5,6 @@ import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { FantasyScreenshotEnvironment } from './FantasyScreenshotEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
-import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 
 interface Fantasy3DSceneProps {
@@ -91,17 +90,13 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         onEnemiesChange={handleEnemiesChange}
       />
 
-      {/* Wizard Staff Weapon */}
-      <WizardStaffWeapon
+      {/* Magic Staff Weapon System - handles shooting and visuals */}
+      <MagicStaffWeaponSystem
+        upgradeLevel={weaponUpgradeLevel}
+        visible
         enemies={enemies}
         weaponStats={weaponStats}
         onEnemyHit={handleEnemyHit}
-      />
-
-      {/* Magic Staff Weapon System - New upgraded weapon system */}
-      <MagicStaffWeaponSystem
-        upgradeLevel={weaponUpgradeLevel}
-        visible={true}
       />
 
       {/* Simplified contact shadows */}
