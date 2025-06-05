@@ -3,31 +3,27 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Tree model URLs from GitHub repository
+// Tree model URLs from the local assets folder
 export const TREE_MODELS = {
-  realistic: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/realistic_tree.glb',
-  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/stylized_tree.glb',
-  pine: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/pine_tree_218poly.glb'
+  realistic: '/assets/realistic_tree.glb',
+  pine: '/assets/pine_tree_218poly.glb'
 } as const;
 
 // Distribution ratios as specified
 export const TREE_DISTRIBUTION = {
-  pine: 0.4,      // 40%
-  stylized: 0.3,  // 30% 
-  realistic: 0.3  // 30%
+  pine: 0.5,       // 50%
+  realistic: 0.5   // 50%
 } as const;
 
 // Scale configurations as specified
 export const TREE_SCALES = {
   realistic: { min: 0.75, max: 1.0 },
-  stylized: { min: 0.9, max: 1.1 },
   pine: { min: 0.65, max: 0.85 }
 } as const;
 
 // Y-offset adjustments for proper alignment
 export const TREE_Y_OFFSETS = {
   realistic: 0,
-  stylized: -0.1,
   pine: 0
 } as const;
 
@@ -42,7 +38,7 @@ class TreeAssetManagerSingleton {
   private preloadPromises = new Map<string, Promise<void>>();
 
   async preloadAllModels(): Promise<void> {
-    console.log('TreeAssetManager: Starting preload of all tree models from GitHub...');
+    console.log('TreeAssetManager: Starting preload of all tree models from assets...');
     
     const preloadPromises = Object.entries(TREE_MODELS).map(async ([type, url]) => {
       if (!this.preloadPromises.has(type)) {
@@ -53,12 +49,12 @@ class TreeAssetManagerSingleton {
     });
 
     await Promise.allSettled(preloadPromises);
-    console.log('TreeAssetManager: GitHub model preload completed');
+    console.log('TreeAssetManager: Asset model preload completed');
   }
 
   private async preloadModel(type: keyof typeof TREE_MODELS, url: string): Promise<void> {
     try {
-      console.log(`TreeAssetManager: Preloading ${type} from GitHub: ${url}`);
+      console.log(`TreeAssetManager: Preloading ${type} from assets: ${url}`);
       
       // Use GLTFLoader directly for better control
       const gltf = await new Promise<any>((resolve, reject) => {
@@ -74,10 +70,10 @@ class TreeAssetManagerSingleton {
           scene: gltf.scene,
           loaded: true
         });
-        console.log(`TreeAssetManager: Successfully cached ${type} model from GitHub`);
+        console.log(`TreeAssetManager: Successfully cached ${type} model from assets`);
       }
     } catch (error) {
-      console.warn(`TreeAssetManager: Failed to preload ${type} from GitHub:`, error);
+      console.warn(`TreeAssetManager: Failed to preload ${type} from assets:`, error);
       this.cache.set(type, {
         scene: this.createFallbackTree(type),
         loaded: false,
@@ -131,23 +127,6 @@ class TreeAssetManagerSingleton {
         );
         pineCone.position.y = 1.5;
         group.add(pineCone);
-        break;
-        
-      case 'stylized':
-        // Stylized tree fallback
-        const stylizedHandle = new THREE.Mesh(
-          new THREE.CylinderGeometry(0.12, 0.18, 1.4),
-          new THREE.MeshLambertMaterial({ color: '#8B4513' })
-        );
-        stylizedHandle.position.y = 0.7;
-        group.add(stylizedHandle);
-        
-        const stylizedCanopy = new THREE.Mesh(
-          new THREE.SphereGeometry(0.9, 12, 8),
-          new THREE.MeshLambertMaterial({ color: '#228B22' })
-        );
-        stylizedCanopy.position.y = 1.6;
-        group.add(stylizedCanopy);
         break;
         
       default: // realistic
@@ -205,5 +184,5 @@ export const TreeAssetManager = new TreeAssetManagerSingleton();
 
 // Initialize preloading
 TreeAssetManager.preloadAllModels().catch(error => {
-  console.warn('TreeAssetManager: Initial GitHub preload failed:', error);
+  console.warn('TreeAssetManager: Initial asset preload failed:', error);
 });

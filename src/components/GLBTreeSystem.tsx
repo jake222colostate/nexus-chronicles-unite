@@ -12,9 +12,8 @@ interface GLBTreeSystemProps {
 
 // Local GLB tree models bundled with the project
 const TREE_MODELS = {
-  stylized: '/stylized_tree.glb',
-  pine218: '/pine_tree_218poly.glb',
-  pineLow: '/lowpoly_pine_tree.glb'
+  realistic: '/assets/realistic_tree.glb',
+  pine: '/assets/pine_tree_218poly.glb'
 } as const;
 
 // Simple seeded random number generator
