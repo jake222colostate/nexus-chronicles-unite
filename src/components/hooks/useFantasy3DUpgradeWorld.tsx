@@ -24,8 +24,8 @@ export const useFantasy3DUpgradeWorld = ({
   // Enhanced infinite world parameters
   const CHUNK_SIZE = 80;
   const RENDER_DISTANCE = 200;
-  // Increase spacing so mana upgrades appear farther apart
-  const UPGRADE_SPACING = 60;
+  // Increase spacing so mana upgrades appear much farther apart
+  const UPGRADE_SPACING = 150;
 
   // Get dynamic upgrades based on player position
   const upgrades = useInfiniteUpgrades({
