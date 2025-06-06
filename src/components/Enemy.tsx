@@ -1,6 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import { Group, Vector3 } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
@@ -27,6 +28,9 @@ export const Enemy: React.FC<EnemyProps> = ({
   const speed = 2;
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
+
+  // Load vampire bat model
+  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   // Initialize enemy health on mount - only once
   useEffect(() => {
@@ -79,6 +83,16 @@ export const Enemy: React.FC<EnemyProps> = ({
     // Update group position
     groupRef.current.position.copy(currentPosition.current);
 
+    // Add flying animation - bat should bob up and down
+    if (groupRef.current) {
+      const time = Date.now() * 0.003;
+      const bobOffset = Math.sin(time + position[0]) * 0.3;
+      groupRef.current.position.y = currentPosition.current.y + bobOffset;
+      
+      // Add slight rotation for more natural flying motion
+      groupRef.current.rotation.z = Math.sin(time * 0.5) * 0.1;
+    }
+
     // Check if enemy reached player (within 2 units)
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
     if (distanceToPlayer < 2 && onReachPlayer) {
@@ -97,31 +111,19 @@ export const Enemy: React.FC<EnemyProps> = ({
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.5, 0]} 
+          position={[0, 1.5, 0]} 
         />
       )}
       
-      {/* Body */}
-      <mesh position={[0, -1, 0]}>
-        <cylinderGeometry args={[0.3, 0.6, 1.5, 8]} />
-        <meshStandardMaterial color="#552222" />
-      </mesh>
-
-      {/* Head */}
-      <mesh position={[0, 0.5, 0]}>
-        <sphereGeometry args={[0.5, 16, 16]} />
-        <meshStandardMaterial color="#dd3344" />
-      </mesh>
-
-      {/* Horns */}
-      <mesh position={[0.35, 0.9, 0]} rotation={[0, 0, Math.PI / 8]}>
-        <coneGeometry args={[0.2, 0.5, 8]} />
-        <meshStandardMaterial color="#ffd700" />
-      </mesh>
-      <mesh position={[-0.35, 0.9, 0]} rotation={[0, 0, -Math.PI / 8]}>
-        <coneGeometry args={[0.2, 0.5, 8]} />
-        <meshStandardMaterial color="#ffd700" />
-      </mesh>
+      {/* Vampire Bat Model */}
+      <primitive 
+        object={batScene.clone()} 
+        scale={0.8}
+        rotation={[0, Math.PI, 0]} // Face the bat toward the player initially
+      />
     </group>
   );
 };
+
+// Preload the vampire bat model
+useGLTF.preload('/assets/vampire-bat/source/bat.glb');
