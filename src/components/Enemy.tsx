@@ -25,19 +25,23 @@ export const Enemy: React.FC<EnemyProps> = ({
 }) => {
   const groupRef = useRef<Group>(null);
   const batMeshRef = useRef<Group>(null);
-  const currentPosition = useRef(new Vector3(position[0], position[1] + 1.5, position[2])); // Start hovering at fixed height
+  const currentPosition = useRef(new Vector3(position[0], 1.5, position[2])); // Start at proper flight height
   const speed = 2;
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model
-  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  // Load vampire bat model with error handling
+  const { scene: batScene, error: batError } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
-    console.log(`Enemy ${enemyId}: Bat model loaded:`, !!batScene);
+    if (batError) {
+      console.error(`Enemy ${enemyId}: Failed to load bat model:`, batError);
+      return;
+    }
+
     if (batScene && batMeshRef.current) {
-      console.log(`Enemy ${enemyId}: Bat scene children:`, batScene.children.length);
+      console.log(`Enemy ${enemyId}: Bat model loaded successfully - children:`, batScene.children.length);
       
       // Clear any existing children and add the bat model
       batMeshRef.current.clear();
@@ -46,7 +50,7 @@ export const Enemy: React.FC<EnemyProps> = ({
       // Ensure materials are visible and properly configured
       batClone.traverse((child) => {
         if (child instanceof Mesh) {
-          console.log(`Enemy ${enemyId}: Found mesh:`, child.name, 'Material:', !!child.material);
+          console.log(`Enemy ${enemyId}: Configuring mesh:`, child.name, 'Material:', !!child.material);
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
@@ -56,23 +60,22 @@ export const Enemy: React.FC<EnemyProps> = ({
         }
       });
 
-      // Apply proper positioning - adjust for model pivot point
-      batClone.position.set(0, 1.2, 0); // Offset to center the bat model properly
-      batClone.scale.setScalar(1.2); // Main enemy scale
-      batClone.rotation.set(0, Math.PI, 0); // Face forward
+      // Apply proper positioning and scaling for vampire bat
+      batClone.position.set(0, 0, 0); // Center at entity position
+      batClone.scale.setScalar(1.0); // Good scale for main enemies
+      batClone.rotation.set(0, Math.PI, 0); // Face forward initially
       
       // Parent the bat mesh to the enemy entity
       batMeshRef.current.add(batClone);
-      console.log(`Enemy ${enemyId}: Bat model properly parented to enemy entity`);
+      console.log(`Enemy ${enemyId}: Bat model successfully added to enemy entity`);
     }
-  }, [batScene, enemyId]);
+  }, [batScene, batError, enemyId]);
 
-  // Initialize as enemy with proper flight position
+  // Initialize enemy in damage system
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
-      // Position main enemies at elevated flight position - fixed height
       const flightPosition: [number, number, number] = [position[0], 1.5, position[2]];
-      console.log(`Enemy ${enemyId} initializing as enemy at flight position:`, flightPosition);
+      console.log(`Enemy ${enemyId}: Initializing at flight position:`, flightPosition);
       onInitialize(enemyId, flightPosition);
       initialized.current = true;
     }
@@ -81,11 +84,11 @@ export const Enemy: React.FC<EnemyProps> = ({
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
 
-    // Handle death
+    // Handle death animation
     if (enemyHealth && enemyHealth.currentHealth <= 0) {
       if (!fadeOutStarted.current) {
         fadeOutStarted.current = true;
-        console.log(`Enemy ${enemyId} starting death fade - health: ${enemyHealth.currentHealth}`);
+        console.log(`Enemy ${enemyId}: Starting death animation - health: ${enemyHealth.currentHealth}`);
       }
       
       const currentScale = groupRef.current.scale.x;
@@ -95,12 +98,12 @@ export const Enemy: React.FC<EnemyProps> = ({
       if (newScale <= 0.1 && !isFullyFaded.current) {
         groupRef.current.visible = false;
         isFullyFaded.current = true;
-        console.log(`Enemy ${enemyId} death complete`);
+        console.log(`Enemy ${enemyId}: Death animation complete`);
       }
       return;
     }
 
-    // Reset if alive
+    // Reset if enemy is revived (shouldn't happen but just in case)
     if (enemyHealth && enemyHealth.currentHealth > 0 && fadeOutStarted.current) {
       fadeOutStarted.current = false;
       isFullyFaded.current = false;
@@ -108,9 +111,9 @@ export const Enemy: React.FC<EnemyProps> = ({
       groupRef.current.scale.setScalar(1);
     }
 
-    // AI movement - chase player at flight altitude
+    // AI movement - chase player at consistent flight altitude
     const targetPosition = playerPosition.clone();
-    targetPosition.y = 1.5; // Maintain fixed flight altitude
+    targetPosition.y = 1.5; // Maintain consistent flight altitude
     
     const direction = new Vector3()
       .subVectors(targetPosition, currentPosition.current)
@@ -119,65 +122,69 @@ export const Enemy: React.FC<EnemyProps> = ({
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Ensure bat stays at proper height
+    // Lock Y position to flight altitude
     currentPosition.current.y = 1.5;
 
-    // Update enemy entity position (this is what health bar should track)
+    // Update enemy entity position
     groupRef.current.position.copy(currentPosition.current);
 
-    // Flying animation with proper hovering
+    // Enhanced flying animation for vampire bat
     if (batMeshRef.current) {
       const time = Date.now() * 0.003;
-      const bobOffset = Math.sin(time + position[0]) * 0.4;
+      const bobOffset = Math.sin(time + position[0]) * 0.3;
       
-      // Apply flight motion to the bat mesh within the enemy entity
-      batMeshRef.current.position.y = bobOffset; // Relative to entity position
+      // Apply subtle hovering motion relative to entity position
+      batMeshRef.current.position.y = bobOffset;
       
-      // Face movement direction
+      // Face movement direction smoothly
       const angle = Math.atan2(direction.x, direction.z);
       batMeshRef.current.rotation.y = angle;
       
-      // Flying motion - enhanced for main enemies
-      batMeshRef.current.rotation.z = Math.sin(time * 0.5) * 0.15;
-      batMeshRef.current.rotation.x = Math.sin(time * 0.8) * 0.1;
+      // Wing flapping and banking motion
+      batMeshRef.current.rotation.z = Math.sin(time * 6) * 0.2;
+      batMeshRef.current.rotation.x = Math.sin(time * 4) * 0.1;
     }
 
-    // Check collision
+    // Check collision with player
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
     if (distanceToPlayer < 2 && onReachPlayer) {
       onReachPlayer();
     }
   });
 
-  // Don't render if dead
+  // Don't render if dead and fully faded
   if (enemyHealth && enemyHealth.currentHealth <= 0 && isFullyFaded.current) {
     return null;
   }
 
   return (
     <group ref={groupRef} position={[position[0], 1.5, position[2]]} castShadow receiveShadow>
-      {/* Health bar positioned above enemy entity - tracks the enemy entity */}
+      {/* Health bar positioned above enemy entity */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.5, 0]} // Positioned above enemy entity
+          position={[0, 2.5, 0]}
         />
       )}
       
-      {/* Bat mesh container - properly parented to enemy entity */}
+      {/* Bat mesh container */}
       <group ref={batMeshRef} />
       
-      {/* Fallback while loading - also properly centered */}
-      {!batScene && (
+      {/* Fallback geometry while bat model loads */}
+      {(!batScene || batError) && (
         <group position={[0, 0, 0]}>
           <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[1, 16, 16]} />
-            <meshStandardMaterial color="#ff0000" />
+            <sphereGeometry args={[0.8, 12, 12]} />
+            <meshStandardMaterial color="#8B0000" />
+          </mesh>
+          <mesh position={[0, 0.5, 0]}>
+            <coneGeometry args={[0.3, 0.8, 6]} />
+            <meshStandardMaterial color="#4B0000" />
           </mesh>
         </group>
       )}
       
-      {/* Debug collision bounds */}
+      {/* Debug collision bounds (invisible) */}
       <mesh visible={false}>
         <boxGeometry args={[2.5, 2.5, 2.5]} />
         <meshBasicMaterial wireframe color="#00ff00" />
@@ -186,5 +193,5 @@ export const Enemy: React.FC<EnemyProps> = ({
   );
 };
 
-// Preload model
+// Preload the vampire bat model
 useGLTF.preload('/assets/vampire-bat/source/bat.glb');

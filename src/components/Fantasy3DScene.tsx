@@ -1,5 +1,5 @@
 
-import React, { Suspense, useRef, useState, useCallback } from 'react';
+import React, { Suspense, useRef, useState, useCallback, useMemo } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
@@ -39,9 +39,14 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
   const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2));
 
+  // Stabilize player Z to prevent infinite updates - only update every 10 units
+  const stablePlayerZ = useMemo(() => {
+    return Math.floor(cameraPosition.z / 10) * 10;
+  }, [Math.floor(cameraPosition.z / 10)]);
+
   // Initialize shared damage system with stable player Z
   const damageSystem = useEnemyDamageSystem({
-    playerZ: Math.floor(cameraPosition.z / 10) * 10, // Stable reference to prevent infinite updates
+    playerZ: stablePlayerZ,
     upgradeLevel: weaponUpgradeLevel
   });
 

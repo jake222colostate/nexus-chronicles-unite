@@ -27,36 +27,36 @@ export const EnemyHealthBar: React.FC<EnemyHealthBarProps> = ({
 
   return (
     <group position={position}>
-      {/* Background bar (dark red) */}
+      {/* Health bar background */}
       <mesh position={[0, 0, 0.01]}>
-        <planeGeometry args={[1.0, 0.12]} />
+        <planeGeometry args={[1.2, 0.15]} />
         <meshBasicMaterial 
           color="#220000" 
           transparent 
-          opacity={0.9}
+          opacity={0.8}
         />
       </mesh>
       
-      {/* Health bar (bright red) with proper scaling */}
+      {/* Health bar foreground with proper positioning */}
       <mesh 
-        position={[-0.5 + (0.5 * healthPercentage), 0, 0.02]} 
+        position={[(-0.6 + (0.6 * healthPercentage)), 0, 0.02]} 
         scale={[healthPercentage, 1, 1]}
       >
-        <planeGeometry args={[1.0, 0.1]} />
+        <planeGeometry args={[1.2, 0.12]} />
         <meshBasicMaterial 
-          color={isRecentlyHit ? "#FFFFFF" : "#FF2222"} 
+          color={isRecentlyHit ? "#FFFFFF" : "#FF3333"} 
           transparent 
-          opacity={isRecentlyHit ? 1.0 : 0.95}
+          opacity={isRecentlyHit ? 1.0 : 0.9}
         />
       </mesh>
       
-      {/* Border outline */}
+      {/* Health bar border */}
       <mesh position={[0, 0, 0.03]}>
-        <ringGeometry args={[0.45, 0.52, 8]} />
+        <ringGeometry args={[0.5, 0.62, 16]} />
         <meshBasicMaterial 
           color="#FFFFFF" 
           transparent 
-          opacity={0.8}
+          opacity={0.7}
         />
       </mesh>
     </group>
