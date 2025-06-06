@@ -21,9 +21,9 @@ export const PathsideMountains: React.FC = () => {
     const count = 5;
     const spacing = 12;
     const offsetX = 6;
-    const scale = 0.4;
+    const scale = 0.15; // Much smaller scale for decorative pathside mountains
 
-    console.log('PathsideMountains: Creating pathside mountains with smaller scale');
+    console.log('PathsideMountains: Creating smaller pathside mountains with scale:', scale);
 
     for (let i = 0; i < count; i++) {
       const z = -i * spacing;
@@ -65,7 +65,7 @@ export const PathsideMountains: React.FC = () => {
       mountainsRef.current.push(right);
     }
 
-    console.log('PathsideMountains: Added', mountainsRef.current.length, 'pathside mountains to scene');
+    console.log('PathsideMountains: Added', mountainsRef.current.length, 'smaller pathside mountains to scene');
 
     // Cleanup function
     return () => {
