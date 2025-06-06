@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -25,7 +24,7 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
 }) => {
   const groupRef = useRef<Group>(null);
   const currentPosition = useRef(new Vector3(...position));
-  const speed = 1.5; // Slightly slower than vampire bat
+  const speed = 1.2; // Slightly slower than vampire bat for walking
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
 
@@ -84,21 +83,25 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       .subVectors(playerPosition, currentPosition.current)
       .normalize();
 
-    // Move toward player
+    // Move toward player on ground level
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
+
+    // Keep fairy at ground level (same as player height)
+    currentPosition.current.y = 1.7; // Same as player height
 
     // Update group position
     groupRef.current.position.copy(currentPosition.current);
 
-    // Add floating animation - fairy should float gracefully
+    // Add subtle walking animation - gentle bobbing
     if (groupRef.current) {
-      const time = Date.now() * 0.002;
-      const floatOffset = Math.sin(time + position[0]) * 0.5;
-      groupRef.current.position.y = currentPosition.current.y + floatOffset;
+      const time = Date.now() * 0.004;
+      const walkBob = Math.sin(time + position[0]) * 0.1; // Much smaller bobbing for walking
+      groupRef.current.position.y = currentPosition.current.y + walkBob;
       
-      // Add gentle rotation for magical floating motion
-      groupRef.current.rotation.y = Math.sin(time * 0.3) * 0.2;
+      // Face the direction of movement
+      const angle = Math.atan2(direction.x, direction.z);
+      groupRef.current.rotation.y = angle;
     }
 
     // Check if enemy reached player (within 2 units)
@@ -120,7 +123,7 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       <group ref={groupRef} position={position}>
         {/* Fallback pink sphere while model loads */}
         <mesh>
-          <sphereGeometry args={[1, 16, 16]} />
+          <sphereGeometry args={[0.8, 16, 16]} />
           <meshStandardMaterial color="#ff69b4" />
         </mesh>
       </group>
@@ -133,21 +136,21 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 3, 0]} 
+          position={[0, 2.2, 0]} 
         />
       )}
       
-      {/* Great Fairy Model */}
+      {/* Great Fairy Model - scaled down to human size */}
       <primitive 
         object={fairyScene.clone()} 
-        scale={[1.5, 1.5, 1.5]} 
+        scale={[0.8, 0.8, 0.8]} // Much smaller scale for human-like size
         rotation={[0, 0, 0]} 
-        position={[0, 0, 0]} 
+        position={[0, -0.85, 0]} // Lower position to put feet on ground
       />
       
       {/* Debug wireframe to see the bounds */}
       <mesh visible={false}>
-        <boxGeometry args={[2, 2, 2]} />
+        <boxGeometry args={[1.6, 1.7, 1.6]} />
         <meshBasicMaterial wireframe color="#ff69b4" />
       </mesh>
     </group>
