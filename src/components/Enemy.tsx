@@ -31,15 +31,10 @@ export const Enemy: React.FC<EnemyProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model with error handling
-  const { scene: batScene, error: batError } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  // Load vampire bat model
+  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
-    if (batError) {
-      console.error(`Enemy ${enemyId}: Failed to load bat model:`, batError);
-      return;
-    }
-
     if (batScene && batMeshRef.current) {
       console.log(`Enemy ${enemyId}: Bat model loaded successfully - children:`, batScene.children.length);
       
@@ -69,7 +64,7 @@ export const Enemy: React.FC<EnemyProps> = ({
       batMeshRef.current.add(batClone);
       console.log(`Enemy ${enemyId}: Bat model successfully added to enemy entity`);
     }
-  }, [batScene, batError, enemyId]);
+  }, [batScene, enemyId]);
 
   // Initialize enemy in damage system
   useEffect(() => {
@@ -171,7 +166,7 @@ export const Enemy: React.FC<EnemyProps> = ({
       <group ref={batMeshRef} />
       
       {/* Fallback geometry while bat model loads */}
-      {(!batScene || batError) && (
+      {!batScene && (
         <group position={[0, 0, 0]}>
           <mesh position={[0, 0, 0]}>
             <sphereGeometry args={[0.8, 12, 12]} />
