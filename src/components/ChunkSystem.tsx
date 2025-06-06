@@ -26,17 +26,22 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
 }) => {
   const activeChunks = useMemo(() => {
     const chunks: ChunkData[] = [];
-    const playerChunkX = Math.floor(playerPosition.x / chunkSize);
-    const playerChunkZ = Math.floor(Math.abs(playerPosition.z) / chunkSize);
     
-    // Much smaller chunk radius for 60fps performance
-    const maxRenderDistance = Math.min(renderDistance, 200); // Cap render distance
+    // Round player position to reduce chunk calculation frequency
+    const roundedPlayerX = Math.round(playerPosition.x / 5) * 5;
+    const roundedPlayerZ = Math.round(Math.abs(playerPosition.z) / 5) * 5;
+    
+    const playerChunkX = Math.floor(roundedPlayerX / chunkSize);
+    const playerChunkZ = Math.floor(roundedPlayerZ / chunkSize);
+    
+    // Smaller chunk radius for better performance
+    const maxRenderDistance = Math.min(renderDistance, 150); // Reduced from 200
     const chunkRadius = Math.ceil(maxRenderDistance / chunkSize);
     const farAheadChunks = Math.ceil(maxRenderDistance / chunkSize);
     
-    // Limit total chunks for performance
+    // Hard limit for performance
     let chunkCount = 0;
-    const maxChunks = 80; // Hard limit for 60fps
+    const maxChunks = 60; // Reduced from 80
     
     // Generate chunks in a smaller pattern for performance
     for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius && chunkCount < maxChunks; x++) {
@@ -47,8 +52,8 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
           
           // More aggressive distance-based culling
           const distanceToPlayer = Math.sqrt(
-            Math.pow(worldX - playerPosition.x, 2) + 
-            Math.pow(worldZ - playerPosition.z, 2)
+            Math.pow(worldX - roundedPlayerX, 2) + 
+            Math.pow(worldZ - roundedPlayerZ, 2)
           );
           
           if (distanceToPlayer <= maxRenderDistance) {
@@ -70,14 +75,13 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
       }
     }
     
-    console.log(`ChunkSystem: Generated ${chunks.length} chunks (max: ${maxChunks}) with render distance ${maxRenderDistance}`);
-    
     return chunks;
   }, [
-    Math.floor(playerPosition.x / chunkSize), 
-    Math.floor(Math.abs(playerPosition.z) / chunkSize), 
+    // Use rounded values to reduce recalculation frequency
+    Math.floor(playerPosition.x / 10) * 10, 
+    Math.floor(Math.abs(playerPosition.z) / 10) * 10, 
     chunkSize, 
-    Math.min(renderDistance, 200) // Cap for performance
+    Math.min(renderDistance, 150)
   ]);
 
   return <>{children(activeChunks)}</>;

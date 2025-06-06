@@ -36,30 +36,31 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   ) => {
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
   const lastSpawnTime = useRef(0);
+  const lastPlayerZ = useRef(0);
+  const lastCleanupTime = useRef(0);
   const spawnInterval = 3000; // 3 seconds between spawns
+  const cleanupInterval = 1000; // 1 second between cleanup checks
 
+  // Only notify of enemy changes when the array actually changes
+  const lastEnemyCount = useRef(0);
   useEffect(() => {
-    if (onEnemiesChange) {
+    if (enemies.length !== lastEnemyCount.current && onEnemiesChange) {
+      lastEnemyCount.current = enemies.length;
       onEnemiesChange(enemies);
     }
-  }, [enemies, onEnemiesChange]);
+  }, [enemies.length, onEnemiesChange]);
 
-  // Spawn new enemy ahead of player
+  // Spawn new enemy ahead of player - optimized to reduce calls
   const spawnEnemy = useCallback(() => {
     const now = Date.now();
-    console.log(`EnemySystem: Attempting to spawn enemy. Now: ${now}, Last spawn: ${lastSpawnTime.current}, Interval: ${spawnInterval}`);
     
     if (now - lastSpawnTime.current < spawnInterval) {
-      console.log(`EnemySystem: Too soon to spawn (${now - lastSpawnTime.current}ms since last spawn)`);
-      return;
+      return false; // Return false if no spawn occurred
     }
 
     setEnemies(prev => {
-      console.log(`EnemySystem: Current enemy count: ${prev.length}, Max: ${maxEnemies}`);
-      
       if (prev.length >= maxEnemies) {
-        console.log(`EnemySystem: Max enemies reached (${prev.length}/${maxEnemies})`);
-        return prev;
+        return prev; // No change
       }
 
       // Spawn enemy 100m ahead of player's Z position
@@ -75,11 +76,13 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
         health: 1
       };
 
-      console.log(`EnemySystem: Spawning enemy at position [${spawnX}, 1, ${spawnZ}], player at [${playerPosition.x}, ${playerPosition.y}, ${playerPosition.z}]`);
+      console.log(`EnemySystem: Spawning enemy at position [${spawnX}, 1, ${spawnZ}]`);
       
       lastSpawnTime.current = now;
       return [...prev, newEnemy];
     });
+    
+    return true; // Spawn occurred
   }, [playerPosition.z, maxEnemies, spawnDistance]);
 
   // Remove enemy when it reaches player or gets too far behind
@@ -102,37 +105,31 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
 
   useImperativeHandle(ref, () => ({ damageEnemy }));
 
-  // Spawn enemies periodically and clean up old ones
+  // Optimized frame loop - only run expensive operations when needed
   useFrame(() => {
-    // Try to spawn new enemy
-    spawnEnemy();
+    const now = Date.now();
+    const currentPlayerZ = Math.floor(playerPosition.z / 10) * 10; // Round to reduce update frequency
+    
+    // Only spawn if player has moved significantly or enough time has passed
+    if (currentPlayerZ !== lastPlayerZ.current || now - lastSpawnTime.current > spawnInterval) {
+      spawnEnemy();
+      lastPlayerZ.current = currentPlayerZ;
+    }
 
-    // Clean up enemies that are too far behind player
-    setEnemies(prev => {
-      const filtered = prev.filter(enemy => {
-        const enemyZ = enemy.position[2];
-        // Positive value indicates the enemy is behind the player
-        const distanceBehindPlayer = enemyZ - playerPosition.z;
-
-        // Remove if more than 50 units behind the player
-        const shouldKeep = distanceBehindPlayer <= 50;
-        if (!shouldKeep) {
-          console.log(
-            `EnemySystem: Cleaning up enemy at Z=${enemyZ}, player at Z=${playerPosition.z}, distance behind: ${distanceBehindPlayer}`
-          );
-        }
-        return shouldKeep;
+    // Clean up enemies less frequently
+    if (now - lastCleanupTime.current > cleanupInterval) {
+      setEnemies(prev => {
+        const filtered = prev.filter(enemy => {
+          const enemyZ = enemy.position[2];
+          const distanceBehindPlayer = enemyZ - playerPosition.z;
+          return distanceBehindPlayer <= 50;
+        });
+        
+        lastCleanupTime.current = now;
+        return filtered.length !== prev.length ? filtered : prev;
       });
-      
-      if (filtered.length !== prev.length) {
-        console.log(`EnemySystem: Cleaned up ${prev.length - filtered.length} enemies`);
-      }
-      
-      return filtered;
-    });
+    }
   });
-
-  console.log(`EnemySystem: Rendering ${enemies.length} enemies`);
 
   return (
     <group>
