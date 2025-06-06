@@ -151,14 +151,14 @@ export const Enemy: React.FC<EnemyProps> = ({
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.8, 0]} // Positioned above bat
+          position={[0, 2.0, 0]} // Positioned above bat
         />
       )}
       
       {/* Vampire Bat Model - main enemy scale */}
       <primitive 
         object={batScene.clone()} 
-        scale={[2.0, 2.0, 2.0]} // Larger than minions
+        scale={[1.5, 1.5, 1.5]} // Larger than minions but not excessive
         rotation={[0, Math.PI, 0]}
         position={[0, 0, 0]}
       />

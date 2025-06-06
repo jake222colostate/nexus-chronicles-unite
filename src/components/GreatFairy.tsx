@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -35,13 +36,13 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
   // Load great fairy model
   const { scene: fairyScene } = useGLTF('/assets/great_fairy.glb');
 
-  // Fix fairy model setup
+  // Fix fairy model setup and ensure proper enemy scale
   useEffect(() => {
     console.log(`GreatFairy ${enemyId}: Model loaded:`, !!fairyScene);
     if (fairyScene) {
       console.log(`GreatFairy ${enemyId}: Scene children:`, fairyScene.children.length);
       
-      // Fix T-pose by resetting bone rotations
+      // Fix T-pose and ensure proper enemy appearance
       fairyScene.traverse((child) => {
         if (child instanceof SkinnedMesh && child.skeleton) {
           console.log(`GreatFairy ${enemyId}: Found skeleton, fixing T-pose`);
@@ -173,16 +174,16 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 3.0, 0]} // Positioned above fairy head
+          position={[0, 2.5, 0]} // Positioned above fairy head at player scale
         />
       )}
       
-      {/* Great Fairy Model - proper enemy scale */}
+      {/* Great Fairy Model - PROPER PLAYER SCALE ENEMY SIZE */}
       <primitive 
         object={fairyScene.clone()} 
-        scale={[0.8, 0.8, 0.8]} // Player-scale enemy size
+        scale={[0.4, 0.4, 0.4]} // Much smaller scale - same size as player
         rotation={[0, 0, 0]} 
-        position={[0, -0.5, 0]} // Feet on ground
+        position={[0, 0, 0]} // Ground level positioning
       />
       
       {/* Debug collision bounds */}

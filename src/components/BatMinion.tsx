@@ -163,14 +163,14 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.5, 0]} // Fixed position above bat
+          position={[0, 1.0, 0]} // Positioned above bat at proper scale
         />
       )}
       
       {/* Vampire Bat Model - proper minion scale */}
       <primitive 
         object={batScene.clone()} 
-        scale={[1.2, 1.2, 1.2]} // Smaller than main bats
+        scale={[0.8, 0.8, 0.8]} // Smaller but visible bat minions
         rotation={[0, Math.PI, 0]} 
         position={[0, 0, 0]}
       />
