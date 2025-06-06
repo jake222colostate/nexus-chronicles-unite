@@ -10,7 +10,7 @@ interface EnemyProps {
 }
 
 export const Enemy: React.FC<EnemyProps> = ({ 
-  position, 
+  position = [0, 0, 0], // Default position to prevent undefined errors
   playerPosition, 
   onReachPlayer 
 }) => {
@@ -19,7 +19,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   const speed = 2; // units per second
 
   useFrame((_, delta) => {
-    if (!groupRef.current) return;
+    if (!groupRef.current || !playerPosition) return;
 
     // Calculate direction toward player
     const direction = new Vector3()
