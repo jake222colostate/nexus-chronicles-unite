@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -34,11 +33,11 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model with better error handling
-  const { scene: batScene, error } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  // Load vampire bat model
+  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
-    console.log(`BatMinion ${enemyId}: Model loading state - Scene:`, !!batScene, 'Error:', !!error);
+    console.log(`BatMinion ${enemyId}: Model loading state - Scene:`, !!batScene);
     if (batScene) {
       console.log(`BatMinion ${enemyId}: Bat model loaded successfully, children:`, batScene.children.length);
       
@@ -53,11 +52,10 @@ export const BatMinion: React.FC<BatMinionProps> = ({
           }
         }
       });
+    } else {
+      console.log(`BatMinion ${enemyId}: Bat model not yet loaded`);
     }
-    if (error) {
-      console.error(`BatMinion ${enemyId}: Failed to load bat model:`, error);
-    }
-  }, [batScene, error, enemyId]);
+  }, [batScene, enemyId]);
 
   // Initialize as enemy
   useEffect(() => {
