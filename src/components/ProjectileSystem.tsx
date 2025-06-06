@@ -30,8 +30,8 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
   const groupRef = useRef<Group>(null);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   
-  // Auto-fire based on upgrade level - faster firing
-  const fireRate = Math.max(200, 800 - (upgradeLevel * 100)); // Much faster firing
+  // Slower auto-fire rate for more strategic combat
+  const fireRate = Math.max(400, 1000 - (upgradeLevel * 50)); // Slower firing
   const lastFireTime = useRef(0);
 
   // Find closest living enemy for automatic targeting
@@ -51,7 +51,7 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
     }
 
     // Only target enemies within reasonable range
-    return closestDistance < 150 ? closest : null;
+    return closestDistance < 100 ? closest : null;
   }, [enemies, camera]);
 
   const createProjectile = useCallback((fromClick = false) => {
@@ -77,13 +77,13 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
       id: `proj_${Date.now()}_${Math.random()}`,
       position: origin,
       direction: direction.normalize(),
-      damage: projectileDamage,
-      speed: 60, // Faster projectiles
+      damage: projectileDamage, // Use the exact damage value from the system
+      speed: 40, // Slower projectiles for more visible combat
       targetEnemyId: targetEnemy.id
     };
 
     setProjectiles(prev => [...prev, newProjectile]);
-    console.log(`Projectile fired at enemy ${targetEnemy.id}`);
+    console.log(`Projectile fired at enemy ${targetEnemy.id} with ${projectileDamage} damage`);
   }, [camera, projectileDamage, findClosestEnemy]);
 
   // Handle mouse click to shoot
@@ -118,7 +118,7 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
         
         // Check collision with enemies (prioritize target enemy)
         let hit = false;
-        const hitRadius = 2.0; // Larger hit radius for easier targeting
+        const hitRadius = 1.5; // Smaller hit radius for more precision
         
         // Check target enemy first
         if (projectile.targetEnemyId) {
@@ -151,7 +151,7 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
         }
         
         // Remove projectile if hit or too far
-        const maxDistance = 200;
+        const maxDistance = 150;
         if (!hit && camera.position.distanceTo(newPosition) < maxDistance) {
           updated.push({
             ...projectile,
@@ -172,13 +172,13 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
           position={projectile.position.toArray() as [number, number, number]}
           castShadow
         >
-          <sphereGeometry args={[0.2, 8, 8]} />
+          <sphereGeometry args={[0.15, 6, 6]} />
           <meshStandardMaterial 
             color="#FFD700" 
             emissive="#FFD700" 
-            emissiveIntensity={0.8}
+            emissiveIntensity={0.6}
             transparent
-            opacity={0.9}
+            opacity={0.8}
           />
         </mesh>
       ))}

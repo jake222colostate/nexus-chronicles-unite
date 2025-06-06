@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useMemo } from 'react';
 
 export interface EnemyHealth {
@@ -17,17 +16,17 @@ interface UseEnemyDamageSystemProps {
 export const useEnemyDamageSystem = ({ playerZ, upgradeLevel }: UseEnemyDamageSystemProps) => {
   const [enemyHealths, setEnemyHealths] = useState<Map<string, EnemyHealth>>(new Map());
 
-  // Calculate base health - 10 shots to kill early enemies
+  // Calculate base health - exactly 10 shots to kill early enemies
   const calculateMaxHealth = useCallback((enemyZ: number) => {
-    const baseHealth = 100; // Base health for 10 shots (10 damage per shot)
-    const distanceBonus = Math.floor(Math.abs(enemyZ) / 20) * 20; // Slower scaling
+    const baseHealth = 50; // Reduced base health
+    const distanceBonus = Math.floor(Math.abs(enemyZ) / 30) * 10; // Slower scaling
     return baseHealth + distanceBonus;
   }, []);
 
-  // Calculate damage - 10 damage base (1/10 of 100 health), scales with upgrades
+  // Calculate damage - exactly 5 damage base (1/10 of 50 health = 10 shots to kill)
   const projectileDamage = useMemo(() => {
-    const baseDamage = 10; // 10 damage = 1/10 of 100 health = 10 shots to kill
-    const upgradeBonus = upgradeLevel * 5; // +5 damage per upgrade level
+    const baseDamage = 5; // Reduced to 5 damage = 1/10 of 50 health = 10 shots to kill
+    const upgradeBonus = upgradeLevel * 2; // Smaller upgrade bonus
     return baseDamage + upgradeBonus;
   }, [upgradeLevel]);
 
