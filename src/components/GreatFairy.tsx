@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Mesh, SkinnedMesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
 
@@ -35,15 +35,15 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
   // Load great fairy model
   const { scene: fairyScene } = useGLTF('/assets/great_fairy.glb');
 
-  // Debug log for model loading
+  // Debug log for model loading with proper type checking
   useEffect(() => {
     console.log(`GreatFairy ${enemyId}: Model loaded:`, !!fairyScene);
     if (fairyScene) {
       console.log(`GreatFairy ${enemyId}: Scene children:`, fairyScene.children.length);
       
-      // Fix T-pose by setting a basic idle rotation if available
+      // Fix T-pose by setting a basic idle rotation if available with proper type guards
       fairyScene.traverse((child) => {
-        if (child.isMesh && child.skeleton) {
+        if (child instanceof SkinnedMesh && child.skeleton) {
           console.log(`GreatFairy ${enemyId}: Found skeleton, applying idle pose`);
           // Reset any extreme rotations that cause T-pose
           if (child.skeleton.bones) {

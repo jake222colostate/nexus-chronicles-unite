@@ -1,8 +1,7 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
 
@@ -31,32 +30,29 @@ export const Enemy: React.FC<EnemyProps> = ({
   const isFullyFaded = useRef(false);
 
   // Load vampire bat model - ensure correct path
-  const { scene: batScene, error } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
-  // Debug log for model loading with error handling
+  // Debug log for model loading with proper type checking
   useEffect(() => {
     console.log(`Enemy ${enemyId}: Bat model loaded:`, !!batScene);
-    if (error) {
-      console.error(`Enemy ${enemyId}: Error loading bat model:`, error);
-    }
     if (batScene) {
       console.log(`Enemy ${enemyId}: Bat scene children:`, batScene.children.length);
       
-      // Ensure materials are properly loaded
+      // Ensure materials are properly loaded with type guards
       batScene.traverse((child) => {
-        if (child.isMesh) {
+        if (child instanceof Mesh) {
           console.log(`Enemy ${enemyId}: Found mesh:`, child.name, 'Material:', !!child.material);
           if (child.material) {
             // Ensure material is visible
             child.material.visible = true;
-            if (child.material.map) {
+            if ('map' in child.material && child.material.map) {
               console.log(`Enemy ${enemyId}: Material has texture:`, !!child.material.map);
             }
           }
         }
       });
     }
-  }, [batScene, error, enemyId]);
+  }, [batScene, enemyId]);
 
   // Initialize enemy health on mount - only once
   useEffect(() => {
@@ -137,9 +133,9 @@ export const Enemy: React.FC<EnemyProps> = ({
     return null;
   }
 
-  // Don't render if model hasn't loaded yet or if there was an error
-  if (!batScene || error) {
-    console.log(`Enemy ${enemyId}: Bat model not loaded yet or error occurred, rendering fallback`);
+  // Don't render if model hasn't loaded yet
+  if (!batScene) {
+    console.log(`Enemy ${enemyId}: Bat model not loaded yet, rendering fallback`);
     return (
       <group ref={groupRef} position={position}>
         {/* Fallback red sphere while model loads */}
