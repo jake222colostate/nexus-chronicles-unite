@@ -19,15 +19,15 @@ export const useEnemyDamageSystem = ({ playerZ, upgradeLevel }: UseEnemyDamageSy
 
   // Calculate base health based on player progression
   const calculateMaxHealth = useCallback((enemyZ: number) => {
-    const baseHealth = 20;
-    const distanceBonus = Math.floor(Math.abs(enemyZ) / 10) * 5;
+    const baseHealth = 100; // Increased base health for 1/5 damage system
+    const distanceBonus = Math.floor(Math.abs(enemyZ) / 10) * 10;
     return baseHealth + distanceBonus;
   }, []);
 
-  // Calculate damage based on upgrade level
+  // Calculate damage - each hit does 1/5 of max health
   const projectileDamage = useMemo(() => {
-    return 1 + upgradeLevel * 2;
-  }, [upgradeLevel]);
+    return 20; // 20 damage = 1/5 of 100 health
+  }, []);
 
   // Initialize enemy health when spawned
   const initializeEnemy = useCallback((enemyId: string, position: [number, number, number]) => {
@@ -55,13 +55,15 @@ export const useEnemyDamageSystem = ({ playerZ, upgradeLevel }: UseEnemyDamageSy
       const newMap = new Map(prev);
       const enemy = newMap.get(enemyId);
       
-      if (enemy) {
+      if (enemy && enemy.currentHealth > 0) {
         const newHealth = Math.max(0, enemy.currentHealth - actualDamage);
         newMap.set(enemyId, {
           ...enemy,
           currentHealth: newHealth,
           lastHitTime: Date.now()
         });
+        
+        console.log(`Enemy ${enemyId} hit for ${actualDamage} damage. Health: ${newHealth}/${enemy.maxHealth}`);
       }
       
       return newMap;

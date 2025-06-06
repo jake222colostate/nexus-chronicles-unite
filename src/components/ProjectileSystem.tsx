@@ -10,6 +10,7 @@ interface Projectile {
   direction: Vector3;
   damage: number;
   speed: number;
+  targetEnemyId?: string;
 }
 
 interface ProjectileSystemProps {
@@ -29,13 +30,38 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
   const groupRef = useRef<Group>(null);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   
-  // Auto-fire based on upgrade level
-  const fireRate = Math.max(300, 1000 - (upgradeLevel * 100)); // Faster with upgrades
+  // Auto-fire based on upgrade level - faster firing
+  const fireRate = Math.max(200, 800 - (upgradeLevel * 100)); // Much faster firing
   const lastFireTime = useRef(0);
 
+  // Find closest living enemy for automatic targeting
+  const findClosestEnemy = useCallback(() => {
+    const livingEnemies = enemies.filter(enemy => enemy.currentHealth > 0);
+    if (livingEnemies.length === 0) return null;
+
+    let closest = livingEnemies[0];
+    let closestDistance = camera.position.distanceTo(new Vector3(...closest.position));
+
+    for (const enemy of livingEnemies) {
+      const distance = camera.position.distanceTo(new Vector3(...enemy.position));
+      if (distance < closestDistance) {
+        closest = enemy;
+        closestDistance = distance;
+      }
+    }
+
+    // Only target enemies within reasonable range
+    return closestDistance < 150 ? closest : null;
+  }, [enemies, camera]);
+
   const createProjectile = useCallback((fromClick = false) => {
-    const direction = new Vector3();
-    camera.getWorldDirection(direction);
+    const targetEnemy = findClosestEnemy();
+    if (!targetEnemy) return; // Don't shoot if no targets
+
+    const targetPosition = new Vector3(...targetEnemy.position);
+    const direction = new Vector3()
+      .subVectors(targetPosition, camera.position)
+      .normalize();
     
     // Offset projectile spawn position
     const spawnOffset = direction.clone().multiplyScalar(2);
@@ -52,11 +78,13 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
       position: origin,
       direction: direction.normalize(),
       damage: projectileDamage,
-      speed: 50
+      speed: 60, // Faster projectiles
+      targetEnemyId: targetEnemy.id
     };
 
     setProjectiles(prev => [...prev, newProjectile]);
-  }, [camera, projectileDamage]);
+    console.log(`Projectile fired at enemy ${targetEnemy.id}`);
+  }, [camera, projectileDamage, findClosestEnemy]);
 
   // Handle mouse click to shoot
   React.useEffect(() => {
@@ -73,7 +101,7 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
   useFrame((_, delta) => {
     const currentTime = Date.now();
     
-    // Auto-fire
+    // Auto-fire at closest enemy
     if (currentTime - lastFireTime.current > fireRate) {
       createProjectile(false);
       lastFireTime.current = currentTime;
@@ -88,20 +116,37 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
         const movement = projectile.direction.clone().multiplyScalar(projectile.speed * delta);
         const newPosition = projectile.position.clone().add(movement);
         
-        // Check collision with enemies
+        // Check collision with enemies (prioritize target enemy)
         let hit = false;
-        const hitRadius = 1.5; // Collision radius
+        const hitRadius = 2.0; // Larger hit radius for easier targeting
         
-        for (const enemy of enemies) {
-          if (enemy.currentHealth <= 0) continue; // Skip dead enemies
-          
-          const enemyPos = new Vector3(...enemy.position);
-          const distance = newPosition.distanceTo(enemyPos);
-          
-          if (distance < hitRadius) {
-            onEnemyHit(enemy.id, projectile.damage);
-            hit = true;
-            break;
+        // Check target enemy first
+        if (projectile.targetEnemyId) {
+          const targetEnemy = enemies.find(e => e.id === projectile.targetEnemyId && e.currentHealth > 0);
+          if (targetEnemy) {
+            const enemyPos = new Vector3(...targetEnemy.position);
+            const distance = newPosition.distanceTo(enemyPos);
+            
+            if (distance < hitRadius) {
+              onEnemyHit(targetEnemy.id, projectile.damage);
+              hit = true;
+            }
+          }
+        }
+        
+        // If target enemy wasn't hit, check all other enemies
+        if (!hit) {
+          for (const enemy of enemies) {
+            if (enemy.currentHealth <= 0) continue; // Skip dead enemies
+            
+            const enemyPos = new Vector3(...enemy.position);
+            const distance = newPosition.distanceTo(enemyPos);
+            
+            if (distance < hitRadius) {
+              onEnemyHit(enemy.id, projectile.damage);
+              hit = true;
+              break;
+            }
           }
         }
         
@@ -127,11 +172,11 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
           position={projectile.position.toArray() as [number, number, number]}
           castShadow
         >
-          <sphereGeometry args={[0.15, 8, 8]} />
+          <sphereGeometry args={[0.2, 8, 8]} />
           <meshStandardMaterial 
             color="#FFD700" 
             emissive="#FFD700" 
-            emissiveIntensity={0.5}
+            emissiveIntensity={0.8}
             transparent
             opacity={0.9}
           />
