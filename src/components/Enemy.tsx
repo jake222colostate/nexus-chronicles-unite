@@ -30,7 +30,15 @@ export const Enemy: React.FC<EnemyProps> = ({
   const fadeOutStarted = useRef(false);
 
   // Load vampire bat model
-  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  const { scene: batScene, error } = useGLTF('/assets/vampire-bat/source/bat.glb');
+
+  // Debug log for model loading
+  useEffect(() => {
+    console.log(`Enemy ${enemyId}: Bat model loaded:`, !!batScene, 'Error:', error);
+    if (batScene) {
+      console.log(`Enemy ${enemyId}: Bat scene children:`, batScene.children.length);
+    }
+  }, [batScene, error, enemyId]);
 
   // Initialize enemy health on mount - only once
   useEffect(() => {
@@ -105,22 +113,43 @@ export const Enemy: React.FC<EnemyProps> = ({
     return null;
   }
 
+  // Don't render if model hasn't loaded yet
+  if (!batScene) {
+    console.log(`Enemy ${enemyId}: Bat model not loaded yet, rendering fallback`);
+    return (
+      <group ref={groupRef} position={position}>
+        {/* Fallback red sphere while model loads */}
+        <mesh>
+          <sphereGeometry args={[1, 16, 16]} />
+          <meshStandardMaterial color="#ff0000" />
+        </mesh>
+      </group>
+    );
+  }
+
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
       {/* Health bar - only render if enemy health exists and is alive */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.5, 0]} 
+          position={[0, 2.5, 0]} 
         />
       )}
       
-      {/* Vampire Bat Model */}
+      {/* Vampire Bat Model - with larger scale and better positioning */}
       <primitive 
         object={batScene.clone()} 
-        scale={0.8}
+        scale={[2, 2, 2]} // Increased scale significantly
         rotation={[0, Math.PI, 0]} // Face the bat toward the player initially
+        position={[0, 0, 0]} // Center the model
       />
+      
+      {/* Debug wireframe to see the bounds */}
+      <mesh visible={false}>
+        <boxGeometry args={[2, 2, 2]} />
+        <meshBasicMaterial wireframe color="#00ff00" />
+      </mesh>
     </group>
   );
 };
