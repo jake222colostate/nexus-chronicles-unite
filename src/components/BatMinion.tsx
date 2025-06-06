@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, useAnimations } from '@react-three/drei';
 import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
@@ -35,8 +35,9 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model
-  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  // Load vampire bat model and animations
+  const { scene: batScene, animations } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  const { actions } = useAnimations(animations, batMeshRef);
 
   useEffect(() => {
     console.log(`BatMinion ${enemyId}: Model loading state - Scene:`, !!batScene);
@@ -73,6 +74,13 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       console.log(`BatMinion ${enemyId}: Bat model not yet loaded`);
     }
   }, [batScene, enemyId]);
+
+  // Play the flying animation if available
+  useEffect(() => {
+    if (actions && actions['Fly']) {
+      actions['Fly'].reset().play();
+    }
+  }, [actions]);
 
   // Initialize as enemy with proper flight position
   useEffect(() => {
