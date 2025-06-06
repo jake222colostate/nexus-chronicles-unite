@@ -7,6 +7,7 @@ import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
+import { Enemy } from './Enemy';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface Fantasy3DSceneProps {
