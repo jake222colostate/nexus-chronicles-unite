@@ -8,8 +8,6 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { Enemy } from './Enemy';
-import { GreatFairy } from './GreatFairy';
-import { BatMinion } from './BatMinion';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface Fantasy3DSceneProps {
@@ -61,7 +59,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const handleEnemyHit = useCallback(
     (id: string) => {
       enemySystemRef.current?.damageEnemy(id, 1);
-      console.log(`Enemy ${id} removed from main enemy system`);
+      console.log(`Enemy ${id} removed from enemy system`);
     },
     []
   );
@@ -73,18 +71,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       damageSystem.initializeEnemy(id, position);
     }
   }, [damageSystem]);
-
-  // Spawn bat minions when fairy spawns them - stable reference
-  const handleSpawnMinions = useCallback((fairyId: string, fairyPosition: [number, number, number]) => {
-    console.log(`Fantasy3DScene: Fairy ${fairyId} spawning minions`);
-    // The minions will be handled by the EnemySystem automatically
-  }, []);
-
-  // Get fairy position for bat minions - stable reference
-  const getFairyPosition = useCallback((parentId: string): Vector3 | undefined => {
-    const fairy = enemies.find(e => e.id === parentId && e.type === 'great_fairy');
-    return fairy ? new Vector3(...fairy.position) : undefined;
-  }, [enemies]);
 
   return (
     <Suspense fallback={null}>
@@ -128,7 +114,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         )}
       </ChunkSystem>
 
-      {/* Enemy System - spawns enemies ahead of player */}
+      {/* Enemy System - spawns vampire bat enemies ahead of player */}
       <EnemySystem
         ref={enemySystemRef}
         playerPosition={cameraPosition}
@@ -150,53 +136,21 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         />
       )}
 
-      {/* Render enemies with health data from damage system - handling all types */}
-      {enemies.map((enemy, index) => {
+      {/* Render vampire bat enemies with health data from damage system */}
+      {enemies.map((enemy) => {
         const enemyHealth = damageSystem?.getEnemyHealth(enemy.id);
         
-        if (enemy.type === 'great_fairy') {
-          return (
-            <GreatFairy
-              key={enemy.id}
-              enemyId={enemy.id}
-              position={enemy.position}
-              playerPosition={cameraPosition}
-              enemyHealth={enemyHealth}
-              onReachPlayer={() => handleEnemyHit(enemy.id)}
-              onInitialize={handleEnemyInitialize}
-              onSpawnMinions={handleSpawnMinions}
-            />
-          );
-        } else if (enemy.type === 'bat_minion') {
-          const fairyPosition = enemy.parentId ? getFairyPosition(enemy.parentId) : undefined;
-          const orbitalOffset = (index % 3) * (Math.PI * 2 / 3);
-          
-          return (
-            <BatMinion
-              key={enemy.id}
-              enemyId={enemy.id}
-              position={enemy.position}
-              playerPosition={cameraPosition}
-              fairyPosition={fairyPosition}
-              enemyHealth={enemyHealth}
-              onReachPlayer={() => handleEnemyHit(enemy.id)}
-              onInitialize={handleEnemyInitialize}
-              orbitalOffset={orbitalOffset}
-            />
-          );
-        } else {
-          return (
-            <Enemy
-              key={enemy.id}
-              enemyId={enemy.id}
-              position={enemy.position}
-              playerPosition={cameraPosition}
-              enemyHealth={enemyHealth}
-              onReachPlayer={() => handleEnemyHit(enemy.id)}
-              onInitialize={handleEnemyInitialize}
-            />
-          );
-        }
+        return (
+          <Enemy
+            key={enemy.id}
+            enemyId={enemy.id}
+            position={enemy.position}
+            playerPosition={cameraPosition}
+            enemyHealth={enemyHealth}
+            onReachPlayer={() => handleEnemyHit(enemy.id)}
+            onInitialize={handleEnemyInitialize}
+          />
+        );
       })}
 
       {/* Simplified contact shadows */}

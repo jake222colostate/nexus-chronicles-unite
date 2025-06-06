@@ -10,8 +10,6 @@ import React, {
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import { Enemy } from './Enemy';
-import { GreatFairy } from './GreatFairy';
-import { BatMinion } from './BatMinion';
 
 interface EnemySystemProps {
   playerPosition: Vector3;
@@ -26,8 +24,7 @@ export interface EnemyData {
   position: [number, number, number];
   spawnTime: number;
   health: number;
-  type: 'vampire_bat' | 'great_fairy' | 'bat_minion';
-  parentId?: string; // For minions to track their parent
+  type: 'vampire_bat';
 }
 
 export interface EnemySystemHandle {
@@ -55,38 +52,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
     }
   }, [enemies.length, onEnemiesChange]);
 
-  // Spawn bat minions for a fairy
-  const spawnBatMinions = useCallback((fairyId: string, fairyPosition: [number, number, number]) => {
-    const now = Date.now();
-    const numMinions = 3; // Spawn 3 bat minions
-    
-    setEnemies(prev => {
-      const newMinions: EnemyData[] = [];
-      
-      for (let i = 0; i < numMinions; i++) {
-        const angle = (i / numMinions) * Math.PI * 2;
-        const radius = 3;
-        const minionX = fairyPosition[0] + Math.cos(angle) * radius;
-        const minionZ = fairyPosition[2] + Math.sin(angle) * radius;
-        
-        const minion: EnemyData = {
-          id: `bat_minion_${fairyId}_${i}_${now}`,
-          position: [minionX, fairyPosition[1] + 2, minionZ],
-          spawnTime: now,
-          health: 1,
-          type: 'bat_minion',
-          parentId: fairyId
-        };
-        
-        newMinions.push(minion);
-        console.log(`EnemySystem: Spawning bat minion ${minion.id} for fairy ${fairyId} at position [${minionX}, ${fairyPosition[1] + 2}, ${minionZ}]`);
-      }
-      
-      return [...prev, ...newMinions];
-    });
-  }, []);
-
-  // Spawn new enemy ahead of player - ensure Great Fairy spawns as enemy
+  // Spawn new vampire bat enemy ahead of player
   const spawnEnemy = useCallback(() => {
     const now = Date.now();
     
@@ -95,9 +61,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
     }
 
     setEnemies(prev => {
-      // Count only main enemies (not minions) for max enemy limit
-      const mainEnemies = prev.filter(e => e.type !== 'bat_minion');
-      if (mainEnemies.length >= maxEnemies) {
+      if (prev.length >= maxEnemies) {
         return prev;
       }
 
@@ -107,18 +71,15 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
       // Random X position near the path
       const spawnX = (Math.random() - 0.5) * 20;
       
-      // Higher chance for Great Fairy to spawn (70% great fairy, 30% vampire bat)
-      const enemyType: 'vampire_bat' | 'great_fairy' = Math.random() < 0.7 ? 'great_fairy' : 'vampire_bat';
-      
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
-        position: [spawnX, 0, spawnZ], // Ground level for Great Fairy
+        position: [spawnX, 0, spawnZ],
         spawnTime: now,
         health: 1,
-        type: enemyType
+        type: 'vampire_bat'
       };
 
-      console.log(`EnemySystem: Spawning ${enemyType} enemy ${newEnemy.id} at position [${spawnX}, 0, ${spawnZ}]`);
+      console.log(`EnemySystem: Spawning vampire_bat enemy ${newEnemy.id} at position [${spawnX}, 0, ${spawnZ}]`);
       
       lastSpawnTime.current = now;
       return [...prev, newEnemy];
@@ -130,10 +91,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   // Remove enemy when it reaches player or gets too far behind
   const removeEnemy = useCallback((enemyId: string) => {
     console.log(`EnemySystem: Removing enemy ${enemyId}`);
-    setEnemies(prev => {
-      // Also remove any minions associated with this enemy
-      return prev.filter(enemy => enemy.id !== enemyId && enemy.parentId !== enemyId);
-    });
+    setEnemies(prev => prev.filter(enemy => enemy.id !== enemyId));
   }, []);
 
   const damageEnemy = useCallback((enemyId: string, damage: number) => {
@@ -176,57 +134,18 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
     }
   });
 
-  // Get fairy position for bat minions to follow
-  const getFairyPosition = useCallback((parentId: string): Vector3 | undefined => {
-    const fairy = enemies.find(e => e.id === parentId && e.type === 'great_fairy');
-    return fairy ? new Vector3(...fairy.position) : undefined;
-  }, [enemies]);
-
   return (
     <group>
-      {enemies.map((enemy, index) => {
-        // Render the appropriate enemy type
-        if (enemy.type === 'great_fairy') {
-          return (
-            <GreatFairy
-              key={enemy.id}
-              enemyId={enemy.id}
-              position={enemy.position}
-              playerPosition={playerPosition}
-              onReachPlayer={() => removeEnemy(enemy.id)}
-              onInitialize={onEnemyInitialize}
-              onSpawnMinions={spawnBatMinions}
-            />
-          );
-        } else if (enemy.type === 'bat_minion') {
-          const fairyPosition = enemy.parentId ? getFairyPosition(enemy.parentId) : undefined;
-          const orbitalOffset = (index % 3) * (Math.PI * 2 / 3); // Spread minions around fairy
-          
-          return (
-            <BatMinion
-              key={enemy.id}
-              enemyId={enemy.id}
-              position={enemy.position}
-              playerPosition={playerPosition}
-              fairyPosition={fairyPosition}
-              onReachPlayer={() => removeEnemy(enemy.id)}
-              onInitialize={onEnemyInitialize}
-              orbitalOffset={orbitalOffset}
-            />
-          );
-        } else {
-          return (
-            <Enemy
-              key={enemy.id}
-              enemyId={enemy.id}
-              position={enemy.position}
-              playerPosition={playerPosition}
-              onReachPlayer={() => removeEnemy(enemy.id)}
-              onInitialize={onEnemyInitialize}
-            />
-          );
-        }
-      })}
+      {enemies.map((enemy) => (
+        <Enemy
+          key={enemy.id}
+          enemyId={enemy.id}
+          position={enemy.position}
+          playerPosition={playerPosition}
+          onReachPlayer={() => removeEnemy(enemy.id)}
+          onInitialize={onEnemyInitialize}
+        />
+      ))}
     </group>
   );
 });
