@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -29,35 +30,30 @@ export const Enemy: React.FC<EnemyProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model - ensure correct path
+  // Load vampire bat model
   const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
-  // Debug log for model loading with proper type checking
   useEffect(() => {
     console.log(`Enemy ${enemyId}: Bat model loaded:`, !!batScene);
     if (batScene) {
       console.log(`Enemy ${enemyId}: Bat scene children:`, batScene.children.length);
       
-      // Ensure materials are properly loaded with type guards
+      // Ensure materials are visible
       batScene.traverse((child) => {
         if (child instanceof Mesh) {
           console.log(`Enemy ${enemyId}: Found mesh:`, child.name, 'Material:', !!child.material);
           if (child.material) {
-            // Ensure material is visible
             child.material.visible = true;
-            if ('map' in child.material && child.material.map) {
-              console.log(`Enemy ${enemyId}: Material has texture:`, !!child.material.map);
-            }
           }
         }
       });
     }
   }, [batScene, enemyId]);
 
-  // Initialize enemy health on mount - only once
+  // Initialize as enemy
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
-      console.log(`Enemy ${enemyId} initializing health system at position:`, position);
+      console.log(`Enemy ${enemyId} initializing as enemy at position:`, position);
       onInitialize(enemyId, position);
       initialized.current = true;
     }
@@ -66,28 +62,26 @@ export const Enemy: React.FC<EnemyProps> = ({
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
 
-    // Handle dead enemy - start fade out and disappear
+    // Handle death
     if (enemyHealth && enemyHealth.currentHealth <= 0) {
       if (!fadeOutStarted.current) {
         fadeOutStarted.current = true;
-        console.log(`Enemy ${enemyId} starting fade out - health: ${enemyHealth.currentHealth}`);
+        console.log(`Enemy ${enemyId} starting death fade - health: ${enemyHealth.currentHealth}`);
       }
       
-      // Fade out dead enemy quickly
       const currentScale = groupRef.current.scale.x;
       const newScale = Math.max(0, currentScale - delta * 3);
       groupRef.current.scale.setScalar(newScale);
       
-      // Make enemy completely invisible when scale is very small
       if (newScale <= 0.1 && !isFullyFaded.current) {
         groupRef.current.visible = false;
         isFullyFaded.current = true;
-        console.log(`Enemy ${enemyId} completely faded out and hidden`);
+        console.log(`Enemy ${enemyId} death complete`);
       }
       return;
     }
 
-    // Reset fade out if enemy is alive again (shouldn't happen but safety check)
+    // Reset if alive
     if (enemyHealth && enemyHealth.currentHealth > 0 && fadeOutStarted.current) {
       fadeOutStarted.current = false;
       isFullyFaded.current = false;
@@ -95,55 +89,52 @@ export const Enemy: React.FC<EnemyProps> = ({
       groupRef.current.scale.setScalar(1);
     }
 
-    // Calculate direction toward player for AI movement
+    // AI movement - chase player
     const direction = new Vector3()
       .subVectors(playerPosition, currentPosition.current)
       .normalize();
 
-    // Move toward player with proper enemy AI
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Update group position
+    // Update position
     groupRef.current.position.copy(currentPosition.current);
 
-    // Add flying animation - bat should bob up and down with proper AI behavior
+    // Flying animation
     if (groupRef.current) {
       const time = Date.now() * 0.003;
       const bobOffset = Math.sin(time + position[0]) * 0.3;
       groupRef.current.position.y = currentPosition.current.y + bobOffset;
       
-      // Face the direction of movement for proper AI behavior
+      // Face movement direction
       const angle = Math.atan2(direction.x, direction.z);
       groupRef.current.rotation.y = angle;
       
-      // Add slight rotation for more natural flying motion
+      // Flying motion
       groupRef.current.rotation.z = Math.sin(time * 0.5) * 0.1;
     }
 
-    // Check if enemy reached player (within 2 units)
+    // Check collision
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
     if (distanceToPlayer < 2 && onReachPlayer) {
       onReachPlayer();
     }
   });
 
-  // Don't render if dead and faded out - prevent continuous logging
+  // Don't render if dead
   if (enemyHealth && enemyHealth.currentHealth <= 0 && isFullyFaded.current) {
     return null;
   }
 
-  // Don't render if model hasn't loaded yet
+  // Fallback while loading
   if (!batScene) {
-    console.log(`Enemy ${enemyId}: Bat model not loaded yet, rendering fallback`);
+    console.log(`Enemy ${enemyId}: Bat model loading, showing fallback`);
     return (
       <group ref={groupRef} position={position}>
-        {/* Fallback red sphere while model loads */}
         <mesh>
           <sphereGeometry args={[1, 16, 16]} />
           <meshStandardMaterial color="#ff0000" />
         </mesh>
-        {/* Health bar positioned above fallback model */}
         {enemyHealth && enemyHealth.currentHealth > 0 && (
           <EnemyHealthBar 
             enemyHealth={enemyHealth} 
@@ -156,23 +147,23 @@ export const Enemy: React.FC<EnemyProps> = ({
 
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Health bar - positioned above bat model */}
+      {/* Health bar attached as child - follows bat exactly */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 3.2, 0]}
+          position={[0, 2.8, 0]} // Positioned above bat
         />
       )}
       
-      {/* Vampire Bat Model - properly scaled and positioned */}
+      {/* Vampire Bat Model - main enemy scale */}
       <primitive 
         object={batScene.clone()} 
-        scale={[2.5, 2.5, 2.5]}
+        scale={[2.0, 2.0, 2.0]} // Larger than minions
         rotation={[0, Math.PI, 0]}
         position={[0, 0, 0]}
       />
       
-      {/* Debug wireframe to see the bounds */}
+      {/* Debug collision bounds */}
       <mesh visible={false}>
         <boxGeometry args={[2.5, 2.5, 2.5]} />
         <meshBasicMaterial wireframe color="#00ff00" />
@@ -181,5 +172,5 @@ export const Enemy: React.FC<EnemyProps> = ({
   );
 };
 
-// Preload the vampire bat model
+// Preload model
 useGLTF.preload('/assets/vampire-bat/source/bat.glb');

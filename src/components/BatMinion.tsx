@@ -14,7 +14,7 @@ interface BatMinionProps {
   enemyHealth?: EnemyHealth;
   onInitialize?: (id: string, position: [number, number, number]) => void;
   enemyId: string;
-  orbitalOffset?: number; // For positioning around fairy
+  orbitalOffset?: number;
 }
 
 export const BatMinion: React.FC<BatMinionProps> = ({ 
@@ -29,7 +29,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
 }) => {
   const groupRef = useRef<Group>(null);
   const currentPosition = useRef(new Vector3(...position));
-  const speed = 2.5; // Slightly faster than fairy
+  const speed = 2.5;
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
@@ -37,7 +37,6 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   // Load vampire bat model
   const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
-  // Debug log for model loading
   useEffect(() => {
     console.log(`BatMinion ${enemyId}: Model loaded:`, !!batScene);
     if (batScene) {
@@ -45,10 +44,10 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     }
   }, [batScene, enemyId]);
 
-  // Initialize enemy health on mount - only once
+  // Initialize as enemy
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
-      console.log(`BatMinion ${enemyId} initializing health system at position:`, position);
+      console.log(`BatMinion ${enemyId} initializing as enemy at position:`, position);
       onInitialize(enemyId, position);
       initialized.current = true;
     }
@@ -57,28 +56,26 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
 
-    // Handle dead enemy - start fade out and disappear
+    // Handle death
     if (enemyHealth && enemyHealth.currentHealth <= 0) {
       if (!fadeOutStarted.current) {
         fadeOutStarted.current = true;
-        console.log(`BatMinion ${enemyId} starting fade out - health: ${enemyHealth.currentHealth}`);
+        console.log(`BatMinion ${enemyId} starting death fade - health: ${enemyHealth.currentHealth}`);
       }
       
-      // Fade out dead enemy quickly
       const currentScale = groupRef.current.scale.x;
       const newScale = Math.max(0, currentScale - delta * 3);
       groupRef.current.scale.setScalar(newScale);
       
-      // Make enemy completely invisible when scale is very small
       if (newScale <= 0.1 && !isFullyFaded.current) {
         groupRef.current.visible = false;
         isFullyFaded.current = true;
-        console.log(`BatMinion ${enemyId} completely faded out and hidden`);
+        console.log(`BatMinion ${enemyId} death complete`);
       }
       return;
     }
 
-    // Reset fade out if enemy is alive again
+    // Reset if alive
     if (enemyHealth && enemyHealth.currentHealth > 0 && fadeOutStarted.current) {
       fadeOutStarted.current = false;
       isFullyFaded.current = false;
@@ -86,11 +83,11 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       groupRef.current.scale.setScalar(1);
     }
 
-    // Determine target position - orbit around fairy if available, otherwise chase player
+    // AI behavior - orbit fairy or chase player
     let targetPosition = playerPosition.clone();
     
     if (fairyPosition) {
-      // Always orbit around fairy when fairy exists
+      // Orbit around fairy
       const time = Date.now() * 0.002;
       const orbitRadius = 3;
       const orbitAngle = time + orbitalOffset;
@@ -98,22 +95,20 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       targetPosition = fairyPosition.clone();
       targetPosition.x += Math.cos(orbitAngle) * orbitRadius;
       targetPosition.z += Math.sin(orbitAngle) * orbitRadius;
-      targetPosition.y += 2 + Math.sin(time * 3 + orbitalOffset) * 0.5; // Flying height with bobbing
+      targetPosition.y += 2 + Math.sin(time * 3 + orbitalOffset) * 0.5;
     }
 
-    // Calculate direction toward target
     const direction = new Vector3()
       .subVectors(targetPosition, currentPosition.current)
       .normalize();
 
-    // Move toward target with bat AI
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Update group position
+    // Update position
     groupRef.current.position.copy(currentPosition.current);
 
-    // Add flying animation - bats should have erratic flying motion
+    // Flying animation
     if (groupRef.current) {
       const time = Date.now() * 0.005;
       const flyBob = Math.sin(time * 2 + orbitalOffset) * 0.4;
@@ -122,38 +117,36 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       groupRef.current.position.y = currentPosition.current.y + flyBob;
       groupRef.current.position.x = currentPosition.current.x + flyWobble;
       
-      // Face the direction of movement
+      // Face movement direction
       const angle = Math.atan2(direction.x, direction.z);
       groupRef.current.rotation.y = angle;
       
-      // Add wing flapping motion
+      // Wing flapping
       groupRef.current.rotation.z = Math.sin(time * 8) * 0.2;
       groupRef.current.rotation.x = Math.sin(time * 6) * 0.1;
     }
 
-    // Check if enemy reached player (within 1.5 units for smaller bats)
+    // Check collision
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
     if (distanceToPlayer < 1.5 && onReachPlayer) {
       onReachPlayer();
     }
   });
 
-  // Don't render if dead and faded out
+  // Don't render if dead
   if (enemyHealth && enemyHealth.currentHealth <= 0 && isFullyFaded.current) {
     return null;
   }
 
-  // Don't render if model hasn't loaded yet
+  // Fallback while loading
   if (!batScene) {
-    console.log(`BatMinion ${enemyId}: Model not loaded yet, rendering fallback`);
+    console.log(`BatMinion ${enemyId}: Model loading, showing fallback`);
     return (
       <group ref={groupRef} position={position}>
-        {/* Fallback dark sphere while model loads */}
         <mesh>
           <sphereGeometry args={[0.4, 16, 16]} />
           <meshStandardMaterial color="#330000" />
         </mesh>
-        {/* Small health bar for minion */}
         {enemyHealth && enemyHealth.currentHealth > 0 && (
           <EnemyHealthBar 
             enemyHealth={enemyHealth} 
@@ -166,23 +159,23 @@ export const BatMinion: React.FC<BatMinionProps> = ({
 
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Small health bar for bat minion */}
+      {/* Health bar attached as child - follows bat exactly */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.8, 0]} // Lower than fairy but still visible
+          position={[0, 1.5, 0]} // Fixed position above bat
         />
       )}
       
-      {/* Vampire Bat Model - smaller scale for minions */}
+      {/* Vampire Bat Model - proper minion scale */}
       <primitive 
         object={batScene.clone()} 
-        scale={[1.5, 1.5, 1.5]} // Smaller than main enemy bats
+        scale={[1.2, 1.2, 1.2]} // Smaller than main bats
         rotation={[0, Math.PI, 0]} 
         position={[0, 0, 0]}
       />
       
-      {/* Debug wireframe for bat bounds */}
+      {/* Debug collision bounds */}
       <mesh visible={false}>
         <boxGeometry args={[1.5, 1.5, 1.5]} />
         <meshBasicMaterial wireframe color="#660000" />
@@ -191,5 +184,5 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   );
 };
 
-// Preload the vampire bat model
+// Preload model
 useGLTF.preload('/assets/vampire-bat/source/bat.glb');
