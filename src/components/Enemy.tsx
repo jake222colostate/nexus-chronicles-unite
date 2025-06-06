@@ -26,6 +26,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   const currentPosition = useRef(new Vector3(...position));
   const speed = 2;
   const initialized = useRef(false);
+  const fadeOutStarted = useRef(false);
 
   // Initialize enemy health on mount - only once
   useEffect(() => {
@@ -39,14 +40,31 @@ export const Enemy: React.FC<EnemyProps> = ({
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
 
-    // Don't move if dead
+    // Handle dead enemy - start fade out and disappear
     if (enemyHealth && enemyHealth.currentHealth <= 0) {
-      // Fade out dead enemy
-      groupRef.current.scale.setScalar(Math.max(0, groupRef.current.scale.x - delta * 2));
-      if (groupRef.current.scale.x <= 0.1) {
+      if (!fadeOutStarted.current) {
+        fadeOutStarted.current = true;
+        console.log(`Enemy ${enemyId} starting fade out - health: ${enemyHealth.currentHealth}`);
+      }
+      
+      // Fade out dead enemy quickly
+      const currentScale = groupRef.current.scale.x;
+      const newScale = Math.max(0, currentScale - delta * 3); // Faster fade out
+      groupRef.current.scale.setScalar(newScale);
+      
+      // Make enemy completely invisible when scale is very small
+      if (newScale <= 0.1) {
         groupRef.current.visible = false;
+        console.log(`Enemy ${enemyId} completely faded out and hidden`);
       }
       return;
+    }
+
+    // Reset fade out if enemy is alive again (shouldn't happen but safety check)
+    if (enemyHealth && enemyHealth.currentHealth > 0 && fadeOutStarted.current) {
+      fadeOutStarted.current = false;
+      groupRef.current.visible = true;
+      groupRef.current.scale.setScalar(1);
     }
 
     // Calculate direction toward player
@@ -68,16 +86,14 @@ export const Enemy: React.FC<EnemyProps> = ({
     }
   });
 
-  // Don't render if dead and faded out
+  // Don't render if dead and faded out or not visible
   if (enemyHealth && enemyHealth.currentHealth <= 0 && groupRef.current && !groupRef.current.visible) {
     return null;
   }
 
-  console.log(`Enemy ${enemyId} rendering with health:`, enemyHealth);
-
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Health bar - render if enemy health exists and is alive */}
+      {/* Health bar - only render if enemy health exists and is alive */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 

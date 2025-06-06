@@ -39,11 +39,13 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
   const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2)); // 0-2 based on upgrade progression
 
-  // Initialize shared damage system
+  // Initialize shared damage system with console logging
   const damageSystem = useEnemyDamageSystem({
     playerZ: cameraPosition.z,
     upgradeLevel: weaponUpgradeLevel
   });
+
+  console.log('Fantasy3DScene: Damage system initialized:', !!damageSystem);
 
   const handleEnemiesChange = useCallback(
     (list: EnemyData[]) => {
@@ -67,11 +69,15 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Initialize enemies in damage system when they spawn
   const handleEnemyInitialize = useCallback((id: string, position: [number, number, number]) => {
     console.log(`Fantasy3DScene: Initializing enemy ${id} in damage system at position:`, position);
-    damageSystem.initializeEnemy(id, position);
+    if (damageSystem) {
+      damageSystem.initializeEnemy(id, position);
+    }
   }, [damageSystem]);
 
   // Clean up damage system when enemies are removed from main system
   React.useEffect(() => {
+    if (!damageSystem) return;
+    
     const currentEnemyIds = new Set(enemies.map(e => e.id));
     damageSystem.enemyHealths.forEach(healthEnemy => {
       if (!currentEnemyIds.has(healthEnemy.id)) {
@@ -80,6 +86,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       }
     });
   }, [enemies, damageSystem]);
+
+  // Don't render weapon system until damage system is ready
+  if (!damageSystem) {
+    console.log('Fantasy3DScene: Waiting for damage system to initialize...');
+  }
 
   return (
     <Suspense fallback={null}>
@@ -118,19 +129,21 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         onEnemyInitialize={handleEnemyInitialize}
       />
 
-      {/* Wizard Staff Weapon - pass damage system */}
-      <WizardStaffWeapon 
-        enemies={enemies} 
-        onEnemyHit={handleEnemyHit}
-        upgradeLevel={weaponUpgradeLevel}
-        playerPosition={cameraPosition}
-        onEnemyKilled={onEnemyKilled}
-        damageSystem={damageSystem}
-      />
+      {/* Wizard Staff Weapon - only render when damage system is ready */}
+      {damageSystem && (
+        <WizardStaffWeapon 
+          enemies={enemies} 
+          onEnemyHit={handleEnemyHit}
+          upgradeLevel={weaponUpgradeLevel}
+          playerPosition={cameraPosition}
+          onEnemyKilled={onEnemyKilled}
+          damageSystem={damageSystem}
+        />
+      )}
 
       {/* Render enemies with health data from damage system */}
       {enemies.map(enemy => {
-        const enemyHealth = damageSystem.getEnemyHealth(enemy.id);
+        const enemyHealth = damageSystem?.getEnemyHealth(enemy.id);
         return (
           <Enemy
             key={enemy.id}

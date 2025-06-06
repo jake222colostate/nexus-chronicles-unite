@@ -29,6 +29,12 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
   const { camera } = useThree();
   const { texts, addText } = useFloatingCombatText();
 
+  // Early return if damage system not ready
+  if (!damageSystem) {
+    console.log('WizardStaffWeapon: Damage system not ready');
+    return null;
+  }
+
   // Handle enemy hits from projectiles - this is the main damage handler
   const handleEnemyHit = React.useCallback((enemyId: string, damage: number) => {
     console.log(`WizardStaffWeapon: Enemy ${enemyId} hit for ${damage} damage`);
@@ -77,6 +83,8 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
 
   // Convert main enemies to format expected by ProjectileSystem
   const enemiesWithHealth = React.useMemo(() => {
+    if (!damageSystem) return [];
+    
     return enemies.map(enemy => {
       const healthData = damageSystem.getEnemyHealth(enemy.id);
       if (healthData) {
@@ -93,6 +101,13 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
     }).filter(Boolean);
   }, [enemies, damageSystem]);
 
+  // Calculate weapon damage based on upgrade level
+  const weaponDamage = React.useMemo(() => {
+    const baseDamage = damageSystem.projectileDamage || 5;
+    const upgradeBonus = upgradeLevel * 3; // Significant damage increase per upgrade
+    return baseDamage + upgradeBonus;
+  }, [damageSystem.projectileDamage, upgradeLevel]);
+
   return (
     <group>
       {/* Wizard Staff (hidden) */}
@@ -102,7 +117,7 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
       <ProjectileSystem
         enemies={enemiesWithHealth}
         onEnemyHit={handleEnemyHit}
-        projectileDamage={damageSystem.projectileDamage}
+        projectileDamage={weaponDamage}
         upgradeLevel={upgradeLevel}
       />
       

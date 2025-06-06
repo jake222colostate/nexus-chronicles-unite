@@ -30,15 +30,19 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
   const groupRef = useRef<Group>(null);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   
-  // Slower auto-fire rate for more strategic combat
-  const fireRate = Math.max(400, 1000 - (upgradeLevel * 50)); // Slower firing
+  // Improved fire rate based on upgrade level
+  const fireRate = React.useMemo(() => {
+    const baseRate = 1000; // 1 second base
+    const upgradeReduction = upgradeLevel * 100; // 100ms faster per upgrade
+    return Math.max(300, baseRate - upgradeReduction); // Minimum 300ms between shots
+  }, [upgradeLevel]);
+  
   const lastFireTime = useRef(0);
 
   // Find closest living enemy for automatic targeting
   const findClosestEnemy = useCallback(() => {
     const livingEnemies = enemies.filter(enemy => enemy.currentHealth > 0);
     if (livingEnemies.length === 0) {
-      console.log('ProjectileSystem: No living enemies found');
       return null;
     }
 
@@ -54,10 +58,11 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
     }
 
     // Only target enemies within reasonable range
-    const inRange = closestDistance < 100;
+    const maxRange = 100 + (upgradeLevel * 10); // Increased range with upgrades
+    const inRange = closestDistance < maxRange;
     console.log(`ProjectileSystem: Closest enemy ${closest.id} at distance ${closestDistance.toFixed(2)}, in range: ${inRange}`);
     return inRange ? closest : null;
-  }, [enemies, camera]);
+  }, [enemies, camera, upgradeLevel]);
 
   const createProjectile = useCallback((fromClick = false) => {
     const targetEnemy = findClosestEnemy();
@@ -81,18 +86,21 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
       .add(rightOffset)
       .add(upOffset);
 
+    // Improved projectile speed based on upgrade level
+    const projectileSpeed = 40 + (upgradeLevel * 5);
+
     const newProjectile: Projectile = {
       id: `proj_${Date.now()}_${Math.random()}`,
       position: origin,
       direction: direction.normalize(),
       damage: projectileDamage,
-      speed: 40,
+      speed: projectileSpeed,
       targetEnemyId: targetEnemy.id
     };
 
     setProjectiles(prev => [...prev, newProjectile]);
-    console.log(`ProjectileSystem: Projectile fired at enemy ${targetEnemy.id} with ${projectileDamage} damage`);
-  }, [camera, projectileDamage, findClosestEnemy]);
+    console.log(`ProjectileSystem: Projectile fired at enemy ${targetEnemy.id} with ${projectileDamage} damage, speed ${projectileSpeed}`);
+  }, [camera, projectileDamage, findClosestEnemy, upgradeLevel]);
 
   // Handle mouse click to shoot
   React.useEffect(() => {
@@ -109,7 +117,7 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
   useFrame((_, delta) => {
     const currentTime = Date.now();
     
-    // Auto-fire at closest enemy
+    // Auto-fire at closest enemy with improved fire rate
     if (currentTime - lastFireTime.current > fireRate) {
       createProjectile(false);
       lastFireTime.current = currentTime;
@@ -144,7 +152,7 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
         }
         
         // Remove projectile if hit or too far
-        const maxDistance = 150;
+        const maxDistance = 150 + (upgradeLevel * 20); // Increased range with upgrades
         if (!hit && camera.position.distanceTo(newPosition) < maxDistance) {
           updated.push({
             ...projectile,
