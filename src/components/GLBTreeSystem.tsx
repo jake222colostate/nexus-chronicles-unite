@@ -10,10 +10,10 @@ interface GLBTreeSystemProps {
   realm: 'fantasy' | 'scifi';
 }
 
-// Local GLB tree models bundled with the project
+// Updated tree models with proper pine_tree_218poly path
 const TREE_MODELS = {
   stylized: '/stylized_tree.glb',
-  pine218: '/pine_tree_218poly.glb',
+  pine218: '/assets/pine_tree_218poly.glb', // Corrected path to assets folder
   pineLow: '/lowpoly_pine_tree.glb'
 } as const;
 
@@ -51,14 +51,14 @@ const FallbackTree: React.FC<{ position: [number, number, number]; scale: number
         <cylinderGeometry args={[0.1, 0.15, 1]} />
         <meshLambertMaterial color="#8B4513" />
       </mesh>
-      {/* Tree foliage */}
+      {/* Pine tree foliage - multiple cone layers */}
       <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
         <coneGeometry args={[0.8, 1.5, 8]} />
-        <meshLambertMaterial color="#228B22" />
+        <meshLambertMaterial color="#013220" />
       </mesh>
       <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
         <coneGeometry args={[0.6, 1.2, 8]} />
-        <meshLambertMaterial color="#32CD32" />
+        <meshLambertMaterial color="#228B22" />
       </mesh>
     </group>
   );
@@ -72,24 +72,33 @@ const GLBTree: React.FC<{
   rotation: number;
 }> = ({ modelUrl, position, scale, rotation }) => {
   try {
+    console.log('GLBTree: Loading model from:', modelUrl);
     const { scene } = useGLTF(modelUrl);
 
     if (!scene) {
-      console.warn('Tree scene not loaded, using fallback');
+      console.warn('GLBTree: Scene not loaded for', modelUrl, 'using fallback');
       return <FallbackTree position={position} scale={scale} rotation={rotation} />;
     }
 
-    // Clone the scene so each instance can be transformed independently
-    const clonedScene = useMemo(() => scene.clone(), [scene]);
+    console.log('GLBTree: Successfully loaded', modelUrl);
 
-    // Ensure shadows work for all meshes
-    clonedScene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-        if (child.material) child.material.needsUpdate = true;
-      }
-    });
+    // Clone the scene so each instance can be transformed independently
+    const clonedScene = useMemo(() => {
+      const clone = scene.clone();
+      
+      // Ensure shadows work for all meshes
+      clone.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+      
+      return clone;
+    }, [scene]);
 
     return (
       <group position={position} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
@@ -97,7 +106,7 @@ const GLBTree: React.FC<{
       </group>
     );
   } catch (error) {
-    console.error('Failed to load GLB tree model, using fallback:', error);
+    console.error('GLBTree: Failed to load model', modelUrl, error);
     return <FallbackTree position={position} scale={scale} rotation={rotation} />;
   }
 };
@@ -117,7 +126,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
     return null;
   }
 
-  // Generate tree positions for each chunk
+  // Generate tree positions for each chunk with focus on pine_tree_218poly
   const treePositions = useMemo(() => {
     console.log('Generating tree positions for', chunks.length, 'chunks');
     const positions: Array<{
@@ -135,8 +144,8 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate fewer trees per chunk to avoid overcrowding
-      const treeCount = 1 + Math.floor(seededRandom(seed) * 2); // 1-2 trees per chunk
+      // Generate 2-3 trees per chunk, focusing on pine_tree_218poly
+      const treeCount = 2 + Math.floor(seededRandom(seed) * 2); // 2-3 trees per chunk
       console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
       
       for (let i = 0; i < treeCount; i++) {
@@ -157,17 +166,21 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
             continue;
           }
           
-          // Calculate terrain height for proper placement - ensure it's a number
+          // Calculate terrain height for proper placement
           y = Number(getTerrainHeight(x, z));
           
-          // Randomly select a tree model
-          const modelKeys = Object.keys(TREE_MODELS) as Array<keyof typeof TREE_MODELS>;
-          const modelIndex = Math.floor(seededRandom(treeSeed + 2) * modelKeys.length);
-          const treeKey = modelKeys[modelIndex];
-          modelUrl = TREE_MODELS[treeKey];
+          // Prioritize pine_tree_218poly (70% chance), then others
+          const modelRandom = seededRandom(treeSeed + 2);
+          if (modelRandom < 0.7) {
+            modelUrl = TREE_MODELS.pine218; // 70% pine_tree_218poly
+          } else if (modelRandom < 0.85) {
+            modelUrl = TREE_MODELS.stylized; // 15% stylized
+          } else {
+            modelUrl = TREE_MODELS.pineLow; // 15% pineLow
+          }
 
-          // Much smaller scale for trees - they should be decorative elements
-          const baseScale = 0.3; // Reduced from 0.8-0.9 to 0.3
+          // Appropriate scale for pine trees
+          const baseScale = 0.4; // Good size for pine trees
           const variation = 0.8 + seededRandom(treeSeed + 3) * 0.4; // 0.8-1.2 variation
           scale = baseScale * variation;
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
@@ -189,14 +202,14 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
         
         if (validPosition && x !== undefined && z !== undefined && y !== undefined && scale !== undefined && rotation !== undefined && modelUrl !== undefined) {
           positions.push({ x, z, y, scale, rotation, modelUrl, chunkId: seed });
-          console.log(`Tree ${i} placed at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
+          console.log(`Pine tree ${i} placed at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)} using model: ${modelUrl}`);
         } else {
           console.warn(`Failed to place tree ${i} in chunk ${chunk.id} after ${maxAttempts} attempts`);
         }
       }
     });
     
-    console.log(`Total trees generated: ${positions.length}`);
+    console.log(`Total pine trees generated: ${positions.length}`);
     return positions;
   }, [chunks, chunkSize]);
 
@@ -205,7 +218,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
       <Suspense fallback={null}>
         {treePositions.map((pos, index) => (
           <GLBTree
-            key={`glb-tree-${pos.chunkId}-${index}`}
+            key={`pine-tree-${pos.chunkId}-${index}`}
             modelUrl={pos.modelUrl}
             position={[pos.x, pos.y, pos.z]}
             scale={pos.scale}
@@ -217,13 +230,13 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
   );
 };
 
-// Preload the model for better performance, but handle errors gracefully
-console.log('Attempting to preload GLB tree models...');
+// Preload the pine_tree_218poly model for better performance
+console.log('GLBTreeSystem: Preloading pine tree models...');
 Object.values(TREE_MODELS).forEach((url) => {
   try {
     useGLTF.preload(url);
-    console.log('Preloaded tree model:', url);
+    console.log('GLBTreeSystem: Preloaded tree model:', url);
   } catch (error) {
-    console.warn('Failed to preload GLB model:', url, error);
+    console.warn('GLBTreeSystem: Failed to preload model:', url, error);
   }
 });

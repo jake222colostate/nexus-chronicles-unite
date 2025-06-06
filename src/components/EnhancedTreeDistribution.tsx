@@ -55,27 +55,27 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 8;
 };
 
-// Get tree type with specified distribution ratios
-const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine' => {
+// Get tree type with updated distribution favoring pine218
+const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine218' => {
   const random = seededRandom(seed);
-  if (random < TREE_DISTRIBUTION.pine) return 'pine'; // 40%
-  if (random < TREE_DISTRIBUTION.pine + TREE_DISTRIBUTION.stylized) return 'stylized'; // 30%
-  return 'realistic'; // 30%
+  if (random < TREE_DISTRIBUTION.pine218) return 'pine218'; // 60%
+  if (random < TREE_DISTRIBUTION.pine218 + TREE_DISTRIBUTION.stylized) return 'stylized'; // 20%
+  return 'realistic'; // 20%
 };
 
 // Get randomized scale based on tree type
-const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine', seed: number): number => {
+const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: number): number => {
   const scaleConfig = TREE_SCALES[treeType];
   const random = seededRandom(seed);
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// Tree component that loads GLB models
+// Tree component that loads GLB models with pine218 priority
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
-  treeType: 'realistic' | 'stylized' | 'pine';
+  treeType: 'realistic' | 'stylized' | 'pine218';
 }> = ({ position, scale, rotation, treeType }) => {
   const [treeModel, setTreeModel] = useState<THREE.Object3D | null>(null);
   const groupRef = useRef<THREE.Group>(null);
@@ -84,12 +84,15 @@ const GLBTree: React.FC<{
     // Try to get cached model first
     const cachedModel = TreeAssetManager.getCachedModel(treeType);
     if (cachedModel) {
+      console.log(`EnhancedTreeDistribution: Using cached ${treeType} model`);
       setTreeModel(cachedModel);
     } else {
+      console.log(`EnhancedTreeDistribution: Loading ${treeType} model...`);
       // If not cached, try to load it
       TreeAssetManager.preloadAllModels().then(() => {
         const model = TreeAssetManager.getCachedModel(treeType);
         if (model) {
+          console.log(`EnhancedTreeDistribution: Successfully loaded ${treeType} model`);
           setTreeModel(model);
         }
       });
@@ -104,7 +107,7 @@ const GLBTree: React.FC<{
   ];
 
   if (!treeModel) {
-    // Show placeholder while loading
+    // Show pine-specific placeholder while loading
     return (
       <group position={adjustedPosition} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
         <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
@@ -112,8 +115,8 @@ const GLBTree: React.FC<{
           <meshLambertMaterial color="#8B4513" />
         </mesh>
         <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
-          <sphereGeometry args={[0.6, 8, 6]} />
-          <meshLambertMaterial color="#228B22" />
+          <coneGeometry args={[0.6, 1.5, 8]} />
+          <meshLambertMaterial color={treeType === 'pine218' ? "#013220" : "#228B22"} />
         </mesh>
       </group>
     );
@@ -136,7 +139,7 @@ const TreeInstance: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
-  treeType: 'realistic' | 'stylized' | 'pine';
+  treeType: 'realistic' | 'stylized' | 'pine218';
   playerPosition: THREE.Vector3;
 }> = ({ position, scale, rotation, treeType, playerPosition }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -173,7 +176,7 @@ const InstancedTreeGroup: React.FC<{
     z: number; 
     scale: number; 
     rotation: number; 
-    treeType: 'realistic' | 'stylized' | 'pine';
+    treeType: 'realistic' | 'stylized' | 'pine218';
   }>;
   playerPosition: THREE.Vector3;
 }> = ({ positions, playerPosition }) => {
@@ -182,13 +185,18 @@ const InstancedTreeGroup: React.FC<{
     return distance <= 120;
   });
 
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees from GitHub models`);
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees with pine218 priority`);
+  console.log('Tree type distribution:', {
+    pine218: visiblePositions.filter(p => p.treeType === 'pine218').length,
+    stylized: visiblePositions.filter(p => p.treeType === 'stylized').length,
+    realistic: visiblePositions.filter(p => p.treeType === 'realistic').length
+  });
 
   return (
-    <group name="GitHubTreeGroup">
+    <group name="Pine218TreeGroup">
       {visiblePositions.slice(0, 50).map((pos, index) => (
         <TreeInstance
-          key={`github-tree-${index}-${pos.treeType}`}
+          key={`pine218-tree-${index}-${pos.treeType}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -205,7 +213,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with new distribution ratios
+  // Generate tree positions with new distribution ratios favoring pine218
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -215,7 +223,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating tree positions with GitHub models for', chunks.length, 'chunks');
+    console.log('EnhancedTreeDistribution: Generating tree positions with pine218 priority for', chunks.length, 'chunks');
     const trees = [];
     const minDistance = 3; // 3m minimum spacing as specified
     const maxAttempts = 30;
@@ -224,8 +232,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 3-5 trees per chunk for good density
-      const treeCount = 3 + Math.floor(seededRandom(seed) * 3);
+      // Generate 4-6 trees per chunk for good density with pine218 focus
+      const treeCount = 4 + Math.floor(seededRandom(seed) * 3);
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -247,7 +255,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             continue;
           }
           
-          // Get tree type with new distribution ratios
+          // Get tree type with pine218 priority (60% chance)
           treeType = getTreeType(treeSeed + 2);
           
           // Get randomized scale based on tree type
@@ -281,9 +289,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with GitHub models`);
-    console.log('Tree distribution:', {
-      pine: trees.filter(t => t.treeType === 'pine').length,
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with pine218 priority`);
+    console.log('Final tree distribution:', {
+      pine218: trees.filter(t => t.treeType === 'pine218').length,
       stylized: trees.filter(t => t.treeType === 'stylized').length,
       realistic: trees.filter(t => t.treeType === 'realistic').length
     });
