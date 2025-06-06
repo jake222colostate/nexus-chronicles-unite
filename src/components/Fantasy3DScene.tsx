@@ -8,6 +8,7 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { Enemy } from './Enemy';
+import { MountainWalls } from './MountainWalls';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface Fantasy3DSceneProps {
@@ -102,6 +103,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
+
+      {/* Mountain walls on both sides */}
+      <MountainWalls />
 
       {/* Optimized chunk system with performance limits */}
       <ChunkSystem
