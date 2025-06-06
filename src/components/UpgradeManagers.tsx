@@ -1,4 +1,3 @@
-
 import { useCallback, useMemo } from 'react';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { GameState, fantasyBuildings, scifiBuildings } from './GameStateManager';
@@ -140,18 +139,18 @@ export const useUpgradeManagers = ({
     }));
   }, [gameState.weaponUpgrades]);
 
-  // Combat stats with improved damage calculation
+  // Combat stats with improved automatic weapon calculations
   const combatStats = useMemo(() => {
     const manaBlasterLevel = gameState.combatUpgrades.manaBlaster || 0;
     const fireRateLevel = gameState.combatUpgrades.fireRate || 0;
     const autoAimLevel = gameState.combatUpgrades.autoAim || 0;
     
     return {
-      damage: 1 + manaBlasterLevel * 2,
-      fireRate: Math.max(500, 1000 - (fireRateLevel * 80)),
+      damage: 2 + manaBlasterLevel * 3, // More damage per upgrade
+      fireRate: Math.max(300, 1000 - (fireRateLevel * 60)), // Faster firing
       explosionRadius: 2 + (gameState.combatUpgrades.explosionRadius || 0) * 2,
       accuracy: 1 + (gameState.combatUpgrades.accuracy || 0) * 0.2,
-      autoAimRange: autoAimLevel > 0 ? 5 + autoAimLevel * 3 : 0
+      autoAimRange: autoAimLevel > 0 ? 15 + autoAimLevel * 5 : 15 // Default range even at level 0
     };
   }, [gameState.combatUpgrades]);
 

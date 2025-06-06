@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useState, useCallback } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
@@ -7,6 +8,7 @@ import { FantasyScreenshotEnvironment } from './FantasyScreenshotEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
+import { AutomaticWeaponSystem } from './AutomaticWeaponSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -20,6 +22,11 @@ interface Fantasy3DSceneProps {
   onEnemyCountChange?: (count: number) => void;
   onEnemyKilled?: (reward: number) => void;
   weaponStats: { damage: number; fireRate: number; range: number };
+  combatStats?: {
+    damage: number;
+    fireRate: number;
+    autoAimRange: number;
+  };
 }
 
 export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
@@ -31,6 +38,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   onEnemyCountChange,
   onEnemyKilled,
   weaponStats,
+  combatStats,
   maxUnlockedUpgrade
 }) => {
   const enemySystemRef = useRef<EnemySystemHandle>(null);
@@ -54,6 +62,13 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     },
     [onEnemyKilled]
   );
+
+  // Default combat stats if not provided
+  const defaultCombatStats = {
+    damage: 2,
+    fireRate: 800,
+    autoAimRange: 20
+  };
 
   return (
     <Suspense fallback={null}>
@@ -91,14 +106,21 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         onEnemiesChange={handleEnemiesChange}
       />
 
-      {/* Wizard Staff Weapon */}
+      {/* Automatic Weapon System - new primary weapon */}
+      <AutomaticWeaponSystem
+        enemies={enemies}
+        combatStats={combatStats || defaultCombatStats}
+        onEnemyHit={handleEnemyHit}
+      />
+
+      {/* Wizard Staff Weapon - legacy system */}
       <WizardStaffWeapon
         enemies={enemies}
         weaponStats={weaponStats}
         onEnemyHit={handleEnemyHit}
       />
 
-      {/* Magic Staff Weapon System - New upgraded weapon system */}
+      {/* Magic Staff Weapon System - visual weapon display */}
       <MagicStaffWeaponSystem
         upgradeLevel={weaponUpgradeLevel}
         visible={true}

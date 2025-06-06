@@ -44,6 +44,7 @@ export const Enemy: React.FC<EnemyProps> = ({
 
   return (
     <group ref={groupRef} position={data.position} castShadow receiveShadow>
+      {/* Enemy model based on type */}
       {data.type === 'demon' ? (
         <>
           <mesh position={[0, -1, 0]}>
@@ -76,14 +77,16 @@ export const Enemy: React.FC<EnemyProps> = ({
         </>
       )}
 
-      {/* Health bar */}
-      <mesh position={[0, 1.5, 0]}>
-        <boxGeometry args={[1, 0.1, 0.1]} />
-        <meshBasicMaterial color="red" />
+      {/* Health bar background (full width) */}
+      <mesh position={[0, 1.8, 0]}>
+        <boxGeometry args={[1.2, 0.15, 0.05]} />
+        <meshBasicMaterial color="#333333" />
       </mesh>
-      <mesh position={[-(1 - healthRatio) / 2, 1.5, 0.05]}>
-        <boxGeometry args={[healthRatio, 0.1, 0.05]} />
-        <meshBasicMaterial color="lime" />
+      
+      {/* Health bar fill - depletes from left to right */}
+      <mesh position={[-0.6 * (1 - healthRatio), 1.8, 0.03]}>
+        <boxGeometry args={[1.2 * healthRatio, 0.12, 0.03]} />
+        <meshBasicMaterial color={healthRatio > 0.5 ? "#00ff00" : healthRatio > 0.25 ? "#ffff00" : "#ff0000"} />
       </mesh>
     </group>
   );
