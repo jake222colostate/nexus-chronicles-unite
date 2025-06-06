@@ -82,7 +82,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             
             {/* Energy */}
             <div className="flex flex-col items-center gap-0.5">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5" data-energy-display>
                 <span className="text-lg">⚡</span>
                 <span className="text-cyan-300 font-bold text-sm">{formatNumber(energyCredits)}</span>
               </div>

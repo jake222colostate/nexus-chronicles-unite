@@ -1,6 +1,18 @@
 
 import { useState, useCallback, useMemo } from 'react';
-import { GameState } from '../types/GameTypes';
+
+interface GameState {
+  mana: number;
+  energyCredits: number;
+  nexusShards: number;
+  manaPerSecond: number;
+  energyPerSecond: number;
+  fantasyJourneyDistance: number;
+  scifiJourneyDistance: number;
+  convergenceCount: number;
+  fantasyBuildings: { [key: string]: number };
+  scifiBuildings: { [key: string]: number };
+}
 
 interface UseUIStateManagerProps {
   gameState: GameState;

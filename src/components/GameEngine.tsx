@@ -19,6 +19,8 @@ import { AutoClickerUpgradeSystem } from './AutoClickerUpgradeSystem';
 import { useAutoClickerEffect } from '@/hooks/useAutoClickerEffect';
 import { FantasyAutoClickerUpgradeSystem } from './FantasyAutoClickerUpgradeSystem';
 import { useAutoManaSystem } from '@/hooks/useAutoManaSystem';
+import { useAutoEnergySystem } from '@/hooks/useAutoEnergySystem';
+import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
 
 const GameEngine: React.FC = () => {
   const {
@@ -202,6 +204,23 @@ const GameEngine: React.FC = () => {
     }));
   }, [setGameState]);
 
+  // Add AutoEnergy effect for sci-fi realm
+  const handleAutoEnergyGeneration = useCallback((amount: number) => {
+    setGameState(prev => ({
+      ...prev,
+      energyCredits: prev.energyCredits + amount,
+    }));
+  }, [setGameState]);
+
+  useAutoEnergySystem({ onAddEnergy: handleAutoEnergyGeneration });
+
+  const handleScifiAutoClickerUpgrade = useCallback((cost: number) => {
+    setGameState(prev => ({
+      ...prev,
+      energyCredits: prev.energyCredits - cost,
+    }));
+  }, [setGameState]);
+
   return (
     <div className={`h-[667px] w-full relative overflow-hidden bg-black ${false ? 'animate-pulse bg-red-900/20' : ''}`}>
       {/* Enhanced background with better layering */}
@@ -258,6 +277,14 @@ const GameEngine: React.FC = () => {
           <FantasyAutoClickerUpgradeSystem
             currentMana={stableGameState.mana}
             onUpgrade={handleFantasyAutoClickerUpgrade}
+          />
+        )}
+
+        {/* Sci-Fi AutoClicker Upgrade System - positioned top-center, only in sci-fi realm */}
+        {currentRealm === 'scifi' && (
+          <ScifiAutoClickerUpgradeSystem
+            currentEnergy={stableGameState.energyCredits}
+            onUpgrade={handleScifiAutoClickerUpgrade}
           />
         )}
 
