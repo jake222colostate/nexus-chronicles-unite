@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
@@ -34,10 +35,11 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   const isMousePressed = useRef(false);
   const lastNotificationTime = useRef(0);
 
-  // Initialize camera at proper character height
+  // Initialize camera at proper character height with correct viewing angle
   useEffect(() => {
-    targetPosition.current.set(0, 1.7, -10);
+    targetPosition.current.set(0, 2, 5); // Fixed starting position
     camera.position.copy(targetPosition.current);
+    camera.lookAt(0, 1, 0); // Look at ground level ahead
     lastNotifiedPosition.current.copy(targetPosition.current);
     console.log('Camera initialized at:', targetPosition.current);
   }, [camera]);
@@ -193,7 +195,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     
     // Strict mountain collision - keep player within the path corridor
     targetPosition.current.x = Math.max(-15, Math.min(15, targetPosition.current.x));
-    targetPosition.current.y = 1.7; // Fixed character height
+    targetPosition.current.y = 2; // Fixed character height
     
     // Update camera
     camera.position.copy(targetPosition.current);
@@ -205,7 +207,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     const timeSinceLastNotification = now - lastNotificationTime.current;
     
     // Throttle position notifications to prevent infinite updates
-    if (distanceMoved > 0.5 && timeSinceLastNotification > 100) { // Notify max 10 times per second
+    if (distanceMoved > 1.0 && timeSinceLastNotification > 200) { // Less frequent updates
       lastNotifiedPosition.current.copy(targetPosition.current);
       lastNotificationTime.current = now;
       onPositionChange(targetPosition.current.clone());

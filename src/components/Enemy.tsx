@@ -23,7 +23,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   enemyId
 }) => {
   const groupRef = useRef<Group>(null);
-  const currentPosition = useRef(new Vector3(position[0], position[1] + 2.5, position[2])); // Start hovering
+  const currentPosition = useRef(new Vector3(position[0], position[1] + 1.5, position[2])); // Start hovering at fixed height
   const speed = 2;
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
@@ -55,8 +55,8 @@ export const Enemy: React.FC<EnemyProps> = ({
   // Initialize as enemy with proper flight position
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
-      // Position main enemies at elevated flight position
-      const flightPosition: [number, number, number] = [position[0], position[1] + 2.5, position[2]];
+      // Position main enemies at elevated flight position - fixed height
+      const flightPosition: [number, number, number] = [position[0], 1.5, position[2]];
       console.log(`Enemy ${enemyId} initializing as enemy at flight position:`, flightPosition);
       onInitialize(enemyId, flightPosition);
       initialized.current = true;
@@ -95,7 +95,7 @@ export const Enemy: React.FC<EnemyProps> = ({
 
     // AI movement - chase player at flight altitude
     const targetPosition = playerPosition.clone();
-    targetPosition.y += 2.5; // Maintain flight altitude above ground
+    targetPosition.y = 1.5; // Maintain fixed flight altitude
     
     const direction = new Vector3()
       .subVectors(targetPosition, currentPosition.current)
@@ -104,7 +104,10 @@ export const Enemy: React.FC<EnemyProps> = ({
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Update position - ensure bat stays hovering
+    // Ensure bat stays at proper height
+    currentPosition.current.y = 1.5;
+
+    // Update position
     groupRef.current.position.copy(currentPosition.current);
 
     // Flying animation with proper hovering
@@ -112,8 +115,8 @@ export const Enemy: React.FC<EnemyProps> = ({
       const time = Date.now() * 0.003;
       const bobOffset = Math.sin(time + position[0]) * 0.4;
       
-      // Keep bat hovering above ground with natural flight motion
-      groupRef.current.position.y = Math.max(1.5, currentPosition.current.y + bobOffset);
+      // Keep bat hovering at fixed height with natural flight motion
+      groupRef.current.position.y = 1.5 + bobOffset;
       
       // Face movement direction
       const angle = Math.atan2(direction.x, direction.z);
@@ -140,7 +143,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   if (!batScene) {
     console.log(`Enemy ${enemyId}: Bat model loading, showing fallback`);
     return (
-      <group ref={groupRef} position={[position[0], position[1] + 2.5, position[2]]}>
+      <group ref={groupRef} position={[position[0], 1.5, position[2]]}>
         <mesh>
           <sphereGeometry args={[1, 16, 16]} />
           <meshStandardMaterial color="#ff0000" />
@@ -156,7 +159,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   }
 
   return (
-    <group ref={groupRef} position={[position[0], position[1] + 2.5, position[2]]} castShadow receiveShadow>
+    <group ref={groupRef} position={[position[0], 1.5, position[2]]} castShadow receiveShadow>
       {/* Health bar positioned above bat - properly attached */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 

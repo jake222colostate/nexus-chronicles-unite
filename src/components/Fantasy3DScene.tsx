@@ -41,14 +41,13 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
   const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2));
 
-  // Initialize shared damage system with console logging
+  // Initialize shared damage system with stable player Z
   const damageSystem = useEnemyDamageSystem({
-    playerZ: cameraPosition.z,
+    playerZ: Math.floor(cameraPosition.z / 10) * 10, // Stable reference to prevent infinite updates
     upgradeLevel: weaponUpgradeLevel
   });
 
-  console.log('Fantasy3DScene: Damage system initialized:', !!damageSystem);
-
+  // Stable enemy change handler
   const handleEnemiesChange = useCallback(
     (list: EnemyData[]) => {
       console.log(`Fantasy3DScene: Enemies changed, count: ${list.length}`);
@@ -58,17 +57,16 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     [onEnemyCountChange]
   );
 
-  // Handle enemy hits - only remove from main system if actually dead
+  // Handle enemy hits - stable reference
   const handleEnemyHit = useCallback(
     (id: string) => {
-      // Only remove enemy from main system - damage is handled by weapon
       enemySystemRef.current?.damageEnemy(id, 1);
       console.log(`Enemy ${id} removed from main enemy system`);
     },
     []
   );
 
-  // Initialize enemies in damage system when they spawn
+  // Initialize enemies in damage system when they spawn - stable reference
   const handleEnemyInitialize = useCallback((id: string, position: [number, number, number]) => {
     console.log(`Fantasy3DScene: Initializing enemy ${id} in damage system at position:`, position);
     if (damageSystem) {
@@ -76,46 +74,43 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     }
   }, [damageSystem]);
 
-  // Spawn bat minions when fairy spawns them
+  // Spawn bat minions when fairy spawns them - stable reference
   const handleSpawnMinions = useCallback((fairyId: string, fairyPosition: [number, number, number]) => {
     console.log(`Fantasy3DScene: Fairy ${fairyId} spawning minions`);
     // The minions will be handled by the EnemySystem automatically
   }, []);
 
-  // Clean up damage system when enemies are removed from main system
-  React.useEffect(() => {
-    if (!damageSystem) return;
-    
-    const currentEnemyIds = new Set(enemies.map(e => e.id));
-    damageSystem.enemyHealths.forEach(healthEnemy => {
-      if (!currentEnemyIds.has(healthEnemy.id)) {
-        console.log(`Cleaning up enemy ${healthEnemy.id} from damage system`);
-        damageSystem.removeEnemy(healthEnemy.id);
-      }
-    });
-  }, [enemies, damageSystem]);
-
-  // Get fairy position for bat minions
+  // Get fairy position for bat minions - stable reference
   const getFairyPosition = useCallback((parentId: string): Vector3 | undefined => {
     const fairy = enemies.find(e => e.id === parentId && e.type === 'great_fairy');
     return fairy ? new Vector3(...fairy.position) : undefined;
   }, [enemies]);
 
-  // Don't render weapon system until damage system is ready
-  if (!damageSystem) {
-    console.log('Fantasy3DScene: Waiting for damage system to initialize...');
-  }
-
   return (
     <Suspense fallback={null}>
-      {/* Camera controller with proper character height */}
+      {/* Camera controller with proper character height and fixed initial position */}
       <Enhanced360Controller
-        position={[0, 1.7, -10]}
+        position={[0, 2, 5]} // Fixed starting position
         onPositionChange={onPositionChange}
       />
 
       {/* Background color for fantasy dusk */}
       <color attach="background" args={['#2d1b4e']} />
+
+      {/* Ground plane to ensure there's always a visible floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#2d4a2d" />
+      </mesh>
+
+      {/* Basic lighting to ensure visibility */}
+      <ambientLight intensity={0.6} />
+      <directionalLight
+        position={[10, 10, 5]}
+        intensity={0.8}
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+      />
 
       {/* Optimized chunk system with performance limits */}
       <ChunkSystem

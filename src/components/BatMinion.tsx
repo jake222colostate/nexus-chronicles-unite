@@ -27,7 +27,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   orbitalOffset = 0
 }) => {
   const groupRef = useRef<Group>(null);
-  const currentPosition = useRef(new Vector3(position[0], position[1] + 2.5, position[2])); // Start hovering
+  const currentPosition = useRef(new Vector3(position[0], position[1] + 1.5, position[2])); // Start hovering at proper height
   const speed = 2.5;
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
@@ -62,8 +62,8 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   // Initialize as enemy with proper flight position
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
-      // Position bats in flight position (elevated from ground)
-      const flightPosition: [number, number, number] = [position[0], position[1] + 2.5, position[2]];
+      // Position bats in flight position (elevated from ground) - fixed height
+      const flightPosition: [number, number, number] = [position[0], 1.5, position[2]];
       console.log(`BatMinion ${enemyId} initializing as enemy at flight position:`, flightPosition);
       onInitialize(enemyId, flightPosition);
       initialized.current = true;
@@ -112,10 +112,10 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       targetPosition = fairyPosition.clone();
       targetPosition.x += Math.cos(orbitAngle) * orbitRadius;
       targetPosition.z += Math.sin(orbitAngle) * orbitRadius;
-      targetPosition.y += 2.5 + Math.sin(time * 3 + orbitalOffset) * 0.8; // Hover above ground
+      targetPosition.y = 1.5 + Math.sin(time * 3 + orbitalOffset) * 0.8; // Fixed hover height
     } else {
       // Maintain flight altitude when chasing player
-      targetPosition.y += 2.5;
+      targetPosition.y = 1.5; // Fixed flight height
     }
 
     const direction = new Vector3()
@@ -125,7 +125,10 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Update position - ensure bat stays hovering
+    // Ensure bat stays at proper flight height
+    currentPosition.current.y = Math.max(1.5, currentPosition.current.y);
+
+    // Update position
     groupRef.current.position.copy(currentPosition.current);
 
     // Enhanced flying animation with proper hovering
@@ -135,7 +138,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       const flyWobble = Math.cos(time * 3 + orbitalOffset) * 0.2;
       
       // Keep bat hovering with natural flight motion
-      groupRef.current.position.y = Math.max(1.5, currentPosition.current.y + flyBob);
+      groupRef.current.position.y = currentPosition.current.y + flyBob;
       groupRef.current.position.x = currentPosition.current.x + flyWobble;
       
       // Face movement direction
@@ -160,7 +163,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   }
 
   return (
-    <group ref={groupRef} position={[position[0], position[1] + 2.5, position[2]]} castShadow receiveShadow>
+    <group ref={groupRef} position={[position[0], 1.5, position[2]]} castShadow receiveShadow>
       {/* Health bar positioned above bat - properly attached and following */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
