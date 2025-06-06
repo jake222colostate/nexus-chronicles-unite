@@ -41,12 +41,14 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
     const gltf = useGLTF(modelUrl);
     gltfScene = gltf.scene;
   } catch (error) {
+    console.log(`Failed to load model for ${name}:`, error);
     setLoadError(true);
   }
   
   // Enhanced click handler with better debugging
   const handleClick = (event: any) => {
     event.stopPropagation();
+    console.log(`Clicked on ${name}. Within range: ${isWithinRange}, Can afford: ${canAfford}`);
     onClick();
   };
   
@@ -249,6 +251,7 @@ const workingModelUrls = [
 workingModelUrls.forEach(url => {
   try {
     useGLTF.preload(url);
+    console.log(`Preloading model: ${url}`);
   } catch (error) {
     console.warn(`Failed to preload model: ${url}`, error);
   }

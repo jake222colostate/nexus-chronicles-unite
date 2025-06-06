@@ -23,13 +23,10 @@ export interface EnemyData {
   position: [number, number, number];
   spawnTime: number;
   health: number;
-  maxHealth: number;
-  reward: number;
-  type: 'demon' | 'orc';
 }
 
 export interface EnemySystemHandle {
-  damageEnemy: (enemyId: string, damage: number) => { killed: boolean; reward: number } | null;
+  damageEnemy: (enemyId: string, damage: number) => void;
 }
 export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   (
@@ -49,34 +46,36 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   // Spawn new enemy ahead of player
   const spawnEnemy = useCallback(() => {
     const now = Date.now();
-
+    console.log(`EnemySystem: Attempting to spawn enemy. Now: ${now}, Last spawn: ${lastSpawnTime.current}, Interval: ${spawnInterval}`);
+    
     if (now - lastSpawnTime.current < spawnInterval) {
+      console.log(`EnemySystem: Too soon to spawn (${now - lastSpawnTime.current}ms since last spawn)`);
       return;
     }
 
     setEnemies(prev => {
+      console.log(`EnemySystem: Current enemy count: ${prev.length}, Max: ${maxEnemies}`);
+      
       if (prev.length >= maxEnemies) {
+        console.log(`EnemySystem: Max enemies reached (${prev.length}/${maxEnemies})`);
         return prev;
       }
 
+      // Spawn enemy 100m ahead of player's Z position
       const spawnZ = playerPosition.z - spawnDistance;
-      const spawnX = (Math.random() - 0.5) * 20;
-
-      const distance = Math.abs(playerPosition.z);
-      const difficulty = Math.max(1, Math.floor(distance / 200) + 1);
-      const reward = 5 * difficulty;
-      const type: 'demon' | 'orc' = Math.random() < 0.5 ? 'demon' : 'orc';
-
+      
+      // Random X position near the path
+      const spawnX = (Math.random() - 0.5) * 20; // ±10 units from center
+      
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
-        position: [spawnX, 1, spawnZ],
+        position: [spawnX, 1, spawnZ], // Y=1 to place on ground
         spawnTime: now,
-        health: difficulty,
-        maxHealth: difficulty,
-        reward,
-        type
+        health: 1
       };
 
+      console.log(`EnemySystem: Spawning enemy at position [${spawnX}, 1, ${spawnZ}], player at [${playerPosition.x}, ${playerPosition.y}, ${playerPosition.z}]`);
+      
       lastSpawnTime.current = now;
       return [...prev, newEnemy];
     });
@@ -84,30 +83,20 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
 
   // Remove enemy when it reaches player or gets too far behind
   const removeEnemy = useCallback((enemyId: string) => {
+    console.log(`EnemySystem: Removing enemy ${enemyId}`);
     setEnemies(prev => prev.filter(enemy => enemy.id !== enemyId));
   }, []);
 
   const damageEnemy = useCallback((enemyId: string, damage: number) => {
-    let result: { killed: boolean; reward: number } | null = null;
     setEnemies(prev => {
-      const updated: EnemyData[] = [];
-      for (const enemy of prev) {
-        if (enemy.id === enemyId) {
-          const newHealth = enemy.health - damage;
-          if (newHealth <= 0) {
-            result = { killed: true, reward: enemy.reward };
-            continue;
-          } else {
-            updated.push({ ...enemy, health: newHealth });
-            result = { killed: false, reward: 0 };
-          }
-        } else {
-          updated.push(enemy);
-        }
-      }
-      return updated;
+      return prev
+        .map(enemy =>
+          enemy.id === enemyId
+            ? { ...enemy, health: enemy.health - damage }
+            : enemy
+        )
+        .filter(enemy => enemy.health > 0);
     });
-    return result;
   }, []);
 
   useImperativeHandle(ref, () => ({ damageEnemy }));
@@ -127,27 +116,29 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
         // Remove if more than 50 units behind the player
         const shouldKeep = distanceBehindPlayer <= 50;
         if (!shouldKeep) {
-          // enemy is far behind, remove it
+          console.log(
+            `EnemySystem: Cleaning up enemy at Z=${enemyZ}, player at Z=${playerPosition.z}, distance behind: ${distanceBehindPlayer}`
+          );
         }
         return shouldKeep;
       });
       
       if (filtered.length !== prev.length) {
-        // cleaned up some enemies
+        console.log(`EnemySystem: Cleaned up ${prev.length - filtered.length} enemies`);
       }
       
       return filtered;
     });
   });
 
-
+  console.log(`EnemySystem: Rendering ${enemies.length} enemies`);
 
   return (
     <group>
       {enemies.map((enemy) => (
         <Enemy
           key={enemy.id}
-          data={enemy}
+          position={enemy.position}
           playerPosition={playerPosition}
           onReachPlayer={() => removeEnemy(enemy.id)}
         />

@@ -1,15 +1,14 @@
-
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Staff model URLs served locally from the public assets directory
+// Staff model URLs from GitHub repository - Updated to use Draco-compressed versions
 const STAFF_MODELS = {
-  tier1: '/assets/mage_staff.glb',
-  tier2: '/assets/magical_staff.glb',
-  tier3: '/assets/stylized_magic_staff_of_water_game_ready.glb'
+  tier1: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/mage_staff_draco.glb',
+  tier2: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/magical_staff_draco.glb',
+  tier3: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/stylized_magic_staff_of_water_game_ready_draco.glb'
 } as const;
 
 interface MagicStaffWeaponSystemProps {
@@ -51,6 +50,7 @@ class StaffModelCache {
     const url = STAFF_MODELS[tier];
     
     try {
+      console.log(`StaffModelCache: Loading Draco-compressed ${tier} staff from GitHub: ${url}`);
       
       // Use GLTFLoader with correct import
       const loader = new GLTFLoader();
@@ -61,12 +61,13 @@ class StaffModelCache {
       if (gltf?.scene) {
         this.optimizeStaffModel(gltf.scene);
         this.cachedModels.set(tier, gltf.scene);
+        console.log(`StaffModelCache: Successfully cached Draco-compressed ${tier} staff from GitHub`);
         return gltf.scene;
       } else {
-        throw new Error('No scene found in GLB file');
+        throw new Error('No scene found in Draco GLB file');
       }
     } catch (error) {
-      console.error(`StaffModelCache: Failed to load ${tier} staff from GitHub:`, error);
+      console.error(`StaffModelCache: Failed to load Draco-compressed ${tier} staff from GitHub:`, error);
       // Create fallback staff
       const fallback = this.createFallbackStaff(tier);
       this.cachedModels.set(tier, fallback);
@@ -101,6 +102,7 @@ class StaffModelCache {
   }
 
   private createFallbackStaff(tier: keyof typeof STAFF_MODELS): THREE.Object3D {
+    console.log(`StaffModelCache: Creating fallback ${tier} staff geometry`);
     const group = new THREE.Group();
     
     // Different fallback designs based on tier
@@ -141,13 +143,16 @@ class StaffModelCache {
   clearCache(): void {
     this.cachedModels.clear();
     this.loadingPromises.clear();
+    console.log('StaffModelCache: Cache cleared');
   }
 
   async preloadAllStaffs(): Promise<void> {
-    const loadPromises = Object.keys(STAFF_MODELS).map(tier =>
+    console.log('StaffModelCache: Preloading all staff models from GitHub...');
+    const loadPromises = Object.keys(STAFF_MODELS).map(tier => 
       this.loadModel(tier as keyof typeof STAFF_MODELS)
     );
     await Promise.allSettled(loadPromises);
+    console.log('StaffModelCache: All staff models preloaded');
   }
 }
 
@@ -227,10 +232,10 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   );
 };
 
-// Preload all staff models for immediate availability
+// Preload all Draco-compressed staff models for immediate availability
 const staffCache = StaffModelCache.getInstance();
-staffCache.preloadAllStaffs().catch(() => {
-  /* preloading failed */
+staffCache.preloadAllStaffs().catch(error => {
+  console.warn('MagicStaffWeaponSystem: Failed to preload Draco-compressed staff models from GitHub:', error);
 });
 
 // Clear staff model cache

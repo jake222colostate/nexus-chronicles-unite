@@ -12,8 +12,9 @@ interface GLBTreeSystemProps {
 
 // Local GLB tree models bundled with the project
 const TREE_MODELS = {
-  realistic: new URL('../../public/assets/realistic_tree.glb', import.meta.url).href,
-  pine: new URL('../../public/assets/pine_tree_218poly.glb', import.meta.url).href
+  stylized: '/stylized_tree.glb',
+  pine218: '/pine_tree_218poly.glb',
+  pineLow: '/lowpoly_pine_tree.glb'
 } as const;
 
 // Simple seeded random number generator
@@ -108,13 +109,17 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
 }) => {
   const groupRef = useRef();
 
+  console.log('GLBTreeSystem render - Realm:', realm, 'Chunks:', chunks.length);
+
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
+    console.log('GLBTreeSystem: Not fantasy realm, skipping');
     return null;
   }
 
   // Generate tree positions for each chunk
   const treePositions = useMemo(() => {
+    console.log('Generating tree positions for', chunks.length, 'chunks');
     const positions: Array<{
       x: number;
       z: number;
@@ -132,6 +137,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
       
       // Generate fewer trees per chunk to avoid overcrowding
       const treeCount = 1 + Math.floor(seededRandom(seed) * 2); // 1-2 trees per chunk
+      console.log(`Chunk ${chunk.id}: generating ${treeCount} trees at world position (${worldX}, ${worldZ})`);
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -183,11 +189,14 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
         
         if (validPosition && x !== undefined && z !== undefined && y !== undefined && scale !== undefined && rotation !== undefined && modelUrl !== undefined) {
           positions.push({ x, z, y, scale, rotation, modelUrl, chunkId: seed });
+          console.log(`Tree ${i} placed at (${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}) with scale ${scale.toFixed(2)}`);
         } else {
-          // Failed to place tree after max attempts
+          console.warn(`Failed to place tree ${i} in chunk ${chunk.id} after ${maxAttempts} attempts`);
         }
       }
     });
+    
+    console.log(`Total trees generated: ${positions.length}`);
     return positions;
   }, [chunks, chunkSize]);
 
@@ -208,11 +217,13 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
   );
 };
 
-// Preload the model for better performance
+// Preload the model for better performance, but handle errors gracefully
+console.log('Attempting to preload GLB tree models...');
 Object.values(TREE_MODELS).forEach((url) => {
   try {
     useGLTF.preload(url);
-  } catch {
-    /* ignore preload errors */
+    console.log('Preloaded tree model:', url);
+  } catch (error) {
+    console.warn('Failed to preload GLB model:', url, error);
   }
 });

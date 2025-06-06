@@ -38,7 +38,7 @@ export const FantasyInfiniteTileSystem: React.FC<FantasyInfiniteTileSystemProps>
     const currentTileIndices = tiles.map(t => t.index);
     tileQueue.current = currentTileIndices.slice(-3); // Keep only last 3 tiles
     
-
+    console.log(`Rendering ${tiles.length} fantasy tiles. Player Z: ${playerZ.toFixed(1)}`);
     
     return tiles;
   }, [playerPosition.z, renderDistance]);

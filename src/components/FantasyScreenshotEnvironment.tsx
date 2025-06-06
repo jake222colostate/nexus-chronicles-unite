@@ -1,61 +1,61 @@
 
-import React, { Suspense } from 'react';
-import { Vector3 } from 'three';
+import React from 'react';
 import { ChunkData } from './ChunkSystem';
+import { MagicalFantasySkybox } from './MagicalFantasySkybox';
+import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
 import { CleanPathSystem } from './CleanPathSystem';
-import { BoundaryMountainSystem } from './BoundaryMountainSystem';
-import FantasyTreeSystem from './FantasyTreeSystem';
 import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
+import { EnhancedTreeDistribution } from './EnhancedTreeDistribution';
+import * as THREE from 'three';
 
 interface FantasyScreenshotEnvironmentProps {
   chunks: ChunkData[];
   chunkSize: number;
   realm: 'fantasy' | 'scifi';
-  playerPosition: Vector3;
+  playerPosition?: THREE.Vector3;
 }
 
 export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> = ({
   chunks,
   chunkSize,
   realm,
-  playerPosition
+  playerPosition = new THREE.Vector3(0, 0, 0)
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
     return null;
   }
 
-  // Aggressive performance optimization - limit chunks based on distance
-  const nearChunks = chunks.filter(chunk => {
-    const distance = Math.sqrt(
-      Math.pow(chunk.worldX - playerPosition.x, 2) + 
-      Math.pow(chunk.worldZ - playerPosition.z, 2)
-    );
-    return distance <= 120; // Further reduced render distance
-  }).slice(0, 12); // Hard limit to 12 chunks maximum
-
-
   return (
-    <Suspense fallback={null}>
-      {/* Add proper lighting first */}
+    <group>
+      {/* Magical skybox */}
+      <MagicalFantasySkybox />
+      
+      {/* Ground plane */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, -150]} receiveShadow>
+        <planeGeometry args={[200, 600]} />
+        <meshLambertMaterial color="#2E7D32" />
+      </mesh>
+      
+      {/* Path system */}
+      <CleanPathSystem chunks={chunks.slice(0, 30)} chunkSize={chunkSize} realm={realm} />
+      
+      {/* Hyper-realistic mountains */}
+      <ProceduralMountainTerrain
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
+      
+      {/* Enhanced Tree Distribution System with proper GLB loading */}
+      <EnhancedTreeDistribution
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
+      
+      {/* Optimized lighting */}
       <ImprovedFantasyLighting />
-      
-      {/* Essential path system - always render */}
-      <CleanPathSystem 
-        chunks={nearChunks} 
-        chunkSize={chunkSize} 
-        realm={realm} 
-      />
-      
-      {/* Simplified boundary mountains - reduced complexity */}
-      <BoundaryMountainSystem 
-        chunks={nearChunks.slice(0, 6)} // Even fewer chunks for mountains
-        chunkSize={chunkSize} 
-        realm={realm} 
-      />
-      
-      {/* Dense forest with local GLB tree models */}
-      <FantasyTreeSystem chunkCenterZ={playerPosition.z} />
-    </Suspense>
+    </group>
   );
 };

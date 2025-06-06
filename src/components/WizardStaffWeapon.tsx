@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
 import { WizardStaff } from './WizardStaff';
@@ -9,120 +8,57 @@ interface Projectile {
   id: string;
   position: Vector3;
   direction: Vector3;
-  damage: number;
-  speed: number;
-  age: number;
 }
 
 interface WizardStaffWeaponProps {
   enemies: EnemyData[];
-  weaponStats: { damage: number; fireRate: number; range: number };
-  onEnemyHit: (enemyId: string, damage: number) => void;
-  combatUpgradeDamage?: number;
+  onEnemyHit: (enemyId: string) => void;
 }
 
 export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
   enemies,
-  weaponStats,
-  onEnemyHit,
-  combatUpgradeDamage = 0
+  onEnemyHit
 }) => {
   const { camera } = useThree();
   const staffGroup = useRef<Group>(null);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
-  const lastShot = useRef(0);
-  const lastManualShot = useRef(0);
 
-  const shoot = useCallback((direction: Vector3) => {
-    const origin = camera.position.clone();
-    const totalDamage = weaponStats.damage + combatUpgradeDamage;
-    
+  const shoot = useCallback(() => {
+    const direction = new Vector3();
+    camera.getWorldDirection(direction);
+    const origin = camera.position.clone().add(direction.clone().multiplyScalar(1));
     setProjectiles(prev => [
       ...prev,
-      {
-        id: `proj_${Date.now()}_${Math.random()}`,
-        position: origin.clone(),
-        direction,
-        damage: totalDamage,
-        speed: 25 + totalDamage * 2,
-        age: 0
-      }
+      { id: `proj_${Date.now()}_${Math.random()}`, position: origin, direction }
     ]);
-  }, [camera, weaponStats.damage, combatUpgradeDamage]);
+  }, [camera]);
 
-  // Manual shooting on click
   useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      const now = performance.now();
-      // Allow manual shooting every 200ms
-      if (now - lastManualShot.current > 200) {
-        // Find closest enemy to shoot at
-        const target = enemies
-          .filter(e => new Vector3(...e.position).distanceTo(camera.position) <= weaponStats.range)
-          .sort((a, b) =>
-            new Vector3(...a.position).distanceTo(camera.position) -
-            new Vector3(...b.position).distanceTo(camera.position)
-          )[0];
-
-        if (target) {
-          const direction = new Vector3(...target.position).sub(camera.position).normalize();
-          shoot(direction);
-          lastManualShot.current = now;
-        }
+    const handleMouseDown = (e: MouseEvent) => {
+      if (e.button === 0) {
+        shoot();
       }
     };
-
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      canvas.addEventListener('click', handleClick);
-    }
-
-    return () => {
-      if (canvas) {
-        canvas.removeEventListener('click', handleClick);
-      }
-    };
-  }, [enemies, camera, weaponStats.range, shoot]);
+    window.addEventListener('mousedown', handleMouseDown);
+    return () => window.removeEventListener('mousedown', handleMouseDown);
+  }, [shoot]);
 
   useFrame((_, delta) => {
-    const now = performance.now();
-    // Automatic shooting - reduced fire rate interval for faster shooting
-    const fireRateInterval = Math.max(150, weaponStats.fireRate * 0.3);
-    
-    if (now - lastShot.current > fireRateInterval) {
-      const target = enemies
-        .filter(e => new Vector3(...e.position).distanceTo(camera.position) <= weaponStats.range)
-        .sort((a, b) =>
-          new Vector3(...a.position).distanceTo(camera.position) -
-          new Vector3(...b.position).distanceTo(camera.position)
-        )[0];
-
-      if (target) {
-        const direction = new Vector3(...target.position).sub(camera.position).normalize();
-        shoot(direction);
-        lastShot.current = now;
-      }
-    }
-
     setProjectiles(prev => {
       const updated: Projectile[] = [];
       for (const p of prev) {
-        const newPos = p.position.clone().add(p.direction.clone().multiplyScalar(p.speed * delta));
-        const age = p.age + delta;
+        const newPos = p.position.clone().add(p.direction.clone().multiplyScalar(30 * delta));
         let hit = false;
-        
-        // Enhanced collision detection with better hit radius
         for (const enemy of enemies) {
           const ePos = new Vector3(...enemy.position);
-          if (newPos.distanceTo(ePos) < 1.5) {
-            onEnemyHit(enemy.id, p.damage);
+          if (newPos.distanceTo(ePos) < 1) {
+            onEnemyHit(enemy.id);
             hit = true;
             break;
           }
         }
-        
-        if (!hit && age < 4 && camera.position.distanceTo(newPos) < weaponStats.range * 1.5) {
-          updated.push({ ...p, position: newPos, age });
+        if (!hit && camera.position.distanceTo(newPos) < 200) {
+          updated.push({ ...p, position: newPos });
         }
       }
       return updated;
@@ -136,19 +72,15 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
 
   return (
     <group ref={staffGroup}>
-      <WizardStaff visible />
+      <WizardStaff />
       {projectiles.map(p => (
         <mesh
           key={p.id}
           position={p.position.toArray() as [number, number, number]}
           castShadow
         >
-          <sphereGeometry args={[0.12, 8, 8]} />
-          <meshStandardMaterial 
-            color="#ffff00" 
-            emissive="#ffaa00" 
-            emissiveIntensity={0.8}
-          />
+          <sphereGeometry args={[0.1, 6, 6]} />
+          <meshStandardMaterial color="yellow" emissive="yellow" />
         </mesh>
       ))}
     </group>

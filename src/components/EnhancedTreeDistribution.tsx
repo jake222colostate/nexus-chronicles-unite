@@ -56,13 +56,15 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
 };
 
 // Get tree type with specified distribution ratios
-const getTreeType = (seed: number): 'realistic' | 'pine' => {
+const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine' => {
   const random = seededRandom(seed);
-  return random < TREE_DISTRIBUTION.pine ? 'pine' : 'realistic';
+  if (random < TREE_DISTRIBUTION.pine) return 'pine'; // 40%
+  if (random < TREE_DISTRIBUTION.pine + TREE_DISTRIBUTION.stylized) return 'stylized'; // 30%
+  return 'realistic'; // 30%
 };
 
 // Get randomized scale based on tree type
-const getTreeScale = (treeType: 'realistic' | 'pine', seed: number): number => {
+const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine', seed: number): number => {
   const scaleConfig = TREE_SCALES[treeType];
   const random = seededRandom(seed);
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
@@ -73,7 +75,7 @@ const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
-  treeType: 'realistic' | 'pine';
+  treeType: 'realistic' | 'stylized' | 'pine';
 }> = ({ position, scale, rotation, treeType }) => {
   const [treeModel, setTreeModel] = useState<THREE.Object3D | null>(null);
   const groupRef = useRef<THREE.Group>(null);
@@ -134,7 +136,7 @@ const TreeInstance: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
-  treeType: 'realistic' | 'pine';
+  treeType: 'realistic' | 'stylized' | 'pine';
   playerPosition: THREE.Vector3;
 }> = ({ position, scale, rotation, treeType, playerPosition }) => {
   const [isVisible, setIsVisible] = useState(true);
@@ -165,13 +167,13 @@ const TreeInstance: React.FC<{
 
 // Performance-optimized tree group
 const InstancedTreeGroup: React.FC<{
-  positions: Array<{
-    x: number;
-    y: number;
-    z: number;
-    scale: number;
-    rotation: number;
-    treeType: 'realistic' | 'pine';
+  positions: Array<{ 
+    x: number; 
+    y: number; 
+    z: number; 
+    scale: number; 
+    rotation: number; 
+    treeType: 'realistic' | 'stylized' | 'pine';
   }>;
   playerPosition: THREE.Vector3;
 }> = ({ positions, playerPosition }) => {
@@ -180,10 +182,10 @@ const InstancedTreeGroup: React.FC<{
     return distance <= 120;
   });
 
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees from assets`);
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees from GitHub models`);
 
   return (
-    <group name="AssetTreeGroup">
+    <group name="GitHubTreeGroup">
       {visiblePositions.slice(0, 50).map((pos, index) => (
         <TreeInstance
           key={`github-tree-${index}-${pos.treeType}`}
@@ -213,7 +215,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating tree positions with asset models for', chunks.length, 'chunks');
+    console.log('EnhancedTreeDistribution: Generating tree positions with GitHub models for', chunks.length, 'chunks');
     const trees = [];
     const minDistance = 3; // 3m minimum spacing as specified
     const maxAttempts = 30;
@@ -279,9 +281,10 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with asset models`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with GitHub models`);
     console.log('Tree distribution:', {
       pine: trees.filter(t => t.treeType === 'pine').length,
+      stylized: trees.filter(t => t.treeType === 'stylized').length,
       realistic: trees.filter(t => t.treeType === 'realistic').length
     });
     

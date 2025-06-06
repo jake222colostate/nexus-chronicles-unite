@@ -70,6 +70,8 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
       }
     }
     
+    console.log(`ChunkSystem: Generated ${chunks.length} chunks (max: ${maxChunks}) with render distance ${maxRenderDistance}`);
+    
     return chunks;
   }, [
     Math.floor(playerPosition.x / chunkSize), 

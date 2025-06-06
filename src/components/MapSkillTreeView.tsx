@@ -24,8 +24,7 @@ interface MapSkillTreeViewProps {
   onTapEffectComplete?: () => void;
   onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
   onEnemyCountChange?: (count: number) => void;
-  onEnemyKilled?: (reward: number) => void;
-  weaponStats: { damage: number; fireRate: number; range: number };
+  onEnemyKilled?: () => void;
 }
 
 export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
@@ -43,8 +42,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   onTapEffectComplete,
   onPlayerPositionUpdate,
   onEnemyCountChange,
-  onEnemyKilled,
-  weaponStats
+  onEnemyKilled
 }) => {
   const [selectedBuilding, setSelectedBuilding] = useState<{
     building: any;
@@ -76,6 +74,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
 
   const handle3DUpgradePurchase = useCallback(() => {
     // Handle 3D upgrade purchase logic here
+    console.log('Purchasing 3D upgrade:', selected3DUpgrade);
     setSelected3DUpgrade(null);
   }, [selected3DUpgrade]);
 
@@ -104,7 +103,6 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
           onPlayerPositionUpdate={onPlayerPositionUpdate}
           onEnemyCountChange={onEnemyCountChange}
           onEnemyKilled={onEnemyKilled}
-          weaponStats={weaponStats}
         />
       ) : (
         <Scene3D

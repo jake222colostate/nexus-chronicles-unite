@@ -1,29 +1,32 @@
-
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Tree model URLs from the local assets folder
+// Tree model URLs from GitHub repository - Updated to use Draco-compressed versions
 export const TREE_MODELS = {
-  realistic: new URL('../../public/assets/realistic_tree.glb', import.meta.url).href,
-  pine: new URL('../../public/assets/pine_tree_218poly.glb', import.meta.url).href
+  realistic: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/realistic_tree_draco.glb',
+  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/stylized_tree_draco.glb',
+  pine: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/pine_tree_218poly_draco.glb'
 } as const;
 
 // Distribution ratios as specified
 export const TREE_DISTRIBUTION = {
-  pine: 0.5,       // 50%
-  realistic: 0.5   // 50%
+  pine: 0.4,      // 40%
+  stylized: 0.3,  // 30% 
+  realistic: 0.3  // 30%
 } as const;
 
 // Scale configurations as specified
 export const TREE_SCALES = {
   realistic: { min: 0.75, max: 1.0 },
+  stylized: { min: 0.9, max: 1.1 },
   pine: { min: 0.65, max: 0.85 }
 } as const;
 
 // Y-offset adjustments for proper alignment
 export const TREE_Y_OFFSETS = {
   realistic: 0,
+  stylized: -0.1,
   pine: 0
 } as const;
 
@@ -38,7 +41,7 @@ class TreeAssetManagerSingleton {
   private preloadPromises = new Map<string, Promise<void>>();
 
   async preloadAllModels(): Promise<void> {
-    console.log('TreeAssetManager: Starting preload of all tree models from assets...');
+    console.log('TreeAssetManager: Starting preload of all Draco-compressed tree models from GitHub...');
     
     const preloadPromises = Object.entries(TREE_MODELS).map(async ([type, url]) => {
       if (!this.preloadPromises.has(type)) {
@@ -49,12 +52,12 @@ class TreeAssetManagerSingleton {
     });
 
     await Promise.allSettled(preloadPromises);
-    console.log('TreeAssetManager: Asset model preload completed');
+    console.log('TreeAssetManager: Draco-compressed model preload completed');
   }
 
   private async preloadModel(type: keyof typeof TREE_MODELS, url: string): Promise<void> {
     try {
-      console.log(`TreeAssetManager: Preloading ${type} from assets: ${url}`);
+      console.log(`TreeAssetManager: Preloading Draco-compressed ${type} from GitHub: ${url}`);
       
       // Use GLTFLoader directly for better control
       const gltf = await new Promise<any>((resolve, reject) => {
@@ -70,10 +73,10 @@ class TreeAssetManagerSingleton {
           scene: gltf.scene,
           loaded: true
         });
-        console.log(`TreeAssetManager: Successfully cached ${type} model from assets`);
+        console.log(`TreeAssetManager: Successfully cached Draco-compressed ${type} model from GitHub`);
       }
     } catch (error) {
-      console.warn(`TreeAssetManager: Failed to preload ${type} from assets:`, error);
+      console.warn(`TreeAssetManager: Failed to preload Draco-compressed ${type} from GitHub:`, error);
       this.cache.set(type, {
         scene: this.createFallbackTree(type),
         loaded: false,
@@ -129,6 +132,23 @@ class TreeAssetManagerSingleton {
         group.add(pineCone);
         break;
         
+      case 'stylized':
+        // Stylized tree fallback
+        const stylizedHandle = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.12, 0.18, 1.4),
+          new THREE.MeshLambertMaterial({ color: '#8B4513' })
+        );
+        stylizedHandle.position.y = 0.7;
+        group.add(stylizedHandle);
+        
+        const stylizedCanopy = new THREE.Mesh(
+          new THREE.SphereGeometry(0.9, 12, 8),
+          new THREE.MeshLambertMaterial({ color: '#228B22' })
+        );
+        stylizedCanopy.position.y = 1.6;
+        group.add(stylizedCanopy);
+        break;
+        
       default: // realistic
         // Realistic tree fallback
         const realisticHandle = new THREE.Mesh(
@@ -182,7 +202,7 @@ class TreeAssetManagerSingleton {
 
 export const TreeAssetManager = new TreeAssetManagerSingleton();
 
-// Initialize preloading
+// Initialize preloading of Draco-compressed models
 TreeAssetManager.preloadAllModels().catch(error => {
-  console.warn('TreeAssetManager: Initial asset preload failed:', error);
+  console.warn('TreeAssetManager: Initial Draco-compressed preload failed:', error);
 });
