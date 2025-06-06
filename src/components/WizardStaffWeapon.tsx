@@ -9,6 +9,8 @@ interface Projectile {
   position: Vector3;
   direction: Vector3;
   damage: number;
+  speed: number;
+  age: number;
 }
 
 interface WizardStaffWeaponProps {
@@ -26,17 +28,18 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
   const staffGroup = useRef<Group>(null);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const lastShot = useRef(0);
-  const shoot = useCallback((target: EnemyData) => {
+
+  const shoot = useCallback((direction: Vector3) => {
     const origin = camera.position.clone();
-    const targetPos = new Vector3(...target.position);
-    const direction = targetPos.sub(origin).normalize();
     setProjectiles(prev => [
       ...prev,
       {
         id: `proj_${Date.now()}_${Math.random()}`,
         position: origin.clone(),
         direction,
-        damage: weaponStats.damage
+        damage: weaponStats.damage,
+        speed: 20 + weaponStats.damage * 5,
+        age: 0
       }
     ]);
   }, [camera, weaponStats.damage]);
@@ -50,16 +53,20 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
           new Vector3(...a.position).distanceTo(camera.position) -
           new Vector3(...b.position).distanceTo(camera.position)
         )[0];
-      if (target) {
-        shoot(target);
-        lastShot.current = now;
-      }
+
+      const direction = target
+        ? new Vector3(...target.position).sub(camera.position).normalize()
+        : camera.getWorldDirection(new Vector3());
+
+      shoot(direction);
+      lastShot.current = now;
     }
 
     setProjectiles(prev => {
       const updated: Projectile[] = [];
       for (const p of prev) {
-        const newPos = p.position.clone().add(p.direction.clone().multiplyScalar(30 * delta));
+        const newPos = p.position.clone().add(p.direction.clone().multiplyScalar(p.speed * delta));
+        const age = p.age + delta;
         let hit = false;
         for (const enemy of enemies) {
           const ePos = new Vector3(...enemy.position);
@@ -69,8 +76,8 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
             break;
           }
         }
-        if (!hit && camera.position.distanceTo(newPos) < weaponStats.range * 1.5) {
-          updated.push({ ...p, position: newPos });
+        if (!hit && age < 3 && camera.position.distanceTo(newPos) < weaponStats.range * 1.5) {
+          updated.push({ ...p, position: newPos, age });
         }
       }
       return updated;
