@@ -10,6 +10,7 @@ import React, {
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import { Enemy } from './Enemy';
+import { GreatFairy } from './GreatFairy';
 
 interface EnemySystemProps {
   playerPosition: Vector3;
@@ -24,6 +25,7 @@ export interface EnemyData {
   position: [number, number, number];
   spawnTime: number;
   health: number;
+  type: 'vampire_bat' | 'great_fairy'; // Add enemy type
 }
 
 export interface EnemySystemHandle {
@@ -70,14 +72,18 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
       // Random X position near the path
       const spawnX = (Math.random() - 0.5) * 20; // ±10 units from center
       
+      // Randomly choose enemy type (70% vampire bat, 30% great fairy)
+      const enemyType: 'vampire_bat' | 'great_fairy' = Math.random() < 0.7 ? 'vampire_bat' : 'great_fairy';
+      
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
         position: [spawnX, 1, spawnZ], // Y=1 to place on ground
         spawnTime: now,
-        health: 1
+        health: 1,
+        type: enemyType
       };
 
-      console.log(`EnemySystem: Spawning enemy ${newEnemy.id} at position [${spawnX}, 1, ${spawnZ}]`);
+      console.log(`EnemySystem: Spawning ${enemyType} enemy ${newEnemy.id} at position [${spawnX}, 1, ${spawnZ}]`);
       
       lastSpawnTime.current = now;
       return [...prev, newEnemy];
@@ -134,16 +140,32 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
 
   return (
     <group>
-      {enemies.map((enemy) => (
-        <Enemy
-          key={enemy.id}
-          enemyId={enemy.id}
-          position={enemy.position}
-          playerPosition={playerPosition}
-          onReachPlayer={() => removeEnemy(enemy.id)}
-          onInitialize={onEnemyInitialize}
-        />
-      ))}
+      {enemies.map((enemy) => {
+        // Render the appropriate enemy type
+        if (enemy.type === 'great_fairy') {
+          return (
+            <GreatFairy
+              key={enemy.id}
+              enemyId={enemy.id}
+              position={enemy.position}
+              playerPosition={playerPosition}
+              onReachPlayer={() => removeEnemy(enemy.id)}
+              onInitialize={onEnemyInitialize}
+            />
+          );
+        } else {
+          return (
+            <Enemy
+              key={enemy.id}
+              enemyId={enemy.id}
+              position={enemy.position}
+              playerPosition={playerPosition}
+              onReachPlayer={() => removeEnemy(enemy.id)}
+              onInitialize={onEnemyInitialize}
+            />
+          );
+        }
+      })}
     </group>
   );
 });
