@@ -9,6 +9,7 @@ import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { AutomaticWeaponSystem } from './AutomaticWeaponSystem';
+import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -43,9 +44,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 }) => {
   const enemySystemRef = useRef<EnemySystemHandle>(null);
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
+  const { damageEnemy } = useEnemyDamageSystem();
 
   // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
-  const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2)); // 0-2 based on upgrade progression
+  const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2));
 
   const handleEnemiesChange = useCallback(
     (list: EnemyData[]) => {
@@ -57,10 +59,18 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   const handleEnemyHit = useCallback(
     (id: string, damage: number) => {
-      const result = enemySystemRef.current?.damageEnemy(id, damage);
-      if (result?.killed && onEnemyKilled) onEnemyKilled(result.reward);
+      // First try the damage system hook
+      const damageResult = damageEnemy(id, damage);
+      
+      // If that fails, fall back to the enemy system
+      if (!damageResult) {
+        const result = enemySystemRef.current?.damageEnemy(id, damage);
+        if (result?.killed && onEnemyKilled) onEnemyKilled(result.reward);
+      } else if (damageResult.killed && onEnemyKilled) {
+        onEnemyKilled(damageResult.reward);
+      }
     },
-    [onEnemyKilled]
+    [damageEnemy, onEnemyKilled]
   );
 
   // Default combat stats if not provided
@@ -85,7 +95,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       <ChunkSystem
         playerPosition={cameraPosition}
         chunkSize={chunkSize}
-        renderDistance={Math.min(renderDistance, 200)} // Cap render distance for 60fps
+        renderDistance={Math.min(renderDistance, 200)}
       >
         {(chunks: ChunkData[]) => (
           <FantasyScreenshotEnvironment
@@ -106,18 +116,19 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         onEnemiesChange={handleEnemiesChange}
       />
 
-      {/* Automatic Weapon System - new primary weapon */}
+      {/* Automatic Weapon System - primary weapon */}
       <AutomaticWeaponSystem
         enemies={enemies}
         combatStats={combatStats || defaultCombatStats}
         onEnemyHit={handleEnemyHit}
       />
 
-      {/* Wizard Staff Weapon - legacy system */}
+      {/* Wizard Staff Weapon - enhanced with combat upgrades */}
       <WizardStaffWeapon
         enemies={enemies}
         weaponStats={weaponStats}
         onEnemyHit={handleEnemyHit}
+        combatUpgradeDamage={combatStats?.damage || 0}
       />
 
       {/* Magic Staff Weapon System - visual weapon display */}
@@ -129,10 +140,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       {/* Simplified contact shadows */}
       <ContactShadows 
         position={[0, -1.4, cameraPosition.z]} 
-        opacity={0.1} // Reduced opacity
-        scale={20} // Reduced scale
+        opacity={0.1}
+        scale={20}
         blur={1} 
-        far={6} // Reduced range
+        far={6}
       />
     </Suspense>
   );

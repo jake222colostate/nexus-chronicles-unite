@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
@@ -17,12 +18,14 @@ interface WizardStaffWeaponProps {
   enemies: EnemyData[];
   weaponStats: { damage: number; fireRate: number; range: number };
   onEnemyHit: (enemyId: string, damage: number) => void;
+  combatUpgradeDamage?: number;
 }
 
 export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
   enemies,
   weaponStats,
-  onEnemyHit
+  onEnemyHit,
+  combatUpgradeDamage = 0
 }) => {
   const { camera } = useThree();
   const staffGroup = useRef<Group>(null);
@@ -31,18 +34,20 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
 
   const shoot = useCallback((direction: Vector3) => {
     const origin = camera.position.clone();
+    const totalDamage = weaponStats.damage + combatUpgradeDamage;
+    
     setProjectiles(prev => [
       ...prev,
       {
         id: `proj_${Date.now()}_${Math.random()}`,
         position: origin.clone(),
         direction,
-        damage: weaponStats.damage,
-        speed: 20 + weaponStats.damage * 5,
+        damage: totalDamage,
+        speed: 20 + totalDamage * 2, // Speed scales with damage
         age: 0
       }
     ]);
-  }, [camera, weaponStats.damage]);
+  }, [camera, weaponStats.damage, combatUpgradeDamage]);
 
   useFrame((_, delta) => {
     const now = performance.now();
@@ -54,12 +59,11 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
           new Vector3(...b.position).distanceTo(camera.position)
         )[0];
 
-      const direction = target
-        ? new Vector3(...target.position).sub(camera.position).normalize()
-        : camera.getWorldDirection(new Vector3());
-
-      shoot(direction);
-      lastShot.current = now;
+      if (target) {
+        const direction = new Vector3(...target.position).sub(camera.position).normalize();
+        shoot(direction);
+        lastShot.current = now;
+      }
     }
 
     setProjectiles(prev => {
@@ -68,15 +72,18 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
         const newPos = p.position.clone().add(p.direction.clone().multiplyScalar(p.speed * delta));
         const age = p.age + delta;
         let hit = false;
+        
+        // Enhanced collision detection
         for (const enemy of enemies) {
           const ePos = new Vector3(...enemy.position);
-          if (newPos.distanceTo(ePos) < 1) {
+          if (newPos.distanceTo(ePos) < 1.2) { // Increased hit radius
             onEnemyHit(enemy.id, p.damage);
             hit = true;
             break;
           }
         }
-        if (!hit && age < 3 && camera.position.distanceTo(newPos) < weaponStats.range * 1.5) {
+        
+        if (!hit && age < 4 && camera.position.distanceTo(newPos) < weaponStats.range * 1.5) {
           updated.push({ ...p, position: newPos, age });
         }
       }
@@ -98,8 +105,12 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
           position={p.position.toArray() as [number, number, number]}
           castShadow
         >
-          <sphereGeometry args={[0.1, 6, 6]} />
-          <meshStandardMaterial color="yellow" emissive="yellow" />
+          <sphereGeometry args={[0.12, 8, 8]} />
+          <meshStandardMaterial 
+            color="#ffff00" 
+            emissive="#ffaa00" 
+            emissiveIntensity={0.8}
+          />
         </mesh>
       ))}
     </group>
