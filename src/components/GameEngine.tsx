@@ -280,18 +280,6 @@ const GameEngine: React.FC = () => {
             🏰
           </Button>
         </div>
-
-        {/* Convergence Ready Button */}
-        {canConverge && (
-          <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 z-30">
-            <Button 
-              onClick={() => setShowConvergence(true)}
-              className="h-10 px-6 rounded-xl bg-gradient-to-r from-yellow-500/95 to-orange-500/95 hover:from-yellow-600/95 hover:to-orange-600/95 backdrop-blur-xl border border-yellow-400/70 animate-pulse transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30"
-            >
-              🔁 Convergence Ready!
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* Enhanced Bottom Action Bar with realm-specific journey progress */}
@@ -343,7 +331,7 @@ const GameEngine: React.FC = () => {
         />
       )}
 
-      {/* Convergence Modal */}
+      {/* Convergence Modal - only show when manually triggered */}
       {showConvergence && (
         <div 
           className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"

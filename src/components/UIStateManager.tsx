@@ -1,52 +1,62 @@
 
 import { useState, useCallback, useMemo } from 'react';
-import { GameState } from './GameStateManager';
+import { GameState } from '../types/GameTypes';
+
+interface UseUIStateManagerProps {
+  gameState: GameState;
+}
 
 export const useUIStateManager = (gameState: GameState) => {
   const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi'>('fantasy');
   const [showConvergence, setShowConvergence] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showTapEffect, setShowTapEffect] = useState(false);
-  const [showQuickHelp, setShowQuickHelp] = useState(() => {
-    return !localStorage.getItem('celestialNexusHelpDismissed');
-  });
+  const [showQuickHelp, setShowQuickHelp] = useState(false);
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
-  const [playerPosition, setPlayerPosition] = useState({ x: 0, y: 1.6, z: 0 });
 
-  // Current journey distance calculation
+  const playerPosition = useMemo(() => ({
+    x: 0,
+    y: 1.7,
+    z: currentRealm === 'fantasy' ? -gameState.fantasyJourneyDistance : -gameState.scifiJourneyDistance
+  }), [currentRealm, gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance]);
+
   const currentJourneyDistance = useMemo(() => {
-    return currentRealm === 'fantasy' 
-      ? gameState.fantasyJourneyDistance 
-      : gameState.scifiJourneyDistance;
+    return currentRealm === 'fantasy' ? gameState.fantasyJourneyDistance : gameState.scifiJourneyDistance;
   }, [currentRealm, gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance]);
 
-  // Enhanced realm switching with proper visual feedback
-  const switchRealm = useCallback((newRealm: 'fantasy' | 'scifi') => {
-    if (newRealm === currentRealm || isTransitioning) return;
+  // Significantly delay convergence availability - require much more progression
+  const canConverge = useMemo(() => {
+    const minFantasyDistance = 500; // Increased from lower values
+    const minScifiDistance = 500;   // Increased from lower values
+    const minMana = 10000;          // Increased significantly
+    const minEnergy = 10000;        // Increased significantly
     
+    return gameState.fantasyJourneyDistance >= minFantasyDistance &&
+           gameState.scifiJourneyDistance >= minScifiDistance &&
+           gameState.mana >= minMana &&
+           gameState.energyCredits >= minEnergy;
+  }, [gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance, gameState.mana, gameState.energyCredits]);
+
+  const convergenceProgress = useMemo(() => {
+    const fantasyProgress = Math.min(100, (gameState.fantasyJourneyDistance / 500) * 100);
+    const scifiProgress = Math.min(100, (gameState.scifiJourneyDistance / 500) * 100);
+    const manaProgress = Math.min(100, (gameState.mana / 10000) * 100);
+    const energyProgress = Math.min(100, (gameState.energyCredits / 10000) * 100);
+    
+    return Math.min(100, (fantasyProgress + scifiProgress + manaProgress + energyProgress) / 4);
+  }, [gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance, gameState.mana, gameState.energyCredits]);
+
+  const switchRealm = useCallback(() => {
     setIsTransitioning(true);
-    
     setTimeout(() => {
-      setCurrentRealm(newRealm);
-      setTimeout(() => {
-        setIsTransitioning(false);
-      }, 300);
-    }, 200);
-  }, [currentRealm, isTransitioning]);
-
-  const canConverge = gameState.mana + gameState.energyCredits >= 1000;
-  const convergenceProgress = Math.min(((gameState.mana + gameState.energyCredits) / 1000) * 100, 100);
-
-  const formatNumber = useCallback((num: number): string => {
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
-    return Math.floor(num).toString();
+      setCurrentRealm(prev => prev === 'fantasy' ? 'scifi' : 'fantasy');
+      setIsTransitioning(false);
+    }, 500);
   }, []);
 
   return {
-    // State
     currentRealm,
     showConvergence,
     isTransitioning,
@@ -59,20 +69,12 @@ export const useUIStateManager = (gameState: GameState) => {
     currentJourneyDistance,
     canConverge,
     convergenceProgress,
-    
-    // Setters
-    setCurrentRealm,
     setShowConvergence,
-    setIsTransitioning,
     setShowTapEffect,
     setShowQuickHelp,
     setShowCombatUpgrades,
     setShowWeaponUpgrades,
     setShowCrossRealmUpgrades,
-    setPlayerPosition,
-    
-    // Functions
-    switchRealm,
-    formatNumber
+    switchRealm
   };
 };

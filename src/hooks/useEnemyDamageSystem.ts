@@ -17,17 +17,19 @@ interface UseEnemyDamageSystemProps {
 export const useEnemyDamageSystem = ({ playerZ, upgradeLevel }: UseEnemyDamageSystemProps) => {
   const [enemyHealths, setEnemyHealths] = useState<Map<string, EnemyHealth>>(new Map());
 
-  // Calculate base health based on player progression
+  // Calculate base health - 10 shots to kill early enemies
   const calculateMaxHealth = useCallback((enemyZ: number) => {
-    const baseHealth = 100; // Increased base health for 1/5 damage system
-    const distanceBonus = Math.floor(Math.abs(enemyZ) / 10) * 10;
+    const baseHealth = 100; // Base health for 10 shots (10 damage per shot)
+    const distanceBonus = Math.floor(Math.abs(enemyZ) / 20) * 20; // Slower scaling
     return baseHealth + distanceBonus;
   }, []);
 
-  // Calculate damage - each hit does 1/5 of max health
+  // Calculate damage - 10 damage base (1/10 of 100 health), scales with upgrades
   const projectileDamage = useMemo(() => {
-    return 20; // 20 damage = 1/5 of 100 health
-  }, []);
+    const baseDamage = 10; // 10 damage = 1/10 of 100 health = 10 shots to kill
+    const upgradeBonus = upgradeLevel * 5; // +5 damage per upgrade level
+    return baseDamage + upgradeBonus;
+  }, [upgradeLevel]);
 
   // Initialize enemy health when spawned
   const initializeEnemy = useCallback((enemyId: string, position: [number, number, number]) => {
