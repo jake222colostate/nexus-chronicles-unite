@@ -30,6 +30,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   // Initialize enemy health on mount
   useEffect(() => {
     if (!initialized.current && onInitialize) {
+      console.log(`Enemy ${enemyId} calling onInitialize with position:`, position);
       onInitialize(enemyId, position);
       initialized.current = true;
     }
@@ -74,8 +75,8 @@ export const Enemy: React.FC<EnemyProps> = ({
 
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Health bar - always render if enemy health exists */}
-      {enemyHealth && (
+      {/* Health bar - render if enemy health exists */}
+      {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar enemyHealth={enemyHealth} position={[0, 2.5, 0]} />
       )}
       

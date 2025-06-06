@@ -53,6 +53,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     [onEnemyKilled]
   );
 
+  // This callback will be called when enemies need to be initialized in the damage system
+  const handleEnemyInitialize = useCallback((id: string, position: [number, number, number]) => {
+    console.log(`Fantasy3DScene: Enemy ${id} requesting initialization at:`, position);
+  }, []);
+
   return (
     <Suspense fallback={null}>
       {/* Camera controller with proper character height */}
@@ -87,6 +92,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         maxEnemies={3} // Reduced max enemies
         spawnDistance={80} // Reduced spawn distance
         onEnemiesChange={handleEnemiesChange}
+        onEnemyInitialize={handleEnemyInitialize}
       />
 
       {/* Wizard Staff Weapon */}

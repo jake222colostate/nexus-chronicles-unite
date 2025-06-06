@@ -32,11 +32,22 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
     upgradeLevel
   });
 
-  // Initialize enemies in damage system
+  // Initialize ALL enemies in damage system - this was the missing piece
   React.useEffect(() => {
     enemies.forEach(enemy => {
+      // Check if enemy exists in damage system, if not initialize it
       if (!damageSystem.getEnemyHealth(enemy.id)) {
+        console.log(`Initializing enemy ${enemy.id} in damage system`);
         damageSystem.initializeEnemy(enemy.id, enemy.position);
+      }
+    });
+    
+    // Clean up enemies that no longer exist in the main enemy list
+    const currentEnemyIds = new Set(enemies.map(e => e.id));
+    damageSystem.enemyHealths.forEach(healthEnemy => {
+      if (!currentEnemyIds.has(healthEnemy.id)) {
+        console.log(`Removing stale enemy ${healthEnemy.id} from damage system`);
+        damageSystem.removeEnemy(healthEnemy.id);
       }
     });
   }, [enemies, damageSystem]);
@@ -44,7 +55,15 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
   // Handle enemy hits from projectiles
   const handleEnemyHit = React.useCallback((enemyId: string, damage: number) => {
     const enemyHealth = damageSystem.getEnemyHealth(enemyId);
-    if (!enemyHealth) return;
+    if (!enemyHealth) {
+      console.log(`Enemy ${enemyId} not found in damage system, attempting to initialize`);
+      // Try to find and initialize the enemy
+      const legacyEnemy = enemies.find(e => e.id === enemyId);
+      if (legacyEnemy) {
+        damageSystem.initializeEnemy(enemyId, legacyEnemy.position);
+      }
+      return;
+    }
 
     // Deal damage
     damageSystem.damageEnemy(enemyId, damage);
@@ -78,14 +97,14 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
 
     // Legacy callback
     onEnemyHit(enemyId);
-  }, [damageSystem, addText, upgradeLevel, onManaGained, onEnemyKilled, onEnemyHit]);
+  }, [damageSystem, addText, upgradeLevel, onManaGained, onEnemyKilled, onEnemyHit, enemies]);
 
   return (
     <group>
       {/* Wizard Staff (hidden) */}
       <WizardStaff visible={false} />
       
-      {/* Projectile System */}
+      {/* Projectile System - now uses combined enemy data */}
       <ProjectileSystem
         enemies={damageSystem.enemyHealths}
         onEnemyHit={handleEnemyHit}

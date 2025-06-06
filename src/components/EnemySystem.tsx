@@ -16,6 +16,7 @@ interface EnemySystemProps {
   maxEnemies?: number;
   spawnDistance?: number;
   onEnemiesChange?: (enemies: EnemyData[]) => void;
+  onEnemyInitialize?: (id: string, position: [number, number, number]) => void;
 }
 
 export interface EnemyData {
@@ -31,7 +32,7 @@ export interface EnemySystemHandle {
 
 export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   (
-    { playerPosition, maxEnemies = 5, spawnDistance = 100, onEnemiesChange },
+    { playerPosition, maxEnemies = 5, spawnDistance = 100, onEnemiesChange, onEnemyInitialize },
     ref
   ) => {
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
@@ -76,7 +77,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
         health: 1
       };
 
-      console.log(`EnemySystem: Spawning enemy at position [${spawnX}, 1, ${spawnZ}]`);
+      console.log(`EnemySystem: Spawning enemy ${newEnemy.id} at position [${spawnX}, 1, ${spawnZ}]`);
       
       lastSpawnTime.current = now;
       return [...prev, newEnemy];
@@ -140,6 +141,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
           position={enemy.position}
           playerPosition={playerPosition}
           onReachPlayer={() => removeEnemy(enemy.id)}
+          onInitialize={onEnemyInitialize}
         />
       ))}
     </group>
