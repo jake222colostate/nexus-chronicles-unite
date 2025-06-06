@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
-import { Group } from 'three';
+import { Group, Mesh } from 'three';
 import { useThree } from '@react-three/fiber';
 
 export const MountainWalls: React.FC = () => {
@@ -36,7 +36,7 @@ export const MountainWalls: React.FC = () => {
       
       // Apply materials for visibility
       leftMountain.traverse((child) => {
-        if (child.isMesh) {
+        if ((child as Mesh).isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
         }
@@ -54,7 +54,7 @@ export const MountainWalls: React.FC = () => {
       
       // Apply materials for visibility
       rightMountain.traverse((child) => {
-        if (child.isMesh) {
+        if ((child as Mesh).isMesh) {
           child.castShadow = true;
           child.receiveShadow = true;
         }
