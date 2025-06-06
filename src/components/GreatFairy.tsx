@@ -1,7 +1,8 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { Group, Vector3, SkinnedMesh } from 'three';
+import { Group, Vector3, SkinnedMesh, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
 
@@ -61,8 +62,8 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
           });
         }
         
-        // Ensure materials are visible
-        if (child.material) {
+        // Ensure materials are visible - properly type check for Mesh
+        if (child instanceof Mesh && child.material) {
           child.material.visible = true;
           child.material.needsUpdate = true;
         }
