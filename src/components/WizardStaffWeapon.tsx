@@ -43,7 +43,7 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
         position: origin.clone(),
         direction,
         damage: totalDamage,
-        speed: 20 + totalDamage * 2, // Speed scales with damage
+        speed: 25 + totalDamage * 2, // Increased base speed
         age: 0
       }
     ]);
@@ -51,7 +51,10 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
 
   useFrame((_, delta) => {
     const now = performance.now();
-    if (now - lastShot.current > weaponStats.fireRate) {
+    // Increased shooting speed - reduced fire rate interval
+    const fireRateInterval = Math.max(150, weaponStats.fireRate * 0.3); // Much faster shooting
+    
+    if (now - lastShot.current > fireRateInterval) {
       const target = enemies
         .filter(e => new Vector3(...e.position).distanceTo(camera.position) <= weaponStats.range)
         .sort((a, b) =>
@@ -73,10 +76,10 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
         const age = p.age + delta;
         let hit = false;
         
-        // Enhanced collision detection
+        // Enhanced collision detection with better hit radius
         for (const enemy of enemies) {
           const ePos = new Vector3(...enemy.position);
-          if (newPos.distanceTo(ePos) < 1.2) { // Increased hit radius
+          if (newPos.distanceTo(ePos) < 1.5) { // Slightly larger hit radius
             onEnemyHit(enemy.id, p.damage);
             hit = true;
             break;
