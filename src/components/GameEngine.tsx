@@ -17,6 +17,8 @@ import { useUpgradeManagers } from './UpgradeManagers';
 import { useUIStateManager } from './UIStateManager';
 import { AutoClickerUpgradeSystem } from './AutoClickerUpgradeSystem';
 import { useAutoClickerEffect } from '@/hooks/useAutoClickerEffect';
+import { FantasyAutoClickerUpgradeSystem } from './FantasyAutoClickerUpgradeSystem';
+import { useAutoManaSystem } from '@/hooks/useAutoManaSystem';
 
 const GameEngine: React.FC = () => {
   const {
@@ -184,16 +186,16 @@ const GameEngine: React.FC = () => {
   }, [performConvergence, setShowConvergence]);
 
   // Add AutoClicker effect
-  const handleAutoClickerMana = useCallback((amount: number) => {
+  const handleAutoManaGeneration = useCallback((amount: number) => {
     setGameState(prev => ({
       ...prev,
       mana: prev.mana + amount,
     }));
   }, [setGameState]);
 
-  useAutoClickerEffect({ onAddMana: handleAutoClickerMana });
+  useAutoManaSystem({ onAddMana: handleAutoManaGeneration });
 
-  const handleAutoClickerUpgrade = useCallback((cost: number) => {
+  const handleFantasyAutoClickerUpgrade = useCallback((cost: number) => {
     setGameState(prev => ({
       ...prev,
       mana: prev.mana - cost,
@@ -251,11 +253,13 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* AutoClicker Upgrade System - positioned top-center */}
-        <AutoClickerUpgradeSystem
-          currentMana={stableGameState.mana}
-          onUpgrade={handleAutoClickerUpgrade}
-        />
+        {/* Fantasy AutoClicker Upgrade System - positioned top-center, only in fantasy realm */}
+        {currentRealm === 'fantasy' && (
+          <FantasyAutoClickerUpgradeSystem
+            currentMana={stableGameState.mana}
+            onUpgrade={handleFantasyAutoClickerUpgrade}
+          />
+        )}
 
         {/* Weapon Upgrade Button */}
         <div className="absolute top-16 right-4 z-30">

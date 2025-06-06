@@ -73,7 +73,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           <div className="flex items-center justify-center gap-4 text-base font-bold text-white relative z-10 flex-1">
             {/* Mana */}
             <div className="flex flex-col items-center gap-0.5">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5" data-mana-display>
                 <span className="text-lg">🧙‍♂️</span>
                 <span className="text-purple-300 font-bold text-sm">{formatNumber(mana)}</span>
               </div>
