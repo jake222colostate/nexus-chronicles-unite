@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useThree } from '@react-three/fiber';
-import { Group } from 'three';
+import { Group, Vector3 } from 'three';
 import { WizardStaff } from './WizardStaff';
 import { ProjectileSystem } from './ProjectileSystem';
 import { useEnemyDamageSystem, EnemyHealth } from '../hooks/useEnemyDamageSystem';
@@ -50,7 +50,7 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
     damageSystem.damageEnemy(enemyId, damage);
     
     // Show floating combat text
-    const position = new THREE.Vector3(...enemyHealth.position);
+    const position = new Vector3(...enemyHealth.position);
     addText(`-${damage}`, position, "#FF6666");
 
     // Check if enemy died

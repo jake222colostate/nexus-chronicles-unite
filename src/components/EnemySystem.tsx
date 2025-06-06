@@ -28,6 +28,7 @@ export interface EnemyData {
 export interface EnemySystemHandle {
   damageEnemy: (enemyId: string, damage: number) => void;
 }
+
 export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   (
     { playerPosition, maxEnemies = 5, spawnDistance = 100, onEnemiesChange },
@@ -138,6 +139,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
       {enemies.map((enemy) => (
         <Enemy
           key={enemy.id}
+          enemyId={enemy.id}
           position={enemy.position}
           playerPosition={playerPosition}
           onReachPlayer={() => removeEnemy(enemy.id)}
