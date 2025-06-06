@@ -32,49 +32,28 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
     upgradeLevel
   });
 
-  // Initialize ALL enemies in damage system
-  React.useEffect(() => {
-    enemies.forEach(enemy => {
-      // Check if enemy exists in damage system, if not initialize it
-      if (!damageSystem.getEnemyHealth(enemy.id)) {
-        console.log(`Initializing enemy ${enemy.id} in damage system`);
-        damageSystem.initializeEnemy(enemy.id, enemy.position);
-      }
-    });
-    
-    // Clean up enemies that no longer exist in the main enemy list
-    const currentEnemyIds = new Set(enemies.map(e => e.id));
-    damageSystem.enemyHealths.forEach(healthEnemy => {
-      if (!currentEnemyIds.has(healthEnemy.id)) {
-        console.log(`Removing stale enemy ${healthEnemy.id} from damage system`);
-        damageSystem.removeEnemy(healthEnemy.id);
-      }
-    });
-  }, [enemies, damageSystem]);
-
-  // Handle enemy hits from projectiles
+  // Handle enemy hits from projectiles - this is the main damage handler
   const handleEnemyHit = React.useCallback((enemyId: string, damage: number) => {
+    console.log(`WizardStaffWeapon: Enemy ${enemyId} hit for ${damage} damage`);
+    
     const enemyHealth = damageSystem.getEnemyHealth(enemyId);
     if (!enemyHealth) {
-      console.log(`Enemy ${enemyId} not found in damage system, attempting to initialize`);
-      // Try to find and initialize the enemy
-      const legacyEnemy = enemies.find(e => e.id === enemyId);
-      if (legacyEnemy) {
-        damageSystem.initializeEnemy(enemyId, legacyEnemy.position);
-      }
+      console.log(`Enemy ${enemyId} not found in damage system - skipping damage`);
       return;
     }
 
-    // Deal damage
+    // Deal damage through the damage system
     damageSystem.damageEnemy(enemyId, damage);
     
     // Show floating combat text
     const position = new Vector3(...enemyHealth.position);
     addText(`-${damage}`, position, "#FF6666");
 
-    // Check if enemy died
+    // Check if enemy died after damage
     const updatedHealth = damageSystem.getEnemyHealth(enemyId);
     if (updatedHealth && updatedHealth.currentHealth <= 0) {
+      console.log(`Enemy ${enemyId} killed!`);
+      
       // Award mana
       const manaReward = 10 + Math.floor(upgradeLevel * 2);
       if (onManaGained) {
@@ -89,7 +68,7 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
         onEnemyKilled();
       }
       
-      // NOW call the legacy callback to remove from main enemy system
+      // Remove from main enemy system
       onEnemyHit(enemyId);
       
       // Remove enemy from damage system after delay
@@ -97,16 +76,14 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
         damageSystem.removeEnemy(enemyId);
       }, 1000);
     }
-
-    // DO NOT call legacy onEnemyHit unless enemy actually died
-  }, [damageSystem, addText, upgradeLevel, onManaGained, onEnemyKilled, onEnemyHit, enemies]);
+  }, [damageSystem, addText, upgradeLevel, onManaGained, onEnemyKilled, onEnemyHit]);
 
   return (
     <group>
       {/* Wizard Staff (hidden) */}
       <WizardStaff visible={false} />
       
-      {/* Projectile System - now uses combined enemy data */}
+      {/* Projectile System - uses the damage system's enemy health data */}
       <ProjectileSystem
         enemies={damageSystem.enemyHealths}
         onEnemyHit={handleEnemyHit}

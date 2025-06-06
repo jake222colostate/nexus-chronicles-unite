@@ -27,14 +27,14 @@ export const Enemy: React.FC<EnemyProps> = ({
   const speed = 2;
   const initialized = useRef(false);
 
-  // Initialize enemy health on mount
+  // Initialize enemy health on mount - only once
   useEffect(() => {
-    if (!initialized.current && onInitialize) {
-      console.log(`Enemy ${enemyId} calling onInitialize with position:`, position);
+    if (!initialized.current && onInitialize && !enemyHealth) {
+      console.log(`Enemy ${enemyId} initializing health system at position:`, position);
       onInitialize(enemyId, position);
       initialized.current = true;
     }
-  }, [enemyId, position, onInitialize]);
+  }, [enemyId, position, onInitialize, enemyHealth]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
@@ -75,7 +75,7 @@ export const Enemy: React.FC<EnemyProps> = ({
 
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Health bar - ALWAYS render if enemy health exists and is alive */}
+      {/* Health bar - only render if enemy health exists and is alive */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar enemyHealth={enemyHealth} position={[0, 2.5, 0]} />
       )}

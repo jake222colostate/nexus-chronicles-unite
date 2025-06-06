@@ -56,18 +56,29 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Handle enemy hits - only remove from main system if actually dead
   const handleEnemyHit = useCallback(
     (id: string) => {
-      // Only remove enemy from main system - damage system handles health
+      // Only remove enemy from main system - damage is handled by weapon
       enemySystemRef.current?.damageEnemy(id, 1);
       console.log(`Enemy ${id} removed from main enemy system`);
     },
     []
   );
 
-  // This callback will be called when enemies need to be initialized in the damage system
+  // Initialize enemies in damage system when they spawn
   const handleEnemyInitialize = useCallback((id: string, position: [number, number, number]) => {
-    console.log(`Fantasy3DScene: Enemy ${id} requesting initialization at:`, position);
+    console.log(`Fantasy3DScene: Initializing enemy ${id} at position:`, position);
     damageSystem.initializeEnemy(id, position);
   }, [damageSystem]);
+
+  // Clean up damage system when enemies are removed from main system
+  React.useEffect(() => {
+    const currentEnemyIds = new Set(enemies.map(e => e.id));
+    damageSystem.enemyHealths.forEach(healthEnemy => {
+      if (!currentEnemyIds.has(healthEnemy.id)) {
+        console.log(`Cleaning up enemy ${healthEnemy.id} from damage system`);
+        damageSystem.removeEnemy(healthEnemy.id);
+      }
+    });
+  }, [enemies, damageSystem]);
 
   return (
     <Suspense fallback={null}>
@@ -108,17 +119,14 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
       {/* Wizard Staff Weapon */}
       <WizardStaffWeapon 
-        enemies={enemies.map(enemy => ({
-          ...enemy,
-          enemyHealth: damageSystem.getEnemyHealth(enemy.id)
-        }))} 
+        enemies={enemies} 
         onEnemyHit={handleEnemyHit}
         upgradeLevel={weaponUpgradeLevel}
         playerPosition={cameraPosition}
         onEnemyKilled={onEnemyKilled}
       />
 
-      {/* Render enemies with health data */}
+      {/* Render enemies with health data from damage system */}
       {enemies.map(enemy => {
         const enemyHealth = damageSystem.getEnemyHealth(enemy.id);
         return (
