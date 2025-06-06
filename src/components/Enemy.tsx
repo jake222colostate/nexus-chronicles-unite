@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -23,6 +24,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   enemyId
 }) => {
   const groupRef = useRef<Group>(null);
+  const batMeshRef = useRef<Group>(null);
   const currentPosition = useRef(new Vector3(position[0], position[1] + 1.5, position[2])); // Start hovering at fixed height
   const speed = 2;
   const initialized = useRef(false);
@@ -34,11 +36,15 @@ export const Enemy: React.FC<EnemyProps> = ({
 
   useEffect(() => {
     console.log(`Enemy ${enemyId}: Bat model loaded:`, !!batScene);
-    if (batScene) {
+    if (batScene && batMeshRef.current) {
       console.log(`Enemy ${enemyId}: Bat scene children:`, batScene.children.length);
       
+      // Clear any existing children and add the bat model
+      batMeshRef.current.clear();
+      const batClone = batScene.clone();
+      
       // Ensure materials are visible and properly configured
-      batScene.traverse((child) => {
+      batClone.traverse((child) => {
         if (child instanceof Mesh) {
           console.log(`Enemy ${enemyId}: Found mesh:`, child.name, 'Material:', !!child.material);
           child.castShadow = true;
@@ -49,6 +55,15 @@ export const Enemy: React.FC<EnemyProps> = ({
           }
         }
       });
+
+      // Apply proper positioning - adjust for model pivot point
+      batClone.position.set(0, 1.2, 0); // Offset to center the bat model properly
+      batClone.scale.setScalar(1.2); // Main enemy scale
+      batClone.rotation.set(0, Math.PI, 0); // Face forward
+      
+      // Parent the bat mesh to the enemy entity
+      batMeshRef.current.add(batClone);
+      console.log(`Enemy ${enemyId}: Bat model properly parented to enemy entity`);
     }
   }, [batScene, enemyId]);
 
@@ -107,24 +122,24 @@ export const Enemy: React.FC<EnemyProps> = ({
     // Ensure bat stays at proper height
     currentPosition.current.y = 1.5;
 
-    // Update position
+    // Update enemy entity position (this is what health bar should track)
     groupRef.current.position.copy(currentPosition.current);
 
     // Flying animation with proper hovering
-    if (groupRef.current) {
+    if (batMeshRef.current) {
       const time = Date.now() * 0.003;
       const bobOffset = Math.sin(time + position[0]) * 0.4;
       
-      // Keep bat hovering at fixed height with natural flight motion
-      groupRef.current.position.y = 1.5 + bobOffset;
+      // Apply flight motion to the bat mesh within the enemy entity
+      batMeshRef.current.position.y = bobOffset; // Relative to entity position
       
       // Face movement direction
       const angle = Math.atan2(direction.x, direction.z);
-      groupRef.current.rotation.y = angle;
+      batMeshRef.current.rotation.y = angle;
       
       // Flying motion - enhanced for main enemies
-      groupRef.current.rotation.z = Math.sin(time * 0.5) * 0.15;
-      groupRef.current.rotation.x = Math.sin(time * 0.8) * 0.1;
+      batMeshRef.current.rotation.z = Math.sin(time * 0.5) * 0.15;
+      batMeshRef.current.rotation.x = Math.sin(time * 0.8) * 0.1;
     }
 
     // Check collision
@@ -139,42 +154,28 @@ export const Enemy: React.FC<EnemyProps> = ({
     return null;
   }
 
-  // Fallback while loading
-  if (!batScene) {
-    console.log(`Enemy ${enemyId}: Bat model loading, showing fallback`);
-    return (
-      <group ref={groupRef} position={[position[0], 1.5, position[2]]}>
-        <mesh>
-          <sphereGeometry args={[1, 16, 16]} />
-          <meshStandardMaterial color="#ff0000" />
-        </mesh>
-        {enemyHealth && enemyHealth.currentHealth > 0 && (
-          <EnemyHealthBar 
-            enemyHealth={enemyHealth} 
-            position={[0, 2.5, 0]} 
-          />
-        )}
-      </group>
-    );
-  }
-
   return (
     <group ref={groupRef} position={[position[0], 1.5, position[2]]} castShadow receiveShadow>
-      {/* Health bar positioned above bat - properly attached */}
+      {/* Health bar positioned above enemy entity - tracks the enemy entity */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.0, 0]} // Positioned above bat model
+          position={[0, 2.5, 0]} // Positioned above enemy entity
         />
       )}
       
-      {/* Vampire Bat Model - main enemy scale */}
-      <primitive 
-        object={batScene.clone()} 
-        scale={[1.2, 1.2, 1.2]} // Larger than minions for main enemies
-        rotation={[0, Math.PI, 0]}
-        position={[0, 0, 0]} // Centered on group origin
-      />
+      {/* Bat mesh container - properly parented to enemy entity */}
+      <group ref={batMeshRef} />
+      
+      {/* Fallback while loading - also properly centered */}
+      {!batScene && (
+        <group position={[0, 0, 0]}>
+          <mesh position={[0, 0, 0]}>
+            <sphereGeometry args={[1, 16, 16]} />
+            <meshStandardMaterial color="#ff0000" />
+          </mesh>
+        </group>
+      )}
       
       {/* Debug collision bounds */}
       <mesh visible={false}>

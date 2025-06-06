@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -27,6 +28,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   orbitalOffset = 0
 }) => {
   const groupRef = useRef<Group>(null);
+  const batMeshRef = useRef<Group>(null);
   const currentPosition = useRef(new Vector3(position[0], position[1] + 1.5, position[2])); // Start hovering at proper height
   const speed = 2.5;
   const initialized = useRef(false);
@@ -38,11 +40,15 @@ export const BatMinion: React.FC<BatMinionProps> = ({
 
   useEffect(() => {
     console.log(`BatMinion ${enemyId}: Model loading state - Scene:`, !!batScene);
-    if (batScene) {
+    if (batScene && batMeshRef.current) {
       console.log(`BatMinion ${enemyId}: Bat model loaded successfully, children:`, batScene.children.length);
       
+      // Clear any existing children and add the bat model
+      batMeshRef.current.clear();
+      const batClone = batScene.clone();
+      
       // Fix materials and ensure proper setup
-      batScene.traverse((child) => {
+      batClone.traverse((child) => {
         if (child instanceof Mesh) {
           console.log(`BatMinion ${enemyId}: Found mesh:`, child.name, 'Visible:', child.visible);
           child.castShadow = true;
@@ -54,6 +60,15 @@ export const BatMinion: React.FC<BatMinionProps> = ({
           }
         }
       });
+
+      // Apply proper positioning for minions - adjust for model pivot point
+      batClone.position.set(0, 1.0, 0); // Slightly lower offset for minions
+      batClone.scale.setScalar(0.8); // Smaller for minions
+      batClone.rotation.set(0, Math.PI, 0); // Face forward
+      
+      // Parent the bat mesh to the enemy entity
+      batMeshRef.current.add(batClone);
+      console.log(`BatMinion ${enemyId}: Bat model properly parented to enemy entity`);
     } else {
       console.log(`BatMinion ${enemyId}: Bat model not yet loaded`);
     }
@@ -128,26 +143,26 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     // Ensure bat stays at proper flight height
     currentPosition.current.y = Math.max(1.5, currentPosition.current.y);
 
-    // Update position
+    // Update enemy entity position (this is what health bar should track)
     groupRef.current.position.copy(currentPosition.current);
 
     // Enhanced flying animation with proper hovering
-    if (groupRef.current) {
+    if (batMeshRef.current) {
       const time = Date.now() * 0.005;
       const flyBob = Math.sin(time * 2 + orbitalOffset) * 0.4;
       const flyWobble = Math.cos(time * 3 + orbitalOffset) * 0.2;
       
-      // Keep bat hovering with natural flight motion
-      groupRef.current.position.y = currentPosition.current.y + flyBob;
-      groupRef.current.position.x = currentPosition.current.x + flyWobble;
+      // Apply flight motion to the bat mesh within the enemy entity
+      batMeshRef.current.position.y = flyBob; // Relative to entity position
+      batMeshRef.current.position.x = flyWobble; // Relative to entity position
       
       // Face movement direction
       const angle = Math.atan2(direction.x, direction.z);
-      groupRef.current.rotation.y = angle;
+      batMeshRef.current.rotation.y = angle;
       
       // Wing flapping animation
-      groupRef.current.rotation.z = Math.sin(time * 8) * 0.2;
-      groupRef.current.rotation.x = Math.sin(time * 6) * 0.1;
+      batMeshRef.current.rotation.z = Math.sin(time * 8) * 0.2;
+      batMeshRef.current.rotation.x = Math.sin(time * 6) * 0.1;
     }
 
     // Check collision
@@ -164,27 +179,20 @@ export const BatMinion: React.FC<BatMinionProps> = ({
 
   return (
     <group ref={groupRef} position={[position[0], 1.5, position[2]]} castShadow receiveShadow>
-      {/* Health bar positioned above bat - properly attached and following */}
+      {/* Health bar positioned above enemy entity - tracks the enemy entity */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.5, 0]} // Attached above bat model
+          position={[0, 2.0, 0]} // Positioned above enemy entity
         />
       )}
       
-      {/* Vampire bat model with proper scaling and positioning */}
-      {batScene && (
-        <primitive 
-          object={batScene.clone()} 
-          scale={[0.8, 0.8, 0.8]} // Slightly smaller for minions
-          rotation={[0, Math.PI, 0]} 
-          position={[0, 0, 0]} // Centered on group origin
-        />
-      )}
+      {/* Bat mesh container - properly parented to enemy entity */}
+      <group ref={batMeshRef} />
       
-      {/* Fallback if model doesn't load */}
+      {/* Fallback if model doesn't load - also properly centered */}
       {!batScene && (
-        <>
+        <group position={[0, 0, 0]}>
           <mesh position={[0, 0, 0]}>
             <sphereGeometry args={[0.4, 8, 8]} />
             <meshStandardMaterial color="#990000" />
@@ -193,7 +201,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
             <coneGeometry args={[0.2, 0.6, 3]} />
             <meshStandardMaterial color="#660000" />
           </mesh>
-        </>
+        </group>
       )}
       
       {/* Debug collision bounds - visible during development */}
