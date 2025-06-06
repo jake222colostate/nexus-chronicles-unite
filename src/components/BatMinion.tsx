@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { Group, Vector3 } from 'three';
+import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
 
@@ -34,15 +34,30 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model
-  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  // Load vampire bat model with better error handling
+  const { scene: batScene, error } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
-    console.log(`BatMinion ${enemyId}: Model loaded:`, !!batScene);
+    console.log(`BatMinion ${enemyId}: Model loading state - Scene:`, !!batScene, 'Error:', !!error);
     if (batScene) {
-      console.log(`BatMinion ${enemyId}: Scene children:`, batScene.children.length);
+      console.log(`BatMinion ${enemyId}: Bat model loaded successfully, children:`, batScene.children.length);
+      
+      // Ensure all meshes are visible and properly configured
+      batScene.traverse((child) => {
+        if (child instanceof Mesh) {
+          console.log(`BatMinion ${enemyId}: Found mesh:`, child.name, 'Visible:', child.visible);
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (child.material) {
+            child.material.visible = true;
+          }
+        }
+      });
     }
-  }, [batScene, enemyId]);
+    if (error) {
+      console.error(`BatMinion ${enemyId}: Failed to load bat model:`, error);
+    }
+  }, [batScene, error, enemyId]);
 
   // Initialize as enemy
   useEffect(() => {
@@ -138,42 +153,39 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     return null;
   }
 
-  // Fallback while loading
-  if (!batScene) {
-    console.log(`BatMinion ${enemyId}: Model loading, showing fallback`);
-    return (
-      <group ref={groupRef} position={position}>
-        <mesh>
-          <sphereGeometry args={[0.4, 16, 16]} />
-          <meshStandardMaterial color="#330000" />
-        </mesh>
-        {enemyHealth && enemyHealth.currentHealth > 0 && (
-          <EnemyHealthBar 
-            enemyHealth={enemyHealth} 
-            position={[0, 1.2, 0]} 
-          />
-        )}
-      </group>
-    );
-  }
-
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
       {/* Health bar attached as child - follows bat exactly */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.0, 0]} // Positioned above bat at proper scale
+          position={[0, 1.5, 0]} // Positioned above bat
         />
       )}
       
-      {/* Vampire Bat Model - proper minion scale */}
-      <primitive 
-        object={batScene.clone()} 
-        scale={[0.8, 0.8, 0.8]} // Smaller but visible bat minions
-        rotation={[0, Math.PI, 0]} 
-        position={[0, 0, 0]}
-      />
+      {/* Always render the vampire bat model if available */}
+      {batScene && (
+        <primitive 
+          object={batScene.clone()} 
+          scale={[1.0, 1.0, 1.0]} // Standard scale for minions
+          rotation={[0, Math.PI, 0]} 
+          position={[0, 0, 0]}
+        />
+      )}
+      
+      {/* Only show fallback if model failed to load */}
+      {!batScene && (
+        <>
+          <mesh position={[0, 0, 0]}>
+            <sphereGeometry args={[0.4, 8, 8]} />
+            <meshStandardMaterial color="#990000" />
+          </mesh>
+          <mesh position={[0, 0, 0]}>
+            <coneGeometry args={[0.2, 0.6, 3]} />
+            <meshStandardMaterial color="#660000" />
+          </mesh>
+        </>
+      )}
       
       {/* Debug collision bounds */}
       <mesh visible={false}>
