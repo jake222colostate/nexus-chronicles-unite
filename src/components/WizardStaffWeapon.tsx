@@ -1,88 +1,100 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useThree, useFrame } from '@react-three/fiber';
-import { Vector3, Group } from 'three';
-import { WizardStaff } from './WizardStaff';
-import { EnemyData } from './EnemySystem';
 
-interface Projectile {
-  id: string;
-  position: Vector3;
-  direction: Vector3;
-}
+import React from 'react';
+import { useThree } from '@react-three/fiber';
+import { Group } from 'three';
+import { WizardStaff } from './WizardStaff';
+import { ProjectileSystem } from './ProjectileSystem';
+import { useEnemyDamageSystem, EnemyHealth } from '../hooks/useEnemyDamageSystem';
+import { FloatingCombatText, useFloatingCombatText } from './FloatingCombatText';
 
 interface WizardStaffWeaponProps {
-  enemies: EnemyData[];
+  enemies: any[]; // Legacy enemy data
   onEnemyHit: (enemyId: string) => void;
+  upgradeLevel?: number;
+  playerPosition?: { x: number; y: number; z: number };
+  onEnemyKilled?: () => void;
+  onManaGained?: (amount: number) => void;
 }
 
 export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
   enemies,
-  onEnemyHit
+  onEnemyHit,
+  upgradeLevel = 0,
+  playerPosition = { x: 0, y: 0, z: 0 },
+  onEnemyKilled,
+  onManaGained
 }) => {
   const { camera } = useThree();
-  const staffGroup = useRef<Group>(null);
-  const [projectiles, setProjectiles] = useState<Projectile[]>([]);
-
-  const shoot = useCallback(() => {
-    const direction = new Vector3();
-    camera.getWorldDirection(direction);
-    const origin = camera.position.clone().add(direction.clone().multiplyScalar(1));
-    setProjectiles(prev => [
-      ...prev,
-      { id: `proj_${Date.now()}_${Math.random()}`, position: origin, direction }
-    ]);
-  }, [camera]);
-
-  useEffect(() => {
-    const handleMouseDown = (e: MouseEvent) => {
-      if (e.button === 0) {
-        shoot();
-      }
-    };
-    window.addEventListener('mousedown', handleMouseDown);
-    return () => window.removeEventListener('mousedown', handleMouseDown);
-  }, [shoot]);
-
-  useFrame((_, delta) => {
-    setProjectiles(prev => {
-      const updated: Projectile[] = [];
-      for (const p of prev) {
-        const newPos = p.position.clone().add(p.direction.clone().multiplyScalar(30 * delta));
-        let hit = false;
-        for (const enemy of enemies) {
-          const ePos = new Vector3(...enemy.position);
-          if (newPos.distanceTo(ePos) < 1) {
-            onEnemyHit(enemy.id);
-            hit = true;
-            break;
-          }
-        }
-        if (!hit && camera.position.distanceTo(newPos) < 200) {
-          updated.push({ ...p, position: newPos });
-        }
-      }
-      return updated;
-    });
-
-    if (staffGroup.current) {
-      staffGroup.current.position.copy(camera.position);
-      staffGroup.current.rotation.copy(camera.rotation);
-    }
+  const { texts, addText } = useFloatingCombatText();
+  
+  const damageSystem = useEnemyDamageSystem({
+    playerZ: playerPosition.z,
+    upgradeLevel
   });
 
+  // Initialize enemies in damage system
+  React.useEffect(() => {
+    enemies.forEach(enemy => {
+      if (!damageSystem.getEnemyHealth(enemy.id)) {
+        damageSystem.initializeEnemy(enemy.id, enemy.position);
+      }
+    });
+  }, [enemies, damageSystem]);
+
+  // Handle enemy hits from projectiles
+  const handleEnemyHit = React.useCallback((enemyId: string, damage: number) => {
+    const enemyHealth = damageSystem.getEnemyHealth(enemyId);
+    if (!enemyHealth) return;
+
+    // Deal damage
+    damageSystem.damageEnemy(enemyId, damage);
+    
+    // Show floating combat text
+    const position = new THREE.Vector3(...enemyHealth.position);
+    addText(`-${damage}`, position, "#FF6666");
+
+    // Check if enemy died
+    const updatedHealth = damageSystem.getEnemyHealth(enemyId);
+    if (updatedHealth && updatedHealth.currentHealth <= 0) {
+      // Award mana
+      const manaReward = 10 + Math.floor(upgradeLevel * 2);
+      if (onManaGained) {
+        onManaGained(manaReward);
+      }
+      
+      // Show mana reward text
+      addText(`+${manaReward} Mana`, position, "#00FFFF");
+      
+      // Notify of kill
+      if (onEnemyKilled) {
+        onEnemyKilled();
+      }
+      
+      // Remove enemy after delay
+      setTimeout(() => {
+        damageSystem.removeEnemy(enemyId);
+      }, 1000);
+    }
+
+    // Legacy callback
+    onEnemyHit(enemyId);
+  }, [damageSystem, addText, upgradeLevel, onManaGained, onEnemyKilled, onEnemyHit]);
+
   return (
-    <group ref={staffGroup}>
-      <WizardStaff />
-      {projectiles.map(p => (
-        <mesh
-          key={p.id}
-          position={p.position.toArray() as [number, number, number]}
-          castShadow
-        >
-          <sphereGeometry args={[0.1, 6, 6]} />
-          <meshStandardMaterial color="yellow" emissive="yellow" />
-        </mesh>
-      ))}
+    <group>
+      {/* Wizard Staff (hidden) */}
+      <WizardStaff visible={false} />
+      
+      {/* Projectile System */}
+      <ProjectileSystem
+        enemies={damageSystem.enemyHealths}
+        onEnemyHit={handleEnemyHit}
+        projectileDamage={damageSystem.projectileDamage}
+        upgradeLevel={upgradeLevel}
+      />
+      
+      {/* Floating Combat Text */}
+      <FloatingCombatText texts={texts} />
     </group>
   );
 };

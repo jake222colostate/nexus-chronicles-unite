@@ -2,24 +2,51 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Vector3 } from 'three';
+import { EnemyHealthBar } from './EnemyHealthBar';
+import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
 
 interface EnemyProps {
   position: [number, number, number];
   playerPosition: Vector3;
   onReachPlayer?: () => void;
+  enemyHealth?: EnemyHealth;
+  onInitialize?: (id: string, position: [number, number, number]) => void;
+  enemyId: string;
 }
 
 export const Enemy: React.FC<EnemyProps> = ({ 
-  position = [0, 0, 0], // Default position to prevent undefined errors
+  position = [0, 0, 0],
   playerPosition, 
-  onReachPlayer 
+  onReachPlayer,
+  enemyHealth,
+  onInitialize,
+  enemyId
 }) => {
   const groupRef = useRef<Group>(null);
   const currentPosition = useRef(new Vector3(...position));
-  const speed = 2; // units per second
+  const speed = 2;
+  const initialized = useRef(false);
+
+  // Initialize enemy health on mount
+  useEffect(() => {
+    if (!initialized.current && onInitialize) {
+      onInitialize(enemyId, position);
+      initialized.current = true;
+    }
+  }, [enemyId, position, onInitialize]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
+
+    // Don't move if dead
+    if (enemyHealth && enemyHealth.currentHealth <= 0) {
+      // Fade out dead enemy
+      groupRef.current.scale.setScalar(Math.max(0, groupRef.current.scale.x - delta * 2));
+      if (groupRef.current.scale.x <= 0.1) {
+        groupRef.current.visible = false;
+      }
+      return;
+    }
 
     // Calculate direction toward player
     const direction = new Vector3()
@@ -40,8 +67,18 @@ export const Enemy: React.FC<EnemyProps> = ({
     }
   });
 
+  // Don't render if dead and faded out
+  if (enemyHealth && enemyHealth.currentHealth <= 0 && groupRef.current && !groupRef.current.visible) {
+    return null;
+  }
+
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
+      {/* Health bar */}
+      {enemyHealth && enemyHealth.currentHealth > 0 && (
+        <EnemyHealthBar enemyHealth={enemyHealth} />
+      )}
+      
       {/* Body */}
       <mesh position={[0, -1, 0]}>
         <cylinderGeometry args={[0.3, 0.6, 1.5, 8]} />
