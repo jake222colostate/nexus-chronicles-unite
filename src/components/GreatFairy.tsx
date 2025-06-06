@@ -67,14 +67,14 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
     }
   }, [enemyId, position, onInitialize, enemyHealth]);
 
-  // Spawn minions when fairy is initialized and healthy
+  // Spawn minions immediately when fairy is created
   useEffect(() => {
-    if (!minionsSpawned.current && enemyHealth && enemyHealth.currentHealth > 0 && onSpawnMinions) {
-      console.log(`GreatFairy ${enemyId}: Spawning bat minions`);
+    if (!minionsSpawned.current && onSpawnMinions && fairyScene) {
+      console.log(`GreatFairy ${enemyId}: Spawning bat minions immediately`);
       onSpawnMinions(enemyId, position);
       minionsSpawned.current = true;
     }
-  }, [enemyHealth, onSpawnMinions, enemyId, position]);
+  }, [onSpawnMinions, enemyId, position, fairyScene]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
@@ -118,7 +118,7 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
     currentPosition.current.add(movement);
 
     // Keep fairy at proper ground level (slightly above ground)
-    currentPosition.current.y = 0.85; // Lower than before to match player height better
+    currentPosition.current.y = 1; // Proper enemy height for collision
 
     // Update group position
     groupRef.current.position.copy(currentPosition.current);
@@ -156,14 +156,14 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       <group ref={groupRef} position={position}>
         {/* Fallback pink sphere while model loads */}
         <mesh>
-          <sphereGeometry args={[0.8, 16, 16]} />
+          <sphereGeometry args={[1, 16, 16]} />
           <meshStandardMaterial color="#ff69b4" />
         </mesh>
         {/* Health bar positioned above fallback model */}
         {enemyHealth && enemyHealth.currentHealth > 0 && (
           <EnemyHealthBar 
             enemyHealth={enemyHealth} 
-            position={[0, 2.2, 0]} 
+            position={[0, 2.5, 0]} 
           />
         )}
       </group>
@@ -176,21 +176,21 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.8, 0]} // Higher position for better visibility
+          position={[0, 3.5, 0]} // Higher position for better visibility
         />
       )}
       
-      {/* Great Fairy Model - properly scaled to match player character size */}
+      {/* Great Fairy Model - proper enemy size, not background decoration */}
       <primitive 
         object={fairyScene.clone()} 
-        scale={[0.5, 0.5, 0.5]} // Further reduced scale to match player exactly
+        scale={[0.3, 0.3, 0.3]} // Smaller scale for enemy size
         rotation={[0, 0, 0]} 
-        position={[0, -0.85, 0]} // Adjusted to ensure feet touch ground
+        position={[0, -1, 0]} // Adjust to ensure feet touch ground
       />
       
       {/* Debug wireframe to see the bounds - proper enemy registration bounds */}
       <mesh visible={false}>
-        <boxGeometry args={[1.2, 1.7, 1.2]} />
+        <boxGeometry args={[2, 2, 2]} />
         <meshBasicMaterial wireframe color="#ff69b4" />
       </mesh>
     </group>

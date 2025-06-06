@@ -65,13 +65,13 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
       
       for (let i = 0; i < numMinions; i++) {
         const angle = (i / numMinions) * Math.PI * 2;
-        const radius = 2;
+        const radius = 3;
         const minionX = fairyPosition[0] + Math.cos(angle) * radius;
         const minionZ = fairyPosition[2] + Math.sin(angle) * radius;
         
         const minion: EnemyData = {
           id: `bat_minion_${fairyId}_${i}_${now}`,
-          position: [minionX, fairyPosition[1] + 1, minionZ],
+          position: [minionX, fairyPosition[1] + 2, minionZ],
           spawnTime: now,
           health: 1,
           type: 'bat_minion',
@@ -79,14 +79,14 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
         };
         
         newMinions.push(minion);
-        console.log(`EnemySystem: Spawning bat minion ${minion.id} for fairy ${fairyId}`);
+        console.log(`EnemySystem: Spawning bat minion ${minion.id} for fairy ${fairyId} at position [${minionX}, ${fairyPosition[1] + 2}, ${minionZ}]`);
       }
       
       return [...prev, ...newMinions];
     });
   }, []);
 
-  // Spawn new enemy ahead of player - optimized to reduce calls
+  // Spawn new enemy ahead of player - ensure Great Fairy spawns as enemy
   const spawnEnemy = useCallback(() => {
     const now = Date.now();
     
@@ -107,18 +107,18 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
       // Random X position near the path
       const spawnX = (Math.random() - 0.5) * 20;
       
-      // Randomly choose enemy type (50% vampire bat, 50% great fairy)
-      const enemyType: 'vampire_bat' | 'great_fairy' = Math.random() < 0.5 ? 'vampire_bat' : 'great_fairy';
+      // Higher chance for Great Fairy to spawn (70% great fairy, 30% vampire bat)
+      const enemyType: 'vampire_bat' | 'great_fairy' = Math.random() < 0.7 ? 'great_fairy' : 'vampire_bat';
       
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
-        position: [spawnX, 1, spawnZ],
+        position: [spawnX, 0, spawnZ], // Ground level for Great Fairy
         spawnTime: now,
         health: 1,
         type: enemyType
       };
 
-      console.log(`EnemySystem: Spawning ${enemyType} enemy ${newEnemy.id} at position [${spawnX}, 1, ${spawnZ}]`);
+      console.log(`EnemySystem: Spawning ${enemyType} enemy ${newEnemy.id} at position [${spawnX}, 0, ${spawnZ}]`);
       
       lastSpawnTime.current = now;
       return [...prev, newEnemy];

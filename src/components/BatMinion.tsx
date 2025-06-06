@@ -89,16 +89,16 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     // Determine target position - orbit around fairy if available, otherwise chase player
     let targetPosition = playerPosition.clone();
     
-    if (fairyPosition && fairyPosition.distanceTo(playerPosition) > 5) {
-      // Orbit around fairy when fairy is far from player
-      const time = Date.now() * 0.001;
-      const orbitRadius = 2;
+    if (fairyPosition) {
+      // Always orbit around fairy when fairy exists
+      const time = Date.now() * 0.002;
+      const orbitRadius = 3;
       const orbitAngle = time + orbitalOffset;
       
       targetPosition = fairyPosition.clone();
       targetPosition.x += Math.cos(orbitAngle) * orbitRadius;
       targetPosition.z += Math.sin(orbitAngle) * orbitRadius;
-      targetPosition.y += 1 + Math.sin(time * 2 + orbitalOffset) * 0.5; // Shoulder height with bobbing
+      targetPosition.y += 2 + Math.sin(time * 3 + orbitalOffset) * 0.5; // Flying height with bobbing
     }
 
     // Calculate direction toward target
