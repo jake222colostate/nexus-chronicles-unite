@@ -32,7 +32,7 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
     upgradeLevel
   });
 
-  // Initialize ALL enemies in damage system - this was the missing piece
+  // Initialize ALL enemies in damage system
   React.useEffect(() => {
     enemies.forEach(enemy => {
       // Check if enemy exists in damage system, if not initialize it
@@ -89,14 +89,16 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
         onEnemyKilled();
       }
       
-      // Remove enemy after delay
+      // NOW call the legacy callback to remove from main enemy system
+      onEnemyHit(enemyId);
+      
+      // Remove enemy from damage system after delay
       setTimeout(() => {
         damageSystem.removeEnemy(enemyId);
       }, 1000);
     }
 
-    // Legacy callback
-    onEnemyHit(enemyId);
+    // DO NOT call legacy onEnemyHit unless enemy actually died
   }, [damageSystem, addText, upgradeLevel, onManaGained, onEnemyKilled, onEnemyHit, enemies]);
 
   return (

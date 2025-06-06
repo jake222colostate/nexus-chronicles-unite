@@ -7,6 +7,7 @@ import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
+import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -37,6 +38,12 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
   const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2)); // 0-2 based on upgrade progression
 
+  // Initialize shared damage system
+  const damageSystem = useEnemyDamageSystem({
+    playerZ: cameraPosition.z,
+    upgradeLevel: weaponUpgradeLevel
+  });
+
   const handleEnemiesChange = useCallback(
     (list: EnemyData[]) => {
       setEnemies(list);
@@ -45,18 +52,21 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     [onEnemyCountChange]
   );
 
+  // Handle enemy hits - only remove from main system if actually dead
   const handleEnemyHit = useCallback(
     (id: string) => {
+      // Only remove enemy from main system - damage system handles health
       enemySystemRef.current?.damageEnemy(id, 1);
-      if (onEnemyKilled) onEnemyKilled();
+      console.log(`Enemy ${id} removed from main enemy system`);
     },
-    [onEnemyKilled]
+    []
   );
 
   // This callback will be called when enemies need to be initialized in the damage system
   const handleEnemyInitialize = useCallback((id: string, position: [number, number, number]) => {
     console.log(`Fantasy3DScene: Enemy ${id} requesting initialization at:`, position);
-  }, []);
+    damageSystem.initializeEnemy(id, position);
+  }, [damageSystem]);
 
   return (
     <Suspense fallback={null}>
@@ -97,12 +107,31 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
       {/* Wizard Staff Weapon */}
       <WizardStaffWeapon 
-        enemies={enemies} 
+        enemies={enemies.map(enemy => ({
+          ...enemy,
+          enemyHealth: damageSystem.getEnemyHealth(enemy.id)
+        }))} 
         onEnemyHit={handleEnemyHit}
         upgradeLevel={weaponUpgradeLevel}
         playerPosition={cameraPosition}
         onEnemyKilled={onEnemyKilled}
       />
+
+      {/* Render enemies with health data */}
+      {enemies.map(enemy => {
+        const enemyHealth = damageSystem.getEnemyHealth(enemy.id);
+        return (
+          <Enemy
+            key={enemy.id}
+            enemyId={enemy.id}
+            position={enemy.position}
+            playerPosition={cameraPosition}
+            enemyHealth={enemyHealth}
+            onReachPlayer={() => handleEnemyHit(enemy.id)}
+            onInitialize={handleEnemyInitialize}
+          />
+        );
+      })}
 
       {/* Simplified contact shadows */}
       <ContactShadows 
