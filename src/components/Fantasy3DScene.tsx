@@ -1,12 +1,12 @@
+
 import React, { Suspense, useRef, useState, useCallback } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
-import { FantasyScreenshotEnvironment } from './FantasyScreenshotEnvironment';
+import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
-import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -68,10 +68,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       <ChunkSystem
         playerPosition={cameraPosition}
         chunkSize={chunkSize}
-        renderDistance={Math.min(renderDistance, 200)} // Cap render distance for 60fps
+        renderDistance={Math.min(renderDistance, 150)} // Reduced render distance
       >
         {(chunks: ChunkData[]) => (
-          <FantasyScreenshotEnvironment
+          <OptimizedFantasyEnvironment
             chunks={chunks}
             chunkSize={chunkSize}
             realm={realm}
@@ -84,27 +84,27 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       <EnemySystem
         ref={enemySystemRef}
         playerPosition={cameraPosition}
-        maxEnemies={5}
-        spawnDistance={100}
+        maxEnemies={3} // Reduced max enemies
+        spawnDistance={80} // Reduced spawn distance
         onEnemiesChange={handleEnemiesChange}
       />
 
       {/* Wizard Staff Weapon */}
-      <WizardStaffWeapon enemies={enemies} onEnemyHit={handleEnemyHit} />
-
-      {/* Magic Staff Weapon System - New upgraded weapon system */}
-      <MagicStaffWeaponSystem
+      <WizardStaffWeapon 
+        enemies={enemies} 
+        onEnemyHit={handleEnemyHit}
         upgradeLevel={weaponUpgradeLevel}
-        visible={true}
+        playerPosition={cameraPosition}
+        onEnemyKilled={onEnemyKilled}
       />
 
       {/* Simplified contact shadows */}
       <ContactShadows 
         position={[0, -1.4, cameraPosition.z]} 
-        opacity={0.1} // Reduced opacity
-        scale={20} // Reduced scale
-        blur={1} 
-        far={6} // Reduced range
+        opacity={0.05} // Very low opacity
+        scale={15} // Smaller scale
+        blur={2} 
+        far={4} // Reduced range
       />
     </Suspense>
   );
