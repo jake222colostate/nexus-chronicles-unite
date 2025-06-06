@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
 import { WizardStaff } from './WizardStaff';
@@ -31,6 +31,7 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
   const staffGroup = useRef<Group>(null);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const lastShot = useRef(0);
+  const lastManualShot = useRef(0);
 
   const shoot = useCallback((direction: Vector3) => {
     const origin = camera.position.clone();
@@ -43,16 +44,50 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
         position: origin.clone(),
         direction,
         damage: totalDamage,
-        speed: 25 + totalDamage * 2, // Increased base speed
+        speed: 25 + totalDamage * 2,
         age: 0
       }
     ]);
   }, [camera, weaponStats.damage, combatUpgradeDamage]);
 
+  // Manual shooting on click
+  useEffect(() => {
+    const handleClick = (event: MouseEvent) => {
+      const now = performance.now();
+      // Allow manual shooting every 200ms
+      if (now - lastManualShot.current > 200) {
+        // Find closest enemy to shoot at
+        const target = enemies
+          .filter(e => new Vector3(...e.position).distanceTo(camera.position) <= weaponStats.range)
+          .sort((a, b) =>
+            new Vector3(...a.position).distanceTo(camera.position) -
+            new Vector3(...b.position).distanceTo(camera.position)
+          )[0];
+
+        if (target) {
+          const direction = new Vector3(...target.position).sub(camera.position).normalize();
+          shoot(direction);
+          lastManualShot.current = now;
+        }
+      }
+    };
+
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.addEventListener('click', handleClick);
+    }
+
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('click', handleClick);
+      }
+    };
+  }, [enemies, camera, weaponStats.range, shoot]);
+
   useFrame((_, delta) => {
     const now = performance.now();
-    // Increased shooting speed - reduced fire rate interval
-    const fireRateInterval = Math.max(150, weaponStats.fireRate * 0.3); // Much faster shooting
+    // Automatic shooting - reduced fire rate interval for faster shooting
+    const fireRateInterval = Math.max(150, weaponStats.fireRate * 0.3);
     
     if (now - lastShot.current > fireRateInterval) {
       const target = enemies
@@ -79,7 +114,7 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
         // Enhanced collision detection with better hit radius
         for (const enemy of enemies) {
           const ePos = new Vector3(...enemy.position);
-          if (newPos.distanceTo(ePos) < 1.5) { // Slightly larger hit radius
+          if (newPos.distanceTo(ePos) < 1.5) {
             onEnemyHit(enemy.id, p.damage);
             hit = true;
             break;
