@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -24,7 +23,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   enemyId
 }) => {
   const groupRef = useRef<Group>(null);
-  const currentPosition = useRef(new Vector3(...position));
+  const currentPosition = useRef(new Vector3(position[0], position[1] + 2.5, position[2])); // Start hovering
   const speed = 2;
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
@@ -53,11 +52,11 @@ export const Enemy: React.FC<EnemyProps> = ({
     }
   }, [batScene, enemyId]);
 
-  // Initialize as enemy
+  // Initialize as enemy with proper flight position
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
       // Position main enemies at elevated flight position
-      const flightPosition: [number, number, number] = [position[0], position[1] + 2, position[2]];
+      const flightPosition: [number, number, number] = [position[0], position[1] + 2.5, position[2]];
       console.log(`Enemy ${enemyId} initializing as enemy at flight position:`, flightPosition);
       onInitialize(enemyId, flightPosition);
       initialized.current = true;
@@ -96,7 +95,7 @@ export const Enemy: React.FC<EnemyProps> = ({
 
     // AI movement - chase player at flight altitude
     const targetPosition = playerPosition.clone();
-    targetPosition.y += 2; // Maintain flight altitude
+    targetPosition.y += 2.5; // Maintain flight altitude above ground
     
     const direction = new Vector3()
       .subVectors(targetPosition, currentPosition.current)
@@ -105,14 +104,16 @@ export const Enemy: React.FC<EnemyProps> = ({
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Update position
+    // Update position - ensure bat stays hovering
     groupRef.current.position.copy(currentPosition.current);
 
-    // Flying animation
+    // Flying animation with proper hovering
     if (groupRef.current) {
       const time = Date.now() * 0.003;
       const bobOffset = Math.sin(time + position[0]) * 0.4;
-      groupRef.current.position.y = currentPosition.current.y + bobOffset;
+      
+      // Keep bat hovering above ground with natural flight motion
+      groupRef.current.position.y = Math.max(1.5, currentPosition.current.y + bobOffset);
       
       // Face movement direction
       const angle = Math.atan2(direction.x, direction.z);
@@ -139,7 +140,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   if (!batScene) {
     console.log(`Enemy ${enemyId}: Bat model loading, showing fallback`);
     return (
-      <group ref={groupRef} position={[position[0], position[1] + 2, position[2]]}>
+      <group ref={groupRef} position={[position[0], position[1] + 2.5, position[2]]}>
         <mesh>
           <sphereGeometry args={[1, 16, 16]} />
           <meshStandardMaterial color="#ff0000" />
@@ -154,16 +155,13 @@ export const Enemy: React.FC<EnemyProps> = ({
     );
   }
 
-  // Start at elevated flight position
-  const flightPosition: [number, number, number] = [position[0], position[1] + 2, position[2]];
-
   return (
-    <group ref={groupRef} position={flightPosition} castShadow receiveShadow>
-      {/* Health bar positioned above bat */}
+    <group ref={groupRef} position={[position[0], position[1] + 2.5, position[2]]} castShadow receiveShadow>
+      {/* Health bar positioned above bat - properly attached */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.8, 0]} // Positioned above bat model
+          position={[0, 2.0, 0]} // Positioned above bat model
         />
       )}
       

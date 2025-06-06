@@ -47,15 +47,21 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
         if (child instanceof SkinnedMesh && child.skeleton) {
           console.log(`GreatFairy ${enemyId}: Found skeleton, fixing T-pose for bone count:`, child.skeleton.bones.length);
           
-          // Fix T-pose by adjusting arm positions
+          // Fix T-pose by adjusting arm positions to natural relaxed pose
           child.skeleton.bones.forEach((bone) => {
             const boneName = bone.name.toLowerCase();
             
-            // Reset problematic arm bones to natural position
-            if (boneName.includes('arm') || 
-                boneName.includes('shoulder') ||
-                boneName.includes('upperarm') ||
-                boneName.includes('forearm')) {
+            // Apply natural arm positions (arms down at sides)
+            if (boneName.includes('upperarm') || boneName.includes('shoulder')) {
+              // Arms down at sides instead of T-pose
+              bone.rotation.set(0, 0, -0.3); // Slight downward angle
+              bone.updateMatrixWorld(true);
+            } else if (boneName.includes('forearm')) {
+              // Slightly bent elbows for natural look
+              bone.rotation.set(-0.2, 0, 0);
+              bone.updateMatrixWorld(true);
+            } else if (boneName.includes('hand') || boneName.includes('wrist')) {
+              // Natural hand position
               bone.rotation.set(0, 0, 0);
               bone.updateMatrixWorld(true);
             }
@@ -180,18 +186,18 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
 
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Health bar positioned above fairy model */}
+      {/* Health bar positioned above fairy head - properly attached */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.8, 0]} // Positioned above fairy head
+          position={[0, 3.2, 0]} // Higher position above fairy head
         />
       )}
       
-      {/* Great Fairy Model - PROPERLY SCALED TO PLAYER SIZE */}
+      {/* Great Fairy Model - PROPERLY SCALED TO PLAYER SIZE (match reference image) */}
       <primitive 
         object={fairyScene.clone()} 
-        scale={[0.25, 0.25, 0.25]} // Much smaller - player-scale enemy
+        scale={[0.02, 0.02, 0.02]} // Much smaller scale to match player size
         rotation={[0, 0, 0]} 
         position={[0, 0, 0]} // Centered at group origin
       />

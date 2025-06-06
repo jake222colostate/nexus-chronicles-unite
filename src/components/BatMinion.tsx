@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -28,7 +27,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   orbitalOffset = 0
 }) => {
   const groupRef = useRef<Group>(null);
-  const currentPosition = useRef(new Vector3(...position));
+  const currentPosition = useRef(new Vector3(position[0], position[1] + 2.5, position[2])); // Start hovering
   const speed = 2.5;
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
@@ -60,7 +59,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     }
   }, [batScene, enemyId]);
 
-  // Initialize as enemy
+  // Initialize as enemy with proper flight position
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
       // Position bats in flight position (elevated from ground)
@@ -113,7 +112,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       targetPosition = fairyPosition.clone();
       targetPosition.x += Math.cos(orbitAngle) * orbitRadius;
       targetPosition.z += Math.sin(orbitAngle) * orbitRadius;
-      targetPosition.y += 3 + Math.sin(time * 3 + orbitalOffset) * 0.8; // Higher flight altitude
+      targetPosition.y += 2.5 + Math.sin(time * 3 + orbitalOffset) * 0.8; // Hover above ground
     } else {
       // Maintain flight altitude when chasing player
       targetPosition.y += 2.5;
@@ -126,16 +125,17 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Update position
+    // Update position - ensure bat stays hovering
     groupRef.current.position.copy(currentPosition.current);
 
-    // Enhanced flying animation
+    // Enhanced flying animation with proper hovering
     if (groupRef.current) {
       const time = Date.now() * 0.005;
-      const flyBob = Math.sin(time * 2 + orbitalOffset) * 0.6;
-      const flyWobble = Math.cos(time * 3 + orbitalOffset) * 0.3;
+      const flyBob = Math.sin(time * 2 + orbitalOffset) * 0.4;
+      const flyWobble = Math.cos(time * 3 + orbitalOffset) * 0.2;
       
-      groupRef.current.position.y = currentPosition.current.y + flyBob;
+      // Keep bat hovering with natural flight motion
+      groupRef.current.position.y = Math.max(1.5, currentPosition.current.y + flyBob);
       groupRef.current.position.x = currentPosition.current.x + flyWobble;
       
       // Face movement direction
@@ -143,8 +143,8 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       groupRef.current.rotation.y = angle;
       
       // Wing flapping animation
-      groupRef.current.rotation.z = Math.sin(time * 8) * 0.3;
-      groupRef.current.rotation.x = Math.sin(time * 6) * 0.15;
+      groupRef.current.rotation.z = Math.sin(time * 8) * 0.2;
+      groupRef.current.rotation.x = Math.sin(time * 6) * 0.1;
     }
 
     // Check collision
@@ -159,16 +159,13 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     return null;
   }
 
-  // Start at elevated flight position
-  const flightPosition: [number, number, number] = [position[0], position[1] + 2.5, position[2]];
-
   return (
-    <group ref={groupRef} position={flightPosition} castShadow receiveShadow>
-      {/* Health bar positioned above bat */}
+    <group ref={groupRef} position={[position[0], position[1] + 2.5, position[2]]} castShadow receiveShadow>
+      {/* Health bar positioned above bat - properly attached and following */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.2, 0]} // Positioned above bat model
+          position={[0, 1.5, 0]} // Attached above bat model
         />
       )}
       
