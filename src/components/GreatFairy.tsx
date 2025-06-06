@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -36,32 +35,42 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
   // Load great fairy model
   const { scene: fairyScene } = useGLTF('/assets/great_fairy.glb');
 
-  // Fix fairy model setup and ensure proper enemy scale
+  // Fix fairy model setup and T-pose
   useEffect(() => {
     console.log(`GreatFairy ${enemyId}: Model loaded:`, !!fairyScene);
     if (fairyScene) {
       console.log(`GreatFairy ${enemyId}: Scene children:`, fairyScene.children.length);
       
-      // Fix T-pose and ensure proper enemy appearance
+      // Fix T-pose and ensure proper materials
       fairyScene.traverse((child) => {
         if (child instanceof SkinnedMesh && child.skeleton) {
-          console.log(`GreatFairy ${enemyId}: Found skeleton, fixing T-pose`);
-          if (child.skeleton.bones) {
-            child.skeleton.bones.forEach((bone) => {
-              // Reset arm bones to natural position
-              if (bone.name.toLowerCase().includes('arm') || 
-                  bone.name.toLowerCase().includes('shoulder') ||
-                  bone.name.toLowerCase().includes('upperarm')) {
-                bone.rotation.set(0, 0, 0);
-              }
-            });
-          }
+          console.log(`GreatFairy ${enemyId}: Found skeleton, fixing T-pose for bone count:`, child.skeleton.bones.length);
+          
+          // Fix T-pose by adjusting arm positions
+          child.skeleton.bones.forEach((bone) => {
+            const boneName = bone.name.toLowerCase();
+            
+            // Reset problematic arm bones to natural position
+            if (boneName.includes('arm') || 
+                boneName.includes('shoulder') ||
+                boneName.includes('upperarm') ||
+                boneName.includes('forearm')) {
+              bone.rotation.set(0, 0, 0);
+              bone.updateMatrixWorld(true);
+            }
+          });
+        }
+        
+        // Ensure materials are visible
+        if (child.material) {
+          child.material.visible = true;
+          child.material.needsUpdate = true;
         }
       });
     }
   }, [fairyScene, enemyId]);
 
-  // Initialize enemy health - proper enemy registration
+  // Initialize enemy health
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
       console.log(`GreatFairy ${enemyId} initializing as enemy at position:`, position);
@@ -70,19 +79,19 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
     }
   }, [enemyId, position, onInitialize, enemyHealth]);
 
-  // Spawn minions when fairy is created
+  // Spawn minions when fairy spawns
   useEffect(() => {
-    if (!minionsSpawned.current && onSpawnMinions && fairyScene) {
-      console.log(`GreatFairy ${enemyId}: Spawning bat minions as enemy spawns`);
+    if (!minionsSpawned.current && onSpawnMinions && fairyScene && enemyHealth) {
+      console.log(`GreatFairy ${enemyId}: Spawning bat minions`);
       onSpawnMinions(enemyId, position);
       minionsSpawned.current = true;
     }
-  }, [onSpawnMinions, enemyId, position, fairyScene]);
+  }, [onSpawnMinions, enemyId, position, fairyScene, enemyHealth]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
 
-    // Handle dead enemy fade out
+    // Handle death fade out
     if (enemyHealth && enemyHealth.currentHealth <= 0) {
       if (!fadeOutStarted.current) {
         fadeOutStarted.current = true;
@@ -96,12 +105,12 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       if (newScale <= 0.1 && !isFullyFaded.current) {
         groupRef.current.visible = false;
         isFullyFaded.current = true;
-        console.log(`GreatFairy ${enemyId} death complete - removed from scene`);
+        console.log(`GreatFairy ${enemyId} death complete`);
       }
       return;
     }
 
-    // Reset if alive again
+    // Reset if alive
     if (enemyHealth && enemyHealth.currentHealth > 0 && fadeOutStarted.current) {
       fadeOutStarted.current = false;
       isFullyFaded.current = false;
@@ -109,7 +118,7 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       groupRef.current.scale.setScalar(1);
     }
 
-    // Enemy AI - chase player on ground level
+    // Enemy AI - chase player
     const direction = new Vector3()
       .subVectors(playerPosition, currentPosition.current)
       .normalize();
@@ -117,27 +126,27 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Keep fairy at ground level for proper enemy collision
-    currentPosition.current.y = 1;
+    // Keep fairy at ground level for proper enemy mechanics
+    currentPosition.current.y = 0.5;
 
     // Update position
     groupRef.current.position.copy(currentPosition.current);
 
-    // Add gentle floating animation
+    // Gentle floating animation
     if (groupRef.current) {
       const time = Date.now() * 0.002;
-      const floatBob = Math.sin(time + position[0]) * 0.15;
+      const floatBob = Math.sin(time + position[0]) * 0.2;
       groupRef.current.position.y = currentPosition.current.y + floatBob;
       
       // Face player direction
       const angle = Math.atan2(direction.x, direction.z);
       groupRef.current.rotation.y = angle;
       
-      // Gentle swaying
-      groupRef.current.rotation.z = Math.sin(time * 0.8) * 0.05;
+      // Gentle magical swaying
+      groupRef.current.rotation.z = Math.sin(time * 0.8) * 0.08;
     }
 
-    // Check enemy collision with player
+    // Check collision with player
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
     if (distanceToPlayer < 2 && onReachPlayer) {
       onReachPlayer();
@@ -170,20 +179,20 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
 
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Health bar attached as child - follows model position */}
+      {/* Health bar positioned above fairy model */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.5, 0]} // Positioned above fairy head at player scale
+          position={[0, 2.8, 0]} // Positioned above fairy head
         />
       )}
       
-      {/* Great Fairy Model - PROPER PLAYER SCALE ENEMY SIZE */}
+      {/* Great Fairy Model - PROPERLY SCALED TO PLAYER SIZE */}
       <primitive 
         object={fairyScene.clone()} 
-        scale={[0.4, 0.4, 0.4]} // Much smaller scale - same size as player
+        scale={[0.25, 0.25, 0.25]} // Much smaller - player-scale enemy
         rotation={[0, 0, 0]} 
-        position={[0, 0, 0]} // Ground level positioning
+        position={[0, 0, 0]} // Centered at group origin
       />
       
       {/* Debug collision bounds */}

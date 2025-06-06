@@ -38,12 +38,15 @@ export const Enemy: React.FC<EnemyProps> = ({
     if (batScene) {
       console.log(`Enemy ${enemyId}: Bat scene children:`, batScene.children.length);
       
-      // Ensure materials are visible
+      // Ensure materials are visible and properly configured
       batScene.traverse((child) => {
         if (child instanceof Mesh) {
           console.log(`Enemy ${enemyId}: Found mesh:`, child.name, 'Material:', !!child.material);
+          child.castShadow = true;
+          child.receiveShadow = true;
           if (child.material) {
             child.material.visible = true;
+            child.material.needsUpdate = true;
           }
         }
       });
@@ -53,8 +56,10 @@ export const Enemy: React.FC<EnemyProps> = ({
   // Initialize as enemy
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
-      console.log(`Enemy ${enemyId} initializing as enemy at position:`, position);
-      onInitialize(enemyId, position);
+      // Position main enemies at elevated flight position
+      const flightPosition: [number, number, number] = [position[0], position[1] + 2, position[2]];
+      console.log(`Enemy ${enemyId} initializing as enemy at flight position:`, flightPosition);
+      onInitialize(enemyId, flightPosition);
       initialized.current = true;
     }
   }, [enemyId, position, onInitialize, enemyHealth]);
@@ -89,9 +94,12 @@ export const Enemy: React.FC<EnemyProps> = ({
       groupRef.current.scale.setScalar(1);
     }
 
-    // AI movement - chase player
+    // AI movement - chase player at flight altitude
+    const targetPosition = playerPosition.clone();
+    targetPosition.y += 2; // Maintain flight altitude
+    
     const direction = new Vector3()
-      .subVectors(playerPosition, currentPosition.current)
+      .subVectors(targetPosition, currentPosition.current)
       .normalize();
 
     const movement = direction.multiplyScalar(speed * delta);
@@ -103,15 +111,16 @@ export const Enemy: React.FC<EnemyProps> = ({
     // Flying animation
     if (groupRef.current) {
       const time = Date.now() * 0.003;
-      const bobOffset = Math.sin(time + position[0]) * 0.3;
+      const bobOffset = Math.sin(time + position[0]) * 0.4;
       groupRef.current.position.y = currentPosition.current.y + bobOffset;
       
       // Face movement direction
       const angle = Math.atan2(direction.x, direction.z);
       groupRef.current.rotation.y = angle;
       
-      // Flying motion
-      groupRef.current.rotation.z = Math.sin(time * 0.5) * 0.1;
+      // Flying motion - enhanced for main enemies
+      groupRef.current.rotation.z = Math.sin(time * 0.5) * 0.15;
+      groupRef.current.rotation.x = Math.sin(time * 0.8) * 0.1;
     }
 
     // Check collision
@@ -130,7 +139,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   if (!batScene) {
     console.log(`Enemy ${enemyId}: Bat model loading, showing fallback`);
     return (
-      <group ref={groupRef} position={position}>
+      <group ref={groupRef} position={[position[0], position[1] + 2, position[2]]}>
         <mesh>
           <sphereGeometry args={[1, 16, 16]} />
           <meshStandardMaterial color="#ff0000" />
@@ -145,22 +154,25 @@ export const Enemy: React.FC<EnemyProps> = ({
     );
   }
 
+  // Start at elevated flight position
+  const flightPosition: [number, number, number] = [position[0], position[1] + 2, position[2]];
+
   return (
-    <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Health bar attached as child - follows bat exactly */}
+    <group ref={groupRef} position={flightPosition} castShadow receiveShadow>
+      {/* Health bar positioned above bat */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.0, 0]} // Positioned above bat
+          position={[0, 1.8, 0]} // Positioned above bat model
         />
       )}
       
       {/* Vampire Bat Model - main enemy scale */}
       <primitive 
         object={batScene.clone()} 
-        scale={[1.5, 1.5, 1.5]} // Larger than minions but not excessive
+        scale={[1.2, 1.2, 1.2]} // Larger than minions for main enemies
         rotation={[0, Math.PI, 0]}
-        position={[0, 0, 0]}
+        position={[0, 0, 0]} // Centered on group origin
       />
       
       {/* Debug collision bounds */}

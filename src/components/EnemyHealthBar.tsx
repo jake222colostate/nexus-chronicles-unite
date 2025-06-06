@@ -12,7 +12,7 @@ export const EnemyHealthBar: React.FC<EnemyHealthBarProps> = ({
   position = [0, 2.5, 0] 
 }) => {
   const healthPercentage = useMemo(() => {
-    return Math.max(0, enemyHealth.currentHealth / enemyHealth.maxHealth);
+    return Math.max(0, Math.min(1, enemyHealth.currentHealth / enemyHealth.maxHealth));
   }, [enemyHealth.currentHealth, enemyHealth.maxHealth]);
 
   // Flash effect when recently hit
@@ -29,34 +29,34 @@ export const EnemyHealthBar: React.FC<EnemyHealthBarProps> = ({
     <group position={position}>
       {/* Background bar (dark red) */}
       <mesh position={[0, 0, 0.01]}>
-        <planeGeometry args={[1.2, 0.15]} />
+        <planeGeometry args={[1.0, 0.12]} />
         <meshBasicMaterial 
-          color="#330000" 
+          color="#220000" 
           transparent 
-          opacity={0.8}
+          opacity={0.9}
         />
       </mesh>
       
-      {/* Health bar (bright red) */}
+      {/* Health bar (bright red) with proper scaling */}
       <mesh 
-        position={[-0.6 + (0.6 * healthPercentage), 0, 0.02]} 
+        position={[-0.5 + (0.5 * healthPercentage), 0, 0.02]} 
         scale={[healthPercentage, 1, 1]}
       >
-        <planeGeometry args={[1.2, 0.12]} />
+        <planeGeometry args={[1.0, 0.1]} />
         <meshBasicMaterial 
-          color={isRecentlyHit ? "#FFFFFF" : "#FF0000"} 
+          color={isRecentlyHit ? "#FFFFFF" : "#FF2222"} 
           transparent 
-          opacity={isRecentlyHit ? 1.0 : 0.9}
+          opacity={isRecentlyHit ? 1.0 : 0.95}
         />
       </mesh>
       
-      {/* Border */}
+      {/* Border outline */}
       <mesh position={[0, 0, 0.03]}>
-        <ringGeometry args={[0.6, 0.65, 8]} />
+        <ringGeometry args={[0.45, 0.52, 8]} />
         <meshBasicMaterial 
           color="#FFFFFF" 
           transparent 
-          opacity={0.6}
+          opacity={0.8}
         />
       </mesh>
     </group>
