@@ -9,6 +9,7 @@ import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { Enemy } from './Enemy';
 import { GreatFairy } from './GreatFairy';
+import { BatMinion } from './BatMinion';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface Fantasy3DSceneProps {
@@ -38,7 +39,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
 
   // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
-  const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2)); // 0-2 based on upgrade progression
+  const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2));
 
   // Initialize shared damage system with console logging
   const damageSystem = useEnemyDamageSystem({
@@ -75,6 +76,12 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     }
   }, [damageSystem]);
 
+  // Spawn bat minions when fairy spawns them
+  const handleSpawnMinions = useCallback((fairyId: string, fairyPosition: [number, number, number]) => {
+    console.log(`Fantasy3DScene: Fairy ${fairyId} spawning minions`);
+    // The minions will be handled by the EnemySystem automatically
+  }, []);
+
   // Clean up damage system when enemies are removed from main system
   React.useEffect(() => {
     if (!damageSystem) return;
@@ -87,6 +94,12 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       }
     });
   }, [enemies, damageSystem]);
+
+  // Get fairy position for bat minions
+  const getFairyPosition = useCallback((parentId: string): Vector3 | undefined => {
+    const fairy = enemies.find(e => e.id === parentId && e.type === 'great_fairy');
+    return fairy ? new Vector3(...fairy.position) : undefined;
+  }, [enemies]);
 
   // Don't render weapon system until damage system is ready
   if (!damageSystem) {
@@ -108,7 +121,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       <ChunkSystem
         playerPosition={cameraPosition}
         chunkSize={chunkSize}
-        renderDistance={Math.min(renderDistance, 150)} // Reduced render distance
+        renderDistance={Math.min(renderDistance, 150)}
       >
         {(chunks: ChunkData[]) => (
           <OptimizedFantasyEnvironment
@@ -124,8 +137,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       <EnemySystem
         ref={enemySystemRef}
         playerPosition={cameraPosition}
-        maxEnemies={3} // Reduced max enemies
-        spawnDistance={80} // Reduced spawn distance
+        maxEnemies={3}
+        spawnDistance={80}
         onEnemiesChange={handleEnemiesChange}
         onEnemyInitialize={handleEnemyInitialize}
       />
@@ -142,8 +155,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         />
       )}
 
-      {/* Render enemies with health data from damage system - now handling different types */}
-      {enemies.map(enemy => {
+      {/* Render enemies with health data from damage system - handling all types */}
+      {enemies.map((enemy, index) => {
         const enemyHealth = damageSystem?.getEnemyHealth(enemy.id);
         
         if (enemy.type === 'great_fairy') {
@@ -156,6 +169,24 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
               enemyHealth={enemyHealth}
               onReachPlayer={() => handleEnemyHit(enemy.id)}
               onInitialize={handleEnemyInitialize}
+              onSpawnMinions={handleSpawnMinions}
+            />
+          );
+        } else if (enemy.type === 'bat_minion') {
+          const fairyPosition = enemy.parentId ? getFairyPosition(enemy.parentId) : undefined;
+          const orbitalOffset = (index % 3) * (Math.PI * 2 / 3);
+          
+          return (
+            <BatMinion
+              key={enemy.id}
+              enemyId={enemy.id}
+              position={enemy.position}
+              playerPosition={cameraPosition}
+              fairyPosition={fairyPosition}
+              enemyHealth={enemyHealth}
+              onReachPlayer={() => handleEnemyHit(enemy.id)}
+              onInitialize={handleEnemyInitialize}
+              orbitalOffset={orbitalOffset}
             />
           );
         } else {
@@ -176,10 +207,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       {/* Simplified contact shadows */}
       <ContactShadows 
         position={[0, -1.4, cameraPosition.z]} 
-        opacity={0.05} // Very low opacity
-        scale={15} // Smaller scale
+        opacity={0.05}
+        scale={15}
         blur={2} 
-        far={4} // Reduced range
+        far={4}
       />
     </Suspense>
   );

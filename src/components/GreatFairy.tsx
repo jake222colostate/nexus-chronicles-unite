@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -13,6 +12,7 @@ interface GreatFairyProps {
   enemyHealth?: EnemyHealth;
   onInitialize?: (id: string, position: [number, number, number]) => void;
   enemyId: string;
+  onSpawnMinions?: (fairyId: string, fairyPosition: [number, number, number]) => void;
 }
 
 export const GreatFairy: React.FC<GreatFairyProps> = ({ 
@@ -21,14 +21,16 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
   onReachPlayer,
   enemyHealth,
   onInitialize,
-  enemyId
+  enemyId,
+  onSpawnMinions
 }) => {
   const groupRef = useRef<Group>(null);
   const currentPosition = useRef(new Vector3(...position));
-  const speed = 1.2; // Slightly slower than vampire bat for walking
+  const speed = 1.2;
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
+  const minionsSpawned = useRef(false);
 
   // Load great fairy model
   const { scene: fairyScene } = useGLTF('/assets/great_fairy.glb');
@@ -38,6 +40,21 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
     console.log(`GreatFairy ${enemyId}: Model loaded:`, !!fairyScene);
     if (fairyScene) {
       console.log(`GreatFairy ${enemyId}: Scene children:`, fairyScene.children.length);
+      
+      // Fix T-pose by setting a basic idle rotation if available
+      fairyScene.traverse((child) => {
+        if (child.isMesh && child.skeleton) {
+          console.log(`GreatFairy ${enemyId}: Found skeleton, applying idle pose`);
+          // Reset any extreme rotations that cause T-pose
+          if (child.skeleton.bones) {
+            child.skeleton.bones.forEach((bone) => {
+              if (bone.name.includes('arm') || bone.name.includes('shoulder')) {
+                bone.rotation.set(0, 0, 0);
+              }
+            });
+          }
+        }
+      });
     }
   }, [fairyScene, enemyId]);
 
@@ -49,6 +66,15 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       initialized.current = true;
     }
   }, [enemyId, position, onInitialize, enemyHealth]);
+
+  // Spawn minions when fairy is initialized and healthy
+  useEffect(() => {
+    if (!minionsSpawned.current && enemyHealth && enemyHealth.currentHealth > 0 && onSpawnMinions) {
+      console.log(`GreatFairy ${enemyId}: Spawning bat minions`);
+      onSpawnMinions(enemyId, position);
+      minionsSpawned.current = true;
+    }
+  }, [enemyHealth, onSpawnMinions, enemyId, position]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
@@ -91,21 +117,24 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Keep fairy at ground level (same as player height)
-    currentPosition.current.y = 1.7; // Same as player height
+    // Keep fairy at proper ground level (slightly above ground)
+    currentPosition.current.y = 0.85; // Lower than before to match player height better
 
     // Update group position
     groupRef.current.position.copy(currentPosition.current);
 
-    // Add subtle walking animation - gentle bobbing with proper AI
+    // Add subtle floating animation - gentle bobbing for fairy
     if (groupRef.current) {
-      const time = Date.now() * 0.004;
-      const walkBob = Math.sin(time + position[0]) * 0.1; // Much smaller bobbing for walking
-      groupRef.current.position.y = currentPosition.current.y + walkBob;
+      const time = Date.now() * 0.002;
+      const floatBob = Math.sin(time + position[0]) * 0.15; // Gentle floating motion
+      groupRef.current.position.y = currentPosition.current.y + floatBob;
       
       // Face the direction of movement for proper enemy AI behavior
       const angle = Math.atan2(direction.x, direction.z);
       groupRef.current.rotation.y = angle;
+      
+      // Add slight swaying motion for more natural fairy movement
+      groupRef.current.rotation.z = Math.sin(time * 0.8) * 0.05;
     }
 
     // Check if enemy reached player (within 2 units) - proper enemy collision
@@ -147,21 +176,21 @@ export const GreatFairy: React.FC<GreatFairyProps> = ({
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.5, 0]} // Adjusted height for player-sized fairy
+          position={[0, 2.8, 0]} // Higher position for better visibility
         />
       )}
       
-      {/* Great Fairy Model - scaled to match player character size */}
+      {/* Great Fairy Model - properly scaled to match player character size */}
       <primitive 
         object={fairyScene.clone()} 
-        scale={[0.7, 0.7, 0.7]} // Reduced scale to match player size exactly
+        scale={[0.5, 0.5, 0.5]} // Further reduced scale to match player exactly
         rotation={[0, 0, 0]} 
-        position={[0, -0.9, 0]} // Lower position to ensure feet are on ground
+        position={[0, -0.85, 0]} // Adjusted to ensure feet touch ground
       />
       
       {/* Debug wireframe to see the bounds - proper enemy registration bounds */}
       <mesh visible={false}>
-        <boxGeometry args={[1.4, 1.7, 1.4]} />
+        <boxGeometry args={[1.2, 1.7, 1.2]} />
         <meshBasicMaterial wireframe color="#ff69b4" />
       </mesh>
     </group>
