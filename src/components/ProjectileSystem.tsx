@@ -37,7 +37,10 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
   // Find closest living enemy for automatic targeting
   const findClosestEnemy = useCallback(() => {
     const livingEnemies = enemies.filter(enemy => enemy.currentHealth > 0);
-    if (livingEnemies.length === 0) return null;
+    if (livingEnemies.length === 0) {
+      console.log('ProjectileSystem: No living enemies found');
+      return null;
+    }
 
     let closest = livingEnemies[0];
     let closestDistance = camera.position.distanceTo(new Vector3(...closest.position));
@@ -51,12 +54,17 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
     }
 
     // Only target enemies within reasonable range
-    return closestDistance < 100 ? closest : null;
+    const inRange = closestDistance < 100;
+    console.log(`ProjectileSystem: Closest enemy ${closest.id} at distance ${closestDistance.toFixed(2)}, in range: ${inRange}`);
+    return inRange ? closest : null;
   }, [enemies, camera]);
 
   const createProjectile = useCallback((fromClick = false) => {
     const targetEnemy = findClosestEnemy();
-    if (!targetEnemy) return; // Don't shoot if no targets
+    if (!targetEnemy) {
+      console.log('ProjectileSystem: No target enemy, not firing');
+      return;
+    }
 
     const targetPosition = new Vector3(...targetEnemy.position);
     const direction = new Vector3()
@@ -77,13 +85,13 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
       id: `proj_${Date.now()}_${Math.random()}`,
       position: origin,
       direction: direction.normalize(),
-      damage: projectileDamage, // Use the exact damage value from the system
-      speed: 40, // Slower projectiles for more visible combat
+      damage: projectileDamage,
+      speed: 40,
       targetEnemyId: targetEnemy.id
     };
 
     setProjectiles(prev => [...prev, newProjectile]);
-    console.log(`Projectile fired at enemy ${targetEnemy.id} with ${projectileDamage} damage`);
+    console.log(`ProjectileSystem: Projectile fired at enemy ${targetEnemy.id} with ${projectileDamage} damage`);
   }, [camera, projectileDamage, findClosestEnemy]);
 
   // Handle mouse click to shoot
@@ -116,37 +124,22 @@ export const ProjectileSystem: React.FC<ProjectileSystemProps> = ({
         const movement = projectile.direction.clone().multiplyScalar(projectile.speed * delta);
         const newPosition = projectile.position.clone().add(movement);
         
-        // Check collision with enemies (prioritize target enemy)
+        // Check collision with enemies
         let hit = false;
-        const hitRadius = 1.5; // Smaller hit radius for more precision
+        const hitRadius = 1.5;
         
-        // Check target enemy first
-        if (projectile.targetEnemyId) {
-          const targetEnemy = enemies.find(e => e.id === projectile.targetEnemyId && e.currentHealth > 0);
-          if (targetEnemy) {
-            const enemyPos = new Vector3(...targetEnemy.position);
-            const distance = newPosition.distanceTo(enemyPos);
-            
-            if (distance < hitRadius) {
-              onEnemyHit(targetEnemy.id, projectile.damage);
-              hit = true;
-            }
-          }
-        }
-        
-        // If target enemy wasn't hit, check all other enemies
-        if (!hit) {
-          for (const enemy of enemies) {
-            if (enemy.currentHealth <= 0) continue; // Skip dead enemies
-            
-            const enemyPos = new Vector3(...enemy.position);
-            const distance = newPosition.distanceTo(enemyPos);
-            
-            if (distance < hitRadius) {
-              onEnemyHit(enemy.id, projectile.damage);
-              hit = true;
-              break;
-            }
+        // Check all living enemies for collision
+        for (const enemy of enemies) {
+          if (enemy.currentHealth <= 0) continue; // Skip dead enemies
+          
+          const enemyPos = new Vector3(...enemy.position);
+          const distance = newPosition.distanceTo(enemyPos);
+          
+          if (distance < hitRadius) {
+            console.log(`ProjectileSystem: Hit detected! Enemy ${enemy.id} at distance ${distance.toFixed(2)}`);
+            onEnemyHit(enemy.id, projectile.damage);
+            hit = true;
+            break;
           }
         }
         

@@ -73,11 +73,16 @@ export const Enemy: React.FC<EnemyProps> = ({
     return null;
   }
 
+  console.log(`Enemy ${enemyId} rendering with health:`, enemyHealth);
+
   return (
     <group ref={groupRef} position={position} castShadow receiveShadow>
-      {/* Health bar - only render if enemy health exists and is alive */}
+      {/* Health bar - render if enemy health exists and is alive */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
-        <EnemyHealthBar enemyHealth={enemyHealth} position={[0, 2.5, 0]} />
+        <EnemyHealthBar 
+          enemyHealth={enemyHealth} 
+          position={[0, 2.5, 0]} 
+        />
       )}
       
       {/* Body */}

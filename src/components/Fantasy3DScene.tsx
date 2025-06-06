@@ -47,6 +47,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   const handleEnemiesChange = useCallback(
     (list: EnemyData[]) => {
+      console.log(`Fantasy3DScene: Enemies changed, count: ${list.length}`);
       setEnemies(list);
       if (onEnemyCountChange) onEnemyCountChange(list.length);
     },
@@ -65,7 +66,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   // Initialize enemies in damage system when they spawn
   const handleEnemyInitialize = useCallback((id: string, position: [number, number, number]) => {
-    console.log(`Fantasy3DScene: Initializing enemy ${id} at position:`, position);
+    console.log(`Fantasy3DScene: Initializing enemy ${id} in damage system at position:`, position);
     damageSystem.initializeEnemy(id, position);
   }, [damageSystem]);
 
@@ -117,13 +118,14 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         onEnemyInitialize={handleEnemyInitialize}
       />
 
-      {/* Wizard Staff Weapon */}
+      {/* Wizard Staff Weapon - pass damage system */}
       <WizardStaffWeapon 
         enemies={enemies} 
         onEnemyHit={handleEnemyHit}
         upgradeLevel={weaponUpgradeLevel}
         playerPosition={cameraPosition}
         onEnemyKilled={onEnemyKilled}
+        damageSystem={damageSystem}
       />
 
       {/* Render enemies with health data from damage system */}

@@ -8,12 +8,13 @@ import { useEnemyDamageSystem, EnemyHealth } from '../hooks/useEnemyDamageSystem
 import { FloatingCombatText, useFloatingCombatText } from './FloatingCombatText';
 
 interface WizardStaffWeaponProps {
-  enemies: any[]; // Legacy enemy data
+  enemies: any[]; // Main enemy system data
   onEnemyHit: (enemyId: string) => void;
   upgradeLevel?: number;
   playerPosition?: { x: number; y: number; z: number };
   onEnemyKilled?: () => void;
   onManaGained?: (amount: number) => void;
+  damageSystem: any; // Shared damage system from parent
 }
 
 export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
@@ -22,15 +23,11 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
   upgradeLevel = 0,
   playerPosition = { x: 0, y: 0, z: 0 },
   onEnemyKilled,
-  onManaGained
+  onManaGained,
+  damageSystem
 }) => {
   const { camera } = useThree();
   const { texts, addText } = useFloatingCombatText();
-  
-  const damageSystem = useEnemyDamageSystem({
-    playerZ: playerPosition.z,
-    upgradeLevel
-  });
 
   // Handle enemy hits from projectiles - this is the main damage handler
   const handleEnemyHit = React.useCallback((enemyId: string, damage: number) => {
@@ -78,14 +75,32 @@ export const WizardStaffWeapon: React.FC<WizardStaffWeaponProps> = ({
     }
   }, [damageSystem, addText, upgradeLevel, onManaGained, onEnemyKilled, onEnemyHit]);
 
+  // Convert main enemies to format expected by ProjectileSystem
+  const enemiesWithHealth = React.useMemo(() => {
+    return enemies.map(enemy => {
+      const healthData = damageSystem.getEnemyHealth(enemy.id);
+      if (healthData) {
+        return healthData;
+      }
+      // If no health data, create a basic structure for collision detection
+      return {
+        id: enemy.id,
+        currentHealth: 1,
+        maxHealth: 1,
+        position: enemy.position,
+        lastHitTime: 0
+      };
+    }).filter(Boolean);
+  }, [enemies, damageSystem]);
+
   return (
     <group>
       {/* Wizard Staff (hidden) */}
       <WizardStaff visible={false} />
       
-      {/* Projectile System - uses the damage system's enemy health data */}
+      {/* Projectile System - uses enemies with health data */}
       <ProjectileSystem
-        enemies={damageSystem.enemyHealths}
+        enemies={enemiesWithHealth}
         onEnemyHit={handleEnemyHit}
         projectileDamage={damageSystem.projectileDamage}
         upgradeLevel={upgradeLevel}
