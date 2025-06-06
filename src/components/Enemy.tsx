@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -30,15 +29,15 @@ export const Enemy: React.FC<EnemyProps> = ({
   const fadeOutStarted = useRef(false);
 
   // Load vampire bat model
-  const { scene: batScene, error } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   // Debug log for model loading
   useEffect(() => {
-    console.log(`Enemy ${enemyId}: Bat model loaded:`, !!batScene, 'Error:', error);
+    console.log(`Enemy ${enemyId}: Bat model loaded:`, !!batScene);
     if (batScene) {
       console.log(`Enemy ${enemyId}: Bat scene children:`, batScene.children.length);
     }
-  }, [batScene, error, enemyId]);
+  }, [batScene, enemyId]);
 
   // Initialize enemy health on mount - only once
   useEffect(() => {
