@@ -18,17 +18,17 @@ export const PathsideMountains: React.FC = () => {
     });
     mountainsRef.current = [];
 
-    const count = 5;
-    const spacing = 12;
+    const count = 6;
+    const spacing = 10;
     const offsetX = 6;
-    const scale = 0.15; // Much smaller scale for decorative pathside mountains
+    const scale = 0.25; // Much smaller scale for mini decorative mountains
 
-    console.log('PathsideMountains: Creating smaller pathside mountains with scale:', scale);
+    console.log('PathsideMountains: Creating mini pathside mountains with scale:', scale);
 
     for (let i = 0; i < count; i++) {
       const z = -i * spacing;
 
-      // Left side mountains (flipped)
+      // Left side mountains (flipped horizontally)
       const left = mountain.clone() as Group;
       left.position.set(-offsetX, 0, z);
       left.scale.set(-scale, scale, scale); // Flip left with negative X scale
@@ -65,7 +65,7 @@ export const PathsideMountains: React.FC = () => {
       mountainsRef.current.push(right);
     }
 
-    console.log('PathsideMountains: Added', mountainsRef.current.length, 'smaller pathside mountains to scene');
+    console.log('PathsideMountains: Added', mountainsRef.current.length, 'mini pathside mountains to scene');
 
     // Cleanup function
     return () => {
