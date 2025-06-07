@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -53,6 +52,19 @@ const isOnPlayerPath = (x: number, z: number): boolean => {
 const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   const distance = Math.sqrt(x * x + (z + 10) * (z + 10));
   return distance < 8;
+};
+
+// Check if position is within safe mountain boundaries
+const isWithinMountainBoundaries = (x: number): boolean => {
+  return Math.abs(x) < 20; // Keep trees within ±20 units to avoid mountain overlap at ±25
+};
+
+// Updated check combining path and mountain boundary constraints
+const isValidTreePosition = (x: number, z: number): boolean => {
+  return isWithinMountainBoundaries(x) && 
+         !isOnPlayerPath(x, z) && 
+         !isOnSteepSlope(x, z) && 
+         !isTooCloseToPlayerStart(x, z);
 };
 
 // Get tree type with updated distribution favoring pine218
@@ -213,7 +225,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with new distribution ratios favoring pine218
+  // Generate tree positions with mountain boundary constraints
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -223,17 +235,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating tree positions with pine218 priority for', chunks.length, 'chunks');
+    console.log('EnhancedTreeDistribution: Generating tree positions with mountain boundaries for', chunks.length, 'chunks');
     const trees = [];
-    const minDistance = 3; // 3m minimum spacing as specified
-    const maxAttempts = 30;
+    const minDistance = 4; // Increased to 4m minimum spacing for better distribution
+    const maxAttempts = 35; // Increased attempts due to boundary constraints
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 4-6 trees per chunk for good density with pine218 focus
-      const treeCount = 4 + Math.floor(seededRandom(seed) * 3);
+      // Generate 3-5 trees per chunk (reduced due to boundary constraints)
+      const treeCount = 3 + Math.floor(seededRandom(seed) * 3);
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -243,14 +255,15 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Random placement within chunk bounds
-          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8;
+          // Random placement within chunk bounds, constrained by mountain boundaries
+          const maxX = 18; // Reduced from full chunk to stay within mountain boundaries
+          x = worldX + (seededRandom(treeSeed) - 0.5) * maxX;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Skip invalid positions (paths, steep slopes, too close to start)
-          if (isOnPlayerPath(x, z) || isOnSteepSlope(x, z) || isTooCloseToPlayerStart(x, z)) {
+          // Skip invalid positions using combined check
+          if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
           }
@@ -266,7 +279,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           
           finalY = terrainHeight;
           
-          // Check minimum 3-meter distance from existing trees
+          // Check minimum distance from existing trees
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
               Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
@@ -289,8 +302,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with pine218 priority`);
-    console.log('Final tree distribution:', {
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees within mountain boundaries`);
+    console.log('Tree distribution within boundaries:', {
       pine218: trees.filter(t => t.treeType === 'pine218').length,
       stylized: trees.filter(t => t.treeType === 'stylized').length,
       realistic: trees.filter(t => t.treeType === 'realistic').length

@@ -18,12 +18,12 @@ export const PathsideMountains: React.FC = () => {
     });
     mountainsRef.current = [];
 
-    const count = 10; // More mountains for continuous side walls
-    const spacing = 8; // Closer spacing for continuous effect
-    const offsetX = 25; // Much farther apart - increased from 12 to 25
-    const scale = 0.06; // Keep current scale
+    const count = 15; // Increased for better infinite generation coverage
+    const spacing = 8; // Keep current spacing
+    const offsetX = 25; // Keep current separation
+    const scale = 0.08; // Slightly increased from 0.06 to 0.08 for more immersive feel
 
-    console.log('PathsideMountains: Creating mountains much farther apart with offset:', offsetX);
+    console.log('PathsideMountains: Creating enlarged mountains with scale:', scale);
 
     for (let i = 0; i < count; i++) {
       const z = -i * spacing;
@@ -65,7 +65,7 @@ export const PathsideMountains: React.FC = () => {
       mountainsRef.current.push(right);
     }
 
-    console.log('PathsideMountains: Added', mountainsRef.current.length, 'mountains with much wider separation');
+    console.log('PathsideMountains: Added', mountainsRef.current.length, 'enlarged mountains');
 
     // Cleanup function
     return () => {
