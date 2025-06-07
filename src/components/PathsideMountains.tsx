@@ -18,17 +18,17 @@ export const PathsideMountains: React.FC = () => {
     });
     mountainsRef.current = [];
 
-    const count = 8; // More mountains for better continuity
-    const spacing = 12; // Space between mountains along Z-axis
+    const count = 10; // More mountains for continuous side walls
+    const spacing = 8; // Closer spacing for continuous effect
     const offsetX = 6; // Position at X = -6 and X = 6
-    const scale = 0.03; // Very small scale for decorative props
+    const scale = 0.02; // Very small scale as requested - tiny decorative props
 
-    console.log('PathsideMountains: Creating small decorative mountains with scale:', scale);
+    console.log('PathsideMountains: Creating tiny decorative mountains with scale:', scale);
 
     for (let i = 0; i < count; i++) {
       const z = -i * spacing;
 
-      // Left side mountains (mirrored/flipped horizontally)
+      // Left side mountains (mirrored with negative X scale)
       const left = mountain.clone() as Group;
       left.position.set(-offsetX, 0, z); // X = -6, Y = 0 (ground level)
       left.scale.set(-scale, scale, scale); // Negative X scale to mirror/flip
@@ -65,7 +65,7 @@ export const PathsideMountains: React.FC = () => {
       mountainsRef.current.push(right);
     }
 
-    console.log('PathsideMountains: Added', mountainsRef.current.length, 'small decorative mountains to scene');
+    console.log('PathsideMountains: Added', mountainsRef.current.length, 'tiny decorative mountains to scene');
 
     // Cleanup function
     return () => {
