@@ -18,20 +18,20 @@ export const PathsideMountains: React.FC = () => {
     });
     mountainsRef.current = [];
 
-    const count = 6;
-    const spacing = 10;
-    const offsetX = 6;
-    const scale = 0.25; // Much smaller scale for mini decorative mountains
+    const count = 8; // More mountains for better continuity
+    const spacing = 12; // Space between mountains along Z-axis
+    const offsetX = 6; // Position at X = -6 and X = 6
+    const scale = 0.03; // Very small scale for decorative props
 
-    console.log('PathsideMountains: Creating mini pathside mountains with scale:', scale);
+    console.log('PathsideMountains: Creating small decorative mountains with scale:', scale);
 
     for (let i = 0; i < count; i++) {
       const z = -i * spacing;
 
-      // Left side mountains (flipped horizontally)
+      // Left side mountains (mirrored/flipped horizontally)
       const left = mountain.clone() as Group;
-      left.position.set(-offsetX, 0, z);
-      left.scale.set(-scale, scale, scale); // Flip left with negative X scale
+      left.position.set(-offsetX, 0, z); // X = -6, Y = 0 (ground level)
+      left.scale.set(-scale, scale, scale); // Negative X scale to mirror/flip
       left.castShadow = true;
       left.receiveShadow = true;
       
@@ -46,10 +46,10 @@ export const PathsideMountains: React.FC = () => {
       scene.add(left);
       mountainsRef.current.push(left);
 
-      // Right side mountains (normal)
+      // Right side mountains (normal orientation)
       const right = mountain.clone() as Group;
-      right.position.set(offsetX, 0, z);
-      right.scale.set(scale, scale, scale);
+      right.position.set(offsetX, 0, z); // X = 6, Y = 0 (ground level)
+      right.scale.set(scale, scale, scale); // Normal positive scaling
       right.castShadow = true;
       right.receiveShadow = true;
       
@@ -65,7 +65,7 @@ export const PathsideMountains: React.FC = () => {
       mountainsRef.current.push(right);
     }
 
-    console.log('PathsideMountains: Added', mountainsRef.current.length, 'mini pathside mountains to scene');
+    console.log('PathsideMountains: Added', mountainsRef.current.length, 'small decorative mountains to scene');
 
     // Cleanup function
     return () => {
