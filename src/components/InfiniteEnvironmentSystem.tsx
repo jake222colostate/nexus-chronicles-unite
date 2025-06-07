@@ -132,8 +132,8 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
         x = (seededRandom(treeSeed) - 0.5) * 35; // Spread across ±17.5 units
         z = chunkZ + (seededRandom(treeSeed + 1) - 0.5) * CHUNK_SIZE * 0.8;
         
-        // Check boundaries
-        if (!isWithinMountainBoundaries(x) || isOnPlayerPath(x, z)) {
+        // Check boundaries - fix the function call here
+        if (!isWithinMountainBoundaries(x) || isOnPlayerPath(x)) {
           attempts++;
           continue;
         }
