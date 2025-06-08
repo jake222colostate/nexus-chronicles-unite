@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Group, Mesh, Vector3 } from 'three';
@@ -20,7 +19,7 @@ const seededRandom = (seed: number) => {
 
 // Check if position is within mountain boundaries (between left and right mountains)
 const isWithinMountainBoundaries = (x: number): boolean => {
-  return Math.abs(x) < 60; // Keep trees within ±60 units to avoid mountain overlap at ±80
+  return Math.abs(x) < 80; // Keep trees within ±80 units to avoid mountain overlap at ±100
 };
 
 // Check if position is on player path
@@ -115,7 +114,7 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
     const mountains: Group[] = [];
     const trees: Group[] = [];
     
-    // Generate mountains for this chunk - extremely wide separation
+    // Generate mountains for this chunk - maximum separation
     const mountainSpacing = 5; // Reduced spacing for continuous coverage
     const mountainCount = Math.ceil(CHUNK_SIZE / mountainSpacing) + 1; // +1 for overlap
     
@@ -123,15 +122,15 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
       const z = chunkZ - (i * mountainSpacing);
       const mountainSeed = chunkId * 1000 + i * 73;
       
-      // Left mountains (extremely far from center - moved from -50 to -80)
-      const leftMountain = createMountain(-80, z, mountainSeed);
+      // Left mountains (maximum separation - moved from -100 to -100)
+      const leftMountain = createMountain(-100, z, mountainSeed);
       if (leftMountain) {
         scene.add(leftMountain);
         mountains.push(leftMountain);
       }
       
-      // Right mountains (extremely far from center - moved from 50 to 80)
-      const rightMountain = createMountain(80, z, mountainSeed + 500);
+      // Right mountains (maximum separation - moved from 100 to 100)
+      const rightMountain = createMountain(100, z, mountainSeed + 500);
       if (rightMountain) {
         scene.add(rightMountain);
         mountains.push(rightMountain);
@@ -152,8 +151,8 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
       while (!validPosition && attempts < maxAttempts) {
         const treeSeed = chunkId * 1000 + i * 73;
         
-        // Position within chunk bounds and mountain boundaries - wider distribution
-        x = (seededRandom(treeSeed) - 0.5) * 100; // Increased spread to ±50 units for much wider tree distribution
+        // Position within chunk bounds and mountain boundaries - even wider distribution
+        x = (seededRandom(treeSeed) - 0.5) * 120; // Increased spread to ±60 units for maximum tree distribution
         z = chunkZ + (seededRandom(treeSeed + 1) - 0.5) * CHUNK_SIZE * 0.8;
         
         // Check boundaries
@@ -193,7 +192,7 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
       }
     }
     
-    console.log(`Generated chunk ${chunkId} with ${mountains.length} extremely separated jagged mountains at ±80 units and ${trees.length} trees`);
+    console.log(`Generated chunk ${chunkId} with ${mountains.length} maximally separated jagged mountains at ±100 units and ${trees.length} trees`);
     
     return {
       id: chunkId,
