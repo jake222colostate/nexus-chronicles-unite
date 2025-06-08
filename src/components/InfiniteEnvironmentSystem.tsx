@@ -18,9 +18,9 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Check if position is within mountain boundaries (between -35 and 35 X, avoiding mountains)
+// Check if position is within mountain boundaries (between left and right mountains)
 const isWithinMountainBoundaries = (x: number): boolean => {
-  return Math.abs(x) < 25; // Keep trees within ±25 units to avoid mountain overlap
+  return Math.abs(x) < 40; // Keep trees within ±40 units to avoid mountain overlap at ±50
 };
 
 // Check if position is on player path
@@ -115,7 +115,7 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
     const mountains: Group[] = [];
     const trees: Group[] = [];
     
-    // Generate mountains for this chunk - more frequent and continuous
+    // Generate mountains for this chunk - much more separated
     const mountainSpacing = 5; // Reduced spacing for continuous coverage
     const mountainCount = Math.ceil(CHUNK_SIZE / mountainSpacing) + 1; // +1 for overlap
     
@@ -123,15 +123,15 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
       const z = chunkZ - (i * mountainSpacing);
       const mountainSeed = chunkId * 1000 + i * 73;
       
-      // Left mountains (more separated)
-      const leftMountain = createMountain(-35, z, mountainSeed); // Moved from -25 to -35
+      // Left mountains (much more separated - moved from -35 to -50)
+      const leftMountain = createMountain(-50, z, mountainSeed);
       if (leftMountain) {
         scene.add(leftMountain);
         mountains.push(leftMountain);
       }
       
-      // Right mountains (more separated)
-      const rightMountain = createMountain(35, z, mountainSeed + 500); // Moved from 25 to 35
+      // Right mountains (much more separated - moved from 35 to 50)
+      const rightMountain = createMountain(50, z, mountainSeed + 500);
       if (rightMountain) {
         scene.add(rightMountain);
         mountains.push(rightMountain);
@@ -153,7 +153,7 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
         const treeSeed = chunkId * 1000 + i * 73;
         
         // Position within chunk bounds and mountain boundaries
-        x = (seededRandom(treeSeed) - 0.5) * 45; // Spread across ±22.5 units
+        x = (seededRandom(treeSeed) - 0.5) * 75; // Increased spread to ±37.5 units for wider tree distribution
         z = chunkZ + (seededRandom(treeSeed + 1) - 0.5) * CHUNK_SIZE * 0.8;
         
         // Check boundaries
@@ -193,7 +193,7 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
       }
     }
     
-    console.log(`Generated chunk ${chunkId} with ${mountains.length} jagged mountains and ${trees.length} trees`);
+    console.log(`Generated chunk ${chunkId} with ${mountains.length} widely separated jagged mountains and ${trees.length} trees`);
     
     return {
       id: chunkId,
