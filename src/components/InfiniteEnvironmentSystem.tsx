@@ -19,7 +19,7 @@ const seededRandom = (seed: number) => {
 
 // Check if position is within mountain boundaries (between left and right mountains)
 const isWithinMountainBoundaries = (x: number): boolean => {
-  return Math.abs(x) < 80; // Keep trees within ±80 units to avoid mountain overlap at ±100
+  return Math.abs(x) < 110; // Keep trees within ±110 units to avoid mountain overlap at ±130
 };
 
 // Check if position is on player path
@@ -38,26 +38,26 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
   const RENDER_DISTANCE = 120; // How far ahead to generate
   const CLEANUP_DISTANCE = 150; // How far behind to cleanup
 
-  // Create a mountain at specified position with jagged variations
+  // Create a mountain at specified position with enhanced jagged variations
   const createMountain = (x: number, z: number, seed: number): Group | null => {
     if (!mountainModel) return null;
     
     const mountain = mountainModel.clone() as Group;
     
-    // Add jagged variations using seed
-    const offsetVariation = (seededRandom(seed) - 0.5) * 3; // ±1.5 units random offset
-    const scaleVariation = 0.08 + (seededRandom(seed + 1) * 0.04); // 0.08-0.12 scale variation
-    const heightVariation = (seededRandom(seed + 2) - 0.5) * 2; // ±1 unit height variation
-    const rotationVariation = seededRandom(seed + 3) * Math.PI * 0.3; // ±27° rotation
+    // Enhanced jagged variations using seed for more natural appearance
+    const offsetVariation = (seededRandom(seed) - 0.5) * 8; // Increased to ±4 units random offset
+    const scaleVariation = 0.06 + (seededRandom(seed + 1) * 0.08); // Increased variation: 0.06-0.14 scale
+    const heightVariation = (seededRandom(seed + 2) - 0.5) * 4; // Increased to ±2 unit height variation
+    const rotationVariation = seededRandom(seed + 3) * Math.PI * 0.6; // Increased to ±54° rotation
     
-    // Apply jagged positioning
+    // Apply enhanced jagged positioning
     mountain.position.set(
       x + offsetVariation, 
       heightVariation, 
-      z + (seededRandom(seed + 4) - 0.5) * 2 // Z-axis jitter for irregular spacing
+      z + (seededRandom(seed + 4) - 0.5) * 4 // Increased Z-axis jitter for more irregular spacing
     );
     
-    // Apply varied scaling and rotation
+    // Apply more varied scaling and rotation for jagged appearance
     mountain.scale.set(
       x < 0 ? -scaleVariation : scaleVariation, 
       scaleVariation, 
@@ -114,7 +114,7 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
     const mountains: Group[] = [];
     const trees: Group[] = [];
     
-    // Generate mountains for this chunk - maximum separation
+    // Generate mountains for this chunk - ultra-wide separation
     const mountainSpacing = 5; // Reduced spacing for continuous coverage
     const mountainCount = Math.ceil(CHUNK_SIZE / mountainSpacing) + 1; // +1 for overlap
     
@@ -122,15 +122,15 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
       const z = chunkZ - (i * mountainSpacing);
       const mountainSeed = chunkId * 1000 + i * 73;
       
-      // Left mountains (maximum separation - moved from -100 to -100)
-      const leftMountain = createMountain(-100, z, mountainSeed);
+      // Left mountains (ultra-wide separation - moved from -100 to -130)
+      const leftMountain = createMountain(-130, z, mountainSeed);
       if (leftMountain) {
         scene.add(leftMountain);
         mountains.push(leftMountain);
       }
       
-      // Right mountains (maximum separation - moved from 100 to 100)
-      const rightMountain = createMountain(100, z, mountainSeed + 500);
+      // Right mountains (ultra-wide separation - moved from 100 to 130)
+      const rightMountain = createMountain(130, z, mountainSeed + 500);
       if (rightMountain) {
         scene.add(rightMountain);
         mountains.push(rightMountain);
@@ -151,8 +151,8 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
       while (!validPosition && attempts < maxAttempts) {
         const treeSeed = chunkId * 1000 + i * 73;
         
-        // Position within chunk bounds and mountain boundaries - even wider distribution
-        x = (seededRandom(treeSeed) - 0.5) * 120; // Increased spread to ±60 units for maximum tree distribution
+        // Position within chunk bounds and mountain boundaries - ultra-wide distribution
+        x = (seededRandom(treeSeed) - 0.5) * 160; // Increased spread to ±80 units for ultra-wide tree distribution
         z = chunkZ + (seededRandom(treeSeed + 1) - 0.5) * CHUNK_SIZE * 0.8;
         
         // Check boundaries
@@ -192,7 +192,7 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
       }
     }
     
-    console.log(`Generated chunk ${chunkId} with ${mountains.length} maximally separated jagged mountains at ±100 units and ${trees.length} trees`);
+    console.log(`Generated chunk ${chunkId} with ${mountains.length} ultra-wide separated jagged mountains at ±130 units and ${trees.length} trees`);
     
     return {
       id: chunkId,
