@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -54,14 +55,12 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 8;
 };
 
-// Check if position is within safe mountain boundaries
-const isWithinMountainBoundaries = (x: number): boolean => {
-  return Math.abs(x) < 20; // Keep trees within ±20 units to avoid mountain overlap at ±25
-};
-
-// Updated check combining path and mountain boundary constraints
+// Updated check: Trees can only spawn if x < -12 || x > 12 to avoid mountain overlap
 const isValidTreePosition = (x: number, z: number): boolean => {
-  return isWithinMountainBoundaries(x) && 
+  // Primary constraint: avoid mountain zones
+  const outsideMountainZones = x < -12 || x > 12;
+  
+  return outsideMountainZones && 
          !isOnPlayerPath(x, z) && 
          !isOnSteepSlope(x, z) && 
          !isTooCloseToPlayerStart(x, z);
@@ -96,15 +95,12 @@ const GLBTree: React.FC<{
     // Try to get cached model first
     const cachedModel = TreeAssetManager.getCachedModel(treeType);
     if (cachedModel) {
-      console.log(`EnhancedTreeDistribution: Using cached ${treeType} model`);
       setTreeModel(cachedModel);
     } else {
-      console.log(`EnhancedTreeDistribution: Loading ${treeType} model...`);
       // If not cached, try to load it
       TreeAssetManager.preloadAllModels().then(() => {
         const model = TreeAssetManager.getCachedModel(treeType);
         if (model) {
-          console.log(`EnhancedTreeDistribution: Successfully loaded ${treeType} model`);
           setTreeModel(model);
         }
       });
@@ -197,18 +193,13 @@ const InstancedTreeGroup: React.FC<{
     return distance <= 120;
   });
 
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees with pine218 priority`);
-  console.log('Tree type distribution:', {
-    pine218: visiblePositions.filter(p => p.treeType === 'pine218').length,
-    stylized: visiblePositions.filter(p => p.treeType === 'stylized').length,
-    realistic: visiblePositions.filter(p => p.treeType === 'realistic').length
-  });
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees outside mountain zones (x < -12 || x > 12)`);
 
   return (
-    <group name="Pine218TreeGroup">
+    <group name="MountainSafeTreeGroup">
       {visiblePositions.slice(0, 50).map((pos, index) => (
         <TreeInstance
-          key={`pine218-tree-${index}-${pos.treeType}`}
+          key={`mountain-safe-tree-${index}-${pos.treeType}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -225,7 +216,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with mountain boundary constraints
+  // Generate tree positions with strict mountain avoidance
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -235,17 +226,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating tree positions with mountain boundaries for', chunks.length, 'chunks');
+    console.log('EnhancedTreeDistribution: Generating trees outside mountain zones (x < -12 || x > 12)');
     const trees = [];
-    const minDistance = 4; // Increased to 4m minimum spacing for better distribution
-    const maxAttempts = 35; // Increased attempts due to boundary constraints
+    const minDistance = 4; // 4m minimum spacing
+    const maxAttempts = 40; // Increased attempts due to stricter constraints
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Generate 3-5 trees per chunk (reduced due to boundary constraints)
-      const treeCount = 3 + Math.floor(seededRandom(seed) * 3);
+      // Reduced tree count due to stricter constraints
+      const treeCount = 2 + Math.floor(seededRandom(seed) * 2); // 2-3 trees per chunk
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -255,20 +246,19 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Random placement within chunk bounds, constrained by mountain boundaries
-          const maxX = 18; // Reduced from full chunk to stay within mountain boundaries
-          x = worldX + (seededRandom(treeSeed) - 0.5) * maxX;
+          // Random placement within chunk bounds
+          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Skip invalid positions using combined check
+          // Strict mountain avoidance check: only spawn if x < -12 || x > 12
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
           }
           
-          // Get tree type with pine218 priority (60% chance)
+          // Get tree type with pine218 priority
           treeType = getTreeType(treeSeed + 2);
           
           // Get randomized scale based on tree type
@@ -302,12 +292,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees within mountain boundaries`);
-    console.log('Tree distribution within boundaries:', {
-      pine218: trees.filter(t => t.treeType === 'pine218').length,
-      stylized: trees.filter(t => t.treeType === 'stylized').length,
-      realistic: trees.filter(t => t.treeType === 'realistic').length
-    });
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees outside mountain zones`);
     
     return {
       treePositions: trees,
@@ -317,12 +302,10 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
-    console.log('EnhancedTreeDistribution: Not fantasy realm, skipping');
     return null;
   }
 
   if (treePositions.length === 0) {
-    console.log('EnhancedTreeDistribution: No tree positions generated');
     return null;
   }
 

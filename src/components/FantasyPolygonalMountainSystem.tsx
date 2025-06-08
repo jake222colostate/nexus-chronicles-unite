@@ -18,19 +18,20 @@ const PolygonalMountain: React.FC<{
   position: [number, number, number]; 
   seed: number;
   scale: number;
-}> = ({ position, seed, scale }) => {
+  side: 'left' | 'right';
+}> = ({ position, seed, scale, side }) => {
   
-  const peakCount = 5 + Math.floor(seededRandom(seed) * 6); // 5-10 peaks
+  const peakCount = 4 + Math.floor(seededRandom(seed) * 4); // 4-7 peaks for better performance
   
   return (
     <group position={position} scale={[scale, scale, scale]}>
       {/* Main mountain peaks */}
       {Array.from({ length: peakCount }, (_, i) => {
         const peakSeed = seed + i * 73;
-        const peakX = (seededRandom(peakSeed) - 0.5) * 4;
-        const peakY = 4 + seededRandom(peakSeed + 1) * 6;
-        const peakZ = (seededRandom(peakSeed + 2) - 0.5) * 3;
-        const peakScale = 0.8 + seededRandom(peakSeed + 3) * 0.6;
+        const peakX = (seededRandom(peakSeed) - 0.5) * 3;
+        const peakY = 3 + seededRandom(peakSeed + 1) * 5;
+        const peakZ = (seededRandom(peakSeed + 2) - 0.5) * 2;
+        const peakScale = 0.7 + seededRandom(peakSeed + 3) * 0.5;
         
         return (
           <group key={i}>
@@ -40,7 +41,7 @@ const PolygonalMountain: React.FC<{
               scale={[peakScale, peakScale, peakScale]}
               castShadow
             >
-              <coneGeometry args={[1.5, 3, 6]} />
+              <coneGeometry args={[1.2, 2.5, 6]} />
               <meshLambertMaterial 
                 color="#3f3c78"
                 vertexColors={false}
@@ -49,21 +50,21 @@ const PolygonalMountain: React.FC<{
             
             {/* Peak gradient effect */}
             <mesh 
-              position={[peakX, peakY + 1, peakZ]}
-              scale={[peakScale * 0.7, peakScale * 0.7, peakScale * 0.7]}
+              position={[peakX, peakY + 0.8, peakZ]}
+              scale={[peakScale * 0.6, peakScale * 0.6, peakScale * 0.6]}
               castShadow
             >
-              <coneGeometry args={[1, 2, 6]} />
+              <coneGeometry args={[0.8, 1.5, 6]} />
               <meshLambertMaterial color="#aa69d1" />
             </mesh>
             
-            {/* Crystal protrusions */}
-            {Array.from({ length: 2 + Math.floor(seededRandom(peakSeed + 10) * 3) }, (_, j) => {
+            {/* Crystal protrusions - fewer for performance */}
+            {Array.from({ length: 1 + Math.floor(seededRandom(peakSeed + 10) * 2) }, (_, j) => {
               const crystalSeed = peakSeed + j * 41;
-              const crystalX = peakX + (seededRandom(crystalSeed) - 0.5) * 2;
-              const crystalY = peakY + 0.5 + seededRandom(crystalSeed + 1) * 2;
-              const crystalZ = peakZ + (seededRandom(crystalSeed + 2) - 0.5) * 2;
-              const crystalScale = 0.5 + seededRandom(crystalSeed + 3) * 0.7;
+              const crystalX = peakX + (seededRandom(crystalSeed) - 0.5) * 1.5;
+              const crystalY = peakY + 0.3 + seededRandom(crystalSeed + 1) * 1.5;
+              const crystalZ = peakZ + (seededRandom(crystalSeed + 2) - 0.5) * 1.5;
+              const crystalScale = 0.4 + seededRandom(crystalSeed + 3) * 0.5;
               
               return (
                 <mesh
@@ -72,13 +73,13 @@ const PolygonalMountain: React.FC<{
                   scale={[crystalScale, crystalScale, crystalScale]}
                   castShadow
                 >
-                  <octahedronGeometry args={[0.8]} />
+                  <octahedronGeometry args={[0.6]} />
                   <meshPhongMaterial 
                     color="#00ffff"
                     emissive="#00ffff"
-                    emissiveIntensity={0.3}
+                    emissiveIntensity={0.2}
                     transparent
-                    opacity={0.8}
+                    opacity={0.7}
                   />
                 </mesh>
               );
@@ -88,8 +89,8 @@ const PolygonalMountain: React.FC<{
       })}
       
       {/* Mountain base */}
-      <mesh position={[0, 1, 0]} receiveShadow>
-        <cylinderGeometry args={[6, 8, 2, 8]} />
+      <mesh position={[0, 0.8, 0]} receiveShadow>
+        <cylinderGeometry args={[5, 6, 1.6, 8]} />
         <meshLambertMaterial color="#2a2458" />
       </mesh>
     </group>
@@ -112,31 +113,31 @@ export const FantasyPolygonalMountainSystem: React.FC<FantasyPolygonalMountainSy
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
       
-      // Left mountains (X = -10 to -20)
-      const leftMountainCount = 1 + Math.floor(seededRandom(seed + 100) * 2);
+      // Left mountains (X = -20, widened valley)
+      const leftMountainCount = 1 + Math.floor(seededRandom(seed + 100) * 1); // 1-2 mountains
       for (let i = 0; i < leftMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 1000;
-        const x = -10 - seededRandom(mountainSeed) * 10; // -10 to -20
-        const z = worldZ - (i * 12) - seededRandom(mountainSeed + 1) * 8;
-        const scale = 1.0 + seededRandom(mountainSeed + 2) * 0.8;
+        const x = -20 + seededRandom(mountainSeed) * 4; // -20 to -16, tighter clustering
+        const z = worldZ - (i * 15) - seededRandom(mountainSeed + 1) * 6;
+        const scale = 0.9 + seededRandom(mountainSeed + 2) * 0.6;
         
         positions.push({
           x, y: 0, z, scale, seed: mountainSeed,
-          chunkId: chunk.id, side: 'left'
+          chunkId: chunk.id, side: 'left' as const
         });
       }
       
-      // Right mountains (X = +10 to +20)
-      const rightMountainCount = 1 + Math.floor(seededRandom(seed + 200) * 2);
+      // Right mountains (X = +20, mirrored)
+      const rightMountainCount = 1 + Math.floor(seededRandom(seed + 200) * 1); // 1-2 mountains
       for (let i = 0; i < rightMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 2000;
-        const x = 10 + seededRandom(mountainSeed) * 10; // +10 to +20
-        const z = worldZ - (i * 12) - seededRandom(mountainSeed + 1) * 8;
-        const scale = 1.0 + seededRandom(mountainSeed + 2) * 0.8;
+        const x = 20 - seededRandom(mountainSeed) * 4; // +16 to +20, tighter clustering
+        const z = worldZ - (i * 15) - seededRandom(mountainSeed + 1) * 6;
+        const scale = 0.9 + seededRandom(mountainSeed + 2) * 0.6;
         
         positions.push({
           x, y: 0, z, scale, seed: mountainSeed,
-          chunkId: chunk.id, side: 'right'
+          chunkId: chunk.id, side: 'right' as const
         });
       }
     });
@@ -152,6 +153,7 @@ export const FantasyPolygonalMountainSystem: React.FC<FantasyPolygonalMountainSy
           position={[pos.x, pos.y, pos.z]}
           seed={pos.seed}
           scale={pos.scale}
+          side={pos.side}
         />
       ))}
     </group>

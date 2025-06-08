@@ -25,14 +25,17 @@ export const useGameLoopManager = ({
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
   const purchasedUpgradesCount = stablePurchasedUpgrades.length;
 
-  // Game loop
+  // Game loop - now includes auto mana generation
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setGameState(prev => {
+        const deltaTime = 0.1; // 100ms intervals
+        const autoManaGain = prev.autoManaRate * deltaTime;
+        
         const newState = {
           ...prev,
-          mana: prev.mana + prev.manaPerSecond / 10,
-          energyCredits: prev.energyCredits + prev.energyPerSecond / 10,
+          mana: prev.mana + (prev.manaPerSecond * deltaTime) + autoManaGain,
+          energyCredits: prev.energyCredits + prev.energyPerSecond * deltaTime,
           lastSaveTime: Date.now(),
         };
         

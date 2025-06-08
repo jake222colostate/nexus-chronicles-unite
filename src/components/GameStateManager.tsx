@@ -21,6 +21,8 @@ export interface GameState {
   scifiJourneyDistance: number;
   waveNumber: number;
   enemiesKilled: number;
+  autoManaLevel: number;
+  autoManaRate: number;
 }
 
 export interface Building {
@@ -65,6 +67,8 @@ const defaultGameState: GameState = {
   scifiJourneyDistance: 0,
   waveNumber: 1,
   enemiesKilled: 0,
+  autoManaLevel: 0,
+  autoManaRate: 0,
 };
 
 export const useGameStateManager = () => {
@@ -83,6 +87,8 @@ export const useGameStateManager = () => {
         scifiJourneyDistance: parsedState.scifiJourneyDistance || 0,
         waveNumber: parsedState.waveNumber || 1,
         enemiesKilled: parsedState.enemiesKilled || 0,
+        autoManaLevel: parsedState.autoManaLevel || 0,
+        autoManaRate: parsedState.autoManaRate || 0,
       };
     }
     return defaultGameState;
@@ -107,7 +113,7 @@ export const useGameStateManager = () => {
     const offlineTime = Math.min((now - gameState.lastSaveTime) / 1000, 3600);
     
     if (offlineTime > 60) {
-      const offlineMana = gameState.manaPerSecond * offlineTime;
+      const offlineMana = (gameState.manaPerSecond + gameState.autoManaRate) * offlineTime;
       const offlineEnergy = gameState.energyPerSecond * offlineTime;
       
       setGameState(prev => ({
