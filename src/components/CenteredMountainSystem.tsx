@@ -13,7 +13,7 @@ interface CenteredMountainSystemProps {
   realm: 'fantasy' | 'scifi';
 }
 
-// Fallback mountain component for performance or loading issues
+// Fallback mountain component
 const FallbackSingleMountain: React.FC<{ 
   position: [number, number, number]; 
   scale: [number, number, number];
@@ -71,7 +71,7 @@ const SingleMountainModel: React.FC<{
     return <FallbackSingleMountain position={position} scale={scale} rotation={rotation} />;
   }
 
-  console.log('Rendering single mountain model at position:', position);
+  console.log('CenteredMountainSystem: Rendering ONE mountain model at position:', position);
   
   return (
     <primitive 
@@ -90,18 +90,21 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
+    console.log('CenteredMountainSystem: Not fantasy realm, skipping mountain render');
     return null;
   }
 
-  // Render exactly ONE mountain instance - no loops, no multiple instances
-  console.log('CenteredMountainSystem: Rendering single mountain only');
+  console.log('CenteredMountainSystem: Rendering SINGLE mountain at world center');
   
+  // Return exactly ONE mountain instance
   return (
-    <SingleMountainModel
-      position={[0, -10, 0]}
-      scale={[2, 2, 2]}
-      rotation={[0, 0, 0]}
-    />
+    <group name="SingleCenteredMountain">
+      <SingleMountainModel
+        position={[0, -8, 0]}
+        scale={[1.5, 1.5, 1.5]}
+        rotation={[0, 0, 0]}
+      />
+    </group>
   );
 };
 

@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -122,23 +123,23 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
 
-          {/* Optimized chunk system with centered mountain and valley-aware trees */}
-          <ChunkSystem
-            playerPosition={playerPosition}
-            chunkSize={50}
-            renderDistance={realm === 'fantasy' ? 200 : 100}
-          >
-            {(chunks) => (
-              <>
-                {/* Single centered mountain with natural valley at world origin */}
-                <CenteredMountainSystem
-                  chunks={chunks}
-                  chunkSize={50}
-                  realm={realm}
-                />
-                
-                {/* Trees for Fantasy realm - positioned around valley avoiding center */}
-                {realm === 'fantasy' && (
+          {/* ONLY render our single centered mountain - no other mountain systems */}
+          {realm === 'fantasy' && (
+            <ChunkSystem
+              playerPosition={playerPosition}
+              chunkSize={50}
+              renderDistance={100}
+            >
+              {(chunks) => (
+                <>
+                  {/* Single centered mountain with natural valley at world origin */}
+                  <CenteredMountainSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                    realm={realm}
+                  />
+                  
+                  {/* Trees for Fantasy realm - positioned around valley avoiding center */}
                   <GLBTreeSystem
                     chunks={chunks}
                     chunkSize={50}
@@ -147,10 +148,10 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                       centerBuffer: 10 // Trees avoid center valley where player moves
                     }}
                   />
-                )}
-              </>
-            )}
-          </ChunkSystem>
+                </>
+              )}
+            </ChunkSystem>
+          )}
 
           {upgradeNodes}
 
