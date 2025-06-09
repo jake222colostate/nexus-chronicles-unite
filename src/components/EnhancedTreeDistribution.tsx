@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -44,24 +43,18 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
   return maxSlope > 0.8;
 };
 
-// Check if position is too close to player path
-const isOnPlayerPath = (x: number, z: number): boolean => {
-  return Math.abs(x) < 4;
-};
-
 // Check if position is too close to player starting position
 const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   const distance = Math.sqrt(x * x + (z + 10) * (z + 10));
   return distance < 8;
 };
 
-// Updated check: Trees can only spawn if x < -12 || x > 12 to avoid mountain overlap
+// Updated check: Trees can only spawn if |x| >= 6 to avoid centered mountain
 const isValidTreePosition = (x: number, z: number): boolean => {
-  // Primary constraint: avoid mountain zones
-  const outsideMountainZones = x < -12 || x > 12;
+  // Primary constraint: avoid centered mountain zone
+  const outsideMountainZone = Math.abs(x) >= 6;
   
-  return outsideMountainZones && 
-         !isOnPlayerPath(x, z) && 
+  return outsideMountainZone && 
          !isOnSteepSlope(x, z) && 
          !isTooCloseToPlayerStart(x, z);
 };
@@ -193,7 +186,7 @@ const InstancedTreeGroup: React.FC<{
     return distance <= 120;
   });
 
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees outside mountain zones (x < -12 || x > 12)`);
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees avoiding centered mountain (|x| >= 6)`);
 
   return (
     <group name="MountainSafeTreeGroup">
@@ -216,7 +209,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with strict mountain avoidance
+  // Generate tree positions with centered mountain avoidance
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -226,17 +219,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees outside mountain zones (x < -12 || x > 12)');
+    console.log('EnhancedTreeDistribution: Generating trees avoiding centered mountain (|x| >= 6)');
     const trees = [];
     const minDistance = 4; // 4m minimum spacing
-    const maxAttempts = 40; // Increased attempts due to stricter constraints
+    const maxAttempts = 40; // Increased attempts due to centered mountain constraint
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Reduced tree count due to stricter constraints
-      const treeCount = 2 + Math.floor(seededRandom(seed) * 2); // 2-3 trees per chunk
+      // Reduced tree count due to centered mountain constraint
+      const treeCount = 3 + Math.floor(seededRandom(seed) * 3); // 3-5 trees per chunk
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -246,13 +239,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Random placement within chunk bounds
+          // Random placement within chunk bounds, avoiding center
           x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Strict mountain avoidance check: only spawn if x < -12 || x > 12
+          // Centered mountain avoidance check: only spawn if |x| >= 6
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
@@ -292,7 +285,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees outside mountain zones`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees avoiding centered mountain`);
     
     return {
       treePositions: trees,

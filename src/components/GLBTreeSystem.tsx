@@ -9,9 +9,7 @@ interface GLBTreeSystemProps {
   chunkSize: number;
   realm?: 'fantasy' | 'scifi';
   mountainBounds?: {
-    leftX: number;
-    rightX: number;
-    buffer: number;
+    centerBuffer: number;
   };
 }
 
@@ -20,21 +18,14 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Check if tree position conflicts with mountain bounds - updated for new mountain positions
-const isValidTreePosition = (x: number, mountainBounds?: { leftX: number; rightX: number; buffer: number }): boolean => {
-  // Default mountain bounds at X = -20 and X = +20 with buffer
-  const leftMountainX = mountainBounds?.leftX || -20;
-  const rightMountainX = mountainBounds?.rightX || 20;
-  const buffer = mountainBounds?.buffer || 12;
+// Updated for centered mountain: trees can only spawn if x < -6 || x > 6
+const isValidTreePosition = (x: number, mountainBounds?: { centerBuffer: number }): boolean => {
+  const buffer = mountainBounds?.centerBuffer || 6;
   
-  // Check if tree is too close to mountains (with buffer)
-  const tooCloseToLeftMountain = x > (leftMountainX - buffer) && x < (leftMountainX + buffer);
-  const tooCloseToRightMountain = x > (rightMountainX - buffer) && x < (rightMountainX + buffer);
+  // Check if tree is too close to the centered mountain
+  const tooCloseToMountain = Math.abs(x) < buffer;
   
-  // Check if tree is on the player path (center area)
-  const onPlayerPath = Math.abs(x) < 6;
-  
-  return !tooCloseToLeftMountain && !tooCloseToRightMountain && !onPlayerPath;
+  return !tooCloseToMountain;
 };
 
 export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
@@ -64,28 +55,26 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
       
-      // Generate fewer trees but with better collision detection for new mountain positions
+      // Generate fewer trees but with better collision detection for centered mountain
       const treeCount = 6 + Math.floor(seededRandom(seed + 100) * 4); // 6-10 trees per chunk
       let successfulPlacements = 0;
       let attempts = 0;
       const maxAttempts = 30;
       const placedPositions: Array<{x: number, z: number}> = [];
       
-      // Updated default mountain bounds for new positioning
+      // Updated mountain bounds for centered mountain
       const effectiveMountainBounds = mountainBounds || {
-        leftX: -20,
-        rightX: 20,
-        buffer: 12
+        centerBuffer: 6
       };
       
       while (successfulPlacements < treeCount && attempts < maxAttempts) {
         const treeSeed = seed + attempts * 67;
         
-        // Generate position avoiding mountain areas at X = -20 and X = +20
-        const x = (seededRandom(treeSeed) - 0.5) * 32; // Reduced spread to fit between mountains
+        // Generate position avoiding the centered mountain area
+        const x = (seededRandom(treeSeed) - 0.5) * 40; // Spread across wider area
         const z = worldZ - (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
         
-        // Check if position is valid (not in mountains or too close to other trees)
+        // Check if position is valid (not in mountain center area)
         if (isValidTreePosition(x, effectiveMountainBounds)) {
           // Check minimum distance from other trees
           const tooCloseToOthers = placedPositions.some(pos => {
@@ -113,6 +102,8 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
         attempts++;
       }
     });
+    
+    console.log(`GLBTreeSystem: Generated ${instances.length} trees avoiding centered mountain (|x| >= 6)`);
     
     return instances;
   }, [chunks, chunkSize, scene, mountainBounds]);

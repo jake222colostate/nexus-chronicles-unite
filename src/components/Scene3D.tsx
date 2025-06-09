@@ -1,4 +1,3 @@
-
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -8,7 +7,7 @@ import { TapEffect3D } from './TapEffect3D';
 import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
-import { OptimizedMountainSystem } from './OptimizedMountainSystem';
+import { CenteredMountainSystem } from './CenteredMountainSystem';
 import { GLBTreeSystem } from './GLBTreeSystem';
 import { EnvironmentSystem } from './EnvironmentSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
@@ -45,7 +44,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 }) => {
   const cameraRef = useRef();
 
-  // Stable player position for chunk system - centered between mountains at X=0
+  // Stable player position for chunk system - centered on the mountain path
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
 
   // Memoize upgrade unlock checking to prevent recalculation
@@ -133,7 +132,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             />
           )}
 
-          {/* Optimized chunk system with updated mountain collision bounds */}
+          {/* Optimized chunk system with centered mountain collision bounds */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
@@ -141,23 +140,21 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Optimized Mountain System - now using half-models at X = -20 and +20 */}
-                <OptimizedMountainSystem
+                {/* Centered Mountain System - single mountain at X=0 */}
+                <CenteredMountainSystem
                   chunks={chunks}
                   chunkSize={50}
                   realm={realm}
                 />
                 
-                {/* Trees only for Fantasy realm - updated mountain bounds */}
+                {/* Trees only for Fantasy realm - updated for centered mountain */}
                 {realm === 'fantasy' && (
                   <GLBTreeSystem
                     chunks={chunks}
                     chunkSize={50}
                     realm={realm}
                     mountainBounds={{
-                      leftX: -20,
-                      rightX: 20,
-                      buffer: 12 // Updated buffer for new mountain positions
+                      centerBuffer: 6 // Trees avoid |x| < 6 area around centered mountain
                     }}
                   />
                 )}
