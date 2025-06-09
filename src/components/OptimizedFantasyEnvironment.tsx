@@ -1,6 +1,7 @@
 
 import React, { Suspense } from 'react';
 import { ChunkData } from './InfiniteChunkLoader';
+import { ChunkData as ChunkSystemData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from './EnhancedTreeDistribution';
 import { InfiniteEnvironmentSystem } from './InfiniteEnvironmentSystem';
@@ -27,7 +28,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
   console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with infinite ground and wider valley`);
 
   // Convert InfiniteChunkLoader ChunkData to ChunkSystem format for tree distribution
-  const convertedChunks = chunks.map(chunk => ({
+  const convertedChunks: ChunkSystemData[] = chunks.map(chunk => ({
     id: chunk.id,
     x: 0, // Centered on X axis
     z: chunk.index,
