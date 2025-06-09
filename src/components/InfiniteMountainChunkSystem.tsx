@@ -54,18 +54,18 @@ const ScaledMountainInstance: React.FC<{
   }, [scene]);
   
   if (!processedScene) {
-    // Fallback mountain with increased scale
+    // Fallback mountain with proper positioning
     return (
       <group ref={mountainRef} position={position} scale={scale} rotation={rotation}>
         <mesh position={[0, 0, 0]} castShadow receiveShadow>
-          <coneGeometry args={[20, 15, 16]} />
+          <coneGeometry args={[25, 20, 16]} />
           <meshLambertMaterial color="#6B5B73" />
         </mesh>
       </group>
     );
   }
 
-  console.log(`InfiniteMountainChunkSystem: Rendering scaled mountain chunk ${chunkId} at position:`, position);
+  console.log(`InfiniteMountainChunkSystem: Rendering mountain chunk ${chunkId} at position:`, position, 'scale:', scale);
   
   return (
     <primitive 
@@ -92,26 +92,26 @@ export const InfiniteMountainChunkSystem: React.FC<InfiniteMountainChunkSystemPr
     return null;
   }
 
-  console.log('InfiniteMountainChunkSystem: Generating infinite scaled mountain chunks');
+  console.log('InfiniteMountainChunkSystem: Generating infinite mountain chunks with improved positioning');
   
-  // Generate scaled mountain instances - one per chunk for seamless infinite terrain
+  // Generate mountain instances - one per chunk for seamless infinite terrain
   const mountainInstances = useMemo(() => {
     const instances = [];
     
     chunks.forEach(chunk => {
-      // Position mountain at chunk center with increased scale to reduce valley width
-      const scaleFactor = 1.45; // Increased scale (1.3-1.6x range) to close valley gap
+      // Position mountain at chunk center with proper above-ground positioning
+      const scaleFactor = 1.2; // Slightly reduced scale for better performance
       
       instances.push({
-        key: `scaled_mountain_${chunk.id}`,
-        position: [0, -10, chunk.worldZ] as [number, number, number], // Lowered Y position for better valley depth
-        scale: [scaleFactor, scaleFactor, scaleFactor] as [number, number, number], // Increased scale
+        key: `mountain_${chunk.id}`,
+        position: [0, 0, chunk.worldZ] as [number, number, number], // Positioned at ground level (Y=0)
+        scale: [scaleFactor, scaleFactor, scaleFactor] as [number, number, number],
         rotation: [0, 0, 0] as [number, number, number],
         chunkId: chunk.id
       });
     });
     
-    console.log(`InfiniteMountainChunkSystem: Generated ${instances.length} scaled mountain instances for infinite terrain`);
+    console.log(`InfiniteMountainChunkSystem: Generated ${instances.length} mountain instances at ground level`);
     return instances;
   }, [chunks]);
 
@@ -121,7 +121,7 @@ export const InfiniteMountainChunkSystem: React.FC<InfiniteMountainChunkSystemPr
     const instanceKeys = Array.from(mountainInstancesRef.current.keys());
     
     instanceKeys.forEach(key => {
-      const chunkId = key.replace('scaled_mountain_', '');
+      const chunkId = key.replace('mountain_', '');
       if (!currentChunkIds.has(chunkId)) {
         mountainInstancesRef.current.delete(key);
         console.log(`Cleaned up mountain instance for chunk ${chunkId}`);
@@ -129,18 +129,18 @@ export const InfiniteMountainChunkSystem: React.FC<InfiniteMountainChunkSystemPr
     });
   }, [chunks]);
 
-  // Performance monitoring - log camera position and chunk count
+  // Performance monitoring
   useFrame(() => {
     if (camera && mountainInstances.length > 0) {
       const cameraZ = camera.position.z;
-      if (Math.floor(cameraZ) % 50 === 0) { // Log every 50 units
+      if (Math.floor(cameraZ) % 50 === 0) {
         console.log(`Camera Z: ${cameraZ.toFixed(1)}, Active mountain chunks: ${mountainInstances.length}`);
       }
     }
   });
   
   return (
-    <group name="InfiniteScaledMountainSystem">
+    <group name="InfiniteMountainSystem">
       {mountainInstances.map((instance) => (
         <ScaledMountainInstance
           key={instance.key}
