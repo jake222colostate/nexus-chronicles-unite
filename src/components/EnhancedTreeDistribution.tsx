@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -44,22 +43,32 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
   return maxSlope > 0.8;
 };
 
+// Updated: Check if position is in the main player path corridor
+const isInPlayerPath = (x: number, z: number): boolean => {
+  // Main path corridor: wider clearance to ensure no trees block player movement
+  const pathWidth = 8; // 8 units wide path (4 units each side from center)
+  return Math.abs(x) < pathWidth;
+};
+
 // Check if position is too close to player starting position
 const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   const distance = Math.sqrt(x * x + (z + 10) * (z + 10));
-  return distance < 8;
+  return distance < 10; // Increased clearance around player start
 };
 
-// Updated tree spawning bounds: clamp to spawn only between mountains (-12 to 12 range)
+// Updated tree spawning validation: ensure trees stay away from player path
 const isValidTreePosition = (x: number, z: number): boolean => {
-  // Primary constraint: trees spawn only in the valley between mountains
-  const inValleyRange = x >= -12 && x <= 12;
+  // Primary constraint: trees must not spawn in player path corridor
+  const notInPlayerPath = !isInPlayerPath(x, z);
+  
+  // Trees should spawn on the sides of the path, in valley area
+  const inValleyRange = x >= -16 && x <= 16; // Wider valley range
   
   // Additional constraints
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
   
-  return inValleyRange && notOnSteepSlope && notTooCloseToPlayer;
+  return notInPlayerPath && inValleyRange && notOnSteepSlope && notTooCloseToPlayer;
 };
 
 // Get tree type with updated distribution favoring pine218
@@ -212,7 +221,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with clamped valley bounds
+  // Generate tree positions with improved path avoidance
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -222,17 +231,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees with clamped valley bounds (-12 to 12)');
+    console.log('EnhancedTreeDistribution: Generating trees with improved path avoidance');
     const trees = [];
-    const minDistance = 8; // 8m minimum spacing
-    const maxAttempts = 60; // Increased attempts due to clamped bounds
+    const minDistance = 6; // Reduced minimum spacing for better distribution
+    const maxAttempts = 80; // Increased attempts for better placement
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Increased tree count since we're limiting to valley area
-      const treeCount = 4 + Math.floor(seededRandom(seed) * 3); // 4-6 trees per chunk
+      // Increased tree count since we have better positioning logic
+      const treeCount = 5 + Math.floor(seededRandom(seed) * 4); // 5-8 trees per chunk
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -242,13 +251,15 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Generate position within valley bounds (-12 to 12)
-          x = (seededRandom(treeSeed) - 0.5) * 24; // Range of 24 units (-12 to 12)
+          // Generate position on either side of the player path
+          const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
+          const sideOffset = 8 + seededRandom(treeSeed) * 8; // 8-16 units from center
+          x = side * sideOffset;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.9;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Valley bounds check: trees only spawn between -12 and 12
+          // Validate position with improved path avoidance
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
@@ -288,7 +299,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees in valley bounds (-12 to 12)`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with clear player path`);
     
     return {
       treePositions: trees,

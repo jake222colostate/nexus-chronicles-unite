@@ -21,11 +21,11 @@ const PolygonalMountain: React.FC<{
   side: 'left' | 'right';
 }> = ({ position, seed, scale, side }) => {
   
-  const peakCount = 4 + Math.floor(seededRandom(seed) * 4); // 4-7 peaks for better performance
+  const peakCount = 3 + Math.floor(seededRandom(seed) * 3); // 3-5 peaks for better performance
   
   return (
     <group position={position} scale={[scale, scale, scale]}>
-      {/* Main mountain peaks */}
+      {/* Main mountain peaks - no trees, only mountain geometry */}
       {Array.from({ length: peakCount }, (_, i) => {
         const peakSeed = seed + i * 73;
         const peakX = (seededRandom(peakSeed) - 0.5) * 3;
@@ -113,11 +113,11 @@ export const FantasyPolygonalMountainSystem: React.FC<FantasyPolygonalMountainSy
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
       
-      // Left mountains (X = -20, widened valley)
+      // Left mountains (X = -20, widened valley for clear player path)
       const leftMountainCount = 1 + Math.floor(seededRandom(seed + 100) * 1); // 1-2 mountains
       for (let i = 0; i < leftMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 1000;
-        const x = -20 + seededRandom(mountainSeed) * 4; // -20 to -16, tighter clustering
+        const x = -22 + seededRandom(mountainSeed) * 4; // -22 to -18, further from path
         const z = worldZ - (i * 15) - seededRandom(mountainSeed + 1) * 6;
         const scale = 0.9 + seededRandom(mountainSeed + 2) * 0.6;
         
@@ -127,11 +127,11 @@ export const FantasyPolygonalMountainSystem: React.FC<FantasyPolygonalMountainSy
         });
       }
       
-      // Right mountains (X = +20, mirrored)
+      // Right mountains (X = +20, mirrored and further from path)
       const rightMountainCount = 1 + Math.floor(seededRandom(seed + 200) * 1); // 1-2 mountains
       for (let i = 0; i < rightMountainCount; i++) {
         const mountainSeed = seed + i * 67 + 2000;
-        const x = 20 - seededRandom(mountainSeed) * 4; // +16 to +20, tighter clustering
+        const x = 22 - seededRandom(mountainSeed) * 4; // +18 to +22, further from path
         const z = worldZ - (i * 15) - seededRandom(mountainSeed + 1) * 6;
         const scale = 0.9 + seededRandom(mountainSeed + 2) * 0.6;
         
