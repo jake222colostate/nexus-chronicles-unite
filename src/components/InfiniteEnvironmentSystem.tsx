@@ -19,8 +19,10 @@ const seededRandom = (seed: number) => {
 };
 
 // Check if position is within mountain boundaries (between left and right mountains)
+// Mountains now sit closer to the player path so clamp tree generation tighter
 const isWithinMountainBoundaries = (x: number): boolean => {
-  return Math.abs(x) < 140; // Keep trees within ±140 units to avoid mountain overlap at ±160
+  // Keep trees within ±50 units to avoid overlap with mountains positioned at ±60
+  return Math.abs(x) < 50;
 };
 
 // Check if position is on player path
@@ -129,15 +131,15 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       const z = chunkZ - (i * mountainSpacing);
       const mountainSeed = chunkId * 1000 + i * 73;
       
-      // Left mountains (maximum separation - moved to -160)
-      const leftMountain = createMountain(-160, z, mountainSeed);
+      // Left mountains positioned closer to the path
+      const leftMountain = createMountain(-60, z, mountainSeed);
       if (leftMountain) {
         scene.add(leftMountain);
         mountains.push(leftMountain);
       }
       
-      // Right mountains (maximum separation - moved to 160)
-      const rightMountain = createMountain(160, z, mountainSeed + 500);
+      // Right mountains positioned closer to the path
+      const rightMountain = createMountain(60, z, mountainSeed + 500);
       if (rightMountain) {
         scene.add(rightMountain);
         mountains.push(rightMountain);
@@ -169,9 +171,9 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
         }
         
         // Additional safety check - ensure trees are not too close to mountain positions
-        const leftMountainDistance = Math.abs(x - (-160));
-        const rightMountainDistance = Math.abs(x - 160);
-        if (leftMountainDistance < 25 || rightMountainDistance < 25) {
+        const leftMountainDistance = Math.abs(x - (-60));
+        const rightMountainDistance = Math.abs(x - 60);
+        if (leftMountainDistance < 20 || rightMountainDistance < 20) {
           attempts++;
           continue;
         }
@@ -207,7 +209,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       }
     }
     
-    console.log(`Generated chunk ${chunkId} with ${mountains.length} maximally separated mountains at ±160 units and ${trees.length} trees`);
+    console.log(`Generated chunk ${chunkId} with ${mountains.length} mountains at ±60 units and ${trees.length} trees`);
     
     return {
       id: chunkId,
