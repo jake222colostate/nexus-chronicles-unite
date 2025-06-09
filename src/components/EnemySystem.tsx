@@ -142,6 +142,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
           enemyId={enemy.id}
           position={enemy.position}
           playerPosition={playerPosition}
+          enemyType={enemy.type}
           onReachPlayer={() => removeEnemy(enemy.id)}
           onInitialize={onEnemyInitialize}
         />
