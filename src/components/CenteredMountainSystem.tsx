@@ -21,18 +21,14 @@ const FallbackCenteredMountain: React.FC<{
 }> = ({ position, scale, rotation }) => {
   return (
     <group position={position} scale={scale} rotation={rotation}>
-      {/* Create a valley-like structure with two ridges - positioned to create central path */}
-      <mesh position={[-12, 2, 0]} castShadow receiveShadow>
-        <coneGeometry args={[8, 16, 8]} />
+      {/* Create a single mountain with natural valley structure */}
+      <mesh position={[0, 4, 0]} castShadow receiveShadow>
+        <coneGeometry args={[15, 20, 12]} />
         <meshLambertMaterial color="#6B5B73" />
       </mesh>
-      <mesh position={[12, 2, 0]} castShadow receiveShadow>
-        <coneGeometry args={[8, 16, 8]} />
-        <meshLambertMaterial color="#6B5B73" />
-      </mesh>
-      {/* Valley floor - wider for natural path */}
+      {/* Valley floor - natural depression in the center */}
       <mesh position={[0, -1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[20, 25]} />
+        <planeGeometry args={[8, 40]} />
         <meshLambertMaterial color="#5A4A63" />
       </mesh>
     </group>
@@ -52,7 +48,7 @@ const CenteredMountain: React.FC<{
       return <FallbackCenteredMountain position={position} scale={scale} rotation={rotation} />;
     }
 
-    console.log('Mountain model loaded successfully at position:', position);
+    console.log('Single mountain model loaded successfully at position:', position);
     
     const clonedScene = useMemo(() => {
       const clone = scene.clone();
@@ -107,33 +103,23 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return null;
   }
 
-  const mountainInstances = useMemo(() => {
-    const instances: React.ReactNode[] = [];
-    
-    chunks.forEach((chunk, chunkIndex) => {
-      // Create single mountain instance every 60 units for proper spacing
-      // This ensures the valley continues naturally through the terrain
-      for (let zOffset = -30; zOffset < chunkSize + 30; zOffset += 60) {
-        const finalZ = chunk.worldZ - zOffset;
-        
-        // Single mountain positioned with valley center at X=0 for player path
-        instances.push(
-          <CenteredMountain
-            key={`mountain-${chunk.id}-${zOffset}`}
-            position={[0, -2, finalZ]} // Lowered to create natural valley floor
-            scale={[2.5, 2, 2.5]} // Scaled to create proper valley width
-            rotation={[0, 0, 0]} // No rotation - use valley as designed
-          />
-        );
-      }
-    });
-    
-    return instances;
-  }, [chunks, chunkSize]);
+  // Render only ONE mountain instance that contains the natural valley
+  const singleMountainInstance = useMemo(() => {
+    // Position the single mountain at the center, with proper scale to show the valley
+    // The mountain_low_poly.glb should have a natural valley that the player moves through
+    return (
+      <CenteredMountain
+        key="single-mountain-with-valley"
+        position={[0, -1, 0]} // Centered at origin, slightly lowered
+        scale={[3, 2.5, 4]} // Scale to make the valley path visible and traversable
+        rotation={[0, 0, 0]} // No rotation - use the model's natural orientation
+      />
+    );
+  }, []);
 
-  console.log(`CenteredMountainSystem: Generated ${mountainInstances.length} mountain instances with centered valley`);
+  console.log('CenteredMountainSystem: Rendering single mountain with natural valley');
 
-  return <>{mountainInstances}</>;
+  return <>{singleMountainInstance}</>;
 };
 
 // Preload the mountain model
