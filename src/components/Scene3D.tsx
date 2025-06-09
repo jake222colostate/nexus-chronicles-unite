@@ -80,8 +80,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     }).filter(Boolean);
   }, [gameState.purchasedUpgrades, gameState.nexusShards, checkUpgradeUnlocked, onUpgradeClick, realm]);
 
-  console.log('Scene3D: Rendering with realm:', realm);
-
   return (
     <div className="w-full h-full relative">
       <Canvas
@@ -125,49 +123,43 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
 
-          {/* DISABLE mountains in EnvironmentSystem - only render skybox and terrain */}
+          {/* Only add EnvironmentSystem for fantasy realm */}
           {realm === 'fantasy' && (
             <EnvironmentSystem
               upgradeCount={gameState.purchasedUpgrades?.length || 0}
               excludeTrees={true}
-              excludeMountains={true}
               realm={realm}
             />
           )}
 
-          {/* Optimized chunk system with ONLY centered mountain */}
+          {/* Optimized chunk system with centered mountain collision bounds */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
             renderDistance={realm === 'fantasy' ? 200 : 100}
           >
-            {(chunks) => {
-              console.log('Scene3D ChunkSystem: Received', chunks.length, 'chunks, realm is:', realm);
-              return (
-                <>
-                  {/* ONLY Centered Mountain System - single mountain at X=0 */}
-                  {realm === 'fantasy' && (
-                    <CenteredMountainSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                    />
-                  )}
-                  
-                  {/* Trees only for Fantasy realm - updated for centered mountain */}
-                  {realm === 'fantasy' && (
-                    <GLBTreeSystem
-                      chunks={chunks}
-                      chunkSize={50}
-                      realm={realm}
-                      mountainBounds={{
-                        centerBuffer: 6 // Trees avoid |x| < 6 area around centered mountain
-                      }}
-                    />
-                  )}
-                </>
-              );
-            }}
+            {(chunks) => (
+              <>
+                {/* Centered Mountain System - single mountain at X=0 */}
+                <CenteredMountainSystem
+                  chunks={chunks}
+                  chunkSize={50}
+                  realm={realm}
+                />
+                
+                {/* Trees only for Fantasy realm - updated for centered mountain */}
+                {realm === 'fantasy' && (
+                  <GLBTreeSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                    realm={realm}
+                    mountainBounds={{
+                      centerBuffer: 6 // Trees avoid |x| < 6 area around centered mountain
+                    }}
+                  />
+                )}
+              </>
+            )}
           </ChunkSystem>
 
           {upgradeNodes}

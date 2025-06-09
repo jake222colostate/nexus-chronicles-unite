@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from './EnhancedTreeDistribution';
+import { InfiniteEnvironmentSystem } from './InfiniteEnvironmentSystem';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: ChunkData[];
@@ -21,13 +22,14 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  console.log(`OptimizedFantasyEnvironment: Rendering trees only (mountains disabled) for fantasy realm`);
+  console.log(`OptimizedFantasyEnvironment: Rendering with infinite generation for fantasy realm`);
 
   return (
     <Suspense fallback={null}>
-      {/* REMOVED InfiniteEnvironmentSystem to prevent dual mountains */}
+      {/* Infinite environment system handles both mountains and trees */}
+      <InfiniteEnvironmentSystem />
       
-      {/* Keep only tree system for existing chunks */}
+      {/* Keep existing tree system as fallback for existing chunks */}
       <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}
