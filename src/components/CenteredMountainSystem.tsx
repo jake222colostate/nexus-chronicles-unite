@@ -48,7 +48,7 @@ const CenteredMountain: React.FC<{
       return <FallbackCenteredMountain position={position} scale={scale} rotation={rotation} />;
     }
 
-    console.log('Single mountain model loaded successfully at position:', position);
+    console.log('SINGLE mountain model loaded successfully at position:', position);
     
     const clonedScene = useMemo(() => {
       const clone = scene.clone();
@@ -103,21 +103,22 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return null;
   }
 
-  // Render only ONE mountain instance that contains the natural valley
+  // Render ABSOLUTELY ONLY ONE mountain instance
   const singleMountainInstance = useMemo(() => {
-    // Position the single mountain at the center, with proper scale to show the valley
-    // The mountain_low_poly.glb should have a natural valley that the player moves through
+    console.log('CenteredMountainSystem: Rendering SINGLE mountain with natural valley at origin');
+    
+    // Position the mountain at absolute center (0,0,0) with the natural valley
     return (
       <CenteredMountain
-        key="single-mountain-with-valley"
-        position={[0, -1, 0]} // Centered at origin, slightly lowered
-        scale={[3, 2.5, 4]} // Scale to make the valley path visible and traversable
-        rotation={[0, 0, 0]} // No rotation - use the model's natural orientation
+        key="only-mountain-with-valley"
+        position={[0, -2, 0]} // Centered at origin, lowered to show valley
+        scale={[4, 3, 5]} // Scale to make the natural valley clearly visible and traversable
+        rotation={[0, 0, 0]} // No rotation - use the model's natural valley orientation
       />
     );
-  }, []);
+  }, []); // No dependencies - this should render exactly once
 
-  console.log('CenteredMountainSystem: Rendering single mountain with natural valley');
+  console.log('CenteredMountainSystem: Rendering ONLY ONE mountain with its natural valley');
 
   return <>{singleMountainInstance}</>;
 };

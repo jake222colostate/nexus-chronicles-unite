@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -9,7 +10,6 @@ import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
 import { CenteredMountainSystem } from './CenteredMountainSystem';
 import { GLBTreeSystem } from './GLBTreeSystem';
-import { EnvironmentSystem } from './EnvironmentSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
@@ -123,16 +123,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
 
-          {/* Only add EnvironmentSystem for fantasy realm */}
-          {realm === 'fantasy' && (
-            <EnvironmentSystem
-              upgradeCount={gameState.purchasedUpgrades?.length || 0}
-              excludeTrees={true}
-              realm={realm}
-            />
-          )}
+          {/* REMOVED: EnvironmentSystem to prevent conflicting mountain systems */}
 
-          {/* Optimized chunk system with single mountain valley */}
+          {/* Optimized chunk system with ONLY the single centered mountain */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
@@ -140,7 +133,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Single Mountain System - natural valley with player path */}
+                {/* ONLY Single Mountain System - natural valley with player path */}
                 <CenteredMountainSystem
                   chunks={chunks}
                   chunkSize={50}
