@@ -31,19 +31,12 @@ export const Enemy: React.FC<EnemyProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model with error handling
-  let batScene = null;
-  try {
-    const gltf = useGLTF('/assets/vampire-bat/source/bat.glb');
-    batScene = gltf.scene;
-    console.log(`Enemy ${enemyId}: Bat model loaded successfully`);
-  } catch (error) {
-    console.warn(`Enemy ${enemyId}: Failed to load bat model:`, error);
-  }
+  // Load vampire bat model
+  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
     if (batScene && batMeshRef.current) {
-      console.log(`Enemy ${enemyId}: Setting up bat model - children:`, batScene.children.length);
+      console.log(`Enemy ${enemyId}: Bat model loaded successfully - children:`, batScene.children.length);
       
       // Clear any existing children and add the bat model
       batMeshRef.current.clear();
@@ -52,11 +45,9 @@ export const Enemy: React.FC<EnemyProps> = ({
       // Ensure materials are visible and properly configured
       batClone.traverse((child) => {
         if (child instanceof Mesh) {
-          console.log(`Enemy ${enemyId}: Configuring bat mesh:`, child.name);
+          console.log(`Enemy ${enemyId}: Configuring mesh:`, child.name, 'Material:', !!child.material);
           child.castShadow = true;
           child.receiveShadow = true;
-          child.visible = true;
-          
           if (child.material) {
             child.material.visible = true;
             child.material.needsUpdate = true;
@@ -72,8 +63,6 @@ export const Enemy: React.FC<EnemyProps> = ({
       // Parent the bat mesh to the enemy entity
       batMeshRef.current.add(batClone);
       console.log(`Enemy ${enemyId}: Bat model successfully added to enemy entity`);
-    } else {
-      console.log(`Enemy ${enemyId}: Bat model not available, will use fallback`);
     }
   }, [batScene, enemyId]);
 
@@ -135,7 +124,7 @@ export const Enemy: React.FC<EnemyProps> = ({
     groupRef.current.position.copy(currentPosition.current);
 
     // Enhanced flying animation for vampire bat
-    if (batMeshRef.current && batMeshRef.current.children.length > 0) {
+    if (batMeshRef.current) {
       const time = Date.now() * 0.003;
       const bobOffset = Math.sin(time + position[0]) * 0.3;
       
@@ -176,27 +165,16 @@ export const Enemy: React.FC<EnemyProps> = ({
       {/* Bat mesh container */}
       <group ref={batMeshRef} />
       
-      {/* Enhanced fallback geometry while bat model loads */}
-      {(!batScene || !batMeshRef.current?.children.length) && (
+      {/* Fallback geometry while bat model loads */}
+      {!batScene && (
         <group position={[0, 0, 0]}>
-          {/* Main bat body */}
           <mesh position={[0, 0, 0]}>
             <sphereGeometry args={[0.8, 12, 12]} />
             <meshStandardMaterial color="#8B0000" />
           </mesh>
-          {/* Bat head */}
-          <mesh position={[0, 0.5, 0.3]}>
-            <sphereGeometry args={[0.4, 8, 8]} />
+          <mesh position={[0, 0.5, 0]}>
+            <coneGeometry args={[0.3, 0.8, 6]} />
             <meshStandardMaterial color="#4B0000" />
-          </mesh>
-          {/* Wings */}
-          <mesh position={[-1.2, 0, 0]} rotation={[0, 0, Math.PI/6]}>
-            <planeGeometry args={[1.5, 0.8]} />
-            <meshStandardMaterial color="#2B0000" side={2} />
-          </mesh>
-          <mesh position={[1.2, 0, 0]} rotation={[0, 0, -Math.PI/6]}>
-            <planeGeometry args={[1.5, 0.8]} />
-            <meshStandardMaterial color="#2B0000" side={2} />
           </mesh>
         </group>
       )}

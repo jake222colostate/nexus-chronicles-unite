@@ -4,8 +4,8 @@ import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-// Use the correct mountain model path that exists in the project
-const MOUNTAIN_URL = 'https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/mountain.glb';
+// Use local mountain asset for consistent mobile rendering
+const MOUNTAIN_URL = '/assets/mountain_low_poly.glb';
 
 interface CenteredMountainSystemProps {
   chunks: ChunkData[];
@@ -13,7 +13,7 @@ interface CenteredMountainSystemProps {
   realm: 'fantasy' | 'scifi';
 }
 
-// Enhanced fallback mountain component
+// Fallback mountain component
 const FallbackSingleMountain: React.FC<{ 
   position: [number, number, number]; 
   scale: [number, number, number];
@@ -21,20 +21,9 @@ const FallbackSingleMountain: React.FC<{
 }> = ({ position, scale, rotation }) => {
   return (
     <group position={position} scale={scale} rotation={rotation}>
-      {/* Main mountain peak */}
       <mesh position={[0, 0, 0]} castShadow receiveShadow>
-        <coneGeometry args={[20, 25, 8]} />
+        <coneGeometry args={[15, 12, 16]} />
         <meshLambertMaterial color="#6B5B73" />
-      </mesh>
-      {/* Mountain base */}
-      <mesh position={[0, -10, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[25, 30, 8, 8]} />
-        <meshLambertMaterial color="#5A4A63" />
-      </mesh>
-      {/* Additional peak details */}
-      <mesh position={[0, 15, 0]} castShadow receiveShadow>
-        <coneGeometry args={[12, 15, 6]} />
-        <meshLambertMaterial color="#8B7B93" />
       </mesh>
     </group>
   );
@@ -45,58 +34,53 @@ const SingleMountainModel: React.FC<{
   scale: [number, number, number];
   rotation: [number, number, number];
 }> = ({ position, scale, rotation }) => {
-  try {
-    const { scene } = useGLTF(MOUNTAIN_URL);
+  const { scene } = useGLTF(MOUNTAIN_URL);
+  
+  const processedScene = useMemo(() => {
+    if (!scene) return null;
     
-    const processedScene = useMemo(() => {
-      if (!scene) {
-        console.log('Mountain scene not loaded, using fallback');
-        return null;
-      }
-      
-      const clone = scene.clone();
-      
-      clone.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          
-          if (child.material) {
-            // Create mountain material with purple-toned hue
-            const mountainMaterial = new THREE.MeshStandardMaterial({
-              color: new THREE.Color(0.5, 0.3, 0.6), // Purple-toned
-              roughness: 0.9,
-              metalness: 0.0
+    const clone = scene.clone();
+    
+    clone.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(mat => {
+              mat.side = THREE.FrontSide;
             });
-            child.material = mountainMaterial;
-          }
-          
-          if (child.geometry) {
-            child.geometry.computeBoundingBox();
-            child.geometry.computeBoundingSphere();
+          } else {
+            child.material.side = THREE.FrontSide;
           }
         }
-      });
-      
-      return clone;
-    }, [scene]);
+        
+        if (child.geometry) {
+          child.geometry.computeBoundingBox();
+          child.geometry.computeBoundingSphere();
+        }
+      }
+    });
     
-    if (!processedScene) {
-      return <FallbackSingleMountain position={position} scale={scale} rotation={rotation} />;
-    }
-    
-    return (
-      <primitive 
-        object={processedScene} 
-        position={position} 
-        scale={scale}
-        rotation={rotation}
-      />
-    );
-  } catch (error) {
-    console.warn('Failed to load mountain model, using fallback:', error);
+    return clone;
+  }, [scene]);
+  
+  if (!processedScene) {
+    console.warn('Mountain model not loaded, using fallback');
     return <FallbackSingleMountain position={position} scale={scale} rotation={rotation} />;
   }
+
+  console.log('CenteredMountainSystem: Rendering mountain at position:', position);
+  
+  return (
+    <primitive 
+      object={processedScene} 
+      position={position} 
+      scale={scale}
+      rotation={rotation}
+    />
+  );
 };
 
 export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
@@ -106,44 +90,32 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
+    console.log('CenteredMountainSystem: Not fantasy realm, skipping mountain render');
     return null;
   }
+
+  console.log('CenteredMountainSystem: Rendering infinite mountain chunks for tight valley');
   
-  // Generate mountain walls using the same asset repeatedly along straight lines
+  // Generate one mountain per chunk to create infinite terrain
   const mountainInstances = useMemo(() => {
     const instances = [];
     
     chunks.forEach(chunk => {
-      const { worldZ } = chunk;
-      
-      // Generate multiple mountains per chunk for better coverage
-      for (let zOffset = -chunkSize/2; zOffset < chunkSize/2; zOffset += 25) {
-        const finalZ = worldZ + zOffset;
-        
-        // Left mountain wall - straight line at X = -30
-        instances.push({
-          key: `left_mountain_${chunk.id}_${zOffset}`,
-          position: [-30, 0, finalZ] as [number, number, number],
-          scale: [2.0, 2.0, 2.0] as [number, number, number],
-          rotation: [0, Math.random() * 0.5, 0] as [number, number, number] // Slight random rotation
-        });
-        
-        // Right mountain wall - straight line at X = +30
-        instances.push({
-          key: `right_mountain_${chunk.id}_${zOffset}`,
-          position: [30, 0, finalZ] as [number, number, number],
-          scale: [2.0, 2.0, 2.0] as [number, number, number],
-          rotation: [0, Math.PI + (Math.random() * 0.5), 0] as [number, number, number] // Mirror + slight variation
-        });
-      }
+      // Position mountain at chunk center with tighter valley scale
+      instances.push({
+        key: `mountain_${chunk.id}`,
+        position: [0, -8, chunk.worldZ] as [number, number, number],
+        scale: [1.5, 1.5, 1.5] as [number, number, number], // Smaller scale for tighter valley
+        rotation: [0, 0, 0] as [number, number, number]
+      });
     });
     
-    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances in straight lines`);
+    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for infinite terrain`);
     return instances;
-  }, [chunks, chunkSize]);
+  }, [chunks]);
   
   return (
-    <group name="StraightLineMountainSystem">
+    <group name="InfiniteMountainSystem">
       {mountainInstances.map((instance) => (
         <SingleMountainModel
           key={instance.key}
