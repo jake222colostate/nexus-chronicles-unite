@@ -4,7 +4,6 @@ import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-// Use local mountain asset for consistent mobile rendering
 const MOUNTAIN_URL = '/assets/mountain_low_poly.glb';
 
 interface CenteredMountainSystemProps {
@@ -67,11 +66,8 @@ const SingleMountainModel: React.FC<{
   }, [scene]);
   
   if (!processedScene) {
-    console.warn('Mountain model not loaded, using fallback');
     return <FallbackSingleMountain position={position} scale={scale} rotation={rotation} />;
   }
-
-  console.log('CenteredMountainSystem: Rendering mountain at position:', position);
   
   return (
     <primitive 
@@ -90,32 +86,39 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
-    console.log('CenteredMountainSystem: Not fantasy realm, skipping mountain render');
     return null;
   }
-
-  console.log('CenteredMountainSystem: Rendering infinite mountain chunks for tight valley');
   
-  // Generate one mountain per chunk to create infinite terrain
+  // Generate mountain walls along straight lines
   const mountainInstances = useMemo(() => {
     const instances = [];
     
     chunks.forEach(chunk => {
-      // Position mountain at chunk center with tighter valley scale
+      const { worldZ } = chunk;
+      
+      // Left mountain wall - straight line at X = -25
       instances.push({
-        key: `mountain_${chunk.id}`,
-        position: [0, -8, chunk.worldZ] as [number, number, number],
-        scale: [1.5, 1.5, 1.5] as [number, number, number], // Smaller scale for tighter valley
+        key: `left_mountain_${chunk.id}`,
+        position: [-25, -8, worldZ] as [number, number, number],
+        scale: [1.2, 1.5, 1.2] as [number, number, number],
         rotation: [0, 0, 0] as [number, number, number]
+      });
+      
+      // Right mountain wall - straight line at X = +25
+      instances.push({
+        key: `right_mountain_${chunk.id}`,
+        position: [25, -8, worldZ] as [number, number, number],
+        scale: [1.2, 1.5, 1.2] as [number, number, number],
+        rotation: [0, Math.PI, 0] as [number, number, number] // Mirror for variation
       });
     });
     
-    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for infinite terrain`);
+    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain walls in straight lines`);
     return instances;
   }, [chunks]);
   
   return (
-    <group name="InfiniteMountainSystem">
+    <group name="StraightLineMountainSystem">
       {mountainInstances.map((instance) => (
         <SingleMountainModel
           key={instance.key}

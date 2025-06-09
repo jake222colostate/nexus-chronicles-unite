@@ -8,7 +8,7 @@ import { TapEffect3D } from './TapEffect3D';
 import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
-import { CenteredMountainSystem } from './CenteredMountainSystem';
+import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
@@ -122,7 +122,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
 
-          {/* Infinite mountain system with tight valley and seamless chunk generation */}
+          {/* Single unified infinite terrain system for fantasy realm */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
@@ -130,10 +130,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               renderDistance={150}
             >
               {(chunks) => (
-                <CenteredMountainSystem
+                <OptimizedFantasyEnvironment
                   chunks={chunks}
                   chunkSize={50}
                   realm={realm}
+                  playerPosition={playerPosition}
                 />
               )}
             </ChunkSystem>

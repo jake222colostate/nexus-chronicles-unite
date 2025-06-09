@@ -23,19 +23,22 @@ export const InfiniteGroundSystem: React.FC<InfiniteGroundSystemProps> = ({
     const instances = [];
     
     chunks.forEach(chunk => {
+      const { worldZ } = chunk;
+      
+      // Create ground plane exactly aligned with chunk boundaries
       instances.push({
         key: `ground_${chunk.id}`,
-        position: [chunk.worldX, -1.5, chunk.worldZ] as [number, number, number],
+        position: [0, -1.5, worldZ] as [number, number, number], // Centered at X=0, straight line along Z
         size: chunkSize
       });
     });
     
-    console.log(`InfiniteGroundSystem: Generated ${instances.length} ground chunks for infinite terrain`);
+    console.log(`InfiniteGroundSystem: Generated ${instances.length} ground chunks in straight line`);
     return instances;
   }, [chunks, chunkSize]);
 
   return (
-    <group name="InfiniteGroundSystem">
+    <group name="StraightLineGroundSystem">
       {groundChunks.map((ground) => (
         <mesh 
           key={ground.key}

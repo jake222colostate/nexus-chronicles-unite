@@ -3,8 +3,8 @@ import React, { Suspense } from 'react';
 import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from './EnhancedTreeDistribution';
-import { InfiniteEnvironmentSystem } from './InfiniteEnvironmentSystem';
 import { InfiniteGroundSystem } from './InfiniteGroundSystem';
+import { CenteredMountainSystem } from './CenteredMountainSystem';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: ChunkData[];
@@ -24,7 +24,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with infinite ground and tight valley`);
+  console.log(`OptimizedFantasyEnvironment: Rendering ${chunks.length} chunks with coordinated infinite terrain`);
 
   return (
     <Suspense fallback={null}>
@@ -35,10 +35,14 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         realm={realm}
       />
       
-      {/* Infinite environment system handles additional environmental elements */}
-      <InfiniteEnvironmentSystem />
+      {/* Centered mountain system for straight-line infinite mountains */}
+      <CenteredMountainSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
       
-      {/* Tree system positioned within clamped valley bounds (-12 to 12) */}
+      {/* Tree system positioned within valley bounds */}
       <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}
