@@ -94,41 +94,41 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return null;
   }
 
-  console.log('CenteredMountainSystem: Rendering wide valley mountain system with mountains far from center');
+  console.log('CenteredMountainSystem: Rendering extremely wide valley with mountains at maximum distance');
   
-  // Generate mountain walls much farther from center with wide valley
+  // Generate mountain walls at maximum distance to ensure clear valley
   const mountainInstances = useMemo(() => {
     const instances = [];
     
     chunks.forEach(chunk => {
-      // Create mountain walls on left and right sides, much farther from center
+      // Create mountain walls at extreme distances with guaranteed clear center
       for (let zOffset = 0; zOffset < chunkSize; zOffset += 25) {
         const finalZ = chunk.worldZ + zOffset;
         
-        // Left mountain wall at X=-80 (much farther)
+        // Left mountain wall at X=-120 (maximum distance)
         instances.push({
           key: `mountain_left_${chunk.id}_${zOffset}`,
-          position: [-80, -2, finalZ] as [number, number, number],
-          scale: [0.8, 0.8, 0.8] as [number, number, number],
+          position: [-120, -2, finalZ] as [number, number, number],
+          scale: [0.6, 0.6, 0.6] as [number, number, number], // Smaller scale
           rotation: [0, 0, 0] as [number, number, number]
         });
         
-        // Right mountain wall at X=+80 (much farther)
+        // Right mountain wall at X=+120 (maximum distance)
         instances.push({
           key: `mountain_right_${chunk.id}_${zOffset}`,
-          position: [80, -2, finalZ] as [number, number, number],
-          scale: [0.8, 0.8, 0.8] as [number, number, number],
+          position: [120, -2, finalZ] as [number, number, number],
+          scale: [0.6, 0.6, 0.6] as [number, number, number], // Smaller scale
           rotation: [0, Math.PI, 0] as [number, number, number] // Flip for variety
         });
       }
     });
     
-    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for wide valley system`);
+    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for maximum wide valley`);
     return instances;
   }, [chunks, chunkSize]);
   
   return (
-    <group name="WideValleyMountainSystem">
+    <group name="MaximumWideValleyMountainSystem">
       {mountainInstances.map((instance) => (
         <SingleMountainModel
           key={instance.key}

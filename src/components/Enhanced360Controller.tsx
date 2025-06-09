@@ -35,13 +35,13 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   const isMousePressed = useRef(false);
   const lastNotificationTime = useRef(0);
 
-  // Initialize camera at proper character height with correct viewing angle
+  // Initialize camera at guaranteed safe valley center position
   useEffect(() => {
-    targetPosition.current.set(0, 2, 5); // Fixed starting position
+    targetPosition.current.set(0, 2, 10); // Start further back in the clear valley center
     camera.position.copy(targetPosition.current);
     camera.lookAt(0, 1, 0); // Look at ground level ahead
     lastNotifiedPosition.current.copy(targetPosition.current);
-    console.log('Camera initialized at:', targetPosition.current);
+    console.log('Camera initialized at safe valley center:', targetPosition.current);
   }, [camera]);
 
   // Keyboard event handlers with improved key detection
@@ -190,11 +190,11 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       velocity.current.multiplyScalar(damping);
     }
     
-    // Update position with mountain collision bounds
+    // Update position with very wide valley bounds
     targetPosition.current.add(velocity.current.clone().multiplyScalar(delta));
     
-    // Strict mountain collision - keep player within the path corridor
-    targetPosition.current.x = Math.max(-15, Math.min(15, targetPosition.current.x));
+    // Much wider movement bounds - mountains are now at ±120, so allow ±50 for safety
+    targetPosition.current.x = Math.max(-50, Math.min(50, targetPosition.current.x));
     targetPosition.current.y = 2; // Fixed character height
     
     // Update camera
