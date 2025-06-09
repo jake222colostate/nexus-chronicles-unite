@@ -17,6 +17,7 @@ const FallbackCenteredMountain: React.FC<{
   position: [number, number, number]; 
   scale: [number, number, number];
 }> = ({ position, scale }) => {
+  console.log('FallbackCenteredMountain: Rendering fallback mountain at position:', position);
   return (
     <group position={position} scale={scale}>
       <mesh castShadow receiveShadow>
@@ -35,12 +36,17 @@ const CenteredMountain: React.FC<{
   position: [number, number, number];
   scale: [number, number, number];
 }> = ({ position, scale }) => {
+  console.log('CenteredMountain: Attempting to render mountain at position:', position);
+  
   try {
     const { scene } = useGLTF(MOUNTAIN_URL);
     
     if (!scene) {
+      console.warn('CenteredMountain: GLB scene is null, using fallback');
       return <FallbackCenteredMountain position={position} scale={scale} />;
     }
+    
+    console.log('CenteredMountain: Successfully loaded GLB scene, creating mountain');
     
     const clonedScene = useMemo(() => {
       const clone = scene.clone();
@@ -80,7 +86,7 @@ const CenteredMountain: React.FC<{
       />
     );
   } catch (error) {
-    console.warn('Failed to load centered mountain model, using fallback');
+    console.error('CenteredMountain: Failed to load mountain model, using fallback. Error:', error);
     return <FallbackCenteredMountain position={position} scale={scale} />;
   }
 };
@@ -90,18 +96,28 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
   chunkSize,
   realm
 }) => {
+  console.log('CenteredMountainSystem: Component called with:', {
+    realm,
+    chunksLength: chunks.length,
+    chunkSize
+  });
+
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
+    console.log('CenteredMountainSystem: Not fantasy realm, returning null');
     return null;
   }
 
   const mountainInstances = useMemo(() => {
+    console.log('CenteredMountainSystem: Creating mountain instances for', chunks.length, 'chunks');
     const instances: React.ReactNode[] = [];
     
     chunks.forEach((chunk, chunkIndex) => {
       // Create mountain instances every 40 units along Z-axis for proper spacing
       for (let zOffset = -20; zOffset < chunkSize + 20; zOffset += 40) {
         const finalZ = chunk.worldZ - zOffset;
+        
+        console.log(`CenteredMountainSystem: Creating mountain for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
         
         // Single centered mountain at X = 0, embedded slightly below terrain
         instances.push(
@@ -114,13 +130,15 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
       }
     });
     
+    console.log(`CenteredMountainSystem: Generated ${instances.length} centered mountains at X=0`);
     return instances;
   }, [chunks, chunkSize]);
 
-  console.log(`CenteredMountainSystem: Generated ${mountainInstances.length} centered mountains at X=0`);
+  console.log('CenteredMountainSystem: About to render', mountainInstances.length, 'mountain instances');
 
   return <>{mountainInstances}</>;
 };
 
 // Preload the mountain model
 useGLTF.preload(MOUNTAIN_URL);
+console.log('CenteredMountainSystem: Preloading mountain model from:', MOUNTAIN_URL);
