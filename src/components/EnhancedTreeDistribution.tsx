@@ -49,10 +49,11 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 8;
 };
 
-// Updated check: Trees can only spawn if |x| >= 8 to avoid single mountain's natural valley
+// Updated check: Trees can only spawn outside the centered mountain's natural valley
 const isValidTreePosition = (x: number, z: number): boolean => {
-  // Primary constraint: avoid single mountain's natural valley center
-  const outsideNaturalValley = Math.abs(x) >= 8; // Increased buffer for natural valley
+  // Primary constraint: avoid centered mountain's natural valley 
+  const distanceFromCenter = Math.sqrt(x * x + z * z);
+  const outsideNaturalValley = distanceFromCenter >= 10; // Increased buffer for centered valley
   
   return outsideNaturalValley && 
          !isOnSteepSlope(x, z) && 
@@ -209,7 +210,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with single mountain natural valley avoidance
+  // Generate tree positions with centered mountain natural valley avoidance
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -219,17 +220,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees avoiding single mountain natural valley (|x| >= 8)');
+    console.log('EnhancedTreeDistribution: Generating trees around centered mountain natural valley');
     const trees = [];
-    const minDistance = 6; // 6m minimum spacing
-    const maxAttempts = 40; // Increased attempts due to natural valley constraint
+    const minDistance = 8; // 8m minimum spacing
+    const maxAttempts = 50; // Increased attempts due to centered valley constraint
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Reduced tree count due to single mountain natural valley constraint
-      const treeCount = 2 + Math.floor(seededRandom(seed) * 2); // 2-3 trees per chunk
+      // Reduced tree count due to centered mountain natural valley constraint
+      const treeCount = 3 + Math.floor(seededRandom(seed) * 2); // 3-4 trees per chunk
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -239,13 +240,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Random placement within chunk bounds, avoiding single mountain natural valley
+          // Random placement within chunk bounds, avoiding centered mountain natural valley
           x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.9;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.9;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Single mountain natural valley avoidance check: only spawn if |x| >= 8
+          // Centered mountain natural valley avoidance check: only spawn outside radius of 10
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
@@ -285,7 +286,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees avoiding single mountain natural valley`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees around centered mountain natural valley`);
     
     return {
       treePositions: trees,

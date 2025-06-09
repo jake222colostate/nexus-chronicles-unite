@@ -21,14 +21,14 @@ const FallbackSingleMountain: React.FC<{
 }> = ({ position, scale, rotation }) => {
   return (
     <group position={position} scale={scale} rotation={rotation}>
-      {/* Single mountain mesh with natural valley shape */}
+      {/* Create a mountain with natural valley at center */}
       <mesh position={[0, 0, 0]} castShadow receiveShadow>
-        <coneGeometry args={[20, 15, 16]} />
+        <coneGeometry args={[25, 18, 16]} />
         <meshLambertMaterial color="#6B5B73" />
       </mesh>
-      {/* Natural valley depression */}
-      <mesh position={[0, -8, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[12, 50]} />
+      {/* Valley depression at center for player path */}
+      <mesh position={[0, -12, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[16, 60]} />
         <meshLambertMaterial color="#4A3A53" />
       </mesh>
     </group>
@@ -78,7 +78,7 @@ const SingleMountainModel: React.FC<{
     return <FallbackSingleMountain position={position} scale={scale} rotation={rotation} />;
   }
 
-  console.log('Single mountain model with natural valley loaded at:', position);
+  console.log('Single mountain model positioned for natural valley at world center:', position);
   
   return (
     <primitive 
@@ -100,21 +100,21 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return null;
   }
 
-  // Render exactly ONE mountain instance with its natural valley
+  // Position the mountain so its natural valley is centered at world origin
   const mountainInstance = useMemo(() => {
-    console.log('CenteredMountainSystem: Creating single mountain with natural valley');
+    console.log('CenteredMountainSystem: Positioning single mountain with natural valley at world center');
     
     return (
       <SingleMountainModel
-        key="single-mountain-natural-valley"
-        position={[0, -5, 0]} // Position so natural valley is at ground level
-        scale={[1.5, 1.5, 1.5]} // Moderate scale to keep natural proportions
-        rotation={[0, 0, 0]} // No rotation to preserve natural valley orientation
+        key="centered-mountain-natural-valley"
+        position={[0, -10, 0]} // Lower the mountain so valley is at ground level
+        scale={[2, 2, 2]} // Larger scale to create proper valley width
+        rotation={[0, Math.PI, 0]} // Rotate 180 degrees to orient valley correctly
       />
     );
   }, []); // Empty dependency array - render once only
 
-  console.log('CenteredMountainSystem: Rendering single mountain with natural valley');
+  console.log('CenteredMountainSystem: Rendering mountain with natural valley centered at world origin');
 
   return <>{mountainInstance}</>;
 };
