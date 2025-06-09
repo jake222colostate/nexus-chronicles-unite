@@ -4,6 +4,7 @@ import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
+// Use local mountain asset for consistent mobile rendering
 const MOUNTAIN_URL = '/assets/mountain_low_poly.glb';
 
 interface CenteredMountainSystemProps {
@@ -16,15 +17,22 @@ interface CenteredMountainSystemProps {
 const FallbackCenteredMountain: React.FC<{ 
   position: [number, number, number]; 
   scale: [number, number, number];
-}> = ({ position, scale }) => {
+  rotation: [number, number, number];
+}> = ({ position, scale, rotation }) => {
   return (
-    <group position={position} scale={scale}>
-      <mesh castShadow receiveShadow>
-        <coneGeometry args={[8, 15, 8]} />
+    <group position={position} scale={scale} rotation={rotation}>
+      {/* Create a valley-like structure with two ridges */}
+      <mesh position={[-8, 0, 0]} castShadow receiveShadow>
+        <coneGeometry args={[6, 12, 8]} />
         <meshLambertMaterial color="#6B5B73" />
       </mesh>
-      <mesh position={[0, -5, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[10, 12, 5, 8]} />
+      <mesh position={[8, 0, 0]} castShadow receiveShadow>
+        <coneGeometry args={[6, 12, 8]} />
+        <meshLambertMaterial color="#6B5B73" />
+      </mesh>
+      {/* Valley floor */}
+      <mesh position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[16, 20]} />
         <meshLambertMaterial color="#5A4A63" />
       </mesh>
     </group>
@@ -34,12 +42,13 @@ const FallbackCenteredMountain: React.FC<{
 const CenteredMountain: React.FC<{
   position: [number, number, number];
   scale: [number, number, number];
-}> = ({ position, scale }) => {
+  rotation: [number, number, number];
+}> = ({ position, scale, rotation }) => {
   try {
     const { scene } = useGLTF(MOUNTAIN_URL);
     
     if (!scene) {
-      return <FallbackCenteredMountain position={position} scale={scale} />;
+      return <FallbackCenteredMountain position={position} scale={scale} rotation={rotation} />;
     }
     
     const clonedScene = useMemo(() => {
@@ -77,11 +86,12 @@ const CenteredMountain: React.FC<{
         object={clonedScene} 
         position={position} 
         scale={scale}
+        rotation={rotation}
       />
     );
   } catch (error) {
     console.warn('Failed to load centered mountain model, using fallback');
-    return <FallbackCenteredMountain position={position} scale={scale} />;
+    return <FallbackCenteredMountain position={position} scale={scale} rotation={rotation} />;
   }
 };
 
@@ -103,12 +113,14 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
       for (let zOffset = -20; zOffset < chunkSize + 20; zOffset += 40) {
         const finalZ = chunk.worldZ - zOffset;
         
-        // Single centered mountain at X = 0, embedded slightly below terrain
+        // Single mountain positioned to create a central valley for the path
+        // Rotate if needed to align valley properly with path direction
         instances.push(
           <CenteredMountain
             key={`centered-${chunk.id}-${zOffset}`}
-            position={[0, -0.5, finalZ]} // Y = -0.5 for natural embedding
-            scale={[1.5, 1.5, 1.5]} // Adjusted scale for vertical phone layout
+            position={[0, -1, finalZ]} // Slightly lowered for natural valley floor
+            scale={[2, 2, 2]} // Larger scale for proper valley width
+            rotation={[0, 0, 0]} // No rotation - use model as-is initially
           />
         );
       }
@@ -117,10 +129,10 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return instances;
   }, [chunks, chunkSize]);
 
-  console.log(`CenteredMountainSystem: Generated ${mountainInstances.length} centered mountains at X=0`);
+  console.log(`CenteredMountainSystem: Generated ${mountainInstances.length} centered mountains with central valley`);
 
   return <>{mountainInstances}</>;
 };
 
-// Preload the mountain model
+// Preload the local mountain model
 useGLTF.preload(MOUNTAIN_URL);

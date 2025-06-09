@@ -44,7 +44,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 }) => {
   const cameraRef = useRef();
 
-  // Stable player position for chunk system - centered on the mountain path
+  // Stable player position for chunk system - centered on the mountain valley
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
 
   // Memoize upgrade unlock checking to prevent recalculation
@@ -132,7 +132,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             />
           )}
 
-          {/* Optimized chunk system with centered mountain collision bounds */}
+          {/* Optimized chunk system with central valley mountain */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
@@ -140,21 +140,21 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Centered Mountain System - single mountain at X=0 */}
+                {/* Centered Mountain System - single mountain with central valley */}
                 <CenteredMountainSystem
                   chunks={chunks}
                   chunkSize={50}
                   realm={realm}
                 />
                 
-                {/* Trees only for Fantasy realm - updated for centered mountain */}
+                {/* Trees only for Fantasy realm - updated for central valley terrain */}
                 {realm === 'fantasy' && (
                   <GLBTreeSystem
                     chunks={chunks}
                     chunkSize={50}
                     realm={realm}
                     mountainBounds={{
-                      centerBuffer: 6 // Trees avoid |x| < 6 area around centered mountain
+                      centerBuffer: 8 // Trees avoid |x| < 8 area around central valley
                     }}
                   />
                 )}
