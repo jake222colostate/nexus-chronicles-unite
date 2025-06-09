@@ -8,7 +8,7 @@ import { TapEffect3D } from './TapEffect3D';
 import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
-import { CenteredMountainSystem } from './CenteredMountainSystem';
+import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
@@ -43,7 +43,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 }) => {
   const cameraRef = useRef();
 
-  // Stable player position for chunk system - centered in the mountain valley
+  // Stable player position for chunk system - centered in the scaled mountain valley
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
 
   // Memoize upgrade unlock checking to prevent recalculation
@@ -122,7 +122,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
 
-          {/* Infinite mountain system with tight valley and seamless chunk generation */}
+          {/* Infinite scaled mountain system with seamless chunk generation */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
@@ -130,10 +130,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               renderDistance={150}
             >
               {(chunks) => (
-                <CenteredMountainSystem
+                <OptimizedFantasyEnvironment
                   chunks={chunks}
                   chunkSize={50}
                   realm={realm}
+                  playerPosition={playerPosition}
                 />
               )}
             </ChunkSystem>

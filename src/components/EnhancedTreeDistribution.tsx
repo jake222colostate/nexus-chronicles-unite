@@ -50,16 +50,16 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 8;
 };
 
-// Updated tree spawning bounds: clamp to spawn only between mountains (-12 to 12 range)
+// Updated tree spawning bounds: adjusted for scaled mountains - narrower valley (scaled from -12 to -8)
 const isValidTreePosition = (x: number, z: number): boolean => {
-  // Primary constraint: trees spawn only in the valley between mountains
-  const inValleyRange = x >= -12 && x <= 12;
+  // Primary constraint: trees spawn in the narrower valley due to scaled mountains
+  const inNarrowValleyRange = x >= -8 && x <= 8; // Reduced from -12/12 to -8/8 for scaled mountains
   
   // Additional constraints
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
   
-  return inValleyRange && notOnSteepSlope && notTooCloseToPlayer;
+  return inNarrowValleyRange && notOnSteepSlope && notTooCloseToPlayer;
 };
 
 // Get tree type with updated distribution favoring pine218
@@ -189,13 +189,13 @@ const InstancedTreeGroup: React.FC<{
     return distance <= 120;
   });
 
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees clamped to valley range (-12 to 12)`);
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees in narrower valley range (-8 to 8) for scaled mountains`);
 
   return (
-    <group name="ClampedValleyTreeGroup">
+    <group name="NarrowValleyTreeGroup">
       {visiblePositions.slice(0, 50).map((pos, index) => (
         <TreeInstance
-          key={`valley-tree-${index}-${pos.treeType}`}
+          key={`narrow-valley-tree-${index}-${pos.treeType}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -212,7 +212,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with clamped valley bounds
+  // Generate tree positions with narrower valley bounds for scaled mountains
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -222,17 +222,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees with clamped valley bounds (-12 to 12)');
+    console.log('EnhancedTreeDistribution: Generating trees with narrower valley bounds (-8 to 8) for scaled mountains');
     const trees = [];
     const minDistance = 8; // 8m minimum spacing
-    const maxAttempts = 60; // Increased attempts due to clamped bounds
+    const maxAttempts = 70; // Increased attempts due to narrower bounds
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Increased tree count since we're limiting to valley area
-      const treeCount = 4 + Math.floor(seededRandom(seed) * 3); // 4-6 trees per chunk
+      // Increased tree count to compensate for narrower area
+      const treeCount = 5 + Math.floor(seededRandom(seed) * 4); // 5-8 trees per chunk
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -242,13 +242,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Generate position within valley bounds (-12 to 12)
-          x = (seededRandom(treeSeed) - 0.5) * 24; // Range of 24 units (-12 to 12)
+          // Generate position within narrower valley bounds (-8 to 8)
+          x = (seededRandom(treeSeed) - 0.5) * 16; // Range of 16 units (-8 to 8)
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.9;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Valley bounds check: trees only spawn between -12 and 12
+          // Narrower valley bounds check: trees only spawn between -8 and 8
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
@@ -288,7 +288,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees in valley bounds (-12 to 12)`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees in narrower valley bounds (-8 to 8) for scaled mountains`);
     
     return {
       treePositions: trees,

@@ -81,7 +81,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     <Suspense fallback={null}>
       {/* Camera controller with proper character height and fixed initial position */}
       <Enhanced360Controller
-        position={[0, 2, 5]} // Fixed starting position
+        position={[0, 2, 5]} // Fixed starting position in the center of the scaled valley
         onPositionChange={onPositionChange}
       />
 
@@ -103,9 +103,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         shadow-mapSize={[1024, 1024]}
       />
 
-      {/* REMOVED PathsideMountains - this was creating the mirrored mountain walls */}
-
-      {/* Optimized chunk system with performance limits */}
+      {/* Infinite scaled mountain chunk system with optimized performance */}
       <ChunkSystem
         playerPosition={cameraPosition}
         chunkSize={chunkSize}
