@@ -47,7 +47,7 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
 // Updated: Check if position is in the main player path corridor
 const isInPlayerPath = (x: number, z: number): boolean => {
   // Main path corridor: wider clearance to ensure no trees block player movement
-  const pathWidth = 6; // 6 units wide path (3 units each side from center)
+  const pathWidth = 8; // 8 units wide path (4 units each side from center)
   return Math.abs(x) < pathWidth;
 };
 
@@ -57,13 +57,13 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 10; // Increased clearance around player start
 };
 
-// UPDATED: Allow tree spawning in valley between mountains (±10 range)
+// UPDATED: Clamp tree spawning to avoid mountain geometry
 const isValidTreePosition = (x: number, z: number): boolean => {
   // Primary constraint: trees must not spawn in player path corridor
   const notInPlayerPath = !isInPlayerPath(x, z);
   
-  // NEW: Allow tree spawn in valley X-range between ±10 (but outside the path)
-  const inValidXRange = Math.abs(x) <= 10 && Math.abs(x) >= 6; // Between path and mountain walls
+  // NEW: Clamp tree spawn X-range to avoid mountain geometry
+  const inValidXRange = Math.abs(x) >= 12; // Only spawn trees outside ±12 range
   
   // Additional constraints
   const notOnSteepSlope = !isOnSteepSlope(x, z);
@@ -222,7 +222,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with improved path avoidance and valley positioning
+  // Generate tree positions with improved path avoidance and clamping
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -232,7 +232,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees in valley between ±10 range');
+    console.log('EnhancedTreeDistribution: Generating trees with X-range clamping to avoid mountain geometry');
     const trees = [];
     const minDistance = 6; // Reduced minimum spacing for better distribution
     const maxAttempts = 80; // Increased attempts for better placement
@@ -242,7 +242,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       const { worldX, worldZ, seed } = chunk;
       
       // Increased tree count since we have better positioning logic
-      const treeCount = 6 + Math.floor(seededRandom(seed) * 4); // 6-9 trees per chunk
+      const treeCount = 5 + Math.floor(seededRandom(seed) * 4); // 5-8 trees per chunk
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -252,15 +252,15 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Generate position in valley (between path and mountain walls)
+          // Generate position outside the ±12 range to avoid mountain geometry
           const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          const sideOffset = 6 + seededRandom(treeSeed) * 4; // 6-10 units from center (in valley)
+          const sideOffset = 12 + seededRandom(treeSeed) * 8; // 12-20 units from center (outside mountain range)
           x = side * sideOffset;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.9;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Validate position with valley constraints
+          // Validate position with improved clamping
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
@@ -300,7 +300,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees in valley between ±10 range`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees clamped outside ±12 range`);
     
     return {
       treePositions: trees,

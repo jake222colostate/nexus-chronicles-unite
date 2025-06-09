@@ -3,11 +3,11 @@ import React, { Suspense, useRef, useState, useCallback, useMemo } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
-import { InfiniteChunkLoader } from './InfiniteChunkLoader';
-import { InfiniteTerrainSystem } from './InfiniteTerrainSystem';
+import { ChunkSystem, ChunkData } from './ChunkSystem';
+import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
-import { VampireBat } from './VampireBat';
+import { Enemy } from './Enemy';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface Fantasy3DSceneProps {
@@ -36,21 +36,21 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const enemySystemRef = useRef<EnemySystemHandle>(null);
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
 
-  // Calculate weapon upgrade level
+  // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
   const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2));
 
-  // Stabilize player Z
+  // Stabilize player Z to prevent infinite updates - only update every 10 units
   const stablePlayerZ = useMemo(() => {
     return Math.floor(cameraPosition.z / 10) * 10;
   }, [Math.floor(cameraPosition.z / 10)]);
 
-  // Initialize damage system
+  // Initialize shared damage system with stable player Z
   const damageSystem = useEnemyDamageSystem({
     playerZ: stablePlayerZ,
     upgradeLevel: weaponUpgradeLevel
   });
 
-  // Enemy change handler
+  // Stable enemy change handler
   const handleEnemiesChange = useCallback(
     (list: EnemyData[]) => {
       console.log(`Fantasy3DScene: Enemies changed, count: ${list.length}`);
@@ -60,7 +60,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     [onEnemyCountChange]
   );
 
-  // Enemy hit handler
+  // Handle enemy hits - stable reference
   const handleEnemyHit = useCallback(
     (id: string) => {
       enemySystemRef.current?.damageEnemy(id, 1);
@@ -69,7 +69,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     []
   );
 
-  // Enemy initialize handler
+  // Initialize enemies in damage system when they spawn - stable reference
   const handleEnemyInitialize = useCallback((id: string, position: [number, number, number]) => {
     console.log(`Fantasy3DScene: Initializing enemy ${id} in damage system at position:`, position);
     if (damageSystem) {
@@ -79,16 +79,22 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   return (
     <Suspense fallback={null}>
-      {/* Camera controller */}
+      {/* Camera controller with proper character height and fixed initial position */}
       <Enhanced360Controller
-        position={[0, 2, 5]}
+        position={[0, 2, 5]} // Fixed starting position
         onPositionChange={onPositionChange}
       />
 
-      {/* Background color */}
+      {/* Background color for fantasy dusk */}
       <color attach="background" args={['#2d1b4e']} />
 
-      {/* Lighting */}
+      {/* Ground plane to ensure there's always a visible floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#2d4a2d" />
+      </mesh>
+
+      {/* Basic lighting to ensure visibility */}
       <ambientLight intensity={0.6} />
       <directionalLight
         position={[10, 10, 5]}
@@ -97,21 +103,25 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         shadow-mapSize={[1024, 1024]}
       />
 
-      {/* New infinite chunk-based terrain system */}
-      <InfiniteChunkLoader
+      {/* REMOVED PathsideMountains - this was creating the mirrored mountain walls */}
+
+      {/* Optimized chunk system with performance limits */}
+      <ChunkSystem
         playerPosition={cameraPosition}
         chunkSize={chunkSize}
-        renderDistance={Math.min(renderDistance, 200)}
+        renderDistance={Math.min(renderDistance, 150)}
       >
-        {(chunks) => (
-          <InfiniteTerrainSystem
+        {(chunks: ChunkData[]) => (
+          <OptimizedFantasyEnvironment
             chunks={chunks}
             chunkSize={chunkSize}
+            realm={realm}
+            playerPosition={cameraPosition}
           />
         )}
-      </InfiniteChunkLoader>
+      </ChunkSystem>
 
-      {/* Enemy System */}
+      {/* Enemy System - spawns vampire bat enemies ahead of player */}
       <EnemySystem
         ref={enemySystemRef}
         playerPosition={cameraPosition}
@@ -121,7 +131,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         onEnemyInitialize={handleEnemyInitialize}
       />
 
-      {/* Wizard Staff Weapon */}
+      {/* Wizard Staff Weapon - only render when damage system is ready */}
       {damageSystem && (
         <WizardStaffWeapon 
           enemies={enemies} 
@@ -133,12 +143,12 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         />
       )}
 
-      {/* Render vampire bat enemies with proper models */}
+      {/* Render vampire bat enemies with health data from damage system */}
       {enemies.map((enemy) => {
         const enemyHealth = damageSystem?.getEnemyHealth(enemy.id);
         
         return (
-          <VampireBat
+          <Enemy
             key={enemy.id}
             enemyId={enemy.id}
             position={enemy.position}
@@ -150,7 +160,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         );
       })}
 
-      {/* Contact shadows */}
+      {/* Simplified contact shadows */}
       <ContactShadows 
         position={[0, -1.4, cameraPosition.z]} 
         opacity={0.05}
