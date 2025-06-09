@@ -94,41 +94,41 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return null;
   }
 
-  console.log('CenteredMountainSystem: Rendering valley mountain system with clear center path');
+  console.log('CenteredMountainSystem: Rendering wide valley mountain system with mountains far from center');
   
-  // Generate mountain walls on both sides with clear center path
+  // Generate mountain walls much farther from center with wide valley
   const mountainInstances = useMemo(() => {
     const instances = [];
     
     chunks.forEach(chunk => {
-      // Create mountain walls on left and right sides, leaving center clear
+      // Create mountain walls on left and right sides, much farther from center
       for (let zOffset = 0; zOffset < chunkSize; zOffset += 25) {
         const finalZ = chunk.worldZ + zOffset;
         
-        // Left mountain wall at X=-40
+        // Left mountain wall at X=-80 (much farther)
         instances.push({
           key: `mountain_left_${chunk.id}_${zOffset}`,
-          position: [-40, -2, finalZ] as [number, number, number],
+          position: [-80, -2, finalZ] as [number, number, number],
           scale: [0.8, 0.8, 0.8] as [number, number, number],
           rotation: [0, 0, 0] as [number, number, number]
         });
         
-        // Right mountain wall at X=+40
+        // Right mountain wall at X=+80 (much farther)
         instances.push({
           key: `mountain_right_${chunk.id}_${zOffset}`,
-          position: [40, -2, finalZ] as [number, number, number],
+          position: [80, -2, finalZ] as [number, number, number],
           scale: [0.8, 0.8, 0.8] as [number, number, number],
           rotation: [0, Math.PI, 0] as [number, number, number] // Flip for variety
         });
       }
     });
     
-    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for valley system`);
+    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for wide valley system`);
     return instances;
   }, [chunks, chunkSize]);
   
   return (
-    <group name="ValleyMountainSystem">
+    <group name="WideValleyMountainSystem">
       {mountainInstances.map((instance) => (
         <SingleMountainModel
           key={instance.key}

@@ -155,6 +155,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           <Enemy
             key={enemy.id}
             enemyId={enemy.id}
+            enemyType="vampire_bat"
             position={enemy.position}
             playerPosition={cameraPosition}
             enemyHealth={enemyHealth}
