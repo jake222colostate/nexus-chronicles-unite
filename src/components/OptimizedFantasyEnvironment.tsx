@@ -36,7 +36,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
       />
       
       {/* Infinite environment system handles additional environmental elements */}
-      <InfiniteEnvironmentSystem />
+      <InfiniteEnvironmentSystem playerPosition={playerPosition} />
       
       {/* Tree system positioned within clamped valley bounds (-12 to 12) */}
       <EnhancedTreeDistribution

@@ -13,15 +13,17 @@ interface EnemyProps {
   enemyHealth?: EnemyHealth;
   onInitialize?: (id: string, position: [number, number, number]) => void;
   enemyId: string;
+  enemyType: string;
 }
 
-export const Enemy: React.FC<EnemyProps> = ({ 
+export const Enemy: React.FC<EnemyProps> = ({
   position = [0, 0, 0],
-  playerPosition, 
+  playerPosition,
   onReachPlayer,
   enemyHealth,
   onInitialize,
-  enemyId
+  enemyId,
+  enemyType
 }) => {
   const groupRef = useRef<Group>(null);
   const batMeshRef = useRef<Group>(null);
@@ -31,11 +33,11 @@ export const Enemy: React.FC<EnemyProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model from local assets
+  // Load vampire bat model from local assets when needed
   const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
-    if (batScene && batMeshRef.current) {
+    if (enemyType === 'vampire_bat' && batScene && batMeshRef.current) {
       console.log(`Enemy ${enemyId}: Bat model loaded successfully - children:`, batScene.children.length);
       
       // Clear any existing children and add the bat model
@@ -74,7 +76,7 @@ export const Enemy: React.FC<EnemyProps> = ({
       batMeshRef.current.add(batClone);
       console.log(`Enemy ${enemyId}: Bat model successfully added to enemy entity with 2.0x scale for visibility`);
     }
-  }, [batScene, enemyId]);
+  }, [batScene, enemyId, enemyType]);
 
   // Initialize enemy in damage system
   useEffect(() => {
@@ -176,7 +178,7 @@ export const Enemy: React.FC<EnemyProps> = ({
       <group ref={batMeshRef} />
       
       {/* Fallback geometry while bat model loads - make it more visible */}
-      {!batScene && (
+      {enemyType === 'vampire_bat' && !batScene && (
         <group position={[0, 0, 0]}>
           <mesh position={[0, 0, 0]}>
             <sphereGeometry args={[1.0, 12, 12]} />

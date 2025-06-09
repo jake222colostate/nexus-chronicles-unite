@@ -28,7 +28,11 @@ const isOnPlayerPath = (x: number): boolean => {
   return Math.abs(x) < 8; // Increased buffer around path center for safety
 };
 
-export const InfiniteEnvironmentSystem: React.FC = () => {
+interface InfiniteEnvironmentSystemProps {
+  playerPosition: Vector3;
+}
+
+export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps> = ({ playerPosition }) => {
   const { scene } = useThree();
   const { scene: mountainModel } = useGLTF('/assets/mountain_low_poly.glb');
   const [chunks, setChunks] = useState<EnvironmentChunk[]>([]);
@@ -267,10 +271,8 @@ export const InfiniteEnvironmentSystem: React.FC = () => {
     
     lastUpdateRef.current = now;
     
-    // For now, assume player moves forward automatically
-    // In a real game, you'd get this from your player controller
-    playerPositionRef.current.z -= 0.15; // Slightly faster movement
-    
+    playerPositionRef.current.copy(playerPosition);
+
     // Update chunks with throttling
     updateChunks(playerPositionRef.current.z);
   });
