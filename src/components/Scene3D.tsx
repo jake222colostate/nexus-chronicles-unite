@@ -133,7 +133,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             />
           )}
 
-          {/* Optimized chunk system with mountain collision bounds */}
+          {/* Optimized chunk system with updated mountain collision bounds */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
@@ -141,14 +141,14 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Optimized Mountain System */}
+                {/* Optimized Mountain System - now using half-models at X = -20 and +20 */}
                 <OptimizedMountainSystem
                   chunks={chunks}
                   chunkSize={50}
                   realm={realm}
                 />
                 
-                {/* Trees only for Fantasy realm - avoid mountain bounds */}
+                {/* Trees only for Fantasy realm - updated mountain bounds */}
                 {realm === 'fantasy' && (
                   <GLBTreeSystem
                     chunks={chunks}
@@ -157,7 +157,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                     mountainBounds={{
                       leftX: -20,
                       rightX: 20,
-                      buffer: 8 // 8 unit buffer around mountains
+                      buffer: 12 // Updated buffer for new mountain positions
                     }}
                   />
                 )}

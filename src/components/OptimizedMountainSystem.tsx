@@ -47,7 +47,7 @@ const OptimizedMountain: React.FC<{
     const clonedScene = useMemo(() => {
       const clone = scene.clone();
       
-      // Remove backfaces and optimize geometry
+      // Optimize geometry and remove unnecessary parts
       clone.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.castShadow = true;
@@ -64,7 +64,35 @@ const OptimizedMountain: React.FC<{
             }
           }
           
-          // Optimize geometry
+          // Optimize geometry - remove half if this is the original left mountain model
+          if (child.geometry && !isRightSide) {
+            // Clip geometry to only show left half (negative X values)
+            const geometry = child.geometry;
+            if (geometry.attributes.position) {
+              const positions = geometry.attributes.position.array;
+              const newPositions = [];
+              const newIndices = [];
+              
+              // Filter vertices to only include left side (X <= 0)
+              for (let i = 0; i < positions.length; i += 3) {
+                const x = positions[i];
+                if (x <= 0) {
+                  newPositions.push(positions[i], positions[i + 1], positions[i + 2]);
+                }
+              }
+              
+              if (newPositions.length > 0) {
+                const newGeometry = new THREE.BufferGeometry();
+                newGeometry.setAttribute('position', new THREE.Float32BufferAttribute(newPositions, 3));
+                newGeometry.computeVertexNormals();
+                newGeometry.computeBoundingBox();
+                newGeometry.computeBoundingSphere();
+                child.geometry = newGeometry;
+              }
+            }
+          }
+          
+          // Standard geometry optimization
           if (child.geometry) {
             child.geometry.computeBoundingBox();
             child.geometry.computeBoundingSphere();
@@ -73,7 +101,7 @@ const OptimizedMountain: React.FC<{
       });
       
       return clone;
-    }, [scene]);
+    }, [scene, isRightSide]);
     
     return (
       <primitive 
@@ -102,11 +130,11 @@ export const OptimizedMountainSystem: React.FC<OptimizedMountainSystemProps> = (
     const instances: React.ReactNode[] = [];
     
     chunks.forEach((chunk, chunkIndex) => {
-      // Create mountain instances every 60 units along Z-axis for infinite scrolling
-      for (let zOffset = -30; zOffset < chunkSize + 30; zOffset += 60) {
+      // Create mountain instances every 50 units along Z-axis for better spacing
+      for (let zOffset = -25; zOffset < chunkSize + 25; zOffset += 50) {
         const finalZ = chunk.worldZ - zOffset;
         
-        // Left mountain at X = -20
+        // Left mountain at X = -20 (using original half-model)
         instances.push(
           <OptimizedMountain
             key={`left-${chunk.id}-${zOffset}`}
@@ -116,7 +144,7 @@ export const OptimizedMountainSystem: React.FC<OptimizedMountainSystemProps> = (
           />
         );
         
-        // Right mountain at X = 20 (mirrored)
+        // Right mountain at X = +20 (mirrored version)
         instances.push(
           <OptimizedMountain
             key={`right-${chunk.id}-${zOffset}`}
