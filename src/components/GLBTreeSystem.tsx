@@ -18,20 +18,17 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Updated for single mountain with natural valley: trees spawn on mountain slopes, not in valley center
+// Updated for single mountain with natural valley: trees spawn on mountain slopes
 const isValidTreePosition = (x: number, z: number, mountainBounds?: { centerBuffer: number }): boolean => {
-  const buffer = mountainBounds?.centerBuffer || 4; // Natural valley center buffer
+  const buffer = mountainBounds?.centerBuffer || 8; // Larger buffer for natural valley
   
-  // Trees should avoid the natural valley center (player path area)
-  const inValleyCenter = Math.abs(x) < buffer;
+  // Avoid the central valley area where player moves
+  const inNaturalValley = Math.abs(x) < buffer;
   
-  // Trees can be on mountain slopes (outside the natural valley)
-  const onMountainSlopes = Math.abs(x) >= buffer && Math.abs(x) <= 20;
+  // Trees can be on the mountain slopes
+  const onMountainSlopes = Math.abs(x) >= buffer && Math.abs(x) <= 25;
   
-  // Avoid extreme positions that would be outside the mountain entirely
-  const outsideMountain = Math.abs(x) > 25;
-  
-  return !inValleyCenter && onMountainSlopes && !outsideMountain;
+  return !inNaturalValley && onMountainSlopes;
 };
 
 export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
@@ -62,22 +59,22 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
       const { worldZ, seed } = chunk;
       
       // Generate trees positioned on the single mountain's slopes
-      const treeCount = 4 + Math.floor(seededRandom(seed + 100) * 3); // 4-7 trees per chunk
+      const treeCount = 3 + Math.floor(seededRandom(seed + 100) * 2); // 3-5 trees per chunk
       let successfulPlacements = 0;
       let attempts = 0;
-      const maxAttempts = 25;
+      const maxAttempts = 30;
       const placedPositions: Array<{x: number, z: number}> = [];
       
-      // Updated bounds for single mountain with natural valley
+      // Natural valley bounds for single mountain
       const effectiveMountainBounds = mountainBounds || {
-        centerBuffer: 4 // Keep valley center clear for player movement
+        centerBuffer: 8 // Keep natural valley clear for player
       };
       
       while (successfulPlacements < treeCount && attempts < maxAttempts) {
         const treeSeed = seed + attempts * 67;
         
-        // Generate position on mountain slopes (not in natural valley center)
-        const x = (seededRandom(treeSeed) - 0.5) * 40; // Spread across mountain width
+        // Generate position on mountain slopes (outside natural valley)
+        const x = (seededRandom(treeSeed) - 0.5) * 50; // Wider spread for single mountain
         const z = worldZ - (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
         
         // Check if position is valid for mountain slope placement
@@ -85,21 +82,21 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
           // Check minimum distance from other trees
           const tooCloseToOthers = placedPositions.some(pos => {
             const distance = Math.sqrt((x - pos.x) ** 2 + (z - pos.z) ** 2);
-            return distance < 6; // Minimum 6 units between trees
+            return distance < 8; // Increased spacing for single mountain
           });
           
           if (!tooCloseToOthers) {
             const rotationY = seededRandom(treeSeed + 2) * Math.PI * 2;
-            const scale = 0.8 + seededRandom(treeSeed + 3) * 0.5; // 0.8 to 1.3 scale
+            const scale = 0.7 + seededRandom(treeSeed + 3) * 0.6; // 0.7 to 1.3 scale
             
             // Position trees on mountain slopes with natural height variation
             const distanceFromCenter = Math.abs(x);
-            const slopeHeight = distanceFromCenter > 6 ? (distanceFromCenter - 6) * 0.15 : 0;
-            const randomY = seededRandom(treeSeed + 4) * 0.6;
+            const slopeHeight = distanceFromCenter > 8 ? (distanceFromCenter - 8) * 0.12 : 0;
+            const randomY = seededRandom(treeSeed + 4) * 0.8;
             
             instances.push({
               key: `tree_${chunk.id}_${attempts}`,
-              position: [x, slopeHeight + randomY - 0.5, z] as [number, number, number],
+              position: [x, slopeHeight + randomY - 2, z] as [number, number, number],
               rotation: [0, rotationY, 0] as [number, number, number],
               scale: [scale, scale, scale] as [number, number, number]
             });
@@ -113,7 +110,7 @@ export const GLBTreeSystem: React.FC<GLBTreeSystemProps> = ({
       }
     });
     
-    console.log(`GLBTreeSystem: Generated ${instances.length} trees on single mountain slopes (avoiding valley center |x| < 4)`);
+    console.log(`GLBTreeSystem: Generated ${instances.length} trees on single mountain slopes (avoiding natural valley |x| < 8)`);
     
     return instances;
   }, [chunks, chunkSize, scene, mountainBounds]);

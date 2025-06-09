@@ -49,12 +49,12 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 8;
 };
 
-// Updated check: Trees can only spawn if |x| >= 4 to avoid single mountain's natural valley
+// Updated check: Trees can only spawn if |x| >= 8 to avoid single mountain's natural valley
 const isValidTreePosition = (x: number, z: number): boolean => {
   // Primary constraint: avoid single mountain's natural valley center
-  const outsideValleyCenter = Math.abs(x) >= 4;
+  const outsideNaturalValley = Math.abs(x) >= 8; // Increased buffer for natural valley
   
-  return outsideValleyCenter && 
+  return outsideNaturalValley && 
          !isOnSteepSlope(x, z) && 
          !isTooCloseToPlayerStart(x, z);
 };
@@ -186,7 +186,7 @@ const InstancedTreeGroup: React.FC<{
     return distance <= 120;
   });
 
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees avoiding single mountain valley center (|x| >= 4)`);
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees avoiding single mountain valley center (|x| >= 8)`);
 
   return (
     <group name="MountainSafeTreeGroup">
@@ -209,7 +209,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with single mountain valley avoidance
+  // Generate tree positions with single mountain natural valley avoidance
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -219,17 +219,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees avoiding single mountain valley center (|x| >= 4)');
+    console.log('EnhancedTreeDistribution: Generating trees avoiding single mountain natural valley (|x| >= 8)');
     const trees = [];
-    const minDistance = 4; // 4m minimum spacing
-    const maxAttempts = 35; // Increased attempts due to valley constraint
+    const minDistance = 6; // 6m minimum spacing
+    const maxAttempts = 40; // Increased attempts due to natural valley constraint
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Reduced tree count due to single mountain valley constraint
-      const treeCount = 2 + Math.floor(seededRandom(seed) * 3); // 2-4 trees per chunk
+      // Reduced tree count due to single mountain natural valley constraint
+      const treeCount = 2 + Math.floor(seededRandom(seed) * 2); // 2-3 trees per chunk
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -239,13 +239,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Random placement within chunk bounds, avoiding single mountain valley center
-          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.8;
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
+          // Random placement within chunk bounds, avoiding single mountain natural valley
+          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.9;
+          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.9;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Single mountain valley avoidance check: only spawn if |x| >= 4
+          // Single mountain natural valley avoidance check: only spawn if |x| >= 8
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
@@ -285,7 +285,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees avoiding single mountain valley`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees avoiding single mountain natural valley`);
     
     return {
       treePositions: trees,
