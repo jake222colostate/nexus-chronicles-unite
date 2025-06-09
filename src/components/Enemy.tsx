@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -27,62 +26,65 @@ export const Enemy: React.FC<EnemyProps> = ({
 }) => {
   const groupRef = useRef<Group>(null);
   const batMeshRef = useRef<Group>(null);
-  const currentPosition = useRef(new Vector3(position[0], 1.5, position[2])); // Start at proper flight height
-  const speed = 2;
+  const currentPosition = useRef(new Vector3(position[0], 2.0, position[2])); // Higher flight altitude
+  const speed = 2.5;
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
+  const animationTime = useRef(0);
 
-  // Load vampire bat model from local assets when needed
+  // Load vampire bat model
   const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
     if (enemyType === 'vampire_bat' && batScene && batMeshRef.current) {
-      console.log(`Enemy ${enemyId}: Bat model loaded successfully - children:`, batScene.children.length);
+      console.log(`Enemy ${enemyId}: Setting up vampire bat model with enhanced animations`);
       
-      // Clear any existing children and add the bat model
+      // Clear existing and add fresh bat model
       batMeshRef.current.clear();
       const batClone = batScene.clone();
       
-      // Ensure materials are visible and properly configured
+      // Enhanced material setup for better visibility
       batClone.traverse((child) => {
         if (child instanceof Mesh) {
-          console.log(`Enemy ${enemyId}: Configuring mesh:`, child.name, 'Material:', !!child.material);
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
             child.material.visible = true;
             child.material.needsUpdate = true;
-            // Ensure proper material transparency
+            // Ensure solid materials for bat visibility
             if (Array.isArray(child.material)) {
               child.material.forEach(mat => {
                 mat.transparent = false;
                 mat.opacity = 1.0;
+                mat.metalness = 0.2;
+                mat.roughness = 0.8;
               });
             } else {
               child.material.transparent = false;
               child.material.opacity = 1.0;
+              if ('metalness' in child.material) child.material.metalness = 0.2;
+              if ('roughness' in child.material) child.material.roughness = 0.8;
             }
           }
         }
       });
 
-      // Apply proper positioning and scaling for vampire bat
-      batClone.position.set(0, 0, 0); // Center at entity position
-      batClone.scale.setScalar(2.0); // Larger scale for better visibility
+      // Scale and position for better visibility and animation
+      batClone.position.set(0, 0, 0);
+      batClone.scale.setScalar(2.5); // Larger for better visibility
       batClone.rotation.set(0, Math.PI, 0); // Face forward initially
       
-      // Parent the bat mesh to the enemy entity
       batMeshRef.current.add(batClone);
-      console.log(`Enemy ${enemyId}: Bat model successfully added to enemy entity with 2.0x scale for visibility`);
+      console.log(`Enemy ${enemyId}: Vampire bat model configured with 2.5x scale and enhanced materials`);
     }
   }, [batScene, enemyId, enemyType]);
 
   // Initialize enemy in damage system
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
-      const flightPosition: [number, number, number] = [position[0], 1.5, position[2]];
-      console.log(`Enemy ${enemyId}: Initializing at flight position:`, flightPosition);
+      const flightPosition: [number, number, number] = [position[0], 2.0, position[2]];
+      console.log(`Enemy ${enemyId}: Initializing vampire bat at flight position:`, flightPosition);
       onInitialize(enemyId, flightPosition);
       initialized.current = true;
     }
@@ -91,18 +93,27 @@ export const Enemy: React.FC<EnemyProps> = ({
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
 
-    // Handle death animation
+    // Update animation time for consistent timing
+    animationTime.current += delta;
+
+    // Handle death animation with enhanced effects
     if (enemyHealth && enemyHealth.currentHealth <= 0) {
       if (!fadeOutStarted.current) {
         fadeOutStarted.current = true;
-        console.log(`Enemy ${enemyId}: Starting death animation - health: ${enemyHealth.currentHealth}`);
+        console.log(`Enemy ${enemyId}: Starting enhanced death animation - health: ${enemyHealth.currentHealth}`);
       }
       
       const currentScale = groupRef.current.scale.x;
-      const newScale = Math.max(0, currentScale - delta * 3);
+      const newScale = Math.max(0, currentScale - delta * 4); // Faster death fade
       groupRef.current.scale.setScalar(newScale);
       
-      if (newScale <= 0.1 && !isFullyFaded.current) {
+      // Add spinning death effect
+      if (batMeshRef.current) {
+        batMeshRef.current.rotation.z += delta * 8; // Spin while dying
+        batMeshRef.current.rotation.x += delta * 4;
+      }
+      
+      if (newScale <= 0.05 && !isFullyFaded.current) {
         groupRef.current.visible = false;
         isFullyFaded.current = true;
         console.log(`Enemy ${enemyId}: Death animation complete`);
@@ -110,7 +121,7 @@ export const Enemy: React.FC<EnemyProps> = ({
       return;
     }
 
-    // Reset if enemy is revived (shouldn't happen but just in case)
+    // Reset if enemy is revived
     if (enemyHealth && enemyHealth.currentHealth > 0 && fadeOutStarted.current) {
       fadeOutStarted.current = false;
       isFullyFaded.current = false;
@@ -118,9 +129,9 @@ export const Enemy: React.FC<EnemyProps> = ({
       groupRef.current.scale.setScalar(1);
     }
 
-    // AI movement - chase player at consistent flight altitude
+    // Enhanced AI movement - aggressive chase with proper flight altitude
     const targetPosition = playerPosition.clone();
-    targetPosition.y = 1.5; // Maintain consistent flight altitude
+    targetPosition.y = 2.0; // Maintain consistent flight altitude
     
     const direction = new Vector3()
       .subVectors(targetPosition, currentPosition.current)
@@ -129,72 +140,102 @@ export const Enemy: React.FC<EnemyProps> = ({
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
-    // Lock Y position to flight altitude
-    currentPosition.current.y = 1.5;
+    // Keep vampire bat at proper flight altitude
+    currentPosition.current.y = 2.0;
 
-    // Update enemy entity position
+    // Update entity position
     groupRef.current.position.copy(currentPosition.current);
 
-    // Enhanced flying animation for vampire bat
-    if (batMeshRef.current) {
-      const time = Date.now() * 0.003;
-      const bobOffset = Math.sin(time + position[0]) * 0.3;
+    // Enhanced vampire bat flying animations
+    if (batMeshRef.current && enemyType === 'vampire_bat') {
+      const time = animationTime.current;
+      const uniqueOffset = parseFloat(enemyId.split('_')[1]) || 0; // Use timestamp for unique offset
       
-      // Apply subtle hovering motion relative to entity position
-      batMeshRef.current.position.y = bobOffset;
+      // Complex hovering motion - figure-8 pattern
+      const hoverRadius = 0.4;
+      const hoverSpeed = 3.0;
+      const bobHeight = 0.6;
+      
+      // Primary hovering motion
+      const hoverX = Math.sin(time * hoverSpeed + uniqueOffset) * hoverRadius;
+      const hoverY = Math.sin(time * hoverSpeed * 2 + uniqueOffset) * bobHeight;
+      const hoverZ = Math.cos(time * hoverSpeed * 1.5 + uniqueOffset) * (hoverRadius * 0.5);
+      
+      batMeshRef.current.position.set(hoverX, hoverY, hoverZ);
       
       // Face movement direction smoothly
       const angle = Math.atan2(direction.x, direction.z);
       batMeshRef.current.rotation.y = angle;
       
-      // Wing flapping and banking motion
-      batMeshRef.current.rotation.z = Math.sin(time * 6) * 0.2;
-      batMeshRef.current.rotation.x = Math.sin(time * 4) * 0.1;
+      // Enhanced wing flapping animation - faster, more realistic
+      const wingFlapSpeed = 12; // Very fast wing flapping
+      const wingFlapIntensity = 0.4;
+      batMeshRef.current.rotation.z = Math.sin(time * wingFlapSpeed + uniqueOffset) * wingFlapIntensity;
+      
+      // Banking motion during turns
+      const bankingAngle = direction.x * 0.6; // Bank into turns
+      batMeshRef.current.rotation.x = Math.sin(time * 4 + uniqueOffset) * 0.15 + bankingAngle;
+      
+      // Subtle body wobble for natural flight
+      const wobbleY = Math.sin(time * 8 + uniqueOffset) * 0.1;
+      batMeshRef.current.rotation.y += wobbleY;
     }
 
-    // Check collision with player
+    // Check collision with player - closer contact needed
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
-    if (distanceToPlayer < 2 && onReachPlayer) {
+    if (distanceToPlayer < 1.8 && onReachPlayer) {
+      console.log(`Enemy ${enemyId}: Vampire bat reached player at distance ${distanceToPlayer}`);
       onReachPlayer();
     }
   });
 
-  // Don't render if dead and fully faded
+  // Don't render if fully dead and faded
   if (enemyHealth && enemyHealth.currentHealth <= 0 && isFullyFaded.current) {
     return null;
   }
 
   return (
-    <group ref={groupRef} position={[position[0], 1.5, position[2]]} castShadow receiveShadow>
-      {/* Health bar positioned above enemy entity */}
+    <group ref={groupRef} position={[position[0], 2.0, position[2]]} castShadow receiveShadow>
+      {/* Health bar positioned above flying bat */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 2.5, 0]}
+          position={[0, 1.5, 0]} // Higher above the bat
         />
       )}
       
-      {/* Bat mesh container */}
+      {/* Enhanced bat mesh container with proper flight positioning */}
       <group ref={batMeshRef} />
       
-      {/* Fallback geometry while bat model loads - make it more visible */}
+      {/* Enhanced fallback geometry while bat model loads */}
       {enemyType === 'vampire_bat' && !batScene && (
         <group position={[0, 0, 0]}>
+          {/* Main bat body */}
           <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[1.0, 12, 12]} />
-            <meshStandardMaterial color="#8B0000" />
+            <sphereGeometry args={[0.8, 12, 12]} />
+            <meshStandardMaterial color="#660000" metalness={0.2} roughness={0.8} />
           </mesh>
-          <mesh position={[0, 0.8, 0]}>
-            <coneGeometry args={[0.4, 1.0, 6]} />
-            <meshStandardMaterial color="#4B0000" />
+          {/* Bat wings */}
+          <mesh position={[-1.2, 0, 0]} rotation={[0, 0, Math.PI/6]}>
+            <boxGeometry args={[0.1, 1.5, 0.8]} />
+            <meshStandardMaterial color="#440000" />
+          </mesh>
+          <mesh position={[1.2, 0, 0]} rotation={[0, 0, -Math.PI/6]}>
+            <boxGeometry args={[0.1, 1.5, 0.8]} />
+            <meshStandardMaterial color="#440000" />
+          </mesh>
+          {/* Bat head */}
+          <mesh position={[0, 0.6, 0.2]}>
+            <coneGeometry args={[0.3, 0.6, 6]} />
+            <meshStandardMaterial color="#330000" />
           </mesh>
         </group>
       )}
       
-      {/* Debug collision bounds (invisible) */}
+      {/* Debug collision bounds (invisible in production) */}
       <mesh visible={false}>
-        <boxGeometry args={[2.5, 2.5, 2.5]} />
-        <meshBasicMaterial wireframe color="#00ff00" />
+        <sphereGeometry args={[1.8]} />
+        <meshBasicMaterial wireframe color="#ff0000" opacity={0.3} transparent />
       </mesh>
     </group>
   );
