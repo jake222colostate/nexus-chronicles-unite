@@ -71,7 +71,7 @@ const SingleMountainModel: React.FC<{
     return <FallbackSingleMountain position={position} scale={scale} rotation={rotation} />;
   }
 
-  console.log('CenteredMountainSystem: Rendering ONE mountain model at position:', position);
+  console.log('CenteredMountainSystem: Rendering mountain closer to player at position:', position);
   
   return (
     <primitive 
@@ -94,14 +94,14 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return null;
   }
 
-  console.log('CenteredMountainSystem: Rendering SINGLE mountain at world center');
+  console.log('CenteredMountainSystem: Rendering mountain closer for intimate valley experience');
   
-  // Return exactly ONE mountain instance
+  // Position mountain closer and slightly larger for tighter valley
   return (
     <group name="SingleCenteredMountain">
       <SingleMountainModel
-        position={[0, -8, 0]}
-        scale={[1.5, 1.5, 1.5]}
+        position={[0, -12, 0]}
+        scale={[2.2, 2.2, 2.2]}
         rotation={[0, 0, 0]}
       />
     </group>

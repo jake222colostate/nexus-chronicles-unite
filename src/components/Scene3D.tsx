@@ -123,7 +123,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
 
-          {/* ONLY render our single centered mountain - no other mountain systems */}
+          {/* ONLY render our single closer mountain - no other mountain systems */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
@@ -132,20 +132,20 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             >
               {(chunks) => (
                 <>
-                  {/* Single centered mountain with natural valley at world origin */}
+                  {/* Single closer mountain with smaller natural valley at world origin */}
                   <CenteredMountainSystem
                     chunks={chunks}
                     chunkSize={50}
                     realm={realm}
                   />
                   
-                  {/* Trees for Fantasy realm - positioned around valley avoiding center */}
+                  {/* Trees for Fantasy realm - positioned around smaller valley */}
                   <GLBTreeSystem
                     chunks={chunks}
                     chunkSize={50}
                     realm={realm}
                     mountainBounds={{
-                      centerBuffer: 10 // Trees avoid center valley where player moves
+                      centerBuffer: 6 // Smaller buffer for closer mountain
                     }}
                   />
                 </>
