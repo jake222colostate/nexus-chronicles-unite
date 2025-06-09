@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import GameEngine from '../components/GameEngine';
 import { useGameStateManager } from '../components/GameStateManager';
 import { useGameLoopManager } from '../components/GameLoopManager';
-import { EnhancedResourceSidebar } from '../components/EnhancedResourceSidebar';
+import { MobileResourceSidebar } from '../components/MobileResourceSidebar';
 
 const Index = () => {
   const {
@@ -45,8 +45,8 @@ const Index = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
-      {/* Enhanced Resource Sidebar with Auto Mana System */}
-      <EnhancedResourceSidebar
+      {/* Mobile-Optimized Resource Sidebar */}
+      <MobileResourceSidebar
         realm={currentRealm}
         mana={gameState.mana}
         energyCredits={gameState.energyCredits}

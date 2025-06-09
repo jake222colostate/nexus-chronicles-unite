@@ -8,7 +8,7 @@ import { TapEffect3D } from './TapEffect3D';
 import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
-import { GLBMountainSystem } from './GLBMountainSystem';
+import { OptimizedMountainSystem } from './OptimizedMountainSystem';
 import { GLBTreeSystem } from './GLBTreeSystem';
 import { EnvironmentSystem } from './EnvironmentSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
@@ -45,7 +45,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 }) => {
   const cameraRef = useRef();
 
-  // Stable player position for chunk system
+  // Stable player position for chunk system - centered between mountains at X=0
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
 
   // Memoize upgrade unlock checking to prevent recalculation
@@ -87,7 +87,13 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
         dpr={[1, 1.5]}
         performance={{ min: 0.6 }}
-        gl={{ antialias: false, alpha: false }}
+        gl={{ 
+          antialias: false, 
+          alpha: false,
+          powerPreference: "high-performance",
+          stencil: false,
+          depth: true
+        }}
       >
         <Suspense fallback={null}>
           <PerspectiveCamera
@@ -108,7 +114,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Simplified lighting for sci-fi realm */}
+          {/* Optimized lighting for mobile */}
           <ambientLight intensity={realm === 'scifi' ? 0.8 : 0.6} />
           <directionalLight
             position={[10, 10, 5]}
@@ -127,42 +133,37 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             />
           )}
 
-          {/* Simplified chunk system - only for fantasy realm */}
-          {realm === 'fantasy' && (
-            <ChunkSystem
-              playerPosition={playerPosition}
-              chunkSize={50}
-              renderDistance={200}
-            >
-              {(chunks) => (
-                <>
-                  {/* Custom GLB Tree System - Only for Fantasy realm */}
-                  <GLBTreeSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                    realm={realm}
-                  />
-                </>
-              )}
-            </ChunkSystem>
-          )}
-
-          {/* Mountains only for sci-fi realm with minimal chunk system */}
-          {realm === 'scifi' && (
-            <ChunkSystem
-              playerPosition={playerPosition}
-              chunkSize={50}
-              renderDistance={100}
-            >
-              {(chunks) => (
-                <GLBMountainSystem
+          {/* Optimized chunk system with mountain collision bounds */}
+          <ChunkSystem
+            playerPosition={playerPosition}
+            chunkSize={50}
+            renderDistance={realm === 'fantasy' ? 200 : 100}
+          >
+            {(chunks) => (
+              <>
+                {/* Optimized Mountain System */}
+                <OptimizedMountainSystem
                   chunks={chunks}
                   chunkSize={50}
                   realm={realm}
                 />
-              )}
-            </ChunkSystem>
-          )}
+                
+                {/* Trees only for Fantasy realm - avoid mountain bounds */}
+                {realm === 'fantasy' && (
+                  <GLBTreeSystem
+                    chunks={chunks}
+                    chunkSize={50}
+                    realm={realm}
+                    mountainBounds={{
+                      leftX: -20,
+                      rightX: 20,
+                      buffer: 8 // 8 unit buffer around mountains
+                    }}
+                  />
+                )}
+              </>
+            )}
+          </ChunkSystem>
 
           {upgradeNodes}
 

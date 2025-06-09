@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface AutoManaUpgradeSystemProps {
@@ -36,39 +35,40 @@ export const AutoManaUpgradeSystem: React.FC<AutoManaUpgradeSystemProps> = ({
   };
 
   const formatNumber = (num: number): string => {
-    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-    if (num >= 1e3) return (num / 1e3).toFixed(2) + 'K';
+    if (num >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+    if (num >= 1e3) return (num / 1e3).toFixed(1) + 'K';
     return Math.floor(num).toString();
   };
 
   return (
-    <div className="flex flex-col items-center gap-2 px-4 py-3">
+    <div className="flex flex-col items-center gap-1.5">
       <Button
         onClick={handleUpgrade}
         disabled={!canAfford}
         className={`
-          transition-all duration-300 font-bold text-xs px-4 py-2 rounded-lg
+          transition-all duration-300 font-bold text-xs px-3 py-1.5 rounded-md
           bg-gradient-to-r from-purple-600 to-violet-700 
           hover:from-purple-500 hover:to-violet-600
           disabled:opacity-50 disabled:cursor-not-allowed
           text-white border border-purple-400/30
-          ${canAfford ? 'hover:scale-105 active:scale-95 shadow-lg hover:shadow-purple-500/25' : ''}
+          ${canAfford ? 'hover:scale-105 active:scale-95 shadow-md hover:shadow-purple-500/25' : ''}
         `}
         style={{
-          minWidth: '160px',
-          boxShadow: canAfford ? '0 4px 15px rgba(147, 51, 234, 0.3)' : undefined
+          minWidth: '140px',
+          fontSize: '10px',
+          boxShadow: canAfford ? '0 2px 8px rgba(147, 51, 234, 0.3)' : undefined
         }}
       >
-        Auto Mana Lvl {autoManaLevel} - {formatNumber(upgradeCost)} Mana
+        Auto Lvl {autoManaLevel} - {formatNumber(upgradeCost)}
       </Button>
       
       <div className="text-center">
-        <div className="text-sm font-medium text-purple-300">
-          +{formatNumber(autoManaRate)} mana/sec
+        <div className="text-xs font-medium text-purple-300">
+          +{formatNumber(autoManaRate)}/sec
         </div>
         {autoManaLevel > 0 && (
           <div className="text-xs text-purple-400/70">
-            Next: +{formatNumber(nextRate)} mana/sec
+            Next: +{formatNumber(nextRate)}/sec
           </div>
         )}
       </div>
