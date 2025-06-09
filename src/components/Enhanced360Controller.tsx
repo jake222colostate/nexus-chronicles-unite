@@ -34,14 +34,14 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   const isMousePressed = useRef(false);
   const frameCount = useRef(0);
 
-  // Initialize camera at guaranteed safe valley center position
+  // Initialize camera at GUARANTEED safe valley center position
   useEffect(() => {
-    const safePosition = new Vector3(0, 2, 20);
+    const safePosition = new Vector3(0, 3, 0); // Center of wide valley, higher up
     targetPosition.current.copy(safePosition);
     camera.position.copy(safePosition);
-    camera.lookAt(0, 1, 0);
+    camera.lookAt(0, 2, -10); // Look down the valley path
     lastNotifiedPosition.current.copy(safePosition);
-    console.log('Camera initialized at safe valley center:', safePosition);
+    console.log('Camera initialized at guaranteed safe valley center:', safePosition);
   }, [camera]);
 
   // Keyboard event handlers
@@ -143,9 +143,9 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   useFrame((state, delta) => {
     frameCount.current++;
     
-    const moveSpeed = 15;
-    const acceleration = 0.2;
-    const damping = 0.8;
+    const moveSpeed = 20; // Increased speed for better responsiveness
+    const acceleration = 0.3; // Increased acceleration
+    const damping = 0.85; // Slightly more damping for control
     
     // Calculate movement direction
     const forward = new Vector3(-Math.sin(yawAngle.current), 0, -Math.cos(yawAngle.current));
@@ -180,29 +180,29 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       velocity.current.multiplyScalar(damping);
     }
     
-    // Update position with wide valley bounds
+    // Update position with VERY WIDE valley bounds
     targetPosition.current.add(velocity.current.clone().multiplyScalar(delta));
     
-    // Keep within valley bounds (mountains are at ±120, so allow ±100 for extra safety)
-    targetPosition.current.x = Math.max(-100, Math.min(100, targetPosition.current.x));
-    targetPosition.current.y = 2; // Fixed character height
+    // Keep within the wide valley bounds (mountains are at ±140, so allow ±120 for safety)
+    targetPosition.current.x = Math.max(-120, Math.min(120, targetPosition.current.x));
+    targetPosition.current.y = Math.max(1, Math.min(10, targetPosition.current.y)); // Allow some vertical movement
     
     // Update camera
     camera.position.copy(targetPosition.current);
     camera.rotation.set(pitchAngle.current, yawAngle.current, 0, 'YXZ');
     
-    // Notify position changes less frequently but more responsive than before
+    // More responsive position updates
     const distanceMoved = targetPosition.current.distanceTo(lastNotifiedPosition.current);
     
-    // Notify every 30 frames (roughly every 0.5 seconds at 60fps) OR when moved significantly
-    if ((frameCount.current % 30 === 0 && distanceMoved > 0.1) || distanceMoved > 10) {
+    // Notify every 20 frames (more frequent) OR when moved significantly
+    if ((frameCount.current % 20 === 0 && distanceMoved > 0.05) || distanceMoved > 5) {
       lastNotifiedPosition.current.copy(targetPosition.current);
       onPositionChange(targetPosition.current.clone());
       console.log('Camera position updated:', targetPosition.current);
     }
     
-    if (isMoving && frameCount.current % 60 === 0) {
-      console.log('Player moving at position:', targetPosition.current);
+    if (isMoving && frameCount.current % 40 === 0) {
+      console.log('Player moving in wide valley at position:', targetPosition.current);
     }
   });
 

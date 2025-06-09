@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Group, Mesh, Vector3 } from 'three';
@@ -18,16 +17,15 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Check if position is within mountain boundaries (between left and right mountains)
-// Mountains now sit closer to the player path so clamp tree generation tighter
+// VERY STRICT boundary checking - mountains must be FAR from player path
 const isWithinMountainBoundaries = (x: number): boolean => {
-  // Keep trees within ±50 units to avoid overlap with mountains positioned at ±60
-  return Math.abs(x) < 50;
+  // Trees can only spawn between mountains, well away from path center
+  return Math.abs(x) > 100 && Math.abs(x) < 130; // Only in narrow bands between mountains
 };
 
-// Check if position is on player path
+// Ensure NO obstacles on the main player path
 const isOnPlayerPath = (x: number): boolean => {
-  return Math.abs(x) < 8; // Increased buffer around path center for safety
+  return Math.abs(x) < 20; // Much wider safety zone around path center
 };
 
 interface InfiniteEnvironmentSystemProps {
@@ -42,31 +40,30 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
   const playerPositionRef = useRef(new Vector3(0, 0, 0));
   const lastUpdateRef = useRef(0);
   
-  const CHUNK_SIZE = 25; // Smaller chunks for more continuous generation
-  const RENDER_DISTANCE = 150; // Increased render distance
-  const CLEANUP_DISTANCE = 200; // Increased cleanup distance
-  const UPDATE_INTERVAL = 100; // Update every 100ms instead of every frame
+  const CHUNK_SIZE = 25;
+  const RENDER_DISTANCE = 150;
+  const CLEANUP_DISTANCE = 200;
+  const UPDATE_INTERVAL = 100;
 
-  // Create a mountain at specified position with enhanced jagged variations
+  // Create a mountain at specified position - MUCH FURTHER from path
   const createMountain = (x: number, z: number, seed: number): Group | null => {
     if (!mountainModel) return null;
     
     const mountain = mountainModel.clone() as Group;
     
-    // Enhanced jagged variations using seed for more natural appearance
-    const offsetVariation = (seededRandom(seed) - 0.5) * 10; // Increased to ±5 units random offset
-    const scaleVariation = 0.05 + (seededRandom(seed + 1) * 0.1); // Increased variation: 0.05-0.15 scale
-    const heightVariation = (seededRandom(seed + 2) - 0.5) * 6; // Increased to ±3 unit height variation
-    const rotationVariation = seededRandom(seed + 3) * Math.PI * 0.8; // Increased to ±72° rotation
+    // Enhanced variations for natural appearance
+    const offsetVariation = (seededRandom(seed) - 0.5) * 15;
+    const scaleVariation = 0.05 + (seededRandom(seed + 1) * 0.1);
+    const heightVariation = (seededRandom(seed + 2) - 0.5) * 6;
+    const rotationVariation = seededRandom(seed + 3) * Math.PI * 0.8;
     
-    // Apply enhanced jagged positioning
+    // Apply positioning - ENSURE mountains stay FAR from center
     mountain.position.set(
       x + offsetVariation, 
       heightVariation, 
-      z + (seededRandom(seed + 4) - 0.5) * 5 // Increased Z-axis jitter for more irregular spacing
+      z + (seededRandom(seed + 4) - 0.5) * 5
     );
     
-    // Apply more varied scaling and rotation for jagged appearance
     mountain.scale.set(
       x < 0 ? -scaleVariation : scaleVariation, 
       scaleVariation, 
@@ -123,33 +120,33 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     const mountains: Group[] = [];
     const trees: Group[] = [];
     
-    // Generate mountains for this chunk - maximum separation
-    const mountainSpacing = 4; // Reduced spacing for even more continuous coverage
-    const mountainCount = Math.ceil(CHUNK_SIZE / mountainSpacing) + 2; // +2 for better overlap
+    // Generate mountains MUCH FURTHER from the path - create a wide valley
+    const mountainSpacing = 4;
+    const mountainCount = Math.ceil(CHUNK_SIZE / mountainSpacing) + 2;
     
     for (let i = 0; i < mountainCount; i++) {
       const z = chunkZ - (i * mountainSpacing);
       const mountainSeed = chunkId * 1000 + i * 73;
       
-      // Left mountains positioned closer to the path
-      const leftMountain = createMountain(-60, z, mountainSeed);
+      // Left mountains positioned at X=-140 (MUCH further)
+      const leftMountain = createMountain(-140, z, mountainSeed);
       if (leftMountain) {
         scene.add(leftMountain);
         mountains.push(leftMountain);
       }
       
-      // Right mountains positioned closer to the path
-      const rightMountain = createMountain(60, z, mountainSeed + 500);
+      // Right mountains positioned at X=+140 (MUCH further)
+      const rightMountain = createMountain(140, z, mountainSeed + 500);
       if (rightMountain) {
         scene.add(rightMountain);
         mountains.push(rightMountain);
       }
     }
     
-    // Generate trees for this chunk (constrained within mountain boundaries)
-    const treeCount = 8 + Math.floor(seededRandom(chunkId * 137) * 5); // 8-12 trees per chunk
-    const minDistance = 4; // Minimum distance between trees
-    const maxAttempts = 30;
+    // Generate trees ONLY in the bands between distant mountains
+    const treeCount = 6 + Math.floor(seededRandom(chunkId * 137) * 4); // Fewer trees
+    const minDistance = 5; // Increased minimum distance between trees
+    const maxAttempts = 40;
     const treePositions: Array<{x: number, z: number}> = [];
     
     for (let i = 0; i < treeCount; i++) {
@@ -160,20 +157,19 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       while (!validPosition && attempts < maxAttempts) {
         const treeSeed = chunkId * 1000 + i * 73;
         
-        // Position within chunk bounds and mountain boundaries - strict boundary checking
-        x = (seededRandom(treeSeed) - 0.5) * 180; // Spread to ±90 units but check boundaries
+        // Position trees ONLY in the mountain boundary areas (far from path)
+        x = (seededRandom(treeSeed) - 0.5) * 260; // Spread to ±130 units
         z = chunkZ + (seededRandom(treeSeed + 1) - 0.5) * CHUNK_SIZE * 0.8;
         
-        // Strict boundary checks - ensure trees don't spawn in mountains
+        // STRICT boundary checks - NO trees near the path
         if (!isWithinMountainBoundaries(x) || isOnPlayerPath(x)) {
           attempts++;
           continue;
         }
         
-        // Additional safety check - ensure trees are not too close to mountain positions
-        const leftMountainDistance = Math.abs(x - (-60));
-        const rightMountainDistance = Math.abs(x - 60);
-        if (leftMountainDistance < 20 || rightMountainDistance < 20) {
+        // Additional safety - ensure trees are in the outer bands only
+        const distanceFromCenter = Math.abs(x);
+        if (distanceFromCenter < 100) { // Must be at least 100 units from center
           attempts++;
           continue;
         }
@@ -185,7 +181,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
         });
         
         if (validPosition) {
-          // Determine tree type (favoring pine218)
+          // Determine tree type
           const typeRandom = seededRandom(treeSeed + 2);
           treeType = typeRandom < 0.6 ? 'pine218' : typeRandom < 0.8 ? 'stylized' : 'realistic';
           
@@ -209,7 +205,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       }
     }
     
-    console.log(`Generated chunk ${chunkId} with ${mountains.length} mountains at ±60 units and ${trees.length} trees`);
+    console.log(`Generated chunk ${chunkId} with ${mountains.length} mountains at ±140 units and ${trees.length} trees in outer bands`);
     
     return {
       id: chunkId,
@@ -233,8 +229,8 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     const chunksToKeep = [];
     
     // Determine which chunks should exist - generate more for continuity
-    const startChunk = currentChunkId - 3; // Three behind for better continuity
-    const endChunk = currentChunkId + Math.ceil(RENDER_DISTANCE / CHUNK_SIZE) + 2; // Extra ahead
+    const startChunk = currentChunkId - 3;
+    const endChunk = currentChunkId + Math.ceil(RENDER_DISTANCE / CHUNK_SIZE) + 2;
     
     for (let i = startChunk; i <= endChunk; i++) {
       if (!chunksRef.current.find(chunk => chunk.id === i)) {
@@ -266,7 +262,6 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
   useFrame((state) => {
     const now = Date.now();
     
-    // Throttle updates to prevent infinite loops
     if (now - lastUpdateRef.current < UPDATE_INTERVAL) {
       return;
     }
@@ -274,8 +269,6 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     lastUpdateRef.current = now;
     
     playerPositionRef.current.copy(playerPosition);
-
-    // Update chunks with throttling
     updateChunks(playerPositionRef.current.z);
   });
 
@@ -283,14 +276,12 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
   useEffect(() => {
     if (!mountainModel) return;
     
-    // Preload tree models
     TreeAssetManager.preloadAllModels().then(() => {
-      console.log('Tree models preloaded, starting continuous mountain generation');
+      console.log('Tree models preloaded, starting wide valley generation with mountains at ±140');
       updateChunks(0);
     });
     
     return () => {
-      // Cleanup all chunks on unmount
       chunksRef.current.forEach(chunk => cleanupChunk(chunk));
       chunksRef.current = [];
     };
