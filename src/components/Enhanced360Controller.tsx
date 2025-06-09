@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
@@ -33,25 +32,23 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   const velocity = useRef(new Vector3());
   const lastNotifiedPosition = useRef(new Vector3());
   const isMousePressed = useRef(false);
-  const lastNotificationTime = useRef(0);
+  const frameCount = useRef(0);
 
-  // Initialize camera at guaranteed safe valley center position - ignore passed position
+  // Initialize camera at guaranteed safe valley center position
   useEffect(() => {
-    // Force safe valley center position regardless of props
-    const safePosition = new Vector3(0, 2, 20); // Start even further back for absolute safety
+    const safePosition = new Vector3(0, 2, 20);
     targetPosition.current.copy(safePosition);
     camera.position.copy(safePosition);
-    camera.lookAt(0, 1, 0); // Look at ground level ahead
+    camera.lookAt(0, 1, 0);
     lastNotifiedPosition.current.copy(safePosition);
-    console.log('Camera force-initialized at absolute safe valley center:', safePosition);
+    console.log('Camera initialized at safe valley center:', safePosition);
   }, [camera]);
 
-  // Keyboard event handlers with improved key detection
+  // Keyboard event handlers
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key.toLowerCase();
       
-      // Prevent default for movement keys
       if (['w', 's', 'a', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
         event.preventDefault();
       }
@@ -59,31 +56,23 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       switch (key) {
         case 'w':
         case 'arrowup':
-          if (!keys.current.forward) {
-            keys.current.forward = true;
-            console.log('Forward movement activated');
-          }
+          keys.current.forward = true;
+          console.log('Forward movement activated');
           break;
         case 's':
         case 'arrowdown':
-          if (!keys.current.backward) {
-            keys.current.backward = true;
-            console.log('Backward movement activated');
-          }
+          keys.current.backward = true;
+          console.log('Backward movement activated');
           break;
         case 'a':
         case 'arrowleft':
-          if (!keys.current.left) {
-            keys.current.left = true;
-            console.log('Left movement activated');
-          }
+          keys.current.left = true;
+          console.log('Left movement activated');
           break;
         case 'd':
         case 'arrowright':
-          if (!keys.current.right) {
-            keys.current.right = true;
-            console.log('Right movement activated');
-          }
+          keys.current.right = true;
+          console.log('Right movement activated');
           break;
       }
     };
@@ -111,7 +100,6 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       }
     };
 
-    // Mouse controls with press and hold
     const handleMouseDown = (event: MouseEvent) => {
       if (event.button === 0) {
         isMousePressed.current = true;
@@ -135,7 +123,6 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       }
     };
 
-    // Add event listeners to window for better key capture
     window.addEventListener('keydown', handleKeyDown, { capture: true });
     window.addEventListener('keyup', handleKeyUp, { capture: true });
     document.addEventListener('mousedown', handleMouseDown);
@@ -154,6 +141,8 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   }, []);
 
   useFrame((state, delta) => {
+    frameCount.current++;
+    
     const moveSpeed = 15;
     const acceleration = 0.2;
     const damping = 0.8;
@@ -166,7 +155,6 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     const moveVector = new Vector3();
     let isMoving = false;
     
-    // Check each movement direction
     if (keys.current.forward) {
       moveVector.add(forward);
       isMoving = true;
@@ -192,27 +180,29 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       velocity.current.multiplyScalar(damping);
     }
     
-    // Update position with very wide valley bounds
+    // Update position with wide valley bounds
     targetPosition.current.add(velocity.current.clone().multiplyScalar(delta));
     
-    // Much wider movement bounds - mountains are now at ±120, so allow ±80 for safety
-    targetPosition.current.x = Math.max(-80, Math.min(80, targetPosition.current.x));
+    // Keep within valley bounds (mountains are at ±120, so allow ±100 for extra safety)
+    targetPosition.current.x = Math.max(-100, Math.min(100, targetPosition.current.x));
     targetPosition.current.y = 2; // Fixed character height
     
     // Update camera
     camera.position.copy(targetPosition.current);
     camera.rotation.set(pitchAngle.current, yawAngle.current, 0, 'YXZ');
     
-    // Only notify on significant position changes and throttle notifications heavily to prevent loops
-    const now = Date.now();
+    // Notify position changes less frequently but more responsive than before
     const distanceMoved = targetPosition.current.distanceTo(lastNotifiedPosition.current);
-    const timeSinceLastNotification = now - lastNotificationTime.current;
     
-    // Heavy throttling to prevent infinite updates - only update every 500ms and when moved significantly
-    if (distanceMoved > 5.0 && timeSinceLastNotification > 500) {
+    // Notify every 30 frames (roughly every 0.5 seconds at 60fps) OR when moved significantly
+    if ((frameCount.current % 30 === 0 && distanceMoved > 0.1) || distanceMoved > 10) {
       lastNotifiedPosition.current.copy(targetPosition.current);
-      lastNotificationTime.current = now;
       onPositionChange(targetPosition.current.clone());
+      console.log('Camera position updated:', targetPosition.current);
+    }
+    
+    if (isMoving && frameCount.current % 60 === 0) {
+      console.log('Player moving at position:', targetPosition.current);
     }
   });
 
