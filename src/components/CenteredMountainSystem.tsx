@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -32,63 +32,76 @@ const FallbackCenteredMountain: React.FC<{
   );
 };
 
-const CenteredMountain: React.FC<{
+// Separate component that properly uses useGLTF hook
+const MountainModel: React.FC<{
   position: [number, number, number];
   scale: [number, number, number];
 }> = ({ position, scale }) => {
-  console.log('CenteredMountain: Attempting to render mountain at position:', position);
+  console.log('MountainModel: Loading mountain model from:', MOUNTAIN_URL);
   
-  try {
-    const { scene } = useGLTF(MOUNTAIN_URL);
-    
-    if (!scene) {
-      console.warn('CenteredMountain: GLB scene is null, using fallback');
-      return <FallbackCenteredMountain position={position} scale={scale} />;
-    }
-    
-    console.log('CenteredMountain: Successfully loaded GLB scene, creating mountain');
-    
-    const clonedScene = useMemo(() => {
-      const clone = scene.clone();
-      
-      clone.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-          
-          // Optimize for mobile performance
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach(mat => {
-                mat.side = THREE.FrontSide;
-              });
-            } else {
-              child.material.side = THREE.FrontSide;
-            }
-          }
-          
-          // Standard geometry optimization
-          if (child.geometry) {
-            child.geometry.computeBoundingBox();
-            child.geometry.computeBoundingSphere();
-          }
-        }
-      });
-      
-      return clone;
-    }, [scene]);
-    
-    return (
-      <primitive 
-        object={clonedScene} 
-        position={position} 
-        scale={scale}
-      />
-    );
-  } catch (error) {
-    console.error('CenteredMountain: Failed to load mountain model, using fallback. Error:', error);
+  const { scene, error } = useGLTF(MOUNTAIN_URL);
+  
+  if (error) {
+    console.error('MountainModel: Failed to load GLB model:', error);
     return <FallbackCenteredMountain position={position} scale={scale} />;
   }
+  
+  if (!scene) {
+    console.warn('MountainModel: GLB scene is null, using fallback');
+    return <FallbackCenteredMountain position={position} scale={scale} />;
+  }
+  
+  console.log('MountainModel: Successfully loaded GLB scene');
+  
+  const clonedScene = useMemo(() => {
+    const clone = scene.clone();
+    
+    clone.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+        
+        // Optimize for mobile performance
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(mat => {
+              mat.side = THREE.FrontSide;
+            });
+          } else {
+            child.material.side = THREE.FrontSide;
+          }
+        }
+        
+        // Standard geometry optimization
+        if (child.geometry) {
+          child.geometry.computeBoundingBox();
+          child.geometry.computeBoundingSphere();
+        }
+      }
+    });
+    
+    return clone;
+  }, [scene]);
+  
+  return (
+    <primitive 
+      object={clonedScene} 
+      position={position} 
+      scale={scale}
+    />
+  );
+};
+
+// Error boundary wrapper for mountain loading
+const MountainWithFallback: React.FC<{
+  position: [number, number, number];
+  scale: [number, number, number];
+}> = ({ position, scale }) => {
+  return (
+    <Suspense fallback={<FallbackCenteredMountain position={position} scale={scale} />}>
+      <MountainModel position={position} scale={scale} />
+    </Suspense>
+  );
 };
 
 export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
@@ -121,7 +134,7 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
         
         // Single centered mountain at X = 0, embedded slightly below terrain
         instances.push(
-          <CenteredMountain
+          <MountainWithFallback
             key={`centered-${chunk.id}-${zOffset}`}
             position={[0, -0.5, finalZ]} // Y = -0.5 for natural embedding
             scale={[1.5, 1.5, 1.5]} // Adjusted scale for vertical phone layout
