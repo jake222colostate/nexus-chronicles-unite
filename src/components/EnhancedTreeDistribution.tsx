@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -56,19 +57,19 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 10; // Increased clearance around player start
 };
 
-// Updated tree spawning validation: ensure trees stay away from player path
+// UPDATED: Clamp tree spawning to avoid mountain geometry
 const isValidTreePosition = (x: number, z: number): boolean => {
   // Primary constraint: trees must not spawn in player path corridor
   const notInPlayerPath = !isInPlayerPath(x, z);
   
-  // Trees should spawn on the sides of the path, in valley area
-  const inValleyRange = x >= -16 && x <= 16; // Wider valley range
+  // NEW: Clamp tree spawn X-range to avoid mountain geometry
+  const inValidXRange = Math.abs(x) >= 12; // Only spawn trees outside ±12 range
   
   // Additional constraints
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
   
-  return notInPlayerPath && inValleyRange && notOnSteepSlope && notTooCloseToPlayer;
+  return notInPlayerPath && inValidXRange && notOnSteepSlope && notTooCloseToPlayer;
 };
 
 // Get tree type with updated distribution favoring pine218
@@ -198,13 +199,13 @@ const InstancedTreeGroup: React.FC<{
     return distance <= 120;
   });
 
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees clamped to valley range (-12 to 12)`);
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees clamped outside ±12 range`);
 
   return (
-    <group name="ClampedValleyTreeGroup">
+    <group name="ClampedTreeGroup">
       {visiblePositions.slice(0, 50).map((pos, index) => (
         <TreeInstance
-          key={`valley-tree-${index}-${pos.treeType}`}
+          key={`clamped-tree-${index}-${pos.treeType}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -221,7 +222,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with improved path avoidance
+  // Generate tree positions with improved path avoidance and clamping
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -231,7 +232,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees with improved path avoidance');
+    console.log('EnhancedTreeDistribution: Generating trees with X-range clamping to avoid mountain geometry');
     const trees = [];
     const minDistance = 6; // Reduced minimum spacing for better distribution
     const maxAttempts = 80; // Increased attempts for better placement
@@ -251,15 +252,15 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Generate position on either side of the player path
+          // Generate position outside the ±12 range to avoid mountain geometry
           const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          const sideOffset = 8 + seededRandom(treeSeed) * 8; // 8-16 units from center
+          const sideOffset = 12 + seededRandom(treeSeed) * 8; // 12-20 units from center (outside mountain range)
           x = side * sideOffset;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.9;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Validate position with improved path avoidance
+          // Validate position with improved clamping
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
@@ -299,7 +300,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with clear player path`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees clamped outside ±12 range`);
     
     return {
       treePositions: trees,

@@ -25,7 +25,7 @@ export const InfiniteGroundSystem: React.FC<InfiniteGroundSystemProps> = ({
     chunks.forEach(chunk => {
       instances.push({
         key: `ground_${chunk.id}`,
-        position: [chunk.worldX, -1.5, chunk.worldZ] as [number, number, number],
+        position: [chunk.worldX, -2, chunk.worldZ] as [number, number, number],
         size: chunkSize
       });
     });

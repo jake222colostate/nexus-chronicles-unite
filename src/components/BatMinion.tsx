@@ -50,7 +50,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       // Fix materials and ensure proper setup
       batClone.traverse((child) => {
         if (child instanceof Mesh) {
-          console.log(`BatMinion ${enemyId}: Found mesh:`, child.name, 'Visible:', child.visible);
+          console.log(`BatMinion ${enemyId}: Configuring mesh:`, child.name, 'Material:', !!child.material);
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
@@ -62,13 +62,13 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       });
 
       // Apply proper positioning for minions - adjust for model pivot point
-      batClone.position.set(0, 1.0, 0); // Slightly lower offset for minions
-      batClone.scale.setScalar(0.8); // Smaller for minions
+      batClone.position.set(0, 0, 0); // Centered at entity position
+      batClone.scale.setScalar(1.2); // Slightly larger for better visibility
       batClone.rotation.set(0, Math.PI, 0); // Face forward
       
       // Parent the bat mesh to the enemy entity
       batMeshRef.current.add(batClone);
-      console.log(`BatMinion ${enemyId}: Bat model properly parented to enemy entity`);
+      console.log(`BatMinion ${enemyId}: Bat model properly parented and scaled for visibility`);
     } else {
       console.log(`BatMinion ${enemyId}: Bat model not yet loaded`);
     }
@@ -204,7 +204,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
         </group>
       )}
       
-      {/* Debug collision bounds - visible during development */}
+      {/* Debug collision bounds - invisible during production */}
       <mesh visible={false}>
         <boxGeometry args={[1.5, 1.5, 1.5]} />
         <meshBasicMaterial wireframe color="#660000" />

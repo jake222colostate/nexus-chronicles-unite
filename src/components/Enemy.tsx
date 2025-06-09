@@ -57,12 +57,12 @@ export const Enemy: React.FC<EnemyProps> = ({
 
       // Apply proper positioning and scaling for vampire bat
       batClone.position.set(0, 0, 0); // Center at entity position
-      batClone.scale.setScalar(1.0); // Good scale for main enemies
+      batClone.scale.setScalar(1.5); // Larger scale for main enemies
       batClone.rotation.set(0, Math.PI, 0); // Face forward initially
       
       // Parent the bat mesh to the enemy entity
       batMeshRef.current.add(batClone);
-      console.log(`Enemy ${enemyId}: Bat model successfully added to enemy entity`);
+      console.log(`Enemy ${enemyId}: Bat model successfully added to enemy entity with proper scale`);
     }
   }, [batScene, enemyId]);
 
