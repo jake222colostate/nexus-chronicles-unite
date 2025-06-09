@@ -1,7 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { ChunkData } from './ChunkSystem';
-import * as THREE from 'three';
+import { ChunkData } from './InfiniteChunkLoader';
 
 interface InfiniteGroundSystemProps {
   chunks: ChunkData[];
@@ -23,15 +22,14 @@ export const InfiniteGroundSystem: React.FC<InfiniteGroundSystemProps> = ({
     const instances = [];
     
     chunks.forEach(chunk => {
-      // Create seamless ground tiles that match mountain positioning
       instances.push({
         key: `ground_${chunk.id}`,
-        position: [0, -2, chunk.worldZ] as [number, number, number], // Center at X=0 to match mountains
+        position: [0, -2, chunk.worldZ] as [number, number, number],
         size: chunkSize
       });
     });
     
-    console.log(`InfiniteGroundSystem: Generated ${instances.length} ground chunks for infinite terrain`);
+    console.log(`InfiniteGroundSystem: Generated ${instances.length} ground chunks`);
     return instances;
   }, [chunks, chunkSize]);
 
@@ -44,7 +42,7 @@ export const InfiniteGroundSystem: React.FC<InfiniteGroundSystemProps> = ({
           rotation={[-Math.PI / 2, 0, 0]} 
           receiveShadow
         >
-          <planeGeometry args={[ground.size, ground.size]} />
+          <planeGeometry args={[300, ground.size]} />
           <meshStandardMaterial 
             color="#2d4a2b" 
             roughness={0.8}
