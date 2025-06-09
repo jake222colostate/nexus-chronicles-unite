@@ -58,14 +58,8 @@ const Index = () => {
         onAutoManaUpgrade={handleAutoManaUpgrade}
       />
 
-      {/* Game Engine */}
-      <GameEngine
-        gameState={gameState}
-        setGameState={setGameState}
-        buffSystem={buffSystem}
-        currentRealm={currentRealm}
-        onRealmChange={setCurrentRealm}
-      />
+      {/* Game Engine - manages its own state internally */}
+      <GameEngine />
     </div>
   );
 };
