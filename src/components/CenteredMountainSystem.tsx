@@ -21,18 +21,18 @@ const FallbackCenteredMountain: React.FC<{
 }> = ({ position, scale, rotation }) => {
   return (
     <group position={position} scale={scale} rotation={rotation}>
-      {/* Create a valley-like structure with two ridges */}
-      <mesh position={[-8, 0, 0]} castShadow receiveShadow>
-        <coneGeometry args={[6, 12, 8]} />
+      {/* Create a valley-like structure with two ridges - positioned to create central path */}
+      <mesh position={[-12, 2, 0]} castShadow receiveShadow>
+        <coneGeometry args={[8, 16, 8]} />
         <meshLambertMaterial color="#6B5B73" />
       </mesh>
-      <mesh position={[8, 0, 0]} castShadow receiveShadow>
-        <coneGeometry args={[6, 12, 8]} />
+      <mesh position={[12, 2, 0]} castShadow receiveShadow>
+        <coneGeometry args={[8, 16, 8]} />
         <meshLambertMaterial color="#6B5B73" />
       </mesh>
-      {/* Valley floor */}
-      <mesh position={[0, -2, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <planeGeometry args={[16, 20]} />
+      {/* Valley floor - wider for natural path */}
+      <mesh position={[0, -1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+        <planeGeometry args={[20, 25]} />
         <meshLambertMaterial color="#5A4A63" />
       </mesh>
     </group>
@@ -48,8 +48,11 @@ const CenteredMountain: React.FC<{
     const { scene } = useGLTF(MOUNTAIN_URL);
     
     if (!scene) {
+      console.warn('Mountain model not loaded, using fallback');
       return <FallbackCenteredMountain position={position} scale={scale} rotation={rotation} />;
     }
+
+    console.log('Mountain model loaded successfully at position:', position);
     
     const clonedScene = useMemo(() => {
       const clone = scene.clone();
@@ -70,7 +73,6 @@ const CenteredMountain: React.FC<{
             }
           }
           
-          // Standard geometry optimization
           if (child.geometry) {
             child.geometry.computeBoundingBox();
             child.geometry.computeBoundingSphere();
@@ -90,7 +92,7 @@ const CenteredMountain: React.FC<{
       />
     );
   } catch (error) {
-    console.warn('Failed to load centered mountain model, using fallback');
+    console.warn('Failed to load mountain model, using fallback:', error);
     return <FallbackCenteredMountain position={position} scale={scale} rotation={rotation} />;
   }
 };
@@ -109,18 +111,18 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     const instances: React.ReactNode[] = [];
     
     chunks.forEach((chunk, chunkIndex) => {
-      // Create mountain instances every 40 units along Z-axis for proper spacing
-      for (let zOffset = -20; zOffset < chunkSize + 20; zOffset += 40) {
+      // Create single mountain instance every 60 units for proper spacing
+      // This ensures the valley continues naturally through the terrain
+      for (let zOffset = -30; zOffset < chunkSize + 30; zOffset += 60) {
         const finalZ = chunk.worldZ - zOffset;
         
-        // Single mountain positioned to create a central valley for the path
-        // Rotate if needed to align valley properly with path direction
+        // Single mountain positioned with valley center at X=0 for player path
         instances.push(
           <CenteredMountain
-            key={`centered-${chunk.id}-${zOffset}`}
-            position={[0, -1, finalZ]} // Slightly lowered for natural valley floor
-            scale={[2, 2, 2]} // Larger scale for proper valley width
-            rotation={[0, 0, 0]} // No rotation - use model as-is initially
+            key={`mountain-${chunk.id}-${zOffset}`}
+            position={[0, -2, finalZ]} // Lowered to create natural valley floor
+            scale={[2.5, 2, 2.5]} // Scaled to create proper valley width
+            rotation={[0, 0, 0]} // No rotation - use valley as designed
           />
         );
       }
@@ -129,10 +131,10 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return instances;
   }, [chunks, chunkSize]);
 
-  console.log(`CenteredMountainSystem: Generated ${mountainInstances.length} centered mountains with central valley`);
+  console.log(`CenteredMountainSystem: Generated ${mountainInstances.length} mountain instances with centered valley`);
 
   return <>{mountainInstances}</>;
 };
 
-// Preload the local mountain model
+// Preload the mountain model
 useGLTF.preload(MOUNTAIN_URL);
