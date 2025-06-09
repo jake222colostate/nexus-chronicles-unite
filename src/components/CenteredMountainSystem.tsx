@@ -94,34 +94,41 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return null;
   }
 
-  console.log('CenteredMountainSystem: Rendering infinite mountain chunks with tighter valley');
+  console.log('CenteredMountainSystem: Rendering valley mountain system with clear center path');
   
-  // Generate seamless mountain instances that tile forward infinitely
+  // Generate mountain walls on both sides with clear center path
   const mountainInstances = useMemo(() => {
     const instances = [];
     
     chunks.forEach(chunk => {
-      // Create multiple mountain instances per chunk to ensure seamless tiling
-      // Place mountains every 25 units along Z-axis for seamless coverage
+      // Create mountain walls on left and right sides, leaving center clear
       for (let zOffset = 0; zOffset < chunkSize; zOffset += 25) {
         const finalZ = chunk.worldZ + zOffset;
         
-        // Single centered mountain at X=0 with tighter valley scale
+        // Left mountain wall at X=-40
         instances.push({
-          key: `mountain_${chunk.id}_${zOffset}`,
-          position: [0, -2, finalZ] as [number, number, number],
-          scale: [1.4, 1.4, 1.4] as [number, number, number], // Tighter valley with 1.4x scale
+          key: `mountain_left_${chunk.id}_${zOffset}`,
+          position: [-40, -2, finalZ] as [number, number, number],
+          scale: [0.8, 0.8, 0.8] as [number, number, number],
           rotation: [0, 0, 0] as [number, number, number]
+        });
+        
+        // Right mountain wall at X=+40
+        instances.push({
+          key: `mountain_right_${chunk.id}_${zOffset}`,
+          position: [40, -2, finalZ] as [number, number, number],
+          scale: [0.8, 0.8, 0.8] as [number, number, number],
+          rotation: [0, Math.PI, 0] as [number, number, number] // Flip for variety
         });
       }
     });
     
-    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for infinite terrain`);
+    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for valley system`);
     return instances;
   }, [chunks, chunkSize]);
   
   return (
-    <group name="InfiniteMountainSystem">
+    <group name="ValleyMountainSystem">
       {mountainInstances.map((instance) => (
         <SingleMountainModel
           key={instance.key}
