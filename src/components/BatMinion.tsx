@@ -35,7 +35,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model
+  // Load vampire bat model from local assets
   const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
@@ -57,18 +57,28 @@ export const BatMinion: React.FC<BatMinionProps> = ({
             child.material.visible = true;
             // Ensure material updates correctly
             child.material.needsUpdate = true;
+            // Ensure proper material transparency
+            if (Array.isArray(child.material)) {
+              child.material.forEach(mat => {
+                mat.transparent = false;
+                mat.opacity = 1.0;
+              });
+            } else {
+              child.material.transparent = false;
+              child.material.opacity = 1.0;
+            }
           }
         }
       });
 
       // Apply proper positioning for minions - adjust for model pivot point
       batClone.position.set(0, 0, 0); // Centered at entity position
-      batClone.scale.setScalar(1.2); // Slightly larger for better visibility
+      batClone.scale.setScalar(1.5); // Increased scale for better visibility
       batClone.rotation.set(0, Math.PI, 0); // Face forward
       
       // Parent the bat mesh to the enemy entity
       batMeshRef.current.add(batClone);
-      console.log(`BatMinion ${enemyId}: Bat model properly parented and scaled for visibility`);
+      console.log(`BatMinion ${enemyId}: Bat model properly parented and scaled to 1.5x for visibility`);
     } else {
       console.log(`BatMinion ${enemyId}: Bat model not yet loaded`);
     }
@@ -190,15 +200,15 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       {/* Bat mesh container - properly parented to enemy entity */}
       <group ref={batMeshRef} />
       
-      {/* Fallback if model doesn't load - also properly centered */}
+      {/* Fallback if model doesn't load - also properly centered and more visible */}
       {!batScene && (
         <group position={[0, 0, 0]}>
           <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[0.4, 8, 8]} />
+            <sphereGeometry args={[0.6, 8, 8]} />
             <meshStandardMaterial color="#990000" />
           </mesh>
-          <mesh position={[0, 0.3, 0]}>
-            <coneGeometry args={[0.2, 0.6, 3]} />
+          <mesh position={[0, 0.5, 0]}>
+            <coneGeometry args={[0.3, 0.8, 3]} />
             <meshStandardMaterial color="#660000" />
           </mesh>
         </group>

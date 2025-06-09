@@ -23,9 +23,10 @@ export const InfiniteGroundSystem: React.FC<InfiniteGroundSystemProps> = ({
     const instances = [];
     
     chunks.forEach(chunk => {
+      // Create seamless ground tiles that match mountain positioning
       instances.push({
         key: `ground_${chunk.id}`,
-        position: [chunk.worldX, -2, chunk.worldZ] as [number, number, number],
+        position: [0, -2, chunk.worldZ] as [number, number, number], // Center at X=0 to match mountains
         size: chunkSize
       });
     });

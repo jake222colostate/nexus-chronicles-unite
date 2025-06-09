@@ -31,7 +31,7 @@ export const Enemy: React.FC<EnemyProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  // Load vampire bat model
+  // Load vampire bat model from local assets
   const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
@@ -51,18 +51,28 @@ export const Enemy: React.FC<EnemyProps> = ({
           if (child.material) {
             child.material.visible = true;
             child.material.needsUpdate = true;
+            // Ensure proper material transparency
+            if (Array.isArray(child.material)) {
+              child.material.forEach(mat => {
+                mat.transparent = false;
+                mat.opacity = 1.0;
+              });
+            } else {
+              child.material.transparent = false;
+              child.material.opacity = 1.0;
+            }
           }
         }
       });
 
       // Apply proper positioning and scaling for vampire bat
       batClone.position.set(0, 0, 0); // Center at entity position
-      batClone.scale.setScalar(1.5); // Larger scale for main enemies
+      batClone.scale.setScalar(2.0); // Larger scale for better visibility
       batClone.rotation.set(0, Math.PI, 0); // Face forward initially
       
       // Parent the bat mesh to the enemy entity
       batMeshRef.current.add(batClone);
-      console.log(`Enemy ${enemyId}: Bat model successfully added to enemy entity with proper scale`);
+      console.log(`Enemy ${enemyId}: Bat model successfully added to enemy entity with 2.0x scale for visibility`);
     }
   }, [batScene, enemyId]);
 
@@ -165,15 +175,15 @@ export const Enemy: React.FC<EnemyProps> = ({
       {/* Bat mesh container */}
       <group ref={batMeshRef} />
       
-      {/* Fallback geometry while bat model loads */}
+      {/* Fallback geometry while bat model loads - make it more visible */}
       {!batScene && (
         <group position={[0, 0, 0]}>
           <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[0.8, 12, 12]} />
+            <sphereGeometry args={[1.0, 12, 12]} />
             <meshStandardMaterial color="#8B0000" />
           </mesh>
-          <mesh position={[0, 0.5, 0]}>
-            <coneGeometry args={[0.3, 0.8, 6]} />
+          <mesh position={[0, 0.8, 0]}>
+            <coneGeometry args={[0.4, 1.0, 6]} />
             <meshStandardMaterial color="#4B0000" />
           </mesh>
         </group>

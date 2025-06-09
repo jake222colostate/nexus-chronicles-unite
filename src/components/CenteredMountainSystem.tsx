@@ -96,23 +96,29 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
 
   console.log('CenteredMountainSystem: Rendering infinite mountain chunks with tighter valley');
   
-  // Generate one mountain per chunk to create infinite terrain
+  // Generate seamless mountain instances that tile forward infinitely
   const mountainInstances = useMemo(() => {
     const instances = [];
     
     chunks.forEach(chunk => {
-      // Position mountain at chunk center with tighter valley scale
-      instances.push({
-        key: `mountain_${chunk.id}`,
-        position: [0, -2, chunk.worldZ] as [number, number, number],
-        scale: [1.4, 1.4, 1.4] as [number, number, number], // Tighter valley with 1.4x scale
-        rotation: [0, 0, 0] as [number, number, number]
-      });
+      // Create multiple mountain instances per chunk to ensure seamless tiling
+      // Place mountains every 25 units along Z-axis for seamless coverage
+      for (let zOffset = 0; zOffset < chunkSize; zOffset += 25) {
+        const finalZ = chunk.worldZ + zOffset;
+        
+        // Single centered mountain at X=0 with tighter valley scale
+        instances.push({
+          key: `mountain_${chunk.id}_${zOffset}`,
+          position: [0, -2, finalZ] as [number, number, number],
+          scale: [1.4, 1.4, 1.4] as [number, number, number], // Tighter valley with 1.4x scale
+          rotation: [0, 0, 0] as [number, number, number]
+        });
+      }
     });
     
     console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for infinite terrain`);
     return instances;
-  }, [chunks]);
+  }, [chunks, chunkSize]);
   
   return (
     <group name="InfiniteMountainSystem">
