@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -123,16 +124,17 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
 
-          {/* Only add EnvironmentSystem for fantasy realm */}
+          {/* DISABLE mountains in EnvironmentSystem - only render skybox and terrain */}
           {realm === 'fantasy' && (
             <EnvironmentSystem
               upgradeCount={gameState.purchasedUpgrades?.length || 0}
               excludeTrees={true}
+              excludeMountains={true}
               realm={realm}
             />
           )}
 
-          {/* Optimized chunk system with centered mountain collision bounds */}
+          {/* Optimized chunk system with ONLY centered mountain */}
           <ChunkSystem
             playerPosition={playerPosition}
             chunkSize={50}
@@ -140,7 +142,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           >
             {(chunks) => (
               <>
-                {/* Centered Mountain System - single mountain at X=0 */}
+                {/* ONLY Centered Mountain System - single mountain at X=0 */}
                 <CenteredMountainSystem
                   chunks={chunks}
                   chunkSize={50}
