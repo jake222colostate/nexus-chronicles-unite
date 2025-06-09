@@ -218,6 +218,8 @@ export const useUpgradeManagers = ({
         enemiesKilled: gameState.enemiesKilled,
         fantasyJourneyDistance: gameState.fantasyJourneyDistance,
         scifiJourneyDistance: gameState.scifiJourneyDistance,
+        autoManaLevel: gameState.autoManaLevel,
+        autoManaRate: gameState.autoManaRate,
       });
     }
   }, [gameState, setGameState]);

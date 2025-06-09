@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { GameEngine } from '../components/GameEngine';
+import GameEngine from '../components/GameEngine';
 import { useGameStateManager } from '../components/GameStateManager';
 import { useGameLoopManager } from '../components/GameLoopManager';
 import { EnhancedResourceSidebar } from '../components/EnhancedResourceSidebar';
