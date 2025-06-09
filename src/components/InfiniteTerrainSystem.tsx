@@ -71,7 +71,7 @@ const MountainChunk: React.FC<{ worldZ: number; chunkIndex: number }> = ({ world
     <primitive 
       object={mountainInstance}
       position={[0, -2, worldZ]}
-      scale={[1.4, 1.4, 1.4]} // Tighter valley appearance
+      scale={[0.8, 0.8, 0.8]} // Reduced from 1.4 to 0.8 for wider valley
       rotation={[0, 0, 0]}
     />
   );
@@ -81,7 +81,7 @@ export const InfiniteTerrainSystem: React.FC<InfiniteTerrainSystemProps> = ({
   chunks,
   chunkSize
 }) => {
-  console.log(`InfiniteTerrainSystem: Rendering ${chunks.length} terrain chunks`);
+  console.log(`InfiniteTerrainSystem: Rendering ${chunks.length} terrain chunks with 0.8x mountain scale`);
 
   return (
     <group name="InfiniteTerrainSystem">
