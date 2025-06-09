@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useState, useCallback, useMemo } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
@@ -7,7 +8,6 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { Enemy } from './Enemy';
-import { PathsideMountains } from './PathsideMountains';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface Fantasy3DSceneProps {
@@ -103,8 +103,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         shadow-mapSize={[1024, 1024]}
       />
 
-      {/* Pathside mountains with smaller scale and closer positioning */}
-      <PathsideMountains />
+      {/* REMOVED PathsideMountains - this was creating the mirrored mountain walls */}
 
       {/* Optimized chunk system with performance limits */}
       <ChunkSystem
