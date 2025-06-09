@@ -40,24 +40,31 @@ export const VampireBat: React.FC<VampireBatProps> = ({
 
     const batClone = batScene.clone() as Group;
     
+    console.log(`VampireBat ${enemyId}: Processing bat model with ${batClone.children.length} children`);
+    
     // Process all meshes in the model
     batClone.traverse((child) => {
       if (child instanceof Mesh || child instanceof SkinnedMesh) {
+        console.log(`VampireBat ${enemyId}: Processing mesh: ${child.name || 'unnamed'}`);
+        
         // Ensure visibility
         child.visible = true;
         child.castShadow = true;
         child.receiveShadow = true;
+        child.frustumCulled = false; // Prevent culling issues
         
         // Fix materials
         if (child.material) {
           if (Array.isArray(child.material)) {
-            child.material.forEach(mat => {
+            child.material.forEach((mat, index) => {
+              console.log(`VampireBat ${enemyId}: Fixing material ${index}`);
               mat.visible = true;
               mat.transparent = false;
               mat.opacity = 1.0;
               mat.needsUpdate = true;
             });
           } else {
+            console.log(`VampireBat ${enemyId}: Fixing single material`);
             child.material.visible = true;
             child.material.transparent = false;
             child.material.opacity = 1.0;
@@ -73,13 +80,15 @@ export const VampireBat: React.FC<VampireBatProps> = ({
       }
     });
     
-    console.log(`VampireBat ${enemyId}: Processed bat model with ${batClone.children.length} children`);
+    console.log(`VampireBat ${enemyId}: Processed bat model successfully`);
     return batClone;
   }, [batScene, enemyId]);
 
   // Setup bat model in the scene
   useEffect(() => {
     if (processedBatModel && batModelRef.current) {
+      console.log(`VampireBat ${enemyId}: Adding processed model to scene`);
+      
       // Clear existing children
       batModelRef.current.clear();
       
@@ -88,10 +97,14 @@ export const VampireBat: React.FC<VampireBatProps> = ({
       
       // Apply proper scaling and positioning
       processedBatModel.position.set(0, 0, 0);
-      processedBatModel.scale.setScalar(3.0); // Larger scale for visibility
+      processedBatModel.scale.setScalar(4.0); // Larger scale for better visibility
       processedBatModel.rotation.set(0, Math.PI, 0); // Face forward
       
-      console.log(`VampireBat ${enemyId}: Bat model successfully added and scaled to 3.0x`);
+      // Force visibility
+      processedBatModel.visible = true;
+      processedBatModel.frustumCulled = false;
+      
+      console.log(`VampireBat ${enemyId}: Bat model successfully added and scaled to 4.0x`);
     }
   }, [processedBatModel, enemyId]);
 
@@ -150,12 +163,12 @@ export const VampireBat: React.FC<VampireBatProps> = ({
     // Update bat position
     groupRef.current.position.copy(currentPosition.current);
 
-    // Flying animation
+    // Enhanced flying animation
     if (batModelRef.current && processedBatModel) {
       const time = Date.now() * 0.003;
       
       // Hovering motion
-      const bobOffset = Math.sin(time + position[0]) * 0.4;
+      const bobOffset = Math.sin(time + position[0]) * 0.5;
       batModelRef.current.position.y = bobOffset;
       
       // Face movement direction
@@ -163,8 +176,12 @@ export const VampireBat: React.FC<VampireBatProps> = ({
       batModelRef.current.rotation.y = angle;
       
       // Wing flapping simulation
-      batModelRef.current.rotation.z = Math.sin(time * 8) * 0.3;
-      batModelRef.current.rotation.x = Math.sin(time * 6) * 0.2;
+      batModelRef.current.rotation.z = Math.sin(time * 10) * 0.4;
+      batModelRef.current.rotation.x = Math.sin(time * 8) * 0.3;
+      
+      // Banking motion
+      const bankAngle = direction.x * 0.5;
+      batModelRef.current.rotation.z += bankAngle;
     }
 
     // Check collision with player
@@ -185,26 +202,26 @@ export const VampireBat: React.FC<VampireBatProps> = ({
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 3.0, 0]}
+          position={[0, 3.5, 0]}
         />
       )}
       
       {/* Bat model container */}
       <group ref={batModelRef} />
       
-      {/* Fallback geometry while model loads */}
+      {/* Enhanced fallback geometry while model loads */}
       {!processedBatModel && (
         <group position={[0, 0, 0]}>
           <mesh position={[0, 0, 0]}>
             <sphereGeometry args={[1.2, 12, 12]} />
             <meshStandardMaterial color="#8B0000" />
           </mesh>
-          <mesh position={[-1.5, 0, -0.5]} rotation={[0, 0, Math.PI / 4]}>
-            <planeGeometry args={[1.5, 0.8]} />
+          <mesh position={[-1.8, 0, -0.5]} rotation={[0, 0, Math.PI / 4]}>
+            <planeGeometry args={[2.0, 1.0]} />
             <meshStandardMaterial color="#4B0000" />
           </mesh>
-          <mesh position={[1.5, 0, -0.5]} rotation={[0, 0, -Math.PI / 4]}>
-            <planeGeometry args={[1.5, 0.8]} />
+          <mesh position={[1.8, 0, -0.5]} rotation={[0, 0, -Math.PI / 4]}>
+            <planeGeometry args={[2.0, 1.0]} />
             <meshStandardMaterial color="#4B0000" />
           </mesh>
         </group>
