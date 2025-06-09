@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -36,18 +37,33 @@ const MountainModel: React.FC<{
   position: [number, number, number];
   scale: [number, number, number];
 }> = ({ position, scale }) => {
-  console.log('MountainModel: Loading mountain model from:', MOUNTAIN_URL);
+  console.log('MountainModel: Attempting to load mountain model from:', MOUNTAIN_URL);
   
-  const { scene } = useGLTF(MOUNTAIN_URL);
+  let scene, error;
+  try {
+    const gltfResult = useGLTF(MOUNTAIN_URL);
+    scene = gltfResult.scene;
+    error = gltfResult.error;
+    console.log('MountainModel: useGLTF result:', { scene: !!scene, error });
+  } catch (loadError) {
+    console.error('MountainModel: Exception during useGLTF:', loadError);
+    return <FallbackCenteredMountain position={position} scale={scale} />;
+  }
+  
+  if (error) {
+    console.error('MountainModel: GLB loading error:', error);
+    return <FallbackCenteredMountain position={position} scale={scale} />;
+  }
   
   if (!scene) {
     console.warn('MountainModel: GLB scene is null, using fallback');
     return <FallbackCenteredMountain position={position} scale={scale} />;
   }
   
-  console.log('MountainModel: Successfully loaded GLB scene');
+  console.log('MountainModel: Successfully loaded GLB scene, children count:', scene.children.length);
   
   const clonedScene = useMemo(() => {
+    console.log('MountainModel: Cloning and optimizing scene');
     const clone = scene.clone();
     
     clone.traverse((child) => {
@@ -74,9 +90,11 @@ const MountainModel: React.FC<{
       }
     });
     
+    console.log('MountainModel: Scene cloned and optimized');
     return clone;
   }, [scene]);
   
+  console.log('MountainModel: Rendering primitive at position:', position, 'scale:', scale);
   return (
     <primitive 
       object={clonedScene} 
@@ -143,7 +161,16 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
 
   console.log('CenteredMountainSystem: About to render', mountainInstances.length, 'mountain instances');
 
-  return <>{mountainInstances}</>;
+  return (
+    <group>
+      {mountainInstances}
+      {/* Debug marker to show where mountains should be */}
+      <mesh position={[0, 2, 0]}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial color="red" />
+      </mesh>
+    </group>
+  );
 };
 
 // Preload the mountain model
