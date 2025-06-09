@@ -9,7 +9,6 @@ import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { Enemy } from './Enemy';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
-import { CasualFog } from './CasualFog';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -88,9 +87,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
       {/* Background color for fantasy dusk */}
       <color attach="background" args={['#2d1b4e']} />
-
-      {/* Subtle fog that fades as you progress */}
-      <CasualFog />
 
       {/* Ground plane to ensure there's always a visible floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
