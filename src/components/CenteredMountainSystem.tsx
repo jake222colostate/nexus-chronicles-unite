@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -39,12 +38,7 @@ const MountainModel: React.FC<{
 }> = ({ position, scale }) => {
   console.log('MountainModel: Loading mountain model from:', MOUNTAIN_URL);
   
-  const { scene, error } = useGLTF(MOUNTAIN_URL);
-  
-  if (error) {
-    console.error('MountainModel: Failed to load GLB model:', error);
-    return <FallbackCenteredMountain position={position} scale={scale} />;
-  }
+  const { scene } = useGLTF(MOUNTAIN_URL);
   
   if (!scene) {
     console.warn('MountainModel: GLB scene is null, using fallback');
