@@ -9,7 +9,6 @@ import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
 import { CenteredMountainSystem } from './CenteredMountainSystem';
-import { GLBTreeSystem } from './GLBTreeSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
@@ -123,32 +122,19 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
 
-          {/* ONLY render our single closer mountain - no other mountain systems */}
+          {/* Infinite mountain system with tight valley and seamless chunk generation */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
               chunkSize={50}
-              renderDistance={100}
+              renderDistance={150}
             >
               {(chunks) => (
-                <>
-                  {/* Single closer mountain with smaller natural valley at world origin */}
-                  <CenteredMountainSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                    realm={realm}
-                  />
-                  
-                  {/* Trees for Fantasy realm - positioned around smaller valley */}
-                  <GLBTreeSystem
-                    chunks={chunks}
-                    chunkSize={50}
-                    realm={realm}
-                    mountainBounds={{
-                      centerBuffer: 6 // Smaller buffer for closer mountain
-                    }}
-                  />
-                </>
+                <CenteredMountainSystem
+                  chunks={chunks}
+                  chunkSize={50}
+                  realm={realm}
+                />
               )}
             </ChunkSystem>
           )}

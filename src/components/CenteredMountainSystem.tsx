@@ -22,7 +22,7 @@ const FallbackSingleMountain: React.FC<{
   return (
     <group position={position} scale={scale} rotation={rotation}>
       <mesh position={[0, 0, 0]} castShadow receiveShadow>
-        <coneGeometry args={[25, 18, 16]} />
+        <coneGeometry args={[15, 12, 16]} />
         <meshLambertMaterial color="#6B5B73" />
       </mesh>
     </group>
@@ -71,7 +71,7 @@ const SingleMountainModel: React.FC<{
     return <FallbackSingleMountain position={position} scale={scale} rotation={rotation} />;
   }
 
-  console.log('CenteredMountainSystem: Rendering mountain closer to player at position:', position);
+  console.log('CenteredMountainSystem: Rendering mountain at position:', position);
   
   return (
     <primitive 
@@ -94,16 +94,36 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return null;
   }
 
-  console.log('CenteredMountainSystem: Rendering mountain closer for intimate valley experience');
+  console.log('CenteredMountainSystem: Rendering infinite mountain chunks for tight valley');
   
-  // Position mountain closer and slightly larger for tighter valley
+  // Generate one mountain per chunk to create infinite terrain
+  const mountainInstances = useMemo(() => {
+    const instances = [];
+    
+    chunks.forEach(chunk => {
+      // Position mountain at chunk center with tighter valley scale
+      instances.push({
+        key: `mountain_${chunk.id}`,
+        position: [0, -8, chunk.worldZ] as [number, number, number],
+        scale: [1.5, 1.5, 1.5] as [number, number, number], // Smaller scale for tighter valley
+        rotation: [0, 0, 0] as [number, number, number]
+      });
+    });
+    
+    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances for infinite terrain`);
+    return instances;
+  }, [chunks]);
+  
   return (
-    <group name="SingleCenteredMountain">
-      <SingleMountainModel
-        position={[0, -12, 0]}
-        scale={[2.2, 2.2, 2.2]}
-        rotation={[0, 0, 0]}
-      />
+    <group name="InfiniteMountainSystem">
+      {mountainInstances.map((instance) => (
+        <SingleMountainModel
+          key={instance.key}
+          position={instance.position}
+          scale={instance.scale}
+          rotation={instance.rotation}
+        />
+      ))}
     </group>
   );
 };

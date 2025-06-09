@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -49,15 +50,16 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 8;
 };
 
-// Updated check: Trees can only spawn outside the centered mountain's natural valley
+// Updated tree spawning bounds: clamp to spawn only between mountains (-12 to 12 range)
 const isValidTreePosition = (x: number, z: number): boolean => {
-  // Primary constraint: avoid centered mountain's natural valley 
-  const distanceFromCenter = Math.sqrt(x * x + z * z);
-  const outsideNaturalValley = distanceFromCenter >= 10; // Increased buffer for centered valley
+  // Primary constraint: trees spawn only in the valley between mountains
+  const inValleyRange = x >= -12 && x <= 12;
   
-  return outsideNaturalValley && 
-         !isOnSteepSlope(x, z) && 
-         !isTooCloseToPlayerStart(x, z);
+  // Additional constraints
+  const notOnSteepSlope = !isOnSteepSlope(x, z);
+  const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
+  
+  return inValleyRange && notOnSteepSlope && notTooCloseToPlayer;
 };
 
 // Get tree type with updated distribution favoring pine218
@@ -187,13 +189,13 @@ const InstancedTreeGroup: React.FC<{
     return distance <= 120;
   });
 
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees avoiding single mountain valley center (|x| >= 8)`);
+  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees clamped to valley range (-12 to 12)`);
 
   return (
-    <group name="MountainSafeTreeGroup">
+    <group name="ClampedValleyTreeGroup">
       {visiblePositions.slice(0, 50).map((pos, index) => (
         <TreeInstance
-          key={`mountain-safe-tree-${index}-${pos.treeType}`}
+          key={`valley-tree-${index}-${pos.treeType}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -210,7 +212,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with centered mountain natural valley avoidance
+  // Generate tree positions with clamped valley bounds
   const { treePositions, playerPosition } = useMemo(() => {
     // Only generate for fantasy realm
     if (realm !== 'fantasy') {
@@ -220,17 +222,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees around centered mountain natural valley');
+    console.log('EnhancedTreeDistribution: Generating trees with clamped valley bounds (-12 to 12)');
     const trees = [];
     const minDistance = 8; // 8m minimum spacing
-    const maxAttempts = 50; // Increased attempts due to centered valley constraint
+    const maxAttempts = 60; // Increased attempts due to clamped bounds
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
       
-      // Reduced tree count due to centered mountain natural valley constraint
-      const treeCount = 3 + Math.floor(seededRandom(seed) * 2); // 3-4 trees per chunk
+      // Increased tree count since we're limiting to valley area
+      const treeCount = 4 + Math.floor(seededRandom(seed) * 3); // 4-6 trees per chunk
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -240,13 +242,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Random placement within chunk bounds, avoiding centered mountain natural valley
-          x = worldX + (seededRandom(treeSeed) - 0.5) * chunkSize * 0.9;
+          // Generate position within valley bounds (-12 to 12)
+          x = (seededRandom(treeSeed) - 0.5) * 24; // Range of 24 units (-12 to 12)
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.9;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Centered mountain natural valley avoidance check: only spawn outside radius of 10
+          // Valley bounds check: trees only spawn between -12 and 12
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
@@ -286,7 +288,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees around centered mountain natural valley`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees in valley bounds (-12 to 12)`);
     
     return {
       treePositions: trees,
