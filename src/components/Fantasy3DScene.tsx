@@ -40,10 +40,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
   const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2));
 
-  // Stabilize player Z to prevent infinite updates - only update every 10 units
+  // Stabilize player Z to prevent infinite updates - only update every 20 units
   const stablePlayerZ = useMemo(() => {
-    return Math.floor(cameraPosition.z / 10) * 10;
-  }, [Math.floor(cameraPosition.z / 10)]);
+    return Math.floor(cameraPosition.z / 20) * 20;
+  }, [Math.floor(cameraPosition.z / 20)]);
 
   // Initialize shared damage system with stable player Z
   const damageSystem = useEnemyDamageSystem({
@@ -80,9 +80,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   return (
     <Suspense fallback={null}>
-      {/* Camera controller with proper character height and fixed initial position */}
+      {/* Camera controller with guaranteed safe valley center starting position */}
       <Enhanced360Controller
-        position={[0, 2, 5]} // Fixed starting position
+        position={[0, 2, 20]} // Start far back in the valley center for absolute safety
         onPositionChange={onPositionChange}
       />
 
@@ -94,7 +94,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
       {/* Ground plane to ensure there's always a visible floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-        <planeGeometry args={[200, 200]} />
+        <planeGeometry args={[300, 300]} />
         <meshStandardMaterial color="#2d4a2d" />
       </mesh>
 
@@ -106,8 +106,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         castShadow
         shadow-mapSize={[1024, 1024]}
       />
-
-      {/* REMOVED PathsideMountains - this was creating the mirrored mountain walls */}
 
       {/* Optimized chunk system with performance limits */}
       <ChunkSystem

@@ -29,19 +29,21 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   
   const yawAngle = useRef(0);
   const pitchAngle = useRef(0);
-  const targetPosition = useRef(new Vector3(...position));
+  const targetPosition = useRef(new Vector3());
   const velocity = useRef(new Vector3());
-  const lastNotifiedPosition = useRef(new Vector3(...position));
+  const lastNotifiedPosition = useRef(new Vector3());
   const isMousePressed = useRef(false);
   const lastNotificationTime = useRef(0);
 
-  // Initialize camera at guaranteed safe valley center position
+  // Initialize camera at guaranteed safe valley center position - ignore passed position
   useEffect(() => {
-    targetPosition.current.set(0, 2, 10); // Start further back in the clear valley center
-    camera.position.copy(targetPosition.current);
+    // Force safe valley center position regardless of props
+    const safePosition = new Vector3(0, 2, 20); // Start even further back for absolute safety
+    targetPosition.current.copy(safePosition);
+    camera.position.copy(safePosition);
     camera.lookAt(0, 1, 0); // Look at ground level ahead
-    lastNotifiedPosition.current.copy(targetPosition.current);
-    console.log('Camera initialized at safe valley center:', targetPosition.current);
+    lastNotifiedPosition.current.copy(safePosition);
+    console.log('Camera force-initialized at absolute safe valley center:', safePosition);
   }, [camera]);
 
   // Keyboard event handlers with improved key detection
@@ -193,21 +195,21 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     // Update position with very wide valley bounds
     targetPosition.current.add(velocity.current.clone().multiplyScalar(delta));
     
-    // Much wider movement bounds - mountains are now at ±120, so allow ±50 for safety
-    targetPosition.current.x = Math.max(-50, Math.min(50, targetPosition.current.x));
+    // Much wider movement bounds - mountains are now at ±120, so allow ±80 for safety
+    targetPosition.current.x = Math.max(-80, Math.min(80, targetPosition.current.x));
     targetPosition.current.y = 2; // Fixed character height
     
     // Update camera
     camera.position.copy(targetPosition.current);
     camera.rotation.set(pitchAngle.current, yawAngle.current, 0, 'YXZ');
     
-    // Only notify on significant position changes and throttle notifications
+    // Only notify on significant position changes and throttle notifications heavily to prevent loops
     const now = Date.now();
     const distanceMoved = targetPosition.current.distanceTo(lastNotifiedPosition.current);
     const timeSinceLastNotification = now - lastNotificationTime.current;
     
-    // Throttle position notifications to prevent infinite updates
-    if (distanceMoved > 1.0 && timeSinceLastNotification > 200) { // Less frequent updates
+    // Heavy throttling to prevent infinite updates - only update every 500ms and when moved significantly
+    if (distanceMoved > 5.0 && timeSinceLastNotification > 500) {
       lastNotifiedPosition.current.copy(targetPosition.current);
       lastNotificationTime.current = now;
       onPositionChange(targetPosition.current.clone());
