@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { ChunkData } from './ChunkSystem';
 import { useGLTF } from '@react-three/drei';
@@ -31,12 +30,7 @@ const JapanesePathTile: React.FC<{
   console.log('JapanesePathTile: Attempting to load stone path at position:', position);
   
   try {
-    const { scene, error } = useGLTF('/assets/japanese_park_stone_floor_uljcfd0_low.glb');
-    
-    if (error) {
-      console.error('JapanesePathTile: Error loading GLB:', error);
-      return <FallbackPathTile position={position} />;
-    }
+    const { scene } = useGLTF('/assets/japanese_park_stone_floor_uljcfd0_low.glb');
     
     if (!scene) {
       console.warn('JapanesePathTile: Scene is null/undefined, using fallback');
