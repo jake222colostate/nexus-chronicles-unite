@@ -13,23 +13,23 @@ const FallbackPathTile: React.FC<{
   return (
     <group position={position}>
       <mesh receiveShadow>
-        <boxGeometry args={[4, 0.05, 4]} />
+        <boxGeometry args={[36, 0.05, 8]} />
         <meshLambertMaterial color="#DEB887" />
       </mesh>
       {/* Add decorative stones */}
-      <mesh position={[1.5, 0.025, 1.5]} receiveShadow>
-        <sphereGeometry args={[0.1]} />
+      <mesh position={[15, 0.025, 3]} receiveShadow>
+        <sphereGeometry args={[0.2]} />
         <meshLambertMaterial color="#A0522D" />
       </mesh>
-      <mesh position={[-1.5, 0.025, -1.5]} receiveShadow>
-        <sphereGeometry args={[0.08]} />
+      <mesh position={[-15, 0.025, -3]} receiveShadow>
+        <sphereGeometry args={[0.15]} />
         <meshLambertMaterial color="#A0522D" />
       </mesh>
     </group>
   );
 };
 
-// Individual path tile component with fallback
+// Individual path tile component with proper scaling and rotation
 const FantasyPathTile: React.FC<{ 
   position: [number, number, number]; 
 }> = ({ position }) => {
@@ -47,22 +47,33 @@ const FantasyPathTile: React.FC<{
     // Clone the scene to avoid sharing geometry between instances
     const clonedScene = scene.clone();
     
-    // Ensure all meshes receive shadows
+    // Ensure all meshes receive shadows and apply proper materials
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.receiveShadow = true;
+        child.castShadow = true;
         if (child.material) {
           child.material.needsUpdate = true;
+          // Ensure proper lighting response
+          if (child.material instanceof THREE.MeshStandardMaterial) {
+            child.material.roughness = 0.8;
+            child.material.metalness = 0.1;
+          }
         }
       }
     });
     
     return (
-      <primitive 
-        object={clonedScene} 
-        position={position}
-        receiveShadow 
-      />
+      <group position={position}>
+        <primitive 
+          object={clonedScene}
+          scale={[9, 1, 2]} // Scale X to span full width (36 units), keep Y flat, scale Z for proper length
+          rotation={[0, 0, 0]} // Keep aligned straight along Z-axis
+          position={[0, 0, 0]} // Centered and at ground level
+          receiveShadow 
+          castShadow
+        />
+      </group>
     );
   } catch (error) {
     console.error('Failed to load fantasy path tile model, using fallback:', error);
@@ -89,23 +100,23 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
     return null;
   }
 
-  // Generate path tile positions for each chunk
+  // Generate path tile positions for seamless coverage across chunks
   const pathTilePositions = useMemo(() => {
     console.log('Generating path tile positions for', chunks.length, 'chunks');
     const positions = [];
-    const tileSize = 4; // Smaller tiles for path detail
+    const tileLength = 8; // Length of each tile along Z-axis
 
     chunks.forEach(chunk => {
       const { worldZ } = chunk;
       
-      // Calculate how many tiles we need for this chunk
-      const tilesPerChunk = Math.ceil(chunkSize / tileSize);
+      // Calculate how many tiles we need for seamless chunk coverage
+      const tilesPerChunk = Math.ceil(chunkSize / tileLength);
       
       for (let i = 0; i < tilesPerChunk; i++) {
-        const z = worldZ - (i * tileSize);
+        const z = worldZ - (i * tileLength);
         positions.push({
-          x: 0, // Path runs down the center
-          y: -0.05, // Slightly above the road
+          x: 0, // Centered path spanning full width
+          y: 0, // At ground level
           z: z,
           chunkId: chunk.id,
           tileIndex: i
@@ -118,7 +129,7 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
   }, [chunks, chunkSize]);
 
   return (
-    <group>
+    <group name="FantasyPathSystem">
       {pathTilePositions.map((pos, index) => {
         return (
           <Suspense key={`fantasy-path-${pos.chunkId}-${pos.tileIndex}`} fallback={null}>
@@ -132,5 +143,7 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
   );
 };
 
-// Don't preload the broken model
-console.log('FantasyPathSystem: Using fallback geometry for path tiles');
+// Preload the model for better performance
+useGLTF.preload(FANTASY_PATH_TILE_URL);
+
+console.log('FantasyPathSystem: Enhanced with proper scaling, rotation, and positioning for seamless path coverage');
