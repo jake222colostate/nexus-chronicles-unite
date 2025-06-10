@@ -5,9 +5,10 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 // Tree model URLs - Updated to prioritize local pine_tree_218poly
 export const TREE_MODELS = {
-  realistic: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/realistic_tree_draco.glb',
-  stylized: 'https://raw.githubusercontent.com/jake222colostate/nexus-chronicles-unite/main/public/assets/stylized_tree_draco.glb',
-  pine218: '/assets/pine_tree_218poly.glb' // Use local pine_tree_218poly model
+  // Use bundled assets to avoid loading errors that caused placeholder trees
+  realistic: '/assets/realistic_tree.glb',
+  stylized: '/assets/stylized_tree.glb',
+  pine218: '/assets/pine_tree_218poly.glb'
 } as const;
 
 // Updated distribution ratios to prioritize pine_tree_218poly
@@ -111,7 +112,11 @@ class TreeAssetManagerSingleton {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        child.frustumCulled = true;
+        // Disable frustum culling so trees do not pop out when the camera
+        // gets very close to them. Some of the imported tree models have
+        // bounding boxes that are too small, causing them to disappear
+        // prematurely.
+        child.frustumCulled = false;
         
         if (child.material) {
           if (Array.isArray(child.material)) {
