@@ -1,4 +1,3 @@
-
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -12,6 +11,7 @@ import { FantasyEnvironmentOrchestrator } from './FantasyEnvironmentOrchestrator
 import { Sun } from './Sun';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
+import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -113,9 +113,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Ambient light with a warm sun */}
-          <ambientLight intensity={realm === 'scifi' ? 0.8 : 0.6} />
-          <Sun position={[10, 20, 5]} />
+          {/* ENHANCED: Much brighter and more vibrant lighting system */}
+          <ImprovedFantasyLighting />
 
           <FloatingIsland realm={realm} />
 
