@@ -29,11 +29,7 @@ const FallbackPathTile: React.FC<{
   );
 };
 
-// Dimensions of the path model determined from the GLB bounding box
-const MODEL_WIDTH = 32.9; // approx X size of dusty_foot_path_way_in_grass_garden.glb
-const MODEL_LENGTH = 41.6; // approx Z size
-
-// Individual path tile component with proper scaling and rotation
+// Individual path tile component with proper flattening and orientation
 const FantasyPathTile: React.FC<{
   position: [number, number, number];
   chunkSize: number;
@@ -67,18 +63,17 @@ const FantasyPathTile: React.FC<{
         }
       }
     });
-    
-    // Scale to match terrain chunk dimensions
-    const widthScale = 36 / MODEL_WIDTH;
-    const lengthScale = chunkSize / MODEL_LENGTH;
 
     return (
       <group position={position}>
         <primitive
           object={clonedScene}
-          scale={[widthScale, 1, lengthScale]}
-          rotation={[-Math.PI / 2, 0, 0]} // Lay flat along the ground
-          position={[0, 0, 0]} // Centered and at ground level
+          // FIXED: Flatten the model to lie horizontally on XZ-plane
+          rotation={[-Math.PI / 2, 0, 0]} // Flatten so top surface faces upward (Y-axis)
+          // FIXED: Scale to match terrain chunk dimensions
+          scale={[36, 1, chunkSize]} // Width=36, Height=1 (flat), Length=chunkSize
+          // FIXED: Position flush with terrain
+          position={[0, -0.1, 0]} // Slightly below ground level to sit flush
           receiveShadow
           castShadow
         />
@@ -116,11 +111,11 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
     chunks.forEach(chunk => {
       const { worldZ } = chunk;
 
-      // One path segment per chunk, aligned with the chunk position
+      // FIXED: One path segment per chunk, aligned and positioned for seamless connection
       positions.push({
-        x: 0,
-        y: 0,
-        z: worldZ,
+        x: 0, // Centered at X=0
+        y: 0, // At ground level
+        z: worldZ, // Aligned with chunk Z position
         chunkId: chunk.id,
         tileIndex: 0
       });
@@ -149,4 +144,4 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
 // Preload the model for better performance
 useGLTF.preload(FANTASY_PATH_TILE_URL);
 
-console.log('FantasyPathSystem: Enhanced with proper scaling, rotation, and positioning for seamless path coverage');
+console.log('FantasyPathSystem: Enhanced with proper flattening, scaling, and ground-flush positioning');
