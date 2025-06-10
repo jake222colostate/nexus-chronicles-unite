@@ -88,7 +88,7 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// Tree component with ANTI-CLIPPING fixes
+// ENHANCED Tree component with maximum anti-clipping and visibility fixes
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -111,35 +111,80 @@ const GLBTree: React.FC<{
     }
   }, [treeType]);
 
-  // Proper Y positioning with terrain integration
+  // ENHANCED Y positioning with terrain integration and elevation boost
   const adjustedPosition: [number, number, number] = [
     position[0],
-    Math.max(1.0, position[1] + TREE_Y_OFFSETS[treeType] + 1.0), // Higher placement to prevent clipping
+    Math.max(2.0, position[1] + TREE_Y_OFFSETS[treeType] + 2.0), // Much higher placement
     position[2]
   ];
 
   if (!treeModel) {
     return (
-      <group position={adjustedPosition} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
+      <group 
+        position={adjustedPosition} 
+        scale={[scale, scale, scale]} 
+        rotation={[0, rotation, 0]}
+        frustumCulled={false} // CRITICAL: Never cull fallback trees
+      >
         <mesh position={[0, 0.5, 0]} castShadow receiveShadow frustumCulled={false}>
           <cylinderGeometry args={[0.1, 0.15, 1]} />
-          <meshLambertMaterial color="#8B4513" />
+          <meshLambertMaterial color="#8B4513" side={THREE.DoubleSide} transparent={false} />
         </mesh>
         <mesh position={[0, 1.2, 0]} castShadow receiveShadow frustumCulled={false}>
           <coneGeometry args={[0.6, 1.5, 8]} />
-          <meshLambertMaterial color={treeType === 'pine218' ? "#013220" : "#228B22"} side={THREE.DoubleSide} />
+          <meshLambertMaterial 
+            color={treeType === 'pine218' ? "#013220" : "#228B22"} 
+            side={THREE.DoubleSide} 
+            transparent={false}
+          />
         </mesh>
       </group>
     );
   }
+
+  // ENHANCED: Apply maximum visibility settings to the tree model
+  React.useEffect(() => {
+    if (treeModel) {
+      treeModel.traverse((child) => {
+        child.frustumCulled = false;
+        child.matrixAutoUpdate = true;
+        
+        if (child instanceof THREE.Mesh) {
+          child.frustumCulled = false;
+          child.castShadow = true;
+          child.receiveShadow = true;
+          
+          // Force material visibility
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              child.material.forEach(mat => {
+                mat.side = THREE.DoubleSide;
+                mat.transparent = false;
+                mat.opacity = 1.0;
+                mat.visible = true;
+                mat.needsUpdate = true;
+              });
+            } else {
+              child.material.side = THREE.DoubleSide;
+              child.material.transparent = false;
+              child.material.opacity = 1.0;
+              child.material.visible = true;
+              child.material.needsUpdate = true;
+            }
+          }
+        }
+      });
+    }
+  }, [treeModel]);
 
   return (
     <group 
       position={adjustedPosition} 
       scale={[scale, scale, scale]} 
       rotation={[0, rotation, 0]}
+      frustumCulled={false} // CRITICAL: Never cull the entire tree group
     >
-      <primitive object={treeModel} />
+      <primitive object={treeModel} frustumCulled={false} />
     </group>
   );
 };
@@ -155,13 +200,13 @@ const TreeGroup: React.FC<{
     treeType: 'realistic' | 'stylized' | 'pine218';
   }>;
 }> = ({ positions }) => {
-  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} anti-clipping trees respecting mountain boundaries`);
+  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} enhanced visibility trees`);
 
   return (
-    <group name="AntiClippingTreeGroup">
+    <group name="EnhancedVisibilityTreeGroup" frustumCulled={false}>
       {positions.map((pos, index) => (
         <GLBTree
-          key={`anti-clip-tree-${index}-${pos.treeType}-${pos.x}-${pos.z}`}
+          key={`enhanced-tree-${index}-${pos.treeType}-${pos.x}-${pos.z}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -182,7 +227,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees with mountain boundary respect and anti-clipping');
+    console.log('EnhancedTreeDistribution: Generating trees with maximum visibility and anti-disappearance settings');
     const trees = [];
     const minDistance = 3; // Reduced for tighter placement
     const maxAttempts = 30;
@@ -216,7 +261,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           treeType = getTreeType(treeSeed + 2);
           scale = getTreeScale(treeType, treeSeed + 3);
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          finalY = Math.max(1.0, terrainHeight + 1.0); // Higher elevation for anti-clipping
+          finalY = Math.max(2.0, terrainHeight + 2.0); // Much higher elevation for maximum visibility
           
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
@@ -236,7 +281,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with mountain boundary respect and anti-clipping`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with maximum visibility settings`);
     return trees;
   }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 
