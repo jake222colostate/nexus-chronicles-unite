@@ -76,9 +76,9 @@ const FantasyPathTile: React.FC<{
       <group position={position}>
         <primitive
           object={clonedScene}
-          scale={[widthScale * 2, 2, lengthScale * 2]}
-          rotation={[-Math.PI / 2 + Math.PI / 4, 0, 0]} // Tilted 45 degrees
-          position={[0, -1, 0]} // Slightly lower to avoid clipping
+          scale={[widthScale, 1, lengthScale]}
+          rotation={[-Math.PI / 2, 0, 0]} // Lay flat along the ground
+          position={[0, 0, 0]} // Centered and at ground level
           receiveShadow
           castShadow
         />
