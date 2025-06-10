@@ -15,7 +15,7 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// UPDATED terrain height simulation function
+// ENHANCED terrain height simulation function for proper grounding
 const getTerrainHeight = (x: number, z: number): number => {
   const baseHeight = Math.sin(x * 0.01) * Math.cos(z * 0.01) * 0.5 + 
                      Math.sin(x * 0.005) * Math.cos(z * 0.005) * 1.0;
@@ -23,14 +23,36 @@ const getTerrainHeight = (x: number, z: number): number => {
   return Math.max(0, baseHeight + jitter);
 };
 
+// ENHANCED: Calculate proper mountain slope height for tree grounding
+const getMountainSlopeHeight = (x: number, z: number): number => {
+  const distanceFromCenter = Math.abs(x);
+  
+  // Valley floor (close to path)
+  if (distanceFromCenter < 15) {
+    return getTerrainHeight(x, z);
+  }
+  
+  // Mountain slope calculation - gradual rise
+  const slopeStart = 15;
+  const slopeDistance = distanceFromCenter - slopeStart;
+  const slopeAngle = 0.15; // Gentle slope
+  const baseTerrainHeight = getTerrainHeight(x, z);
+  const mountainHeight = slopeDistance * slopeAngle;
+  
+  // Add some natural variation to the slope
+  const variation = Math.sin(x * 0.02) * Math.cos(z * 0.02) * 0.3;
+  
+  return baseTerrainHeight + mountainHeight + variation;
+};
+
 // Check if position is on a steep slope (>45°)
 const isOnSteepSlope = (x: number, z: number): boolean => {
   const sampleDistance = 1.5;
-  const centerHeight = getTerrainHeight(x, z);
-  const northHeight = getTerrainHeight(x, z - sampleDistance);
-  const southHeight = getTerrainHeight(x, z + sampleDistance);
-  const eastHeight = getTerrainHeight(x + sampleDistance, z);
-  const westHeight = getTerrainHeight(x - sampleDistance, z);
+  const centerHeight = getMountainSlopeHeight(x, z);
+  const northHeight = getMountainSlopeHeight(x, z - sampleDistance);
+  const southHeight = getMountainSlopeHeight(x, z + sampleDistance);
+  const eastHeight = getMountainSlopeHeight(x + sampleDistance, z);
+  const westHeight = getMountainSlopeHeight(x - sampleDistance, z);
   
   const maxSlope = Math.max(
     Math.abs(centerHeight - northHeight),
@@ -39,12 +61,12 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
     Math.abs(centerHeight - westHeight)
   ) / sampleDistance;
   
-  return maxSlope > 0.6;
+  return maxSlope > 0.8; // Increased threshold for steeper slopes
 };
 
 // Check if position is in the main player path corridor
 const isInPlayerPath = (x: number, z: number): boolean => {
-  const pathWidth = 10; // Wider buffer to avoid trees clipping through path
+  const pathWidth = 10;
   return Math.abs(x) < pathWidth;
 };
 
@@ -54,18 +76,16 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 6;
 };
 
-// UPDATED: Check if position is within the central valley near the path
-// Trees should spawn OUTSIDE this buffer to avoid lining up along the path
+// Check if position is within the central valley near the path
 const isInMountainBoundary = (x: number, z: number): boolean => {
-  // Valley around the path where trees shouldn't spawn
   const mountainBuffer = 5;
   return Math.abs(x) < mountainBuffer;
 };
 
-// UPDATED tree positioning with mountain boundary respect
+// ENHANCED tree positioning with proper grounding
 const isValidTreePosition = (x: number, z: number): boolean => {
   const notInPlayerPath = !isInPlayerPath(x, z);
-  const inValidXRange = Math.abs(x) >= 4 && Math.abs(x) <= 150; // Allow broader scatter
+  const inValidXRange = Math.abs(x) >= 4 && Math.abs(x) <= 150;
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
   const notInMountainBoundary = !isInMountainBoundary(x, z);
@@ -88,7 +108,7 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// ENHANCED Tree component with fog integration
+// ENHANCED Tree component with proper ground connection
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -136,8 +156,6 @@ const GLBTree: React.FC<{
             mat.depthTest = true;
             mat.depthWrite = true;
             mat.needsUpdate = true;
-            // REMOVE fog prevention - let trees be affected by fog
-            // mat.fog = false; // REMOVED
           });
         }
         
@@ -157,15 +175,9 @@ const GLBTree: React.FC<{
     return model;
   }, [treeModel]);
 
-  // UPDATED: Better positioning for mountain sides
-  const distanceFromCenter = Math.abs(position[0]);
-  let adjustedY = -1.8 + TREE_Y_OFFSETS[treeType];
-  
-  // Calculate slope height for trees on mountain sides
-  if (distanceFromCenter > 15) {
-    const slopeHeight = (distanceFromCenter - 15) * 0.12;
-    adjustedY += slopeHeight;
-  }
+  // ENHANCED: Proper ground connection with mountain slope calculation
+  const groundHeight = getMountainSlopeHeight(position[0], position[2]);
+  const adjustedY = groundHeight + TREE_Y_OFFSETS[treeType] - 1.8; // Offset for proper grounding
 
   const adjustedPosition: [number, number, number] = [
     position[0],
@@ -189,7 +201,6 @@ const GLBTree: React.FC<{
             color="#8B4513" 
             side={THREE.DoubleSide} 
             transparent={false}
-            // REMOVE fog prevention - let fallback trees be affected by fog
           />
         </mesh>
         <mesh position={[0, 1.2, 0]} castShadow receiveShadow frustumCulled={false}>
@@ -198,7 +209,6 @@ const GLBTree: React.FC<{
             color={treeType === 'pine218' ? "#013220" : "#228B22"} 
             side={THREE.DoubleSide} 
             transparent={false}
-            // REMOVE fog prevention - let fallback trees be affected by fog
           />
         </mesh>
       </group>
@@ -229,15 +239,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees on mountain sides and valley');
+    console.log('EnhancedTreeDistribution: Generating properly grounded trees');
     const trees = [];
-    const minDistance = 3; // Closer spacing for denser forest
-    const maxAttempts = 60; // More attempts for better coverage
+    const minDistance = 3;
+    const maxAttempts = 60;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      // INCREASED tree count for mountain side coverage
-      const treeCount = 8 + Math.floor(seededRandom(seed + 99) * 6); // 8-13 trees per chunk
+      const treeCount = 8 + Math.floor(seededRandom(seed + 99) * 6);
       const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {
@@ -248,18 +257,18 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157 + chunk.x * 1000 + chunk.z * 100;
 
-          // EXPANDED: Generate trees across much wider range for mountain sides
-          x = (seededRandom(treeSeed) - 0.5) * 300; // EXPANDED to ±150 for mountain coverage
+          x = (seededRandom(treeSeed) - 0.5) * 300;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
-          terrainHeight = getTerrainHeight(x, z);
+          // ENHANCED: Use proper mountain slope height for validation
+          terrainHeight = getMountainSlopeHeight(x, z);
           
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
           }
           
-          // Prefer pine trees on mountain sides (far from center)
+          // Prefer pine trees on mountain sides
           const distanceFromCenter = Math.abs(x);
           if (distanceFromCenter > 80) {
             treeType = seededRandom(treeSeed + 2) < 0.8 ? 'pine218' : 'stylized';
@@ -269,7 +278,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           
           scale = getTreeScale(treeType, treeSeed + 3);
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          finalY = -1.8;
+          
+          // ENHANCED: Calculate proper ground-connected Y position
+          finalY = terrainHeight + TREE_Y_OFFSETS[treeType] - 1.8;
           
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
@@ -289,7 +300,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees including mountain sides`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} properly grounded trees`);
     return trees;
   }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 

@@ -17,15 +17,37 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
+// ENHANCED: Calculate proper mountain slope height for tree grounding
+const getMountainSlopeHeight = (x: number, z: number): number => {
+  const distanceFromCenter = Math.abs(x);
+  
+  // Valley floor (close to path)
+  if (distanceFromCenter < 15) {
+    const baseHeight = Math.sin(x * 0.01) * Math.cos(z * 0.01) * 0.5;
+    return Math.max(0, baseHeight);
+  }
+  
+  // Mountain slope calculation - gradual rise
+  const slopeStart = 15;
+  const slopeDistance = distanceFromCenter - slopeStart;
+  const slopeAngle = 0.15; // Gentle slope to match mountain positioning
+  const baseHeight = Math.sin(x * 0.01) * Math.cos(z * 0.01) * 0.5;
+  const mountainHeight = slopeDistance * slopeAngle;
+  
+  // Add natural variation
+  const variation = Math.sin(x * 0.02) * Math.cos(z * 0.02) * 0.3;
+  
+  return Math.max(0, baseHeight + mountainHeight + variation);
+};
+
 // ADJUSTED: Mountains much further from path to prevent clipping
 const isWithinMountainBoundaries = (x: number): boolean => {
-  // Trees can spawn on mountain sides and in the valley between mountains
-  return Math.abs(x) > 15 && Math.abs(x) < 200; // EXPANDED range for mountain sides
+  return Math.abs(x) > 15 && Math.abs(x) < 200;
 };
 
 // Ensure NO obstacles on the main player path
 const isOnPlayerPath = (x: number): boolean => {
-  return Math.abs(x) < 12; // Keep path clear
+  return Math.abs(x) < 12;
 };
 
 interface InfiniteEnvironmentSystemProps {
@@ -85,7 +107,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     return mountain;
   };
 
-  // Create a tree at specified position
+  // ENHANCED: Create a tree with proper ground connection
   const createTree = async (x: number, z: number, treeType: 'realistic' | 'stylized' | 'pine218', scale: number, rotation: number): Promise<Group | null> => {
     try {
       const treeModel = TreeAssetManager.getCachedModel(treeType);
@@ -96,15 +118,9 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       
       const tree = treeModel.clone() as Group;
       
-      // UPDATED: Position trees on mountain slopes with proper height calculation
-      const distanceFromCenter = Math.abs(x);
-      let yPosition = TREE_Y_OFFSETS[treeType];
-      
-      // Calculate slope height for mountain side placement
-      if (distanceFromCenter > 15) {
-        const slopeHeight = (distanceFromCenter - 15) * 0.15; // Gradual slope
-        yPosition += slopeHeight;
-      }
+      // ENHANCED: Proper ground connection with mountain slope calculation
+      const groundHeight = getMountainSlopeHeight(x, z);
+      const yPosition = groundHeight + TREE_Y_OFFSETS[treeType] - 1.8; // Proper grounding offset
       
       tree.position.set(x, yPosition, z);
       tree.scale.set(scale, scale, scale);
@@ -128,7 +144,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     }
   };
 
-  // Generate a new environment chunk with continuous tree generation
+  // Generate a new environment chunk with properly grounded trees
   const generateChunk = async (chunkId: number): Promise<EnvironmentChunk> => {
     const chunkZ = -chunkId * CHUNK_SIZE;
     const mountains: Group[] = [];
@@ -219,7 +235,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       }
     }
     
-    console.log(`Generated chunk ${chunkId} with ${mountains.length} mountains and ${trees.length} trees (including mountain sides)`);
+    console.log(`Generated chunk ${chunkId} with ${mountains.length} mountains and ${trees.length} properly grounded trees`);
     
     return {
       id: chunkId,
