@@ -44,7 +44,7 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
 
 // Check if position is in the main player path corridor
 const isInPlayerPath = (x: number, z: number): boolean => {
-  const pathWidth = 4; // Reduced from 6 to allow trees closer to path
+  const pathWidth = 10; // Wider buffer to avoid trees clipping through path
   return Math.abs(x) < pathWidth;
 };
 
