@@ -1,7 +1,7 @@
-import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
+
+import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
 import { TreeAssetManager, TREE_DISTRIBUTION, TREE_SCALES, TREE_Y_OFFSETS } from './TreeAssetManager';
 
 interface EnhancedTreeDistributionProps {
@@ -45,7 +45,7 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
 
 // Check if position is in the main player path corridor
 const isInPlayerPath = (x: number, z: number): boolean => {
-  const pathWidth = 6; // Narrower path to allow more tree placement
+  const pathWidth = 6;
   return Math.abs(x) < pathWidth;
 };
 
@@ -55,10 +55,10 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 8;
 };
 
-// UPDATED: Trees can now spawn closer to mountains since mountains are closer
+// Trees can now spawn closer to mountains since mountains are closer
 const isValidTreePosition = (x: number, z: number): boolean => {
   const notInPlayerPath = !isInPlayerPath(x, z);
-  const inValidXRange = Math.abs(x) >= 10 && Math.abs(x) <= 25; // Trees between mountains and further out
+  const inValidXRange = Math.abs(x) >= 10 && Math.abs(x) <= 25;
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
   
@@ -68,9 +68,9 @@ const isValidTreePosition = (x: number, z: number): boolean => {
 // Get tree type with updated distribution favoring pine218
 const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine218' => {
   const random = seededRandom(seed);
-  if (random < TREE_DISTRIBUTION.pine218) return 'pine218'; // 60%
-  if (random < TREE_DISTRIBUTION.pine218 + TREE_DISTRIBUTION.stylized) return 'stylized'; // 20%
-  return 'realistic'; // 20%
+  if (random < TREE_DISTRIBUTION.pine218) return 'pine218';
+  if (random < TREE_DISTRIBUTION.pine218 + TREE_DISTRIBUTION.stylized) return 'stylized';
+  return 'realistic';
 };
 
 // Get randomized scale based on tree type
@@ -80,17 +80,16 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// Tree component that loads GLB models
+// Tree component that loads GLB models - REMOVED distance culling
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
   treeType: 'realistic' | 'stylized' | 'pine218';
 }> = ({ position, scale, rotation, treeType }) => {
-  const [treeModel, setTreeModel] = useState<THREE.Object3D | null>(null);
-  const groupRef = useRef<THREE.Group>(null);
+  const [treeModel, setTreeModel] = React.useState<THREE.Object3D | null>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const cachedModel = TreeAssetManager.getCachedModel(treeType);
     if (cachedModel) {
       setTreeModel(cachedModel);
@@ -127,7 +126,6 @@ const GLBTree: React.FC<{
 
   return (
     <group 
-      ref={groupRef}
       position={adjustedPosition} 
       scale={[scale, scale, scale]} 
       rotation={[0, rotation, 0]}
@@ -137,42 +135,8 @@ const GLBTree: React.FC<{
   );
 };
 
-// Individual tree instance component with distance culling
-const TreeInstance: React.FC<{
-  position: [number, number, number];
-  scale: number;
-  rotation: number;
-  treeType: 'realistic' | 'stylized' | 'pine218';
-  playerPosition: THREE.Vector3;
-}> = ({ position, scale, rotation, treeType, playerPosition }) => {
-  const [isVisible, setIsVisible] = useState(true);
-
-  // Performance culling based on distance
-  useFrame(() => {
-    const distance = playerPosition.distanceTo(new THREE.Vector3(...position));
-    const newVisibility = distance <= 120; // 120m culling distance
-    
-    if (newVisibility !== isVisible) {
-      setIsVisible(newVisibility);
-    }
-  });
-
-  if (!isVisible) {
-    return null;
-  }
-
-  return (
-    <GLBTree 
-      position={position} 
-      scale={scale} 
-      rotation={rotation} 
-      treeType={treeType}
-    />
-  );
-};
-
-// Performance-optimized tree group
-const InstancedTreeGroup: React.FC<{
+// Simplified tree group without distance culling
+const TreeGroup: React.FC<{
   positions: Array<{ 
     x: number; 
     y: number; 
@@ -181,25 +145,18 @@ const InstancedTreeGroup: React.FC<{
     rotation: number; 
     treeType: 'realistic' | 'stylized' | 'pine218';
   }>;
-  playerPosition: THREE.Vector3;
-}> = ({ positions, playerPosition }) => {
-  const visiblePositions = positions.filter(pos => {
-    const distance = playerPosition.distanceTo(new THREE.Vector3(pos.x, pos.y, pos.z));
-    return distance <= 120;
-  });
-
-  console.log(`EnhancedTreeDistribution: Rendering ${visiblePositions.length} trees clamped outside ±12 range`);
+}> = ({ positions }) => {
+  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} persistent trees`);
 
   return (
-    <group name="ClampedTreeGroup">
-      {visiblePositions.slice(0, 50).map((pos, index) => (
-        <TreeInstance
-          key={`clamped-tree-${index}-${pos.treeType}`}
+    <group name="PersistentTreeGroup">
+      {positions.map((pos, index) => (
+        <GLBTree
+          key={`persistent-tree-${index}-${pos.treeType}-${pos.x}-${pos.z}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
           treeType={pos.treeType}
-          playerPosition={playerPosition}
         />
       ))}
     </group>
@@ -211,23 +168,20 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  const { treePositions, playerPosition } = useMemo(() => {
+  const treePositions = useMemo(() => {
     if (realm !== 'fantasy') {
-      return {
-        treePositions: [],
-        playerPosition: new THREE.Vector3(0, 0, 0)
-      };
+      return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees in the space between close mountains');
+    console.log('EnhancedTreeDistribution: Generating deterministic trees for chunk consistency');
     const trees = [];
     const minDistance = 5;
     const maxAttempts = 60;
-    const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      const treeCount = 4 + Math.floor(seededRandom(seed) * 3); // 4-6 trees per chunk
+      const treeCount = 4 + Math.floor(seededRandom(seed) * 3);
+      const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -235,10 +189,11 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         let x, z, terrainHeight, treeType, scale, rotation, finalY;
         
         while (!validPosition && attempts < maxAttempts) {
-          const treeSeed = seed + i * 157;
+          // DETERMINISTIC positioning based on chunk coordinates and tree index
+          const treeSeed = seed + i * 157 + chunk.x * 1000 + chunk.z * 100;
           
           const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          const sideOffset = 10 + seededRandom(treeSeed) * 15; // 10-25 units from center
+          const sideOffset = 10 + seededRandom(treeSeed) * 15;
           x = side * sideOffset;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
@@ -272,16 +227,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
-    const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
-    
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees between close mountains`);
-    
-    return {
-      treePositions: trees,
-      playerPosition: new THREE.Vector3(avgX, 0, avgZ)
-    };
-  }, [chunks.map(c => c.id).join(','), chunkSize, realm]);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} deterministic trees`);
+    return trees;
+  }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 
   if (realm !== 'fantasy' || treePositions.length === 0) {
     return null;
@@ -289,10 +237,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
   return (
     <Suspense fallback={null}>
-      <InstancedTreeGroup
-        positions={treePositions}
-        playerPosition={playerPosition}
-      />
+      <TreeGroup positions={treePositions} />
     </Suspense>
   );
 };
