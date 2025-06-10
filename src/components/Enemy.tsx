@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -25,67 +26,52 @@ export const Enemy: React.FC<EnemyProps> = ({
   enemyType
 }) => {
   const groupRef = useRef<Group>(null);
-  const batMeshRef = useRef<Group>(null);
-  const currentPosition = useRef(new Vector3(position[0], 2.0, position[2])); // Higher flight altitude
-  const speed = 2.5;
+  const modelRef = useRef<Group>(null);
+  const currentPosition = useRef(new Vector3(position[0], 0, position[2])); // Ground level for monster
+  const speed = 1.5; // Slower speed for monster
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
-  const animationTime = useRef(0);
 
-  // Load vampire bat model
-  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  // Load monster model instead of bat
+  const { scene: monsterScene } = useGLTF('/assets/monster_rig.glb');
 
   useEffect(() => {
-    if (enemyType === 'vampire_bat' && batScene && batMeshRef.current) {
-      console.log(`Enemy ${enemyId}: Setting up vampire bat model with enhanced animations`);
+    if (enemyType === 'vampire_bat' && monsterScene && modelRef.current) {
+      console.log(`Enemy ${enemyId}: Setting up monster model (temporarily replacing bat)`);
       
-      // Clear existing and add fresh bat model
-      batMeshRef.current.clear();
-      const batClone = batScene.clone();
+      // Clear existing and add monster model
+      modelRef.current.clear();
+      const monsterClone = monsterScene.clone();
       
-      // Enhanced material setup for better visibility
-      batClone.traverse((child) => {
+      // Setup materials
+      monsterClone.traverse((child) => {
         if (child instanceof Mesh) {
           child.castShadow = true;
           child.receiveShadow = true;
           if (child.material) {
             child.material.visible = true;
             child.material.needsUpdate = true;
-            // Ensure solid materials for bat visibility
-            if (Array.isArray(child.material)) {
-              child.material.forEach(mat => {
-                mat.transparent = false;
-                mat.opacity = 1.0;
-                mat.metalness = 0.2;
-                mat.roughness = 0.8;
-              });
-            } else {
-              child.material.transparent = false;
-              child.material.opacity = 1.0;
-              if ('metalness' in child.material) child.material.metalness = 0.2;
-              if ('roughness' in child.material) child.material.roughness = 0.8;
-            }
           }
         }
       });
 
-      // Scale and position for better visibility and animation
-      batClone.position.set(0, 0, 0);
-      batClone.scale.setScalar(2.5); // Larger for better visibility
-      batClone.rotation.set(0, Math.PI, 0); // Face forward initially
+      // Scale and position for monster
+      monsterClone.position.set(0, 0, 0);
+      monsterClone.scale.setScalar(0.5); // Smaller scale for monster
+      monsterClone.rotation.set(0, 0, 0);
       
-      batMeshRef.current.add(batClone);
-      console.log(`Enemy ${enemyId}: Vampire bat model configured with 2.5x scale and enhanced materials`);
+      modelRef.current.add(monsterClone);
+      console.log(`Enemy ${enemyId}: Monster model configured as vampire bat replacement`);
     }
-  }, [batScene, enemyId, enemyType]);
+  }, [monsterScene, enemyId, enemyType]);
 
   // Initialize enemy in damage system
   useEffect(() => {
     if (!initialized.current && onInitialize && !enemyHealth) {
-      const flightPosition: [number, number, number] = [position[0], 2.0, position[2]];
-      console.log(`Enemy ${enemyId}: Initializing vampire bat at flight position:`, flightPosition);
-      onInitialize(enemyId, flightPosition);
+      const groundPosition: [number, number, number] = [position[0], 0, position[2]];
+      console.log(`Enemy ${enemyId}: Initializing monster at ground position:`, groundPosition);
+      onInitialize(enemyId, groundPosition);
       initialized.current = true;
     }
   }, [enemyId, position, onInitialize, enemyHealth]);
@@ -93,30 +79,21 @@ export const Enemy: React.FC<EnemyProps> = ({
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
 
-    // Update animation time for consistent timing
-    animationTime.current += delta;
-
-    // Handle death animation with enhanced effects
+    // Handle death animation
     if (enemyHealth && enemyHealth.currentHealth <= 0) {
       if (!fadeOutStarted.current) {
         fadeOutStarted.current = true;
-        console.log(`Enemy ${enemyId}: Starting enhanced death animation - health: ${enemyHealth.currentHealth}`);
+        console.log(`Enemy ${enemyId}: Starting monster death animation - health: ${enemyHealth.currentHealth}`);
       }
       
       const currentScale = groupRef.current.scale.x;
-      const newScale = Math.max(0, currentScale - delta * 4); // Faster death fade
+      const newScale = Math.max(0, currentScale - delta * 3);
       groupRef.current.scale.setScalar(newScale);
       
-      // Add spinning death effect
-      if (batMeshRef.current) {
-        batMeshRef.current.rotation.z += delta * 8; // Spin while dying
-        batMeshRef.current.rotation.x += delta * 4;
-      }
-      
-      if (newScale <= 0.05 && !isFullyFaded.current) {
+      if (newScale <= 0.1 && !isFullyFaded.current) {
         groupRef.current.visible = false;
         isFullyFaded.current = true;
-        console.log(`Enemy ${enemyId}: Death animation complete`);
+        console.log(`Enemy ${enemyId}: Monster death animation complete`);
       }
       return;
     }
@@ -129,62 +106,28 @@ export const Enemy: React.FC<EnemyProps> = ({
       groupRef.current.scale.setScalar(1);
     }
 
-    // Enhanced AI movement - aggressive chase with proper flight altitude
-    const targetPosition = playerPosition.clone();
-    targetPosition.y = 2.0; // Maintain consistent flight altitude
-    
+    // Ground-based movement for monster
     const direction = new Vector3()
-      .subVectors(targetPosition, currentPosition.current)
+      .subVectors(playerPosition, currentPosition.current)
       .normalize();
 
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
-
-    // Keep vampire bat at proper flight altitude
-    currentPosition.current.y = 2.0;
+    currentPosition.current.y = 0; // Keep on ground
 
     // Update entity position
     groupRef.current.position.copy(currentPosition.current);
 
-    // Enhanced vampire bat flying animations
-    if (batMeshRef.current && enemyType === 'vampire_bat') {
-      const time = animationTime.current;
-      const uniqueOffset = parseFloat(enemyId.split('_')[1]) || 0; // Use timestamp for unique offset
-      
-      // Complex hovering motion - figure-8 pattern
-      const hoverRadius = 0.4;
-      const hoverSpeed = 3.0;
-      const bobHeight = 0.6;
-      
-      // Primary hovering motion
-      const hoverX = Math.sin(time * hoverSpeed + uniqueOffset) * hoverRadius;
-      const hoverY = Math.sin(time * hoverSpeed * 2 + uniqueOffset) * bobHeight;
-      const hoverZ = Math.cos(time * hoverSpeed * 1.5 + uniqueOffset) * (hoverRadius * 0.5);
-      
-      batMeshRef.current.position.set(hoverX, hoverY, hoverZ);
-      
-      // Face movement direction smoothly
+    // Simple ground-based rotation for monster
+    if (modelRef.current && enemyType === 'vampire_bat') {
       const angle = Math.atan2(direction.x, direction.z);
-      batMeshRef.current.rotation.y = angle;
-      
-      // Enhanced wing flapping animation - faster, more realistic
-      const wingFlapSpeed = 12; // Very fast wing flapping
-      const wingFlapIntensity = 0.4;
-      batMeshRef.current.rotation.z = Math.sin(time * wingFlapSpeed + uniqueOffset) * wingFlapIntensity;
-      
-      // Banking motion during turns
-      const bankingAngle = direction.x * 0.6; // Bank into turns
-      batMeshRef.current.rotation.x = Math.sin(time * 4 + uniqueOffset) * 0.15 + bankingAngle;
-      
-      // Subtle body wobble for natural flight
-      const wobbleY = Math.sin(time * 8 + uniqueOffset) * 0.1;
-      batMeshRef.current.rotation.y += wobbleY;
+      modelRef.current.rotation.y = angle;
     }
 
-    // Check collision with player - closer contact needed
+    // Check collision with player
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
-    if (distanceToPlayer < 1.8 && onReachPlayer) {
-      console.log(`Enemy ${enemyId}: Vampire bat reached player at distance ${distanceToPlayer}`);
+    if (distanceToPlayer < 1.5 && onReachPlayer) {
+      console.log(`Enemy ${enemyId}: Monster reached player at distance ${distanceToPlayer}`);
       onReachPlayer();
     }
   });
@@ -195,51 +138,34 @@ export const Enemy: React.FC<EnemyProps> = ({
   }
 
   return (
-    <group ref={groupRef} position={[position[0], 2.0, position[2]]} castShadow receiveShadow>
-      {/* Health bar positioned above flying bat */}
+    <group ref={groupRef} position={[position[0], 0, position[2]]} castShadow receiveShadow>
+      {/* Health bar positioned above monster */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.5, 0]} // Higher above the bat
+          position={[0, 2, 0]}
         />
       )}
       
-      {/* Enhanced bat mesh container with proper flight positioning */}
-      <group ref={batMeshRef} />
+      {/* Monster model container */}
+      <group ref={modelRef} />
       
-      {/* Enhanced fallback geometry while bat model loads */}
-      {enemyType === 'vampire_bat' && !batScene && (
-        <group position={[0, 0, 0]}>
-          {/* Main bat body */}
-          <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[0.8, 12, 12]} />
-            <meshStandardMaterial color="#660000" metalness={0.2} roughness={0.8} />
-          </mesh>
-          {/* Bat wings */}
-          <mesh position={[-1.2, 0, 0]} rotation={[0, 0, Math.PI/6]}>
-            <boxGeometry args={[0.1, 1.5, 0.8]} />
-            <meshStandardMaterial color="#440000" />
-          </mesh>
-          <mesh position={[1.2, 0, 0]} rotation={[0, 0, -Math.PI/6]}>
-            <boxGeometry args={[0.1, 1.5, 0.8]} />
-            <meshStandardMaterial color="#440000" />
-          </mesh>
-          {/* Bat head */}
-          <mesh position={[0, 0.6, 0.2]}>
-            <coneGeometry args={[0.3, 0.6, 6]} />
-            <meshStandardMaterial color="#330000" />
-          </mesh>
-        </group>
+      {/* Fallback geometry if monster model doesn't load */}
+      {enemyType === 'vampire_bat' && !monsterScene && (
+        <mesh>
+          <boxGeometry args={[1, 2, 1]} />
+          <meshStandardMaterial color="#553344" />
+        </mesh>
       )}
       
       {/* Debug collision bounds (invisible in production) */}
       <mesh visible={false}>
-        <sphereGeometry args={[1.8]} />
-        <meshBasicMaterial wireframe color="#ff0000" opacity={0.3} transparent />
+        <boxGeometry args={[1, 2, 1]} />
+        <meshBasicMaterial wireframe />
       </mesh>
     </group>
   );
 };
 
-// Preload the vampire bat model
-useGLTF.preload('/assets/vampire-bat/source/bat.glb');
+// Preload the monster model
+useGLTF.preload('/assets/monster_rig.glb');
