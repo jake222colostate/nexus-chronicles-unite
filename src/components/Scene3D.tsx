@@ -100,8 +100,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             makeDefault
             position={[0, 0, 8]}
             fov={60}
-            near={0.1}
-            far={200}
+            near={0.01}
+            far={500}
+            onUpdate={(cam) => cam.updateProjectionMatrix()}
           >
             <WizardStaff />
           </PerspectiveCamera>

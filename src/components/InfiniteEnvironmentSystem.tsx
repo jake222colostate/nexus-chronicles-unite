@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Group, Mesh, Vector3 } from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
-import { TreeAssetManager, TREE_SCALES, TREE_Y_OFFSETS } from './TreeAssetManager';
+import { TreeAssetManager, TREE_SCALES, TREE_Y_OFFSETS } from '../environment/TreeAssetManager';
 
 interface EnvironmentChunk {
   id: number;
