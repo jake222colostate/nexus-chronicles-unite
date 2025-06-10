@@ -40,10 +40,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
   const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2));
 
-  // Use a much more stable player Z to prevent infinite updates
+  // FIXED: Properly stable player Z calculation to prevent infinite re-renders
   const stablePlayerZ = useMemo(() => {
-    return Math.floor(cameraPosition.z / 50) * 50; // Changed from 20 to 50 for more stability
-  }, [Math.floor(cameraPosition.z / 50)]); // Simplified dependency
+    const floorValue = Math.floor(cameraPosition.z / 50);
+    return floorValue * 50;
+  }, [Math.floor(cameraPosition.z / 50)]);
 
   // Initialize shared damage system with stable player Z
   const damageSystem = useEnemyDamageSystem({
