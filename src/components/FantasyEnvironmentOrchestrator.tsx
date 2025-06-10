@@ -2,7 +2,7 @@
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
 import { ContinuousMountainSystem } from './ContinuousMountainSystem';
-import { EnhancedTreeDistribution } from './EnhancedTreeDistribution';
+import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
 import { Vector3 } from 'three';
 

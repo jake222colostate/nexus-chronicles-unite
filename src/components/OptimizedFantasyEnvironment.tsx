@@ -2,7 +2,7 @@
 import React, { Suspense } from 'react';
 import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
-import { EnhancedTreeDistribution } from './EnhancedTreeDistribution';
+import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { InfiniteEnvironmentSystem } from './InfiniteEnvironmentSystem';
 import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
 

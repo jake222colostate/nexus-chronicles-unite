@@ -5,7 +5,7 @@ import { MagicalFantasySkybox } from './MagicalFantasySkybox';
 import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
 import { CleanPathSystem } from './CleanPathSystem';
 import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
-import { EnhancedTreeDistribution } from './EnhancedTreeDistribution';
+import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import * as THREE from 'three';
 
 interface FantasyScreenshotEnvironmentProps {

@@ -1,5 +1,5 @@
 import React, { useMemo, Suspense } from 'react';
-import { ChunkData } from './ChunkSystem';
+import { ChunkData } from '../components/ChunkSystem';
 import * as THREE from 'three';
 import { TreeAssetManager, TREE_DISTRIBUTION, TREE_SCALES, TREE_Y_OFFSETS } from './TreeAssetManager';
 
@@ -149,9 +149,13 @@ const GLBTree: React.FC<{
       
       // Apply to all children recursively
       object.children.forEach(child => applyAntiCullingRecursive(child));
+
+      // Ensure matrices are fully updated after modifications
+      object.updateMatrixWorld(true);
     };
 
     applyAntiCullingRecursive(model);
+    model.updateMatrixWorld(true);
     return model;
   }, [treeModel]);
 
