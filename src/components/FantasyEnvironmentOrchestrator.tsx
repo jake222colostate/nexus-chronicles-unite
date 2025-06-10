@@ -23,9 +23,11 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
     return null;
   }
 
+  console.log('FantasyEnvironmentOrchestrator: Rendering with polygon mountains removed and fixed tree positioning');
+
   return (
     <group>
-      {/* Continuous mountain system with proper positioning */}
+      {/* Continuous mountain system with proper underground positioning */}
       <ContinuousMountainSystem
         chunks={chunks}
         chunkSize={chunkSize}
@@ -33,7 +35,7 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
         playerPosition={playerPosition}
       />
       
-      {/* Single tree system to avoid conflicts */}
+      {/* Single tree system with fixed positioning to prevent clipping */}
       <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}

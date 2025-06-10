@@ -16,12 +16,12 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Terrain height simulation function
+// Terrain height simulation function - FIXED to ensure proper tree placement
 const getTerrainHeight = (x: number, z: number): number => {
-  const baseHeight = Math.sin(x * 0.01) * Math.cos(z * 0.01) * 1.5 + 
-                     Math.sin(x * 0.005) * Math.cos(z * 0.005) * 2.5;
-  const jitter = (Math.sin(x * 0.1) * Math.cos(z * 0.1)) * 0.15;
-  return baseHeight + jitter;
+  const baseHeight = Math.sin(x * 0.01) * Math.cos(z * 0.01) * 0.5 + 
+                     Math.sin(x * 0.005) * Math.cos(z * 0.005) * 1.0;
+  const jitter = (Math.sin(x * 0.1) * Math.cos(z * 0.1)) * 0.1;
+  return Math.max(0, baseHeight + jitter); // Ensure terrain is never below 0
 };
 
 // Check if position is on a steep slope (>45°)
@@ -40,7 +40,7 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
     Math.abs(centerHeight - westHeight)
   ) / sampleDistance;
   
-  return maxSlope > 0.8;
+  return maxSlope > 0.6;
 };
 
 // Check if position is in the main player path corridor
@@ -55,21 +55,21 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 8;
 };
 
-// Trees can now spawn closer to mountains since mountains are closer
+// FIXED tree positioning to avoid clipping
 const isValidTreePosition = (x: number, z: number): boolean => {
   const notInPlayerPath = !isInPlayerPath(x, z);
-  const inValidXRange = Math.abs(x) >= 10 && Math.abs(x) <= 25;
+  const inValidXRange = Math.abs(x) >= 8 && Math.abs(x) <= 20; // Closer range for better visibility
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
   
   return notInPlayerPath && inValidXRange && notOnSteepSlope && notTooCloseToPlayer;
 };
 
-// Get tree type with updated distribution favoring pine218
+// Get tree type - REMOVED polygon trees
 const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine218' => {
   const random = seededRandom(seed);
-  if (random < TREE_DISTRIBUTION.pine218) return 'pine218';
-  if (random < TREE_DISTRIBUTION.pine218 + TREE_DISTRIBUTION.stylized) return 'stylized';
+  if (random < 0.7) return 'pine218'; // More pine trees
+  if (random < 0.9) return 'stylized';
   return 'realistic';
 };
 
@@ -80,7 +80,7 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// Tree component that loads GLB models - REMOVED distance culling
+// Tree component with FIXED positioning to prevent clipping
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -103,9 +103,10 @@ const GLBTree: React.FC<{
     }
   }, [treeType]);
 
+  // FIXED Y positioning to sit properly on terrain and avoid clipping
   const adjustedPosition: [number, number, number] = [
     position[0],
-    position[1] + TREE_Y_OFFSETS[treeType],
+    Math.max(0.5, position[1] + TREE_Y_OFFSETS[treeType] + 0.5), // Ensure trees are well above ground
     position[2]
   ];
 
@@ -135,7 +136,7 @@ const GLBTree: React.FC<{
   );
 };
 
-// Simplified tree group without distance culling
+// Tree group without distance culling
 const TreeGroup: React.FC<{
   positions: Array<{ 
     x: number; 
@@ -146,13 +147,13 @@ const TreeGroup: React.FC<{
     treeType: 'realistic' | 'stylized' | 'pine218';
   }>;
 }> = ({ positions }) => {
-  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} persistent trees`);
+  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} trees with fixed positioning`);
 
   return (
-    <group name="PersistentTreeGroup">
+    <group name="FixedTreeGroup">
       {positions.map((pos, index) => (
         <GLBTree
-          key={`persistent-tree-${index}-${pos.treeType}-${pos.x}-${pos.z}`}
+          key={`fixed-tree-${index}-${pos.treeType}-${pos.x}-${pos.z}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -173,14 +174,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating deterministic trees for chunk consistency');
+    console.log('EnhancedTreeDistribution: Generating trees with fixed positioning to prevent clipping');
     const trees = [];
-    const minDistance = 5;
-    const maxAttempts = 60;
+    const minDistance = 4;
+    const maxAttempts = 50;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      const treeCount = 4 + Math.floor(seededRandom(seed) * 3);
+      const treeCount = 3 + Math.floor(seededRandom(seed) * 2); // Fewer trees but better positioned
       const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {
@@ -189,11 +190,10 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         let x, z, terrainHeight, treeType, scale, rotation, finalY;
         
         while (!validPosition && attempts < maxAttempts) {
-          // DETERMINISTIC positioning based on chunk coordinates and tree index
           const treeSeed = seed + i * 157 + chunk.x * 1000 + chunk.z * 100;
           
           const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          const sideOffset = 10 + seededRandom(treeSeed) * 15;
+          const sideOffset = 8 + seededRandom(treeSeed) * 12; // Closer to path for better visibility
           x = side * sideOffset;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
@@ -207,7 +207,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           treeType = getTreeType(treeSeed + 2);
           scale = getTreeScale(treeType, treeSeed + 3);
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          finalY = terrainHeight;
+          finalY = Math.max(0.5, terrainHeight + 0.5); // Ensure trees are elevated above any potential clipping
           
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
@@ -227,7 +227,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} deterministic trees`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with anti-clipping positioning`);
     return trees;
   }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 
