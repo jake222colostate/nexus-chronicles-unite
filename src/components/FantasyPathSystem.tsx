@@ -29,7 +29,11 @@ const FallbackPathTile: React.FC<{
   );
 };
 
-// Individual path tile component with proper rotation to lay flat as ground
+// Dimensions of the path model determined from the GLB bounding box
+const MODEL_WIDTH = 32.9; // approx X size of dusty_foot_path_way_in_grass_garden.glb
+const MODEL_LENGTH = 41.6; // approx Z size
+
+// Individual path tile component with proper scaling and rotation
 const FantasyPathTile: React.FC<{
   position: [number, number, number];
   chunkSize: number;
@@ -48,11 +52,6 @@ const FantasyPathTile: React.FC<{
     // Clone the scene to avoid sharing geometry between instances
     const clonedScene = scene.clone();
     
-    // Debug: Log the bounding box to understand model orientation
-    const box = new THREE.Box3().setFromObject(clonedScene);
-    const size = box.getSize(new THREE.Vector3());
-    console.log('Path model dimensions:', { x: size.x, y: size.y, z: size.z });
-    
     // Ensure all meshes receive shadows and apply proper materials
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
@@ -68,17 +67,18 @@ const FantasyPathTile: React.FC<{
         }
       }
     });
+    
+    // Scale to match terrain chunk dimensions
+    const widthScale = 36 / MODEL_WIDTH;
+    const lengthScale = chunkSize / MODEL_LENGTH;
 
     return (
       <group position={position}>
         <primitive
           object={clonedScene}
-          // FIXED: Try Y-axis rotation first, then X-axis to lay flat
-          rotation={[0, 0, -Math.PI / 2]}
-          // FIXED: Adjust scale based on actual model size
-          scale={[2, 2, 2]}
-          // FIXED: Position at ground level
-          position={[0, 0, 0]}
+          scale={[widthScale, 1, lengthScale]}
+          rotation={[-Math.PI / 2, 0, 0]} // Lay flat along the ground
+          position={[0, 0, 0]} // Centered and at ground level
           receiveShadow
           castShadow
         />
@@ -116,11 +116,11 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
     chunks.forEach(chunk => {
       const { worldZ } = chunk;
 
-      // FIXED: One path segment per chunk, aligned and positioned for seamless connection
+      // One path segment per chunk, aligned with the chunk position
       positions.push({
-        x: 0, // Centered at X=0
-        y: 0, // At ground level
-        z: worldZ, // Aligned with chunk Z position
+        x: 0,
+        y: 0,
+        z: worldZ,
         chunkId: chunk.id,
         tileIndex: 0
       });
@@ -149,4 +149,4 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
 // Preload the model for better performance
 useGLTF.preload(FANTASY_PATH_TILE_URL);
 
-console.log('FantasyPathSystem: Applied combined X and Z rotations to properly orient path as ground');
+console.log('FantasyPathSystem: Enhanced with proper scaling, rotation, and positioning for seamless path coverage');

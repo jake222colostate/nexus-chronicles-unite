@@ -35,33 +35,32 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
   const [modelLoaded, setModelLoaded] = useState(false);
-  const [modelError, setModelError] = useState(false);
 
-  // Load vampire bat model with error handling
-  let batScene;
-  try {
-    const gltfData = useGLTF('/assets/vampire-bat/source/bat.glb');
-    batScene = gltfData.scene;
-    console.log(`BatMinion ${enemyId}: Model loaded successfully`);
-  } catch (error) {
-    console.error(`BatMinion ${enemyId}: Failed to load model:`, error);
-    setModelError(true);
-  }
+  // Load vampire bat model - useGLTF throws errors, doesn't return them
+  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
-    if (batScene && batMeshRef.current && !modelError) {
+    console.log(`BatMinion ${enemyId}: Attempting to load model`);
+    
+    if (batScene && batMeshRef.current) {
+      console.log(`BatMinion ${enemyId}: Model loaded successfully`);
+      
+      // Clear any existing children
+      batMeshRef.current.clear();
+      
       try {
-        console.log(`BatMinion ${enemyId}: Setting up model`);
-        batMeshRef.current.clear();
         const batClone = batScene.clone();
         
+        // Configure materials and shadows
         batClone.traverse((child) => {
           if (child instanceof Mesh) {
+            console.log(`BatMinion ${enemyId}: Configuring mesh:`, child.name);
             child.castShadow = true;
             child.receiveShadow = true;
             if (child.material) {
               child.material.visible = true;
               child.material.needsUpdate = true;
+              // Ensure proper material transparency
               if (Array.isArray(child.material)) {
                 child.material.forEach(mat => {
                   mat.transparent = false;
@@ -75,28 +74,29 @@ export const BatMinion: React.FC<BatMinionProps> = ({
           }
         });
 
+        // Apply proper positioning and scaling
         batClone.position.set(0, 0, 0);
-        batClone.scale.setScalar(2.0);
+        batClone.scale.setScalar(2.0); // INCREASED: Larger for better visibility
         batClone.rotation.set(0, 0, 0);
         
         batMeshRef.current.add(batClone);
         setModelLoaded(true);
-        console.log(`BatMinion ${enemyId}: Model setup complete`);
-      } catch (error) {
-        console.error(`BatMinion ${enemyId}: Error setting up model:`, error);
-        setModelError(true);
+        console.log(`BatMinion ${enemyId}: Model configured and added to scene`);
+      } catch (err) {
+        console.error(`BatMinion ${enemyId}: Error setting up model:`, err);
         setModelLoaded(false);
       }
-    } else if (!batScene && !modelError) {
-      console.warn(`BatMinion ${enemyId}: Model scene not available`);
+    } else if (!batScene) {
+      console.warn(`BatMinion ${enemyId}: Model scene not available yet`);
       setModelLoaded(false);
     }
-  }, [batScene, enemyId, modelError]);
+  }, [batScene, enemyId]);
 
+  // IMPROVED: Initialize as enemy with proper flight position
   useEffect(() => {
     if (!initialized.current && onInitialize) {
       const flightPosition: [number, number, number] = [position[0], 1.5, position[2]];
-      console.log(`BatMinion ${enemyId}: Initializing at position:`, flightPosition);
+      console.log(`BatMinion ${enemyId} initializing at flight position:`, flightPosition);
       onInitialize(enemyId, flightPosition);
       initialized.current = true;
     }
@@ -105,10 +105,11 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
 
+    // Handle death animation
     if (enemyHealth && enemyHealth.currentHealth <= 0) {
       if (!fadeOutStarted.current) {
         fadeOutStarted.current = true;
-        console.log(`BatMinion ${enemyId}: Starting death animation`);
+        console.log(`BatMinion ${enemyId} starting death fade - health: ${enemyHealth.currentHealth}`);
       }
       
       const currentScale = groupRef.current.scale.x;
@@ -118,10 +119,12 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       if (newScale <= 0.1 && !isFullyFaded.current) {
         groupRef.current.visible = false;
         isFullyFaded.current = true;
+        console.log(`BatMinion ${enemyId} death complete`);
       }
       return;
     }
 
+    // Reset if alive
     if (enemyHealth && enemyHealth.currentHealth > 0 && fadeOutStarted.current) {
       fadeOutStarted.current = false;
       isFullyFaded.current = false;
@@ -129,76 +132,101 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       groupRef.current.scale.setScalar(1);
     }
 
+    // Enhanced AI behavior - flying movement towards player
     const targetPosition = playerPosition.clone();
-    targetPosition.y = 1.5;
+    targetPosition.y = 1.5; // Maintain flight height
     
+    // Add some dynamic flight patterns
     const time = Date.now() * 0.001;
     const flightOffset = Math.sin(time + orbitalOffset) * 2;
     targetPosition.x += flightOffset;
     
+    // Calculate direction to target
     const direction = new Vector3()
       .subVectors(targetPosition, currentPosition.current)
       .normalize();
 
+    // Apply movement
     const movement = direction.multiplyScalar(speed * delta);
     currentPosition.current.add(movement);
 
+    // Ensure bat maintains proper flight altitude with subtle bobbing
     const bobHeight = 1.5 + Math.sin(time * 3 + orbitalOffset) * 0.3;
     currentPosition.current.y = bobHeight;
 
+    // Update enemy entity position
     groupRef.current.position.copy(currentPosition.current);
 
-    if (batMeshRef.current && modelLoaded) {
+    // Enhanced flying animation for the bat mesh
+    if (batMeshRef.current) {
       const fastTime = time * 2;
+      
+      // Flying bobbing motion
       const flyBob = Math.sin(fastTime * 4 + orbitalOffset) * 0.2;
       const flyWobble = Math.cos(fastTime * 3 + orbitalOffset) * 0.15;
       
+      // Apply flight motion relative to entity
       batMeshRef.current.position.y = flyBob;
       batMeshRef.current.position.x = flyWobble;
       
+      // Face movement direction smoothly
       const angle = Math.atan2(direction.x, direction.z);
       batMeshRef.current.rotation.y = angle;
+      
+      // Wing flapping and flight dynamics
       batMeshRef.current.rotation.z = Math.sin(fastTime * 10) * 0.3;
       batMeshRef.current.rotation.x = Math.sin(fastTime * 8) * 0.15;
-      batMeshRef.current.rotation.z += direction.x * Math.abs(direction.x) * 0.5;
+      
+      // Banking during turns
+      const turnSpeed = Math.abs(direction.x);
+      batMeshRef.current.rotation.z += direction.x * turnSpeed * 0.5;
     }
 
+    // Check collision with player
     const distanceToPlayer = currentPosition.current.distanceTo(playerPosition);
     if (distanceToPlayer < 2.0 && onReachPlayer) {
+      console.log(`BatMinion ${enemyId} reached player at distance ${distanceToPlayer}`);
       onReachPlayer();
     }
   });
 
+  // Don't render if dead and faded
   if (enemyHealth && enemyHealth.currentHealth <= 0 && isFullyFaded.current) {
     return null;
   }
 
   return (
     <group ref={groupRef} position={[position[0], position[1], position[2]]} castShadow receiveShadow>
+      {/* IMPROVED: Health bar always visible when enemy has health and is alive */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.2, 0]}
+          position={[0, 1.2, 0]} // IMPROVED: Better positioning above bat
         />
       )}
       
+      {/* Bat mesh container with proper animation */}
       <group ref={batMeshRef} />
       
-      {/* Enhanced fallback when model fails to load */}
-      {(!modelLoaded || modelError) && (
+      {/* IMPROVED: Enhanced fallback - always visible when model not loaded */}
+      {!modelLoaded && (
         <group position={[0, 0, 0]}>
+          {/* Main body - larger and more visible */}
           <mesh position={[0, 0, 0]}>
             <sphereGeometry args={[0.4, 8, 8]} />
             <meshStandardMaterial color="#440000" />
           </mesh>
+          {/* Left wing */}
           <mesh position={[-0.6, 0.1, 0]} rotation={[0, 0, Math.PI / 6]}>
             <boxGeometry args={[0.8, 0.05, 0.4]} />
             <meshStandardMaterial color="#660000" />
           </mesh>
+          {/* Right wing */}
           <mesh position={[0.6, 0.1, 0]} rotation={[0, 0, -Math.PI / 6]}>
             <boxGeometry args={[0.8, 0.05, 0.4]} />
             <meshStandardMaterial color="#660000" />
           </mesh>
+          {/* Small ears */}
           <mesh position={[-0.1, 0.25, 0.1]}>
             <coneGeometry args={[0.08, 0.15]} />
             <meshStandardMaterial color="#330000" />
@@ -213,9 +241,5 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   );
 };
 
-// Preload with error handling
-try {
-  useGLTF.preload('/assets/vampire-bat/source/bat.glb');
-} catch (error) {
-  console.error('Failed to preload bat model:', error);
-}
+// Preload vampire bat model
+useGLTF.preload('/assets/vampire-bat/source/bat.glb');

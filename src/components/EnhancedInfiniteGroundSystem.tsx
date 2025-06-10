@@ -5,10 +5,6 @@ import { Vector3 } from 'three';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 
-// Dimensions of the GLB path model obtained via bounding box inspection
-const MODEL_WIDTH = 32.9; // X size of dusty_foot_path_way_in_grass_garden.glb
-const MODEL_LENGTH = 41.6; // Z size after laying flat
-
 interface EnhancedInfiniteGroundSystemProps {
   chunks: ChunkData[];
   chunkSize: number;
@@ -53,7 +49,7 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     for (let z = startZ; z <= endZ; z += tileSize) {
       // MULTIPLE ground layers for guaranteed coverage
       for (let layer = 0; layer < 3; layer++) {
-        const layerY = -2.0 - (layer * 0.1); // Lowered layers to avoid clipping
+        const layerY = -1.8 - (layer * 0.1); // Stacked layers
         
         // Main ground plane with massive overlap
         tiles.push({
@@ -93,8 +89,8 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
             object={pathModel.clone()}
             key={tile.key}
             position={tile.position}
-            rotation={[-Math.PI / 2, Math.PI / 2, 0]} // Align path orientation
-            scale={[tile.size / MODEL_WIDTH, 1, tile.size / MODEL_LENGTH]}
+            rotation={[-Math.PI / 2, 0, 0]}
+            scale={[0.4 * (tile.size / chunkSize), 0.4, 0.4 * (tile.size / chunkSize)]}
             frustumCulled={false}
             matrixAutoUpdate={true}
             renderOrder={-tile.layer}

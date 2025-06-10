@@ -62,7 +62,7 @@ export const useInfiniteUpgrades = ({
       const offset = 3 + Math.floor(i / 16) * 0.5; // Gradually increase spread
       const x = side * offset;
       const z = -(i * upgradeSpacing);
-      const y = -1.6; // Position upgrades near ground level
+      const y = 0;
       
       // Scale increases with tier for visual progression
       const baseScale = 1.0 + (i * 0.1);
