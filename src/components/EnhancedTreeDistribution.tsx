@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -88,7 +87,7 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// ENHANCED Tree component with maximum anti-clipping and visibility fixes
+// FIXED Tree component - removed conditional hooks to prevent hook count mismatch
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -97,6 +96,7 @@ const GLBTree: React.FC<{
 }> = ({ position, scale, rotation, treeType }) => {
   const [treeModel, setTreeModel] = React.useState<THREE.Object3D | null>(null);
 
+  // FIXED: Always call useEffect hooks in the same order - no conditional dependencies
   React.useEffect(() => {
     const cachedModel = TreeAssetManager.getCachedModel(treeType);
     if (cachedModel) {
@@ -109,7 +109,43 @@ const GLBTree: React.FC<{
         }
       });
     }
-  }, [treeType]);
+  }, [treeType]); // Only depend on treeType, not treeModel
+
+  // FIXED: Always call this useEffect, but only execute logic when treeModel exists
+  React.useEffect(() => {
+    if (!treeModel) return;
+
+    // Apply maximum visibility settings to the tree model
+    treeModel.traverse((child) => {
+      child.frustumCulled = false;
+      child.matrixAutoUpdate = true;
+      
+      if (child instanceof THREE.Mesh) {
+        child.frustumCulled = false;
+        child.castShadow = true;
+        child.receiveShadow = true;
+        
+        // Force material visibility
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material.forEach(mat => {
+              mat.side = THREE.DoubleSide;
+              mat.transparent = false;
+              mat.opacity = 1.0;
+              mat.visible = true;
+              mat.needsUpdate = true;
+            });
+          } else {
+            child.material.side = THREE.DoubleSide;
+            child.material.transparent = false;
+            child.material.opacity = 1.0;
+            child.material.visible = true;
+            child.material.needsUpdate = true;
+          }
+        }
+      }
+    });
+  }, [treeModel]); // This is safe now because we always call this hook
 
   // ENHANCED Y positioning with terrain integration and elevation boost
   const adjustedPosition: [number, number, number] = [
@@ -141,41 +177,6 @@ const GLBTree: React.FC<{
       </group>
     );
   }
-
-  // ENHANCED: Apply maximum visibility settings to the tree model
-  React.useEffect(() => {
-    if (treeModel) {
-      treeModel.traverse((child) => {
-        child.frustumCulled = false;
-        child.matrixAutoUpdate = true;
-        
-        if (child instanceof THREE.Mesh) {
-          child.frustumCulled = false;
-          child.castShadow = true;
-          child.receiveShadow = true;
-          
-          // Force material visibility
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach(mat => {
-                mat.side = THREE.DoubleSide;
-                mat.transparent = false;
-                mat.opacity = 1.0;
-                mat.visible = true;
-                mat.needsUpdate = true;
-              });
-            } else {
-              child.material.side = THREE.DoubleSide;
-              child.material.transparent = false;
-              child.material.opacity = 1.0;
-              child.material.visible = true;
-              child.material.needsUpdate = true;
-            }
-          }
-        }
-      });
-    }
-  }, [treeModel]);
 
   return (
     <group 
