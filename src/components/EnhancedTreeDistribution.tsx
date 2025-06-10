@@ -158,7 +158,7 @@ const GLBTree: React.FC<{
   // FIXED: Ground level positioning
   const adjustedPosition: [number, number, number] = [
     position[0],
-    -1.8 + TREE_Y_OFFSETS[treeType],
+    -1.7 + TREE_Y_OFFSETS[treeType], // Slightly raised to avoid clipping
     position[2]
   ];
 
@@ -283,7 +283,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           treeType = getTreeType(treeSeed + 2);
           scale = getTreeScale(treeType, treeSeed + 3);
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          finalY = -1.8; // Fixed ground level positioning
+          finalY = -1.7; // Slightly above ground to prevent clipping
           
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
