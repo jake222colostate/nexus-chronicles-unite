@@ -133,7 +133,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     }
 
     // Enhanced AI behavior - flying movement towards player
-    let targetPosition = playerPosition.clone();
+    const targetPosition = playerPosition.clone();
     targetPosition.y = 1.5; // Maintain flight height
     
     // Add some dynamic flight patterns
