@@ -29,7 +29,7 @@ const FallbackPathTile: React.FC<{
   );
 };
 
-// Individual path tile component with rotation to make it lay flat
+// Individual path tile component with proper rotation to lay flat as ground
 const FantasyPathTile: React.FC<{
   position: [number, number, number];
   chunkSize: number;
@@ -68,12 +68,12 @@ const FantasyPathTile: React.FC<{
       <group position={position}>
         <primitive
           object={clonedScene}
-          // FIXED: Rotate -90 degrees around X-axis to lay flat on ground
-          rotation={[-Math.PI / 2, 0, 0]}
-          // FIXED: Scale to make path visible and appropriate size
-          scale={[3, 3, 3]}
-          // FIXED: Position slightly above ground to prevent z-fighting
-          position={[0, 0.01, 0]}
+          // FIXED: Try multiple rotation approaches - rotate around X and Z axes
+          rotation={[Math.PI / 2, 0, Math.PI / 2]}
+          // FIXED: Larger scale and position adjustment
+          scale={[5, 5, 5]}
+          // FIXED: Lower position to ensure it's at ground level
+          position={[0, -0.5, 0]}
           receiveShadow
           castShadow
         />
@@ -144,4 +144,4 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
 // Preload the model for better performance
 useGLTF.preload(FANTASY_PATH_TILE_URL);
 
-console.log('FantasyPathSystem: Applied -90 degree X rotation to lay path flat on ground');
+console.log('FantasyPathSystem: Applied combined X and Z rotations to properly orient path as ground');
