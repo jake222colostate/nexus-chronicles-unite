@@ -35,11 +35,14 @@ export const CleanPathSystem: React.FC<CleanPathSystemProps> = ({
         if (child.material) {
           const materials = Array.isArray(child.material) ? child.material : [child.material];
           materials.forEach(mat => {
-            if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshLambertMaterial) {
-              // Adjust material for better environment integration
+            // Only set these properties on MeshStandardMaterial
+            if (mat instanceof THREE.MeshStandardMaterial) {
               mat.roughness = 0.8;
               mat.metalness = 0.1;
               mat.envMapIntensity = 0.5;
+              mat.needsUpdate = true;
+            } else if (mat instanceof THREE.MeshLambertMaterial) {
+              // For MeshLambertMaterial, we can only adjust basic properties
               mat.needsUpdate = true;
             }
           });
