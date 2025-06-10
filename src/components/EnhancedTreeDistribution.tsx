@@ -64,7 +64,7 @@ const isInMountainBoundary = (x: number, z: number): boolean => {
 // UPDATED tree positioning with mountain boundary respect
 const isValidTreePosition = (x: number, z: number): boolean => {
   const notInPlayerPath = !isInPlayerPath(x, z);
-  const inValidXRange = Math.abs(x) >= 4.5 && Math.abs(x) <= 4.8; // Tight range between path and mountains
+  const inValidXRange = Math.abs(x) >= 4.5 && Math.abs(x) <= 7; // Wider scatter range
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
   const notInMountainBoundary = !isInMountainBoundary(x, z);
@@ -270,7 +270,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           
           // Controlled positioning between path and mountains
           const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          const sideOffset = 4.6 + seededRandom(treeSeed) * 0.2;
+          const sideOffset = 4.5 + seededRandom(treeSeed) * 2.5; // Scatter further from path
           x = side * sideOffset;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
           

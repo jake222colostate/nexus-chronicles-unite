@@ -41,7 +41,7 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     
     // FIXED: Increased chunk limit to prevent premature culling
     let chunkCount = 0;
-    const maxChunks = 120; // Increased from 60
+    const maxChunks = 500; // Allow many more chunks for true infinite terrain
     
     // Generate chunks in a larger pattern with overlap for seamless coverage
     for (let x = playerChunkX - chunkRadius - 1; x <= playerChunkX + chunkRadius + 1 && chunkCount < maxChunks; x++) {

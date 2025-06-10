@@ -4,7 +4,7 @@ import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
-const FANTASY_PATH_TILE_URL = 'https://raw.githubusercontent.com/jake222colostate/OK/main/fantasy_path_tile.glb';
+const FANTASY_PATH_TILE_URL = '/assets/dusty_foot_path_way_in_grass_garden.glb';
 
 // Fallback path tile component using basic geometry
 const FallbackPathTile: React.FC<{ 
