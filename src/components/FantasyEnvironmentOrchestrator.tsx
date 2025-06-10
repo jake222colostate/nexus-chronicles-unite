@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { FantasyReferenceEnvironment } from './FantasyReferenceEnvironment';
 import { ContinuousMountainSystem } from './ContinuousMountainSystem';
+import { EnhancedTreeDistribution } from './EnhancedTreeDistribution';
 import { Vector3 } from 'three';
 
 interface FantasyEnvironmentOrchestratorProps {
@@ -25,7 +25,7 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
 
   return (
     <group>
-      {/* Continuous mountain system ensures mountains are always visible */}
+      {/* Continuous mountain system with proper positioning */}
       <ContinuousMountainSystem
         chunks={chunks}
         chunkSize={chunkSize}
@@ -33,19 +33,18 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
         playerPosition={playerPosition}
       />
       
-      {/* Use the reference-based environment for other elements */}
-      <FantasyReferenceEnvironment
+      {/* Single tree system to avoid conflicts */}
+      <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
-        playerPosition={playerPosition}
       />
       
       {/* Background color for fantasy dusk */}
       <color attach="background" args={['#1a0f2e']} />
       
       {/* Atmospheric fog */}
-      <fog attach="fog" args={['#2d1b4e', 50, 200]} />
+      <fog attach="fog" args={['#2d1b4e', 30, 150]} />
     </group>
   );
 };

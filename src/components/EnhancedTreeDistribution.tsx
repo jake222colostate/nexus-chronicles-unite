@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense, useRef, useState, useEffect } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -44,28 +43,22 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
   return maxSlope > 0.8;
 };
 
-// Updated: Check if position is in the main player path corridor
+// Check if position is in the main player path corridor
 const isInPlayerPath = (x: number, z: number): boolean => {
-  // Main path corridor: wider clearance to ensure no trees block player movement
-  const pathWidth = 8; // 8 units wide path (4 units each side from center)
+  const pathWidth = 6; // Narrower path to allow more tree placement
   return Math.abs(x) < pathWidth;
 };
 
 // Check if position is too close to player starting position
 const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   const distance = Math.sqrt(x * x + (z + 10) * (z + 10));
-  return distance < 10; // Increased clearance around player start
+  return distance < 8;
 };
 
-// UPDATED: Clamp tree spawning to avoid mountain geometry
+// UPDATED: Trees can now spawn closer to mountains since mountains are closer
 const isValidTreePosition = (x: number, z: number): boolean => {
-  // Primary constraint: trees must not spawn in player path corridor
   const notInPlayerPath = !isInPlayerPath(x, z);
-  
-  // NEW: Clamp tree spawn X-range to avoid mountain geometry
-  const inValidXRange = Math.abs(x) >= 12; // Only spawn trees outside ±12 range
-  
-  // Additional constraints
+  const inValidXRange = Math.abs(x) >= 10 && Math.abs(x) <= 25; // Trees between mountains and further out
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
   
@@ -87,7 +80,7 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// Tree component that loads GLB models with pine218 priority
+// Tree component that loads GLB models
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -98,12 +91,10 @@ const GLBTree: React.FC<{
   const groupRef = useRef<THREE.Group>(null);
 
   useEffect(() => {
-    // Try to get cached model first
     const cachedModel = TreeAssetManager.getCachedModel(treeType);
     if (cachedModel) {
       setTreeModel(cachedModel);
     } else {
-      // If not cached, try to load it
       TreeAssetManager.preloadAllModels().then(() => {
         const model = TreeAssetManager.getCachedModel(treeType);
         if (model) {
@@ -113,7 +104,6 @@ const GLBTree: React.FC<{
     }
   }, [treeType]);
 
-  // Apply Y offset for proper alignment
   const adjustedPosition: [number, number, number] = [
     position[0],
     position[1] + TREE_Y_OFFSETS[treeType],
@@ -121,7 +111,6 @@ const GLBTree: React.FC<{
   ];
 
   if (!treeModel) {
-    // Show pine-specific placeholder while loading
     return (
       <group position={adjustedPosition} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
         <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
@@ -222,9 +211,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  // Generate tree positions with improved path avoidance and clamping
   const { treePositions, playerPosition } = useMemo(() => {
-    // Only generate for fantasy realm
     if (realm !== 'fantasy') {
       return {
         treePositions: [],
@@ -232,17 +219,15 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       };
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees with X-range clamping to avoid mountain geometry');
+    console.log('EnhancedTreeDistribution: Generating trees in the space between close mountains');
     const trees = [];
-    const minDistance = 6; // Reduced minimum spacing for better distribution
-    const maxAttempts = 80; // Increased attempts for better placement
+    const minDistance = 5;
+    const maxAttempts = 60;
     const allPositions = [];
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      
-      // Increased tree count since we have better positioning logic
-      const treeCount = 5 + Math.floor(seededRandom(seed) * 4); // 5-8 trees per chunk
+      const treeCount = 4 + Math.floor(seededRandom(seed) * 3); // 4-6 trees per chunk
       
       for (let i = 0; i < treeCount; i++) {
         let attempts = 0;
@@ -252,32 +237,23 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157;
           
-          // Generate position outside the ±12 range to avoid mountain geometry
           const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          const sideOffset = 12 + seededRandom(treeSeed) * 8; // 12-20 units from center (outside mountain range)
+          const sideOffset = 10 + seededRandom(treeSeed) * 15; // 10-25 units from center
           x = side * sideOffset;
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.9;
+          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
           terrainHeight = getTerrainHeight(x, z);
           
-          // Validate position with improved clamping
           if (!isValidTreePosition(x, z)) {
             attempts++;
             continue;
           }
           
-          // Get tree type with pine218 priority
           treeType = getTreeType(treeSeed + 2);
-          
-          // Get randomized scale based on tree type
           scale = getTreeScale(treeType, treeSeed + 3);
-          
-          // Random Y-axis rotation (0°–360°)
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          
           finalY = terrainHeight;
           
-          // Check minimum distance from existing trees
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
               Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
@@ -296,11 +272,10 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    // Player position for distance calculations
     const avgX = chunks.reduce((sum, chunk) => sum + chunk.worldX, 0) / chunks.length;
     const avgZ = chunks.reduce((sum, chunk) => sum + chunk.worldZ, 0) / chunks.length;
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees clamped outside ±12 range`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees between close mountains`);
     
     return {
       treePositions: trees,
@@ -308,12 +283,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     };
   }, [chunks.map(c => c.id).join(','), chunkSize, realm]);
 
-  // Only render for fantasy realm
-  if (realm !== 'fantasy') {
-    return null;
-  }
-
-  if (treePositions.length === 0) {
+  if (realm !== 'fantasy' || treePositions.length === 0) {
     return null;
   }
 
