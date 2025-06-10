@@ -54,11 +54,12 @@ const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   return distance < 6;
 };
 
-// UPDATED: Check if position overlaps with mountain boundaries
+// UPDATED: Check if position is within the central valley near the path
+// Trees should spawn OUTSIDE this buffer to avoid lining up along the path
 const isInMountainBoundary = (x: number, z: number): boolean => {
-  // Mountains are now at X=±6, so trees should stay outside X=±5 range
+  // Valley around the path where trees shouldn't spawn
   const mountainBuffer = 5;
-  return Math.abs(x) >= mountainBuffer;
+  return Math.abs(x) < mountainBuffer;
 };
 
 // UPDATED tree positioning with mountain boundary respect
@@ -267,11 +268,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157 + chunk.x * 1000 + chunk.z * 100;
-          
-          // Controlled positioning between path and mountains
-          const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          const sideOffset = 4.5 + seededRandom(treeSeed) * 7.5; // Scatter much further from path
-          x = side * sideOffset;
+
+          // Scatter trees randomly within the allowed X range
+          x = (seededRandom(treeSeed) - 0.5) * 24; // [-12, 12]
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
           
           terrainHeight = getTerrainHeight(x, z);
