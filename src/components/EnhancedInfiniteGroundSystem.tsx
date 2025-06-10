@@ -26,37 +26,44 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     const tiles = [];
     const tileSize = chunkSize;
     
-    // FIXED: Use consistent Z positioning logic
-    const playerZ = playerPosition.z; // Use actual Z, not absolute
-    const startZ = Math.floor((playerZ - 300) / tileSize) * tileSize; // Look far back
-    const endZ = Math.floor((playerZ + 500) / tileSize) * tileSize; // Look far forward
+    // FIXED: Much more aggressive ground coverage to prevent any gaps
+    const playerZ = playerPosition.z;
+    const startZ = Math.floor((playerZ - 500) / tileSize) * tileSize; // Increased coverage
+    const endZ = Math.floor((playerZ + 800) / tileSize) * tileSize; // Increased coverage
     
-    // Generate seamless ground tiles that never disappear
+    // Generate seamless ground tiles with massive overlap
     for (let z = startZ; z <= endZ; z += tileSize) {
-      // Main ground plane - consistent with mountain positioning
-      tiles.push({
-        key: `infinite_ground_main_${z}`,
-        position: [0, -1.8, z] as [number, number, number], // Fixed Y positioning at -1.8
-        size: tileSize + 10, // Overlap tiles to prevent gaps
-        type: 'main'
-      });
-      
-      // Side ground extensions to ensure full coverage
-      [-1, 1].forEach(side => {
+      // MULTIPLE ground layers for guaranteed coverage
+      for (let layer = 0; layer < 3; layer++) {
+        const layerY = -1.8 - (layer * 0.1); // Stacked layers
+        
+        // Main ground plane with massive overlap
         tiles.push({
-          key: `infinite_ground_side_${side}_${z}`,
-          position: [side * (tileSize + 5), -1.8, z] as [number, number, number],
-          size: tileSize,
-          type: 'side'
+          key: `infinite_ground_main_${z}_layer_${layer}`,
+          position: [0, layerY, z] as [number, number, number],
+          size: tileSize + 20, // Massive overlap
+          type: 'main',
+          layer
         });
-      });
+        
+        // Side ground extensions with overlap
+        [-2, -1, 1, 2].forEach(side => {
+          tiles.push({
+            key: `infinite_ground_side_${side}_${z}_layer_${layer}`,
+            position: [side * (tileSize + 5), layerY, z] as [number, number, number],
+            size: tileSize + 10,
+            type: 'side',
+            layer
+          });
+        });
+      }
     }
     
-    console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} infinite ground tiles from Z=${startZ} to Z=${endZ} at Y=-1.8`);
+    console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} layered ground tiles for seamless coverage`);
     return tiles;
   }, [
-    // Reduce recalculation frequency by rounding player position
-    Math.floor(playerPosition.z / 20) * 20,
+    // FIXED: Reduced recalculation frequency for stability
+    Math.floor(playerPosition.z / 10) * 10, // Reduced frequency
     chunkSize
   ]);
 
@@ -68,39 +75,49 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
           position={tile.position} 
           rotation={[-Math.PI / 2, 0, 0]} 
           receiveShadow
-          frustumCulled={false} // CRITICAL: Prevent ground from disappearing
+          frustumCulled={false} // CRITICAL: Never cull
           matrixAutoUpdate={true}
+          renderOrder={-tile.layer} // Ensure proper layering
         >
           <planeGeometry args={[tile.size, tile.size, 1, 1]} />
           <meshStandardMaterial 
             color={tile.type === 'main' ? "#2d4a2b" : "#1a3a1b"}
             roughness={0.9}
             metalness={0.1}
-            side={THREE.DoubleSide} // Ensure visibility from any angle
+            side={THREE.DoubleSide} // CRITICAL: Visible from any angle
             transparent={false}
             opacity={1.0}
             depthTest={true}
-            depthWrite={true}
+            depthWrite={tile.layer === 0} // Only write depth for top layer
+            depthFunc={THREE.LessEqualDepth}
           />
         </mesh>
       ))}
       
-      {/* Additional base layer to guarantee ground presence - FIXED positioning */}
-      <mesh 
-        position={[0, -2.2, playerPosition.z]} 
-        rotation={[-Math.PI / 2, 0, 0]} 
-        receiveShadow
-        frustumCulled={false}
-      >
-        <planeGeometry args={[1000, 1000]} />
-        <meshStandardMaterial 
-          color="#1a2a1b"
-          roughness={1.0}
-          metalness={0.0}
-          side={THREE.DoubleSide}
-          transparent={false}
-        />
-      </mesh>
+      {/* ENHANCED: Multiple massive base layers for absolute ground guarantee */}
+      {Array.from({ length: 5 }, (_, i) => (
+        <mesh 
+          key={`mega_base_${i}`}
+          position={[0, -2.5 - (i * 0.2), playerPosition.z]} 
+          rotation={[-Math.PI / 2, 0, 0]} 
+          receiveShadow
+          frustumCulled={false} // CRITICAL: Never cull
+          matrixAutoUpdate={true}
+          renderOrder={-10 - i}
+        >
+          <planeGeometry args={[2000 + (i * 200), 2000 + (i * 200)]} />
+          <meshStandardMaterial 
+            color={i === 0 ? "#1a2a1b" : "#0f1f0c"}
+            roughness={1.0}
+            metalness={0.0}
+            side={THREE.DoubleSide}
+            transparent={false}
+            opacity={1.0}
+            depthTest={true}
+            depthWrite={i === 0}
+          />
+        </mesh>
+      ))}
     </group>
   );
 };

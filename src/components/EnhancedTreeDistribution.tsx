@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -88,62 +87,77 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// FIXED Tree component - completely restructured to prevent hook count issues
+// ENHANCED Tree component with MAXIMUM anti-disappearance measures
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
   treeType: 'realistic' | 'stylized' | 'pine218';
 }> = ({ position, scale, rotation, treeType }) => {
-  // FIXED: Use useMemo to get the model instead of useState + useEffect
+  // Use cached model
   const treeModel = useMemo(() => {
     return TreeAssetManager.getCachedModel(treeType);
   }, [treeType]);
 
-  // FIXED: Use useMemo for the optimized model to prevent hook dependency issues
+  // ENHANCED: Apply MAXIMUM anti-disappearance settings
   const optimizedModel = useMemo(() => {
     if (!treeModel) return null;
 
     const model = treeModel.clone();
     
-    // Apply maximum visibility settings to the tree model
-    model.traverse((child) => {
-      child.frustumCulled = false;
-      child.matrixAutoUpdate = true;
+    // CRITICAL: Apply maximum anti-culling settings recursively
+    const applyAntiCullingRecursive = (object: THREE.Object3D) => {
+      object.frustumCulled = false;
+      object.matrixAutoUpdate = true;
+      object.matrixWorldNeedsUpdate = true;
+      object.visible = true;
       
-      if (child instanceof THREE.Mesh) {
-        child.frustumCulled = false;
-        child.castShadow = true;
-        child.receiveShadow = true;
-        
-        // Force material visibility
-        if (child.material) {
-          if (Array.isArray(child.material)) {
-            child.material.forEach(mat => {
-              mat.side = THREE.DoubleSide;
-              mat.transparent = false;
-              mat.opacity = 1.0;
-              mat.visible = true;
-              mat.needsUpdate = true;
-            });
-          } else {
-            child.material.side = THREE.DoubleSide;
-            child.material.transparent = false;
-            child.material.opacity = 1.0;
-            child.material.visible = true;
-            child.material.needsUpdate = true;
+      if (object instanceof THREE.Mesh) {
+        // ENHANCED: Maximum bounding box expansion
+        if (object.geometry) {
+          object.geometry.computeBoundingBox();
+          object.geometry.computeBoundingSphere();
+          
+          if (object.geometry.boundingBox) {
+            object.geometry.boundingBox.expandByScalar(5.0); // Massive expansion
+          }
+          if (object.geometry.boundingSphere) {
+            object.geometry.boundingSphere.radius += 5.0; // Massive radius
           }
         }
+        
+        // ENHANCED: Force material visibility
+        if (object.material) {
+          const materials = Array.isArray(object.material) ? object.material : [object.material];
+          materials.forEach(mat => {
+            mat.side = THREE.DoubleSide;
+            mat.transparent = false;
+            mat.opacity = 1.0;
+            mat.visible = true;
+            mat.depthTest = true;
+            mat.depthWrite = true;
+            mat.needsUpdate = true;
+            mat.fog = false; // Prevent fog from hiding trees
+          });
+        }
+        
+        object.castShadow = true;
+        object.receiveShadow = true;
+        object.renderOrder = 0;
       }
-    });
+      
+      // Apply to all children recursively
+      object.children.forEach(child => applyAntiCullingRecursive(child));
+    };
 
+    applyAntiCullingRecursive(model);
     return model;
   }, [treeModel]);
 
-  // FIXED Y positioning - place trees at ground level (-1.8 to match ground plane)
+  // FIXED: Ground level positioning
   const adjustedPosition: [number, number, number] = [
     position[0],
-    -1.8 + TREE_Y_OFFSETS[treeType], // Match ground level at Y=-1.8
+    -1.8 + TREE_Y_OFFSETS[treeType],
     position[2]
   ];
 
@@ -153,11 +167,18 @@ const GLBTree: React.FC<{
         position={adjustedPosition} 
         scale={[scale, scale, scale]} 
         rotation={[0, rotation, 0]}
-        frustumCulled={false} // CRITICAL: Never cull fallback trees
+        frustumCulled={false}
+        matrixAutoUpdate={true}
+        renderOrder={1}
       >
         <mesh position={[0, 0.5, 0]} castShadow receiveShadow frustumCulled={false}>
           <cylinderGeometry args={[0.1, 0.15, 1]} />
-          <meshLambertMaterial color="#8B4513" side={THREE.DoubleSide} transparent={false} />
+          <meshLambertMaterial 
+            color="#8B4513" 
+            side={THREE.DoubleSide} 
+            transparent={false}
+            fog={false}
+          />
         </mesh>
         <mesh position={[0, 1.2, 0]} castShadow receiveShadow frustumCulled={false}>
           <coneGeometry args={[0.6, 1.5, 8]} />
@@ -165,6 +186,7 @@ const GLBTree: React.FC<{
             color={treeType === 'pine218' ? "#013220" : "#228B22"} 
             side={THREE.DoubleSide} 
             transparent={false}
+            fog={false}
           />
         </mesh>
       </group>
@@ -176,14 +198,16 @@ const GLBTree: React.FC<{
       position={adjustedPosition} 
       scale={[scale, scale, scale]} 
       rotation={[0, rotation, 0]}
-      frustumCulled={false} // CRITICAL: Never cull the entire tree group
+      frustumCulled={false}
+      matrixAutoUpdate={true}
+      renderOrder={1}
     >
       <primitive object={optimizedModel} frustumCulled={false} />
     </group>
   );
 };
 
-// Tree group component
+// Tree group component with ENHANCED visibility
 const TreeGroup: React.FC<{
   positions: Array<{ 
     x: number; 
@@ -194,13 +218,18 @@ const TreeGroup: React.FC<{
     treeType: 'realistic' | 'stylized' | 'pine218';
   }>;
 }> = ({ positions }) => {
-  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} enhanced visibility trees`);
+  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} trees with MAXIMUM anti-disappearance measures`);
 
   return (
-    <group name="EnhancedVisibilityTreeGroup" frustumCulled={false}>
+    <group 
+      name="EnhancedVisibilityTreeGroup" 
+      frustumCulled={false}
+      matrixAutoUpdate={true}
+      renderOrder={1}
+    >
       {positions.map((pos, index) => (
         <GLBTree
-          key={`enhanced-tree-${index}-${pos.treeType}-${pos.x}-${pos.z}`}
+          key={`enhanced-tree-${index}-${pos.treeType}-${Math.round(pos.x)}-${Math.round(pos.z)}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -221,14 +250,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees with ground-level positioning');
+    console.log('EnhancedTreeDistribution: Generating trees with MAXIMUM anti-disappearance measures');
     const trees = [];
-    const minDistance = 3; // Reduced for tighter placement
+    const minDistance = 3;
     const maxAttempts = 30;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      const treeCount = 2; // Fewer trees due to tighter constraints
+      const treeCount = 3; // Increased slightly for better coverage
       const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {
@@ -241,7 +270,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           
           // Controlled positioning between path and mountains
           const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          const sideOffset = 4.6 + seededRandom(treeSeed) * 0.2; // Very tight range: 4.6-4.8
+          const sideOffset = 4.6 + seededRandom(treeSeed) * 0.2;
           x = side * sideOffset;
           z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
           
@@ -275,7 +304,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees at ground level`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with enhanced visibility measures`);
     return trees;
   }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 
