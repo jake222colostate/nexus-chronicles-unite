@@ -112,24 +112,24 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
         
         console.log(`FantasyMountainSystem: Creating mountains for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
         
-        // Left side mountains at x = -40, grounded at y = 0 (far from road)
+        // Left side mountains slightly closer at x = -30
         instances.push(
           <Suspense key={`left-${chunk.id}-${zOffset}`} fallback={null}>
-            <Mountain 
+            <Mountain
               url={FANTASY_MOUNTAIN_LEFT_URL}
-              position={[-40, 0, finalZ]}
+              position={[-30, 0, finalZ]}
               scale={[2, 2, 2]}
               side="left"
             />
           </Suspense>
         );
         
-        // Right side mountains at x = 40, grounded at y = 0 (far from road)
+        // Right side mountains slightly closer at x = 30
         instances.push(
           <Suspense key={`right-${chunk.id}-${zOffset}`} fallback={null}>
-            <Mountain 
+            <Mountain
               url={FANTASY_MOUNTAIN_RIGHT_URL}
-              position={[40, 0, finalZ]}
+              position={[30, 0, finalZ]}
               scale={[2, 2, 2]}
               side="right"
             />
