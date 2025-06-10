@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
+import { useGLTF } from '@react-three/drei';
 
 interface EnhancedInfiniteGroundSystemProps {
   chunks: ChunkData[];
@@ -21,6 +22,19 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
   if (realm !== 'fantasy') {
     return null;
   }
+
+  const { scene: pathScene } = useGLTF('/assets/dusty_foot_path_way_in_grass_garden.glb');
+
+  const pathModel = useMemo(() => {
+    const clone = pathScene.clone();
+    clone.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    return clone;
+  }, [pathScene]);
 
   const infiniteGroundTiles = useMemo(() => {
     const tiles = [];
@@ -70,28 +84,41 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
   return (
     <group name="EnhancedInfiniteGroundSystem">
       {infiniteGroundTiles.map((tile) => (
-        <mesh 
-          key={tile.key}
-          position={tile.position} 
-          rotation={[-Math.PI / 2, 0, 0]} 
-          receiveShadow
-          frustumCulled={false} // CRITICAL: Never cull
-          matrixAutoUpdate={true}
-          renderOrder={-tile.layer} // Ensure proper layering
-        >
-          <planeGeometry args={[tile.size, tile.size, 1, 1]} />
-          <meshStandardMaterial 
-            color={tile.type === 'main' ? "#2d4a2b" : "#1a3a1b"}
-            roughness={0.9}
-            metalness={0.1}
-            side={THREE.DoubleSide} // CRITICAL: Visible from any angle
-            transparent={false}
-            opacity={1.0}
-            depthTest={true}
-            depthWrite={tile.layer === 0} // Only write depth for top layer
-            depthFunc={THREE.LessEqualDepth}
+        tile.type === 'main' ? (
+          <primitive
+            object={pathModel.clone()}
+            key={tile.key}
+            position={tile.position}
+            rotation={[-Math.PI / 2, 0, 0]}
+            scale={[0.4 * (tile.size / chunkSize), 0.4, 0.4 * (tile.size / chunkSize)]}
+            frustumCulled={false}
+            matrixAutoUpdate={true}
+            renderOrder={-tile.layer}
           />
-        </mesh>
+        ) : (
+          <mesh
+            key={tile.key}
+            position={tile.position}
+            rotation={[-Math.PI / 2, 0, 0]}
+            receiveShadow
+            frustumCulled={false}
+            matrixAutoUpdate={true}
+            renderOrder={-tile.layer}
+          >
+            <planeGeometry args={[tile.size, tile.size, 1, 1]} />
+            <meshStandardMaterial
+              color="#1a3a1b"
+              roughness={0.9}
+              metalness={0.1}
+              side={THREE.DoubleSide}
+              transparent={false}
+              opacity={1.0}
+              depthTest={true}
+              depthWrite={tile.layer === 0}
+              depthFunc={THREE.LessEqualDepth}
+            />
+          </mesh>
+        )
       ))}
       
       {/* ENHANCED: Multiple massive base layers for absolute ground guarantee */}
@@ -121,3 +148,5 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     </group>
   );
 };
+
+useGLTF.preload('/assets/dusty_foot_path_way_in_grass_garden.glb');
