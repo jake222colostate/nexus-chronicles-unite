@@ -92,9 +92,13 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
           <primitive
             object={pathModel.clone()}
             key={tile.key}
-            position={[tile.position[0], tile.position[1] + 0.05, tile.position[2]]}
-            rotation={[-Math.PI / 2, 0, 0]}
-            scale={[tile.size / MODEL_WIDTH, 1, tile.size / MODEL_LENGTH]}
+            position={[tile.position[0], tile.position[1], tile.position[2]]}
+            rotation={[0, 0, 0]} // FIXED: No rotation - keep model in original orientation
+            scale={[
+              tile.size / MODEL_WIDTH,   // Scale X to cover full tile width
+              1,                         // Keep Y scale at 1
+              tile.size / MODEL_LENGTH   // Scale Z to cover full tile length
+            ]}
             frustumCulled={false}
             matrixAutoUpdate={true}
             renderOrder={-tile.layer}
