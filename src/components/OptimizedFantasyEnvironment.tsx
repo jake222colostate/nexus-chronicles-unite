@@ -6,6 +6,7 @@ import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistributio
 import { InfiniteEnvironmentSystem } from './InfiniteEnvironmentSystem';
 import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
 import { RockyForestPathSystem } from './RockyForestPathSystem';
+import { CrystalComponent } from './CrystalComponent';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: ChunkData[];
@@ -25,7 +26,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with infinite ground, rocky path, and tight valley`);
+  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with wider paths and sky crystals`);
 
   return (
     <Suspense fallback={null}>
@@ -37,11 +38,18 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         playerPosition={playerPosition}
       />
       
-      {/* Rocky forest path system - infinite looping path */}
+      {/* Rocky forest path system - wider, properly connected path */}
       <RockyForestPathSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
+      />
+      
+      {/* Special sky crystal for the loading area */}
+      <CrystalComponent
+        position={[0, 20, 0]} 
+        scale={[3, 3, 3]}
+        animate={true}
       />
       
       {/* Infinite environment system handles mountains and other elements */}
