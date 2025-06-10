@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from '../components/ChunkSystem';
 import * as THREE from 'three';
@@ -89,7 +88,7 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// ENHANCED Tree component with MAXIMUM anti-disappearance measures
+// ENHANCED Tree component with fog integration
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -105,28 +104,28 @@ const GLBTree: React.FC<{
 
     const model = treeModel.clone();
     
-    // CRITICAL: Apply maximum anti-culling settings recursively
-    const applyAntiCullingRecursive = (object: THREE.Object3D) => {
+    // Apply optimization settings but ALLOW fog
+    const applyOptimizationRecursive = (object: THREE.Object3D) => {
       object.frustumCulled = false;
       object.matrixAutoUpdate = true;
       object.matrixWorldNeedsUpdate = true;
       object.visible = true;
       
       if (object instanceof THREE.Mesh) {
-        // ENHANCED: Maximum bounding box expansion
+        // Expand bounding boxes for better visibility
         if (object.geometry) {
           object.geometry.computeBoundingBox();
           object.geometry.computeBoundingSphere();
           
           if (object.geometry.boundingBox) {
-            object.geometry.boundingBox.expandByScalar(5.0); // Massive expansion
+            object.geometry.boundingBox.expandByScalar(2.0);
           }
           if (object.geometry.boundingSphere) {
-            object.geometry.boundingSphere.radius += 5.0; // Massive radius
+            object.geometry.boundingSphere.radius += 2.0;
           }
         }
         
-        // ENHANCED: Force material visibility
+        // Configure materials to work with fog
         if (object.material) {
           const materials = Array.isArray(object.material) ? object.material : [object.material];
           materials.forEach(mat => {
@@ -137,7 +136,8 @@ const GLBTree: React.FC<{
             mat.depthTest = true;
             mat.depthWrite = true;
             mat.needsUpdate = true;
-            mat.fog = false; // Prevent fog from hiding trees
+            // REMOVE fog prevention - let trees be affected by fog
+            // mat.fog = false; // REMOVED
           });
         }
         
@@ -147,13 +147,12 @@ const GLBTree: React.FC<{
       }
       
       // Apply to all children recursively
-      object.children.forEach(child => applyAntiCullingRecursive(child));
+      object.children.forEach(child => applyOptimizationRecursive(child));
 
-      // Ensure matrices are fully updated after modifications
       object.updateMatrixWorld(true);
     };
 
-    applyAntiCullingRecursive(model);
+    applyOptimizationRecursive(model);
     model.updateMatrixWorld(true);
     return model;
   }, [treeModel]);
@@ -190,7 +189,7 @@ const GLBTree: React.FC<{
             color="#8B4513" 
             side={THREE.DoubleSide} 
             transparent={false}
-            fog={false}
+            // REMOVE fog prevention - let fallback trees be affected by fog
           />
         </mesh>
         <mesh position={[0, 1.2, 0]} castShadow receiveShadow frustumCulled={false}>
@@ -199,7 +198,7 @@ const GLBTree: React.FC<{
             color={treeType === 'pine218' ? "#013220" : "#228B22"} 
             side={THREE.DoubleSide} 
             transparent={false}
-            fog={false}
+            // REMOVE fog prevention - let fallback trees be affected by fog
           />
         </mesh>
       </group>
