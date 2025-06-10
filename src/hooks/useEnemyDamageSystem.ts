@@ -18,74 +18,80 @@ export const useEnemyDamageSystem = ({ playerZ, upgradeLevel }: UseEnemyDamageSy
   const [enemyHealths, setEnemyHealths] = useState<Map<string, EnemyHealth>>(new Map());
   const lastPlayerZ = useRef(playerZ);
   const lastUpgradeLevel = useRef(upgradeLevel);
+  const stablePlayerZ = useRef(Math.floor(playerZ / 50) * 50); // Much more stable
 
-  // Only recalculate when playerZ or upgradeLevel actually changes
-  const shouldUpdate = playerZ !== lastPlayerZ.current || upgradeLevel !== lastUpgradeLevel.current;
+  // Only update when there's a significant change
+  const shouldUpdate = Math.abs(playerZ - lastPlayerZ.current) > 50 || upgradeLevel !== lastUpgradeLevel.current;
   
   if (shouldUpdate) {
     lastPlayerZ.current = playerZ;
     lastUpgradeLevel.current = upgradeLevel;
+    stablePlayerZ.current = Math.floor(playerZ / 50) * 50;
   }
 
-  // Calculate base health - exactly 10 shots to kill early enemies
+  // Stable calculation functions
   const calculateMaxHealth = useCallback((enemyZ: number) => {
-    const baseHealth = 50; // Base health for early enemies
-    const distanceBonus = Math.floor(Math.abs(enemyZ) / 30) * 10; // Slower scaling
+    const baseHealth = 50;
+    const distanceBonus = Math.floor(Math.abs(enemyZ) / 30) * 10;
     return baseHealth + distanceBonus;
   }, []);
 
-  // Calculate damage - exactly 5 damage base (1/10 of 50 health = 10 shots to kill)
   const projectileDamage = useMemo(() => {
-    const baseDamage = 5; // Base damage = 1/10 of 50 health = 10 shots to kill
-    const upgradeBonus = lastUpgradeLevel.current * 2; // Smaller upgrade bonus
+    const baseDamage = 5;
+    const upgradeBonus = lastUpgradeLevel.current * 2;
     return baseDamage + upgradeBonus;
   }, [lastUpgradeLevel.current]);
 
-  // Initialize enemy health when spawned
   const initializeEnemy = useCallback((enemyId: string, position: [number, number, number]) => {
-    const maxHealth = calculateMaxHealth(position[2]);
-    const enemyHealth: EnemyHealth = {
-      id: enemyId,
-      currentHealth: maxHealth,
-      maxHealth,
-      position,
-      lastHitTime: 0
-    };
-    
     setEnemyHealths(prev => {
+      // Prevent duplicate initialization
+      if (prev.has(enemyId)) {
+        return prev;
+      }
+      
+      const maxHealth = calculateMaxHealth(position[2]);
+      const enemyHealth: EnemyHealth = {
+        id: enemyId,
+        currentHealth: maxHealth,
+        maxHealth,
+        position,
+        lastHitTime: 0
+      };
+      
       const newMap = new Map(prev);
       newMap.set(enemyId, enemyHealth);
-      console.log(`EnemyDamageSystem: Initialized enemy ${enemyId} with health ${maxHealth}/${maxHealth}`);
+      console.log(`EnemyDamageSystem: Initialized enemy ${enemyId} with health ${maxHealth}`);
       return newMap;
     });
   }, [calculateMaxHealth]);
 
-  // Deal damage to enemy
   const damageEnemy = useCallback((enemyId: string, damage?: number) => {
     const actualDamage = damage || projectileDamage;
     
     setEnemyHealths(prev => {
-      const newMap = new Map(prev);
-      const enemy = newMap.get(enemyId);
-      
-      if (enemy && enemy.currentHealth > 0) {
-        const newHealth = Math.max(0, enemy.currentHealth - actualDamage);
-        newMap.set(enemyId, {
-          ...enemy,
-          currentHealth: newHealth,
-          lastHitTime: Date.now()
-        });
-        
-        console.log(`EnemyDamageSystem: Enemy ${enemyId} hit for ${actualDamage} damage. Health: ${newHealth}/${enemy.maxHealth}`);
+      const enemy = prev.get(enemyId);
+      if (!enemy || enemy.currentHealth <= 0) {
+        return prev;
       }
       
+      const newHealth = Math.max(0, enemy.currentHealth - actualDamage);
+      const newMap = new Map(prev);
+      newMap.set(enemyId, {
+        ...enemy,
+        currentHealth: newHealth,
+        lastHitTime: Date.now()
+      });
+      
+      console.log(`EnemyDamageSystem: Enemy ${enemyId} hit for ${actualDamage} damage. Health: ${newHealth}/${enemy.maxHealth}`);
       return newMap;
     });
   }, [projectileDamage]);
 
-  // Remove dead enemies
   const removeEnemy = useCallback((enemyId: string) => {
     setEnemyHealths(prev => {
+      if (!prev.has(enemyId)) {
+        return prev;
+      }
       const newMap = new Map(prev);
       newMap.delete(enemyId);
       console.log(`EnemyDamageSystem: Removed enemy ${enemyId}`);
@@ -93,18 +99,15 @@ export const useEnemyDamageSystem = ({ playerZ, upgradeLevel }: UseEnemyDamageSy
     });
   }, []);
 
-  // Get enemy health data
   const getEnemyHealth = useCallback((enemyId: string): EnemyHealth | undefined => {
     return enemyHealths.get(enemyId);
   }, [enemyHealths]);
 
-  // Check if enemy is dead
   const isEnemyDead = useCallback((enemyId: string): boolean => {
     const enemy = enemyHealths.get(enemyId);
     return !enemy || enemy.currentHealth <= 0;
   }, [enemyHealths]);
 
-  // Get all living enemies
   const getLivingEnemies = useCallback((): EnemyHealth[] => {
     return Array.from(enemyHealths.values()).filter(enemy => enemy.currentHealth > 0);
   }, [enemyHealths]);
