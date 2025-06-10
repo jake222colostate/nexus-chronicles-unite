@@ -140,10 +140,10 @@ const GLBTree: React.FC<{
     return model;
   }, [treeModel]);
 
-  // ENHANCED Y positioning with terrain integration and elevation boost
+  // FIXED Y positioning - place trees at ground level (-1.8 to match ground plane)
   const adjustedPosition: [number, number, number] = [
     position[0],
-    Math.max(2.0, position[1] + TREE_Y_OFFSETS[treeType] + 2.0), // Much higher placement
+    -1.8 + TREE_Y_OFFSETS[treeType], // Match ground level at Y=-1.8
     position[2]
   ];
 
@@ -221,7 +221,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees with maximum visibility and anti-disappearance settings');
+    console.log('EnhancedTreeDistribution: Generating trees with ground-level positioning');
     const trees = [];
     const minDistance = 3; // Reduced for tighter placement
     const maxAttempts = 30;
@@ -255,7 +255,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           treeType = getTreeType(treeSeed + 2);
           scale = getTreeScale(treeType, treeSeed + 3);
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          finalY = Math.max(2.0, terrainHeight + 2.0); // Much higher elevation for maximum visibility
+          finalY = -1.8; // Fixed ground level positioning
           
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
@@ -275,7 +275,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with maximum visibility settings`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees at ground level`);
     return trees;
   }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 

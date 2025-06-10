@@ -96,7 +96,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
     const segmentSpacing = 5; // Tighter spacing for seamless coverage
     const leftMountainX = -6;  // CLOSER to path (was -8)
     const rightMountainX = 6;  // CLOSER to path (was 8)
-    const MOUNTAIN_Y = -2; // Underground positioning
+    const MOUNTAIN_Y = -1.8; // Match ground level positioning
     
     chunks.forEach((chunk) => {
       const segmentsPerChunk = Math.ceil(chunkSize / segmentSpacing) + 6;
@@ -124,7 +124,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
       }
     });
     
-    console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments closer to path with anti-hole positioning`);
+    console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments at ground level Y=-1.8`);
     return segments;
   }, [chunks, chunkSize]);
 

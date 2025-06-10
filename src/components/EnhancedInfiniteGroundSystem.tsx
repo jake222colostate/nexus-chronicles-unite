@@ -25,19 +25,18 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
   const infiniteGroundTiles = useMemo(() => {
     const tiles = [];
     const tileSize = chunkSize;
-    const bufferZones = 5; // Extra tiles beyond render distance
     
-    // Calculate extended range to prevent terrain gaps
-    const playerZ = Math.abs(playerPosition.z);
-    const startZ = Math.floor((playerZ - 200) / tileSize) * tileSize; // Look far back
-    const endZ = Math.floor((playerZ + 300) / tileSize) * tileSize; // Look far forward
+    // FIXED: Use consistent Z positioning logic
+    const playerZ = playerPosition.z; // Use actual Z, not absolute
+    const startZ = Math.floor((playerZ - 300) / tileSize) * tileSize; // Look far back
+    const endZ = Math.floor((playerZ + 500) / tileSize) * tileSize; // Look far forward
     
     // Generate seamless ground tiles that never disappear
     for (let z = startZ; z <= endZ; z += tileSize) {
-      // Main ground plane - wider than chunk system
+      // Main ground plane - consistent with mountain positioning
       tiles.push({
         key: `infinite_ground_main_${z}`,
-        position: [0, -2.5, -z] as [number, number, number], // Slightly lower than mountains
+        position: [0, -1.8, z] as [number, number, number], // Fixed Y positioning at -1.8
         size: tileSize + 10, // Overlap tiles to prevent gaps
         type: 'main'
       });
@@ -46,18 +45,18 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
       [-1, 1].forEach(side => {
         tiles.push({
           key: `infinite_ground_side_${side}_${z}`,
-          position: [side * (tileSize + 5), -2.5, -z] as [number, number, number],
+          position: [side * (tileSize + 5), -1.8, z] as [number, number, number],
           size: tileSize,
           type: 'side'
         });
       });
     }
     
-    console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} infinite ground tiles from Z=${startZ} to Z=${endZ}`);
+    console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} infinite ground tiles from Z=${startZ} to Z=${endZ} at Y=-1.8`);
     return tiles;
   }, [
     // Reduce recalculation frequency by rounding player position
-    Math.floor(Math.abs(playerPosition.z) / 20) * 20,
+    Math.floor(playerPosition.z / 20) * 20,
     chunkSize
   ]);
 
@@ -86,14 +85,14 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
         </mesh>
       ))}
       
-      {/* Additional base layer to guarantee ground presence */}
+      {/* Additional base layer to guarantee ground presence - FIXED positioning */}
       <mesh 
-        position={[0, -3, -Math.abs(playerPosition.z)]} 
+        position={[0, -2.2, playerPosition.z]} 
         rotation={[-Math.PI / 2, 0, 0]} 
         receiveShadow
         frustumCulled={false}
       >
-        <planeGeometry args={[500, 500]} />
+        <planeGeometry args={[1000, 1000]} />
         <meshStandardMaterial 
           color="#1a2a1b"
           roughness={1.0}
