@@ -1,3 +1,4 @@
+
 import React from 'react';
 import * as THREE from 'three';
 
@@ -13,17 +14,18 @@ export const MagicalFantasySkybox: React.FC = () => {
             canvas.height = 1024;
             const ctx = canvas.getContext('2d')!;
 
-            // Vibrant radial gradient
+            // Bright blue radial gradient
             const gradient = ctx.createRadialGradient(512, 512, 100, 512, 512, 512);
-            gradient.addColorStop(0, '#3a1b5d');
-            gradient.addColorStop(0.4, '#512873');
-            gradient.addColorStop(0.7, '#793f9c');
-            gradient.addColorStop(1, '#b66dfa');
+            gradient.addColorStop(0, '#87CEEB'); // Sky blue center
+            gradient.addColorStop(0.4, '#4A90E2'); // Bright blue
+            gradient.addColorStop(0.7, '#6BB6FF'); // Light blue
+            gradient.addColorStop(1, '#B0E0E6'); // Powder blue edge
+
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Draw swirling magical rings
-            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            // Draw lighter magical rings
+            ctx.strokeStyle = 'rgba(255,255,255,0.6)';
             ctx.lineWidth = 2;
             for (let i = 0; i < 6; i++) {
               ctx.beginPath();
@@ -32,12 +34,12 @@ export const MagicalFantasySkybox: React.FC = () => {
               ctx.stroke();
             }
 
-            // Scatter stars
+            // Add fewer, brighter stars
             ctx.fillStyle = '#FFFFFF';
-            for (let i = 0; i < 250; i++) {
+            for (let i = 0; i < 100; i++) {
               const x = Math.random() * canvas.width;
               const y = Math.random() * canvas.height;
-              const size = Math.random() * 2;
+              const size = Math.random() * 3;
               ctx.fillRect(x, y, size, size);
             }
 

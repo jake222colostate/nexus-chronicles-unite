@@ -8,8 +8,8 @@ export const ImprovedFantasyLighting: React.FC = () => {
       {/* Main directional light (bright sun) - SIGNIFICANTLY ENHANCED */}
       <directionalLight
         position={[10, 25, 8]}
-        color={new THREE.Color(1.0, 0.98, 0.9)} // Warmer, brighter sunlight
-        intensity={2.5} // MASSIVELY INCREASED for vibrant lighting
+        color={new THREE.Color(1.0, 1.0, 1.0)} // Pure white bright sunlight
+        intensity={4.0} // MASSIVELY INCREASED for very bright lighting
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
@@ -23,30 +23,30 @@ export const ImprovedFantasyLighting: React.FC = () => {
       
       {/* Enhanced ambient light for overall bright illumination */}
       <ambientLight 
-        color={new THREE.Color(0.6, 0.7, 0.9)} // Brighter blue-tinted ambient
-        intensity={1.2} // DOUBLED for much brighter environment
+        color={new THREE.Color(0.8, 0.9, 1.0)} // Bright blue-tinted ambient
+        intensity={2.0} // TRIPLED for much brighter environment
       />
       
       {/* Enhanced hemisphere light for natural vibrant sky/ground lighting */}
       <hemisphereLight
-        color={new THREE.Color(0.8, 0.9, 1.0)} // Brighter sky color
-        groundColor={new THREE.Color(0.5, 0.4, 0.2)} // Warmer, brighter ground color
-        intensity={1.0} // INCREASED for more vibrant lighting
+        color={new THREE.Color(0.9, 0.95, 1.0)} // Very bright sky color
+        groundColor={new THREE.Color(0.7, 0.6, 0.4)} // Brighter, warmer ground color
+        intensity={1.5} // INCREASED for more vibrant lighting
       />
       
       {/* Additional fill light to eliminate dark areas */}
       <directionalLight
         position={[-8, 15, -8]}
-        color={new THREE.Color(0.8, 0.9, 1.0)} // Cool fill light
-        intensity={0.8} // INCREASED fill light intensity
+        color={new THREE.Color(0.9, 0.95, 1.0)} // Bright cool fill light
+        intensity={1.2} // INCREASED fill light intensity
         castShadow={false}
       />
       
       {/* Extra warm accent light from the side */}
       <directionalLight
         position={[15, 10, 0]}
-        color={new THREE.Color(1.0, 0.9, 0.7)} // Warm golden accent
-        intensity={0.6}
+        color={new THREE.Color(1.0, 0.95, 0.8)} // Bright golden accent
+        intensity={1.0} // INCREASED accent light
         castShadow={false}
       />
     </group>

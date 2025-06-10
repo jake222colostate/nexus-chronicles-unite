@@ -16,13 +16,13 @@ export const FantasyDuskSkybox: React.FC = () => {
             canvas.height = 512;
             const ctx = canvas.getContext('2d')!;
             
-            // Create the exact gradient from reference image
+            // Create bright blue gradient
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#1a0f2e'); // Dark purple top
-            gradient.addColorStop(0.3, '#2d1b4e'); // Medium purple
-            gradient.addColorStop(0.6, '#4a2c5a'); // Lighter purple
-            gradient.addColorStop(0.8, '#6b4c87'); // Pink-purple
-            gradient.addColorStop(1, '#8b6bb1'); // Light purple bottom
+            gradient.addColorStop(0, '#87CEEB'); // Sky blue top
+            gradient.addColorStop(0.3, '#4A90E2'); // Bright blue
+            gradient.addColorStop(0.6, '#6BB6FF'); // Light blue
+            gradient.addColorStop(0.8, '#B0E0E6'); // Powder blue
+            gradient.addColorStop(1, '#E0F6FF'); // Very light blue bottom
             
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);

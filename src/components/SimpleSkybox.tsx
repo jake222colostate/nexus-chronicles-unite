@@ -17,7 +17,7 @@ export const SimpleSkybox: React.FC<SimpleSkyboxProps> = ({ realm }) => {
       <sphereGeometry args={[200, 32, 32]} />
       <meshBasicMaterial 
         side={THREE.BackSide}
-        color="#87CEEB"
+        color="#4A90E2" // Bright blue sky
       />
     </mesh>
   );
