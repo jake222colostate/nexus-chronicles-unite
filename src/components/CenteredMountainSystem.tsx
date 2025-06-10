@@ -94,9 +94,9 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
     return null;
   }
 
-  console.log('CenteredMountainSystem: Rendering extremely wide valley with mountains lowered into ground');
+  console.log('CenteredMountainSystem: Rendering wide valley with mountains moved further away');
   
-  // Generate mountain walls at maximum distance with lowered Y position
+  // Generate mountain walls at even greater distance with lowered Y position
   const mountainInstances = useMemo(() => {
     const instances = [];
     
@@ -105,25 +105,25 @@ export const CenteredMountainSystem: React.FC<CenteredMountainSystemProps> = ({
       for (let zOffset = 0; zOffset < chunkSize; zOffset += 25) {
         const finalZ = chunk.worldZ + zOffset;
         
-        // Left mountain wall at X=-120 (maximum distance) - LOWERED into ground
+        // Left mountain wall at X=-180 (MUCH further away) - LOWERED into ground
         instances.push({
           key: `mountain_left_${chunk.id}_${zOffset}`,
-          position: [-120, -10, finalZ] as [number, number, number], // LOWERED from -2 to -10
+          position: [-180, -10, finalZ] as [number, number, number], // MOVED from -120 to -180
           scale: [0.6, 0.6, 0.6] as [number, number, number], // Smaller scale
           rotation: [0, 0, 0] as [number, number, number]
         });
         
-        // Right mountain wall at X=+120 (maximum distance) - LOWERED into ground
+        // Right mountain wall at X=+180 (MUCH further away) - LOWERED into ground
         instances.push({
           key: `mountain_right_${chunk.id}_${zOffset}`,
-          position: [120, -10, finalZ] as [number, number, number], // LOWERED from -2 to -10
+          position: [180, -10, finalZ] as [number, number, number], // MOVED from 120 to 180
           scale: [0.6, 0.6, 0.6] as [number, number, number], // Smaller scale
           rotation: [0, Math.PI, 0] as [number, number, number] // Flip for variety
         });
       }
     });
     
-    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances lowered into ground`);
+    console.log(`CenteredMountainSystem: Generated ${instances.length} mountain instances moved to ±180 units`);
     return instances;
   }, [chunks, chunkSize]);
   

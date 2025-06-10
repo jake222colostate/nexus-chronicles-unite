@@ -27,7 +27,7 @@ const MountainSegment: React.FC<{
   
   return (
     <group position={position} rotation={[0, side === 'left' ? Math.PI * 0.05 : -Math.PI * 0.05, 0]}>
-      {/* Main mountain peak - REPOSITIONED closer and higher */}
+      {/* Main mountain peak - REPOSITIONED further from path */}
       <mesh position={[0, peakHeight / 2 - 1, 0]} castShadow receiveShadow>
         <coneGeometry args={[baseWidth, peakHeight, segments]} />
         <meshLambertMaterial color="#6B5B73" />
@@ -100,8 +100,8 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
     const segments = [];
     
     const segmentSpacing = 5; // Tighter spacing for seamless coverage
-    const leftMountainX = -6;  // CLOSER to path (was -8)
-    const rightMountainX = 6;  // CLOSER to path (was 8)
+    const leftMountainX = -15;  // MOVED FURTHER from path (was -6)
+    const rightMountainX = 15;  // MOVED FURTHER from path (was 6)
     const MOUNTAIN_Y = -6; // LOWERED from -1.8 to -6 to prevent clipping
     
     chunks.forEach((chunk) => {
@@ -112,7 +112,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
         const segmentZ = chunk.worldZ + zOffset;
         const segmentSeed = chunk.seed + i * 67;
         
-        // Left mountain wall - closer positioning, lowered
+        // Left mountain wall - moved further from path, lowered
         segments.push({
           key: `left_${chunk.id}_${i}`,
           position: [leftMountainX, MOUNTAIN_Y, segmentZ] as [number, number, number],
@@ -120,7 +120,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
           side: 'left' as const
         });
         
-        // Right mountain wall - closer positioning, lowered
+        // Right mountain wall - moved further from path, lowered
         segments.push({
           key: `right_${chunk.id}_${i}`,
           position: [rightMountainX, MOUNTAIN_Y, segmentZ] as [number, number, number],
@@ -130,7 +130,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
       }
     });
     
-    console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments lowered to Y=-6`);
+    console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments moved to ±15 units`);
     return segments;
   }, [chunks, chunkSize]);
 

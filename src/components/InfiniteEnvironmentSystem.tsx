@@ -17,15 +17,15 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// ADJUSTED: Mountains closer to path but still providing a valley corridor
+// ADJUSTED: Mountains much further from path to prevent clipping
 const isWithinMountainBoundaries = (x: number): boolean => {
-  // Trees can spawn between mountains, closer to the path
-  return Math.abs(x) > 30 && Math.abs(x) < 45; // Narrower band, closer to path
+  // Trees can spawn between mountains, but much further from the path
+  return Math.abs(x) > 60 && Math.abs(x) < 85; // MOVED further from path (was 30-45)
 };
 
 // Ensure NO obstacles on the main player path
 const isOnPlayerPath = (x: number): boolean => {
-  return Math.abs(x) < 15; // Slightly narrower safety zone around path center
+  return Math.abs(x) < 25; // EXPANDED safety zone around path center (was 15)
 };
 
 interface InfiniteEnvironmentSystemProps {
@@ -121,7 +121,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     const mountains: Group[] = [];
     const trees: Group[] = [];
     
-    // Generate mountains CLOSER to the path - create a narrower valley
+    // Generate mountains MUCH FURTHER from the path - create a very wide valley
     const mountainSpacing = 3; // Closer spacing for better continuity
     const mountainCount = Math.ceil(CHUNK_SIZE / mountainSpacing) + 3; // More mountains for continuity
     
@@ -129,22 +129,22 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       const z = chunkZ - (i * mountainSpacing);
       const mountainSeed = chunkId * 1000 + i * 73;
       
-      // Left mountains positioned at X=-50 (MUCH closer than before)
-      const leftMountain = createMountain(-50, z, mountainSeed);
+      // Left mountains positioned at X=-80 (MUCH FURTHER from path than before)
+      const leftMountain = createMountain(-80, z, mountainSeed);
       if (leftMountain) {
         scene.add(leftMountain);
         mountains.push(leftMountain);
       }
       
-      // Right mountains positioned at X=+50 (MUCH closer than before)
-      const rightMountain = createMountain(50, z, mountainSeed + 500);
+      // Right mountains positioned at X=+80 (MUCH FURTHER from path than before)
+      const rightMountain = createMountain(80, z, mountainSeed + 500);
       if (rightMountain) {
         scene.add(rightMountain);
         mountains.push(rightMountain);
       }
     }
     
-    // Generate trees in the space between closer mountains
+    // Generate trees in the space between much farther mountains
     const treeCount = 5 + Math.floor(seededRandom(chunkId * 137) * 3); // Fewer trees due to less space
     const minDistance = 4; // Reduced minimum distance
     const maxAttempts = 30;
@@ -158,8 +158,8 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       while (!validPosition && attempts < maxAttempts) {
         const treeSeed = chunkId * 1000 + i * 73;
         
-        // Position trees in the narrower mountain boundary areas
-        x = (seededRandom(treeSeed) - 0.5) * 90; // Spread to ±45 units
+        // Position trees in the mountain boundary areas (much further from path)
+        x = (seededRandom(treeSeed) - 0.5) * 150; // EXPANDED spread to ±75 units
         z = chunkZ + (seededRandom(treeSeed + 1) - 0.5) * CHUNK_SIZE * 0.8;
         
         // STRICT boundary checks - NO trees near the path
@@ -170,7 +170,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
         
         // Additional safety - ensure trees are in the outer bands only
         const distanceFromCenter = Math.abs(x);
-        if (distanceFromCenter < 30) { // Must be at least 30 units from center (reduced from 100)
+        if (distanceFromCenter < 60) { // Must be at least 60 units from center (increased from 30)
           attempts++;
           continue;
         }
@@ -206,7 +206,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       }
     }
     
-    console.log(`Generated chunk ${chunkId} with ${mountains.length} mountains at ±50 units (lowered into ground) and ${trees.length} trees`);
+    console.log(`Generated chunk ${chunkId} with ${mountains.length} mountains at ±80 units (much further from path) and ${trees.length} trees`);
     
     return {
       id: chunkId,
@@ -278,7 +278,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     if (!mountainModel) return;
     
     TreeAssetManager.preloadAllModels().then(() => {
-      console.log('Tree models preloaded, starting wide valley generation with mountains at ±140');
+      console.log('Tree models preloaded, starting very wide valley generation with mountains at ±80');
       updateChunks(0);
     });
     

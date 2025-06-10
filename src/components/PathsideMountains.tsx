@@ -20,17 +20,17 @@ export const PathsideMountains: React.FC = () => {
 
     const count = 15; // Increased for better infinite generation coverage
     const spacing = 8; // Keep current spacing
-    const offsetX = 25; // Keep current separation
+    const offsetX = 40; // INCREASED from 25 to 40 - move mountains further from path
     const scale = 0.08; // Slightly increased from 0.06 to 0.08 for more immersive feel
 
-    console.log('PathsideMountains: Creating enlarged mountains with scale:', scale);
+    console.log('PathsideMountains: Creating enlarged mountains with scale:', scale, 'at distance:', offsetX);
 
     for (let i = 0; i < count; i++) {
       const z = -i * spacing;
 
       // Left side mountains (mirrored with negative X scale)
       const left = mountain.clone() as Group;
-      left.position.set(-offsetX, 0, z); // X = -25, Y = 0 (ground level)
+      left.position.set(-offsetX, 0, z); // X = -40, Y = 0 (ground level)
       left.scale.set(-scale, scale, scale); // Negative X scale to mirror/flip
       left.castShadow = true;
       left.receiveShadow = true;
@@ -48,7 +48,7 @@ export const PathsideMountains: React.FC = () => {
 
       // Right side mountains (normal orientation)
       const right = mountain.clone() as Group;
-      right.position.set(offsetX, 0, z); // X = 25, Y = 0 (ground level)
+      right.position.set(offsetX, 0, z); // X = 40, Y = 0 (ground level)
       right.scale.set(scale, scale, scale); // Normal positive scaling
       right.castShadow = true;
       right.receiveShadow = true;
@@ -65,7 +65,7 @@ export const PathsideMountains: React.FC = () => {
       mountainsRef.current.push(right);
     }
 
-    console.log('PathsideMountains: Added', mountainsRef.current.length, 'enlarged mountains');
+    console.log('PathsideMountains: Added', mountainsRef.current.length, 'enlarged mountains at ±40 units');
 
     // Cleanup function
     return () => {

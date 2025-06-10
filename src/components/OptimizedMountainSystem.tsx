@@ -134,21 +134,21 @@ export const OptimizedMountainSystem: React.FC<OptimizedMountainSystemProps> = (
       for (let zOffset = -25; zOffset < chunkSize + 25; zOffset += 50) {
         const finalZ = chunk.worldZ - zOffset;
         
-        // Left mountain at X = -20 (using original half-model) - LOWERED into ground
+        // Left mountain at X = -35 (MOVED FURTHER from -20) - LOWERED into ground
         instances.push(
           <OptimizedMountain
             key={`left-${chunk.id}-${zOffset}`}
-            position={[-20, -8, finalZ]} // LOWERED from 0 to -8
+            position={[-35, -8, finalZ]} // MOVED from -20 to -35
             scale={[2, 2, 2]}
             isRightSide={false}
           />
         );
         
-        // Right mountain at X = +20 (mirrored version) - LOWERED into ground
+        // Right mountain at X = +35 (MOVED FURTHER from +20) - LOWERED into ground
         instances.push(
           <OptimizedMountain
             key={`right-${chunk.id}-${zOffset}`}
-            position={[20, -8, finalZ]} // LOWERED from 0 to -8
+            position={[35, -8, finalZ]} // MOVED from 20 to 35
             scale={[2, 2, 2]}
             isRightSide={true}
           />
