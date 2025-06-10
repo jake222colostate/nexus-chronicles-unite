@@ -1,4 +1,3 @@
-
 import React, { useMemo, Suspense } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
@@ -29,7 +28,7 @@ const FallbackPathTile: React.FC<{
   );
 };
 
-// Individual path tile component with proper flattening and orientation
+// Individual path tile component with corrected rotation for ground placement
 const FantasyPathTile: React.FC<{
   position: [number, number, number];
   chunkSize: number;
@@ -68,12 +67,12 @@ const FantasyPathTile: React.FC<{
       <group position={position}>
         <primitive
           object={clonedScene}
-          // FIXED: Flatten the model to lie horizontally on XZ-plane
-          rotation={[-Math.PI / 2, 0, 0]} // Flatten so top surface faces upward (Y-axis)
-          // FIXED: Scale to match terrain chunk dimensions
-          scale={[36, 1, chunkSize]} // Width=36, Height=1 (flat), Length=chunkSize
-          // FIXED: Position flush with terrain
-          position={[0, -0.1, 0]} // Slightly below ground level to sit flush
+          // FIXED: Correct rotation to lay path flat on the ground
+          rotation={[0, 0, 0]} // No rotation - keep the model in its original orientation
+          // FIXED: Scale to match terrain dimensions
+          scale={[2, 2, 2]} // Uniform scaling to make it more visible
+          // FIXED: Position at ground level
+          position={[0, 0, 0]} // At ground level
           receiveShadow
           castShadow
         />
@@ -144,4 +143,4 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
 // Preload the model for better performance
 useGLTF.preload(FANTASY_PATH_TILE_URL);
 
-console.log('FantasyPathSystem: Enhanced with proper flattening, scaling, and ground-flush positioning');
+console.log('FantasyPathSystem: Fixed rotation to place path correctly on the ground');
