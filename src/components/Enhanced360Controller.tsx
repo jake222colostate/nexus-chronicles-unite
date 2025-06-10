@@ -14,6 +14,69 @@ interface MovementKeys {
   right: boolean;
 }
 
+// Define mountain collision zones based on the mountain system positions
+const getMountainCollisionZones = (playerZ: number) => {
+  const zones = [];
+  
+  // Based on InfiniteEnvironmentSystem mountains at ±80
+  zones.push({ minX: -90, maxX: -70, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  zones.push({ minX: 70, maxX: 90, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  
+  // Based on CenteredMountainSystem mountains at ±180
+  zones.push({ minX: -190, maxX: -170, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  zones.push({ minX: 170, maxX: 190, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  
+  // Based on OptimizedMountainSystem mountains at ±35
+  zones.push({ minX: -45, maxX: -25, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  zones.push({ minX: 25, maxX: 45, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  
+  // Based on RealisticMountainSystem mountains at ±45, ±65
+  zones.push({ minX: -75, maxX: -35, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  zones.push({ minX: 35, maxX: 75, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  
+  // Based on BoundaryMountainSystem mountains at ±22-28
+  zones.push({ minX: -35, maxX: -15, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  zones.push({ minX: 15, maxX: 35, minZ: playerZ - 200, maxZ: playerZ + 50 });
+  
+  return zones;
+};
+
+// Check if a position would collide with any mountain
+const checkMountainCollision = (x: number, z: number) => {
+  const zones = getMountainCollisionZones(z);
+  
+  for (const zone of zones) {
+    if (x >= zone.minX && x <= zone.maxX && z >= zone.minZ && z <= zone.maxZ) {
+      return true;
+    }
+  }
+  
+  return false;
+};
+
+// Find the nearest safe position if collision is detected
+const findSafePosition = (targetX: number, targetZ: number, currentX: number, currentZ: number) => {
+  // If no collision, return target position
+  if (!checkMountainCollision(targetX, targetZ)) {
+    return { x: targetX, z: targetZ };
+  }
+  
+  // Try moving back towards current position incrementally
+  const steps = 10;
+  for (let i = 1; i <= steps; i++) {
+    const factor = i / steps;
+    const testX = targetX + (currentX - targetX) * factor;
+    const testZ = targetZ + (currentZ - targetZ) * factor;
+    
+    if (!checkMountainCollision(testX, testZ)) {
+      return { x: testX, z: testZ };
+    }
+  }
+  
+  // If still colliding, keep current position
+  return { x: currentX, z: currentZ };
+};
+
 export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   position,
   onPositionChange
@@ -180,8 +243,20 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       velocity.current.multiplyScalar(damping);
     }
     
-    // Update position with VERY WIDE valley bounds
-    targetPosition.current.add(velocity.current.clone().multiplyScalar(delta));
+    // Calculate new target position
+    const newTargetPosition = targetPosition.current.clone().add(velocity.current.clone().multiplyScalar(delta));
+    
+    // Check for mountain collision and find safe position
+    const safePosition = findSafePosition(
+      newTargetPosition.x,
+      newTargetPosition.z,
+      targetPosition.current.x,
+      targetPosition.current.z
+    );
+    
+    // Update position with collision-safe coordinates
+    targetPosition.current.x = safePosition.x;
+    targetPosition.current.z = safePosition.z;
     
     // Keep within the wide valley bounds (mountains are at ±140, so allow ±120 for safety)
     targetPosition.current.x = Math.max(-120, Math.min(120, targetPosition.current.x));
