@@ -5,6 +5,10 @@ import { Vector3 } from 'three';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 
+// Dimensions of dusty_foot_path_way_in_grass_garden.glb determined from bounding box
+const MODEL_WIDTH = 32.905; // approx X size
+const MODEL_LENGTH = 41.633; // approx Z size when laid flat
+
 interface EnhancedInfiniteGroundSystemProps {
   chunks: ChunkData[];
   chunkSize: number;
@@ -88,9 +92,9 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
           <primitive
             object={pathModel.clone()}
             key={tile.key}
-            position={tile.position}
+            position={[tile.position[0], tile.position[1] + 0.05, tile.position[2]]}
             rotation={[-Math.PI / 2, 0, 0]}
-            scale={[0.4 * (tile.size / chunkSize), 0.4, 0.4 * (tile.size / chunkSize)]}
+            scale={[tile.size / MODEL_WIDTH, 1, tile.size / MODEL_LENGTH]}
             frustumCulled={false}
             matrixAutoUpdate={true}
             renderOrder={-tile.layer}
