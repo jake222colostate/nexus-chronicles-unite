@@ -11,6 +11,7 @@ import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import { Enemy } from './Enemy';
 import { Monster } from './Monster';
+import { EnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface EnemySystemProps {
   playerPosition: Vector3;
@@ -18,6 +19,7 @@ interface EnemySystemProps {
   spawnDistance?: number;
   onEnemiesChange?: (enemies: EnemyData[]) => void;
   onEnemyInitialize?: (id: string, position: [number, number, number]) => void;
+  damageSystem?: EnemyDamageSystem;
 }
 
 export type EnemyType = 'vampire_bat' | 'monster';
@@ -36,7 +38,7 @@ export interface EnemySystemHandle {
 
 export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   (
-    { playerPosition, maxEnemies = 5, spawnDistance = 100, onEnemiesChange, onEnemyInitialize },
+    { playerPosition, maxEnemies = 5, spawnDistance = 100, onEnemiesChange, onEnemyInitialize, damageSystem },
     ref
   ) => {
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
@@ -74,7 +76,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
       // Random X position near the path
       const spawnX = (Math.random() - 0.5) * 20;
       
-      const enemyType: EnemyType = Math.random() < 0.5 ? 'monster' : 'vampire_bat';
+      const enemyType: EnemyType = Math.random() < 0.7 ? 'vampire_bat' : 'monster';
 
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
@@ -142,6 +144,8 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   return (
     <group>
       {enemies.map((enemy) => {
+        const enemyHealth = damageSystem?.getEnemyHealth(enemy.id);
+        
         if (enemy.type === 'monster') {
           return (
             <Monster
@@ -149,11 +153,13 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
               enemyId={enemy.id}
               position={enemy.position}
               playerPosition={playerPosition}
+              enemyHealth={enemyHealth}
               onReachPlayer={() => removeEnemy(enemy.id)}
               onInitialize={onEnemyInitialize}
             />
           );
         }
+        
         return (
           <Enemy
             key={enemy.id}
@@ -161,6 +167,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
             position={enemy.position}
             playerPosition={playerPosition}
             enemyType={enemy.type}
+            enemyHealth={enemyHealth}
             onReachPlayer={() => removeEnemy(enemy.id)}
             onInitialize={onEnemyInitialize}
           />
