@@ -39,14 +39,14 @@ export interface EnemySystemHandle {
 
 export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
   (
-    { playerPosition, maxEnemies = 5, spawnDistance = 100, onEnemiesChange, onEnemyInitialize, damageSystem },
+    { playerPosition, maxEnemies = 8, spawnDistance = 100, onEnemiesChange, onEnemyInitialize, damageSystem },
     ref
   ) => {
   const [enemies, setEnemies] = useState<EnemyData[]>([]);
   const lastSpawnTime = useRef(0);
   const lastPlayerZ = useRef(0);
   const lastCleanupTime = useRef(0);
-  const spawnInterval = 3000; // 3 seconds between spawns
+  const spawnInterval = 1500; // REDUCED: 1.5 seconds between spawns for more frequent spawning
   const cleanupInterval = 1000; // 1 second between cleanup checks
 
   // Only notify of enemy changes when the array actually changes
@@ -58,7 +58,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
     }
   }, [enemies.length, onEnemiesChange]);
 
-  // Spawn new enemy ahead of player
+  // IMPROVED: Spawn new enemy more frequently with better distribution
   const spawnEnemy = useCallback(() => {
     const now = Date.now();
     
@@ -71,14 +71,15 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
         return prev;
       }
 
-      // Spawn enemy 100m ahead of player's Z position
+      // IMPROVED: Spawn enemies at varying distances ahead of player
+      const spawnDistance = 60 + Math.random() * 80; // Between 60-140m ahead
       const spawnZ = playerPosition.z - spawnDistance;
       
-      // Random X position near the path
-      const spawnX = (Math.random() - 0.5) * 20;
+      // IMPROVED: Better X position distribution near the path
+      const spawnX = (Math.random() - 0.5) * 30; // Wider spread
       
-      // 80% chance of vampire bat, 20% chance of monster
-      const enemyType: EnemyType = Math.random() < 0.8 ? 'vampire_bat' : 'monster';
+      // IMPROVED: 75% chance of vampire bat, 25% chance of monster
+      const enemyType: EnemyType = Math.random() < 0.75 ? 'vampire_bat' : 'monster';
 
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
@@ -95,7 +96,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
     });
     
     return true;
-  }, [playerPosition.z, maxEnemies, spawnDistance]);
+  }, [playerPosition.z, maxEnemies]);
 
   // Remove enemy when it reaches player or gets too far behind
   const removeEnemy = useCallback((enemyId: string) => {
@@ -117,12 +118,12 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
 
   useImperativeHandle(ref, () => ({ damageEnemy }));
 
-  // Optimized frame loop - only run expensive operations when needed
+  // IMPROVED: More frequent spawning and better cleanup
   useFrame(() => {
     const now = Date.now();
-    const currentPlayerZ = Math.floor(playerPosition.z / 10) * 10;
+    const currentPlayerZ = Math.floor(playerPosition.z / 5) * 5; // Check more frequently
     
-    // Only spawn if player has moved significantly or enough time has passed
+    // IMPROVED: Spawn more frequently
     if (currentPlayerZ !== lastPlayerZ.current || now - lastSpawnTime.current > spawnInterval) {
       spawnEnemy();
       lastPlayerZ.current = currentPlayerZ;
@@ -134,7 +135,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
         const filtered = prev.filter(enemy => {
           const enemyZ = enemy.position[2];
           const distanceBehindPlayer = enemyZ - playerPosition.z;
-          return distanceBehindPlayer <= 50;
+          return distanceBehindPlayer <= 80; // Increased cleanup distance
         });
         
         lastCleanupTime.current = now;

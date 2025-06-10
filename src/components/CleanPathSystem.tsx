@@ -54,29 +54,29 @@ export const CleanPathSystem: React.FC<CleanPathSystemProps> = ({
 
   const pathElements = useMemo(() => {
     const elements = [];
-    const pathWidth = 50; // DRAMATICALLY INCREASED from 24 to 50 for much wider coverage
-    const segmentLength = 8; // Slightly increased for better coverage
+    const pathWidth = 80; // MASSIVELY INCREASED to cover full playable area
+    const segmentLength = 4; // Smaller segments for more overlap and coverage
 
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
-      const segmentCount = Math.ceil(chunkSize / segmentLength);
+      const segmentCount = Math.ceil(chunkSize / segmentLength) + 2; // Extra segments for overlap
       
-      for (let i = 0; i < segmentCount; i++) {
+      for (let i = -1; i < segmentCount + 1; i++) { // Start before and end after chunk
         const z = worldZ - (i * segmentLength);
         elements.push({
           x: 0, // Perfectly centered on X-axis
-          y: -1.7, // Slightly raised for better visibility
+          y: -1.65, // Slightly higher for better visibility
           z: z,
-          scaleX: pathWidth / 2, // MASSIVELY INCREASED scaling (was pathWidth / 4)
-          scaleY: 1.5, // Increased vertical scale for better visibility
-          scaleZ: segmentLength / 2, // INCREASED Z scaling (was segmentLength / 4)
+          scaleX: pathWidth / 1.5, // MASSIVE horizontal scaling
+          scaleY: 2.0, // Increased vertical scale
+          scaleZ: segmentLength / 1.5, // MASSIVE Z scaling for full coverage
           chunkId: chunk.id,
           index: i
         });
       }
     });
 
-    console.log(`CleanPathSystem: Generated ${elements.length} MUCH LARGER path segments with dramatic scaling increase`);
+    console.log(`CleanPathSystem: Generated ${elements.length} MASSIVELY SCALED path segments covering full ground`);
     return elements;
   }, [chunks, chunkSize]);
 
@@ -87,7 +87,7 @@ export const CleanPathSystem: React.FC<CleanPathSystemProps> = ({
           key={`clean_path_${element.chunkId}_${element.index}`}
           object={pathModel.clone()}
           position={[element.x, element.y, element.z]}
-          rotation={[-Math.PI / 2, 0, 0]} // Perfectly horizontal - only 90° X rotation
+          rotation={[0, 0, 0]} // FIXED: Remove the sideways rotation - keep it flat and forward-facing
           scale={[element.scaleX, element.scaleY, element.scaleZ]}
           receiveShadow
           castShadow
@@ -105,13 +105,13 @@ export const CleanPathSystem: React.FC<CleanPathSystemProps> = ({
           receiveShadow
           frustumCulled={false}
         >
-          <planeGeometry args={[element.scaleX * 2.5, element.scaleZ * 2.5]} />
+          <planeGeometry args={[element.scaleX * 1.2, element.scaleZ * 1.2]} />
           <meshStandardMaterial
             color="#2d4a2b"
             roughness={0.9}
             metalness={0.05}
             transparent={true}
-            opacity={0.4}
+            opacity={0.6}
             side={THREE.DoubleSide}
           />
         </mesh>

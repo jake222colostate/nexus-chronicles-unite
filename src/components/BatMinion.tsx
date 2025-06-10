@@ -76,7 +76,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
 
         // Apply proper positioning and scaling
         batClone.position.set(0, 0, 0);
-        batClone.scale.setScalar(1.5); // Slightly larger for better visibility
+        batClone.scale.setScalar(2.0); // INCREASED: Larger for better visibility
         batClone.rotation.set(0, 0, 0);
         
         batMeshRef.current.add(batClone);
@@ -92,15 +92,15 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     }
   }, [batScene, enemyId]);
 
-  // Initialize as enemy with proper flight position
+  // IMPROVED: Initialize as enemy with proper flight position
   useEffect(() => {
-    if (!initialized.current && onInitialize && !enemyHealth) {
+    if (!initialized.current && onInitialize) {
       const flightPosition: [number, number, number] = [position[0], 1.5, position[2]];
       console.log(`BatMinion ${enemyId} initializing at flight position:`, flightPosition);
       onInitialize(enemyId, flightPosition);
       initialized.current = true;
     }
-  }, [enemyId, position, onInitialize, enemyHealth]);
+  }, [enemyId, position, onInitialize]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || !playerPosition) return;
@@ -197,53 +197,45 @@ export const BatMinion: React.FC<BatMinionProps> = ({
 
   return (
     <group ref={groupRef} position={[position[0], position[1], position[2]]} castShadow receiveShadow>
-      {/* Health bar positioned above bat */}
+      {/* IMPROVED: Health bar always visible when enemy has health and is alive */}
       {enemyHealth && enemyHealth.currentHealth > 0 && (
         <EnemyHealthBar 
           enemyHealth={enemyHealth} 
-          position={[0, 1.0, 0]}
+          position={[0, 1.2, 0]} // IMPROVED: Better positioning above bat
         />
       )}
       
       {/* Bat mesh container with proper animation */}
       <group ref={batMeshRef} />
       
-      {/* Enhanced fallback - always visible when model not loaded */}
+      {/* IMPROVED: Enhanced fallback - always visible when model not loaded */}
       {!modelLoaded && (
         <group position={[0, 0, 0]}>
-          {/* Main body */}
+          {/* Main body - larger and more visible */}
           <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[0.3, 8, 8]} />
+            <sphereGeometry args={[0.4, 8, 8]} />
             <meshStandardMaterial color="#440000" />
           </mesh>
           {/* Left wing */}
-          <mesh position={[-0.5, 0.1, 0]} rotation={[0, 0, Math.PI / 6]}>
-            <boxGeometry args={[0.6, 0.05, 0.3]} />
+          <mesh position={[-0.6, 0.1, 0]} rotation={[0, 0, Math.PI / 6]}>
+            <boxGeometry args={[0.8, 0.05, 0.4]} />
             <meshStandardMaterial color="#660000" />
           </mesh>
           {/* Right wing */}
-          <mesh position={[0.5, 0.1, 0]} rotation={[0, 0, -Math.PI / 6]}>
-            <boxGeometry args={[0.6, 0.05, 0.3]} />
+          <mesh position={[0.6, 0.1, 0]} rotation={[0, 0, -Math.PI / 6]}>
+            <boxGeometry args={[0.8, 0.05, 0.4]} />
             <meshStandardMaterial color="#660000" />
           </mesh>
           {/* Small ears */}
-          <mesh position={[-0.1, 0.2, 0.1]}>
-            <coneGeometry args={[0.05, 0.1]} />
+          <mesh position={[-0.1, 0.25, 0.1]}>
+            <coneGeometry args={[0.08, 0.15]} />
             <meshStandardMaterial color="#330000" />
           </mesh>
-          <mesh position={[0.1, 0.2, 0.1]}>
-            <coneGeometry args={[0.05, 0.1]} />
+          <mesh position={[0.1, 0.25, 0.1]}>
+            <coneGeometry args={[0.08, 0.15]} />
             <meshStandardMaterial color="#330000" />
           </mesh>
         </group>
-      )}
-      
-      {/* Debug info */}
-      {!modelLoaded && (
-        <mesh position={[0, -0.8, 0]} visible={false}>
-          <planeGeometry args={[1, 0.2]} />
-          <meshBasicMaterial color="#ff0000" />
-        </mesh>
       )}
     </group>
   );
