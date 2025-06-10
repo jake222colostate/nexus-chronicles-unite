@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from '../components/ChunkSystem';
 import * as THREE from 'three';
@@ -299,7 +300,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
   return (
     <Suspense fallback={null}>
-      <TreeGroup positions={treePositions} />
+      <group>
+        {treePositions.map((tree, index) => (
+          <GLBTree
+            key={`tree-${index}`}
+            position={[tree.x, tree.y, tree.z]}
+            scale={tree.scale}
+            rotation={tree.rotation}
+            treeType={tree.treeType}
+          />
+        ))}
+      </group>
     </Suspense>
   );
 };
