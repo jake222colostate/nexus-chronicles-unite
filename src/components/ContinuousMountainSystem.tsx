@@ -23,25 +23,31 @@ const MountainSegment: React.FC<{
 }> = ({ position, seed, side }) => {
   const peakHeight = 5 + seededRandom(seed) * 3;
   const baseWidth = 2 + seededRandom(seed + 1) * 1;
-  const segments = 6;
+  const segments = 8;
   
   return (
     <group position={position} rotation={[0, side === 'left' ? Math.PI * 0.05 : -Math.PI * 0.05, 0]}>
-      {/* Main mountain peak - FIXED Y positioning to stay underground */}
-      <mesh position={[0, peakHeight / 2 - 2, 0]} castShadow receiveShadow>
+      {/* Main mountain peak - REPOSITIONED closer and higher */}
+      <mesh position={[0, peakHeight / 2 - 1, 0]} castShadow receiveShadow>
         <coneGeometry args={[baseWidth, peakHeight, segments]} />
         <meshLambertMaterial color="#6B5B73" />
       </mesh>
       
-      {/* Base foundation - FIXED Y positioning */}
-      <mesh position={[0, -3, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[baseWidth + 2, baseWidth + 2.5, 4, segments]} />
+      {/* Large base foundation - EXTENDED underground to prevent holes */}
+      <mesh position={[0, -4, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[baseWidth + 3, baseWidth + 4, 8, segments]} />
         <meshLambertMaterial color="#4A3A53" />
       </mesh>
       
-      {/* Forward ridge - FIXED Y positioning */}
+      {/* Additional underground foundation to fill terrain holes */}
+      <mesh position={[0, -8, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[baseWidth + 4, baseWidth + 5, 8, segments]} />
+        <meshLambertMaterial color="#3A2A43" />
+      </mesh>
+      
+      {/* Forward ridge - repositioned */}
       <mesh 
-        position={[0, -1, 2.5]} 
+        position={[0, -0.5, 2.5]} 
         rotation={[0, seededRandom(seed + 2) * Math.PI * 0.15, 0]}
         castShadow 
         receiveShadow
@@ -50,15 +56,25 @@ const MountainSegment: React.FC<{
         <meshLambertMaterial color="#7A6B7D" />
       </mesh>
       
-      {/* Backward ridge - FIXED Y positioning */}
+      {/* Backward ridge - repositioned */}
       <mesh 
-        position={[0, -1.5, -2.5]} 
+        position={[0, -1, -2.5]} 
         rotation={[0, seededRandom(seed + 3) * Math.PI * 0.15, 0]}
         castShadow 
         receiveShadow
       >
         <coneGeometry args={[1, 2.5, 5]} />
         <meshLambertMaterial color="#7A6B7D" />
+      </mesh>
+      
+      {/* Side support ridges to prevent gaps */}
+      <mesh 
+        position={[side === 'left' ? -1.5 : 1.5, -2, 0]} 
+        castShadow 
+        receiveShadow
+      >
+        <coneGeometry args={[1.5, 4, 6]} />
+        <meshLambertMaterial color="#5A4A63" />
       </mesh>
     </group>
   );
@@ -77,38 +93,38 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
   const mountainSegments = useMemo(() => {
     const segments = [];
     
-    const segmentSpacing = 6;
-    const leftMountainX = -8;
-    const rightMountainX = 8;
-    const FIXED_MOUNTAIN_Y = -2; // CONSISTENT Y position for all mountains
+    const segmentSpacing = 5; // Tighter spacing for seamless coverage
+    const leftMountainX = -6;  // CLOSER to path (was -8)
+    const rightMountainX = 6;  // CLOSER to path (was 8)
+    const MOUNTAIN_Y = -2; // Underground positioning
     
     chunks.forEach((chunk) => {
-      const segmentsPerChunk = Math.ceil(chunkSize / segmentSpacing) + 4;
+      const segmentsPerChunk = Math.ceil(chunkSize / segmentSpacing) + 6;
       
       for (let i = 0; i < segmentsPerChunk; i++) {
-        const zOffset = i * segmentSpacing - segmentSpacing * 2;
+        const zOffset = i * segmentSpacing - segmentSpacing * 3;
         const segmentZ = chunk.worldZ + zOffset;
         const segmentSeed = chunk.seed + i * 67;
         
-        // Left mountain wall - FIXED Y position
+        // Left mountain wall - closer positioning
         segments.push({
           key: `left_${chunk.id}_${i}`,
-          position: [leftMountainX, FIXED_MOUNTAIN_Y, segmentZ] as [number, number, number],
+          position: [leftMountainX, MOUNTAIN_Y, segmentZ] as [number, number, number],
           seed: segmentSeed,
           side: 'left' as const
         });
         
-        // Right mountain wall - FIXED Y position
+        // Right mountain wall - closer positioning
         segments.push({
           key: `right_${chunk.id}_${i}`,
-          position: [rightMountainX, FIXED_MOUNTAIN_Y, segmentZ] as [number, number, number],
+          position: [rightMountainX, MOUNTAIN_Y, segmentZ] as [number, number, number],
           seed: segmentSeed + 1000,
           side: 'right' as const
         });
       }
     });
     
-    console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments with fixed underground positioning`);
+    console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments closer to path with anti-hole positioning`);
     return segments;
   }, [chunks, chunkSize]);
 

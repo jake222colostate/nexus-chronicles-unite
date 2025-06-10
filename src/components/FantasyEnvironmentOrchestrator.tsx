@@ -23,11 +23,11 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
     return null;
   }
 
-  console.log('FantasyEnvironmentOrchestrator: Rendering with polygon mountains removed and fixed tree positioning');
+  console.log('FantasyEnvironmentOrchestrator: Rendering with anti-clipping trees and closer mountains');
 
   return (
     <group>
-      {/* Continuous mountain system with proper underground positioning */}
+      {/* Continuous mountain system positioned closer with terrain hole fixes */}
       <ContinuousMountainSystem
         chunks={chunks}
         chunkSize={chunkSize}
@@ -35,7 +35,7 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
         playerPosition={playerPosition}
       />
       
-      {/* Single tree system with fixed positioning to prevent clipping */}
+      {/* ONLY use EnhancedTreeDistribution - all other tree systems removed */}
       <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}

@@ -71,24 +71,13 @@ class TreeAssetManagerSingleton {
     try {
       console.log(`TreeAssetManager: Preloading ${type} from: ${url}`);
       
-      let gltf;
-      
-      if (type === 'pine218') {
-        // Use direct useGLTF for local pine_tree_218poly model
-        gltf = await new Promise<any>((resolve, reject) => {
-          const loader = new GLTFLoader();
-          loader.load(url, resolve, undefined, reject);
-        });
-      } else {
-        // Use GLTFLoader for remote models
-        gltf = await new Promise<any>((resolve, reject) => {
-          const loader = new GLTFLoader();
-          loader.load(url, resolve, undefined, reject);
-        });
-      }
+      const gltf = await new Promise<any>((resolve, reject) => {
+        const loader = new GLTFLoader();
+        loader.load(url, resolve, undefined, reject);
+      });
 
       if (gltf?.scene) {
-        // Optimize the loaded model
+        // Optimize the loaded model and fix clipping issues
         this.optimizeTreeModel(gltf.scene);
         
         this.cache.set(type, {
@@ -108,31 +97,68 @@ class TreeAssetManagerSingleton {
   }
 
   private optimizeTreeModel(model: THREE.Object3D): void {
+    console.log('TreeAssetManager: Optimizing model to prevent clipping');
+    
     model.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.castShadow = true;
         child.receiveShadow = true;
-        // Disable frustum culling so trees do not pop out when the camera
-        // gets very close to them. Some of the imported tree models have
-        // bounding boxes that are too small, causing them to disappear
-        // prematurely.
+        
+        // CRITICAL FIX: Disable frustum culling to prevent tree disappearing
         child.frustumCulled = false;
         
+        // Ensure proper bounding box calculation
+        if (child.geometry) {
+          child.geometry.computeBoundingBox();
+          child.geometry.computeBoundingSphere();
+          
+          // Expand bounding box slightly to prevent edge clipping
+          if (child.geometry.boundingBox) {
+            child.geometry.boundingBox.expandByScalar(0.5);
+          }
+          if (child.geometry.boundingSphere) {
+            child.geometry.boundingSphere.radius += 0.5;
+          }
+        }
+        
+        // Fix material properties to prevent transparency issues
         if (child.material) {
           if (Array.isArray(child.material)) {
             child.material.forEach(mat => {
-              mat.transparent = false;
-              mat.opacity = 1.0;
-              mat.needsUpdate = true;
+              this.fixMaterialProperties(mat);
             });
           } else {
-            child.material.transparent = false;
-            child.material.opacity = 1.0;
-            child.material.needsUpdate = true;
+            this.fixMaterialProperties(child.material);
           }
         }
       }
     });
+    
+    // Ensure the entire model has proper bounds
+    model.traverse((child) => {
+      if (child instanceof THREE.Object3D) {
+        // Force bounding box recalculation
+        if (child.geometry && child.geometry.boundingBox) {
+          child.geometry.boundingBox.expandByScalar(1.0);
+        }
+      }
+    });
+  }
+
+  private fixMaterialProperties(material: THREE.Material): void {
+    // Ensure materials are opaque and visible
+    material.transparent = false;
+    material.opacity = 1.0;
+    material.alphaTest = 0;
+    material.needsUpdate = true;
+    
+    // Disable back face culling for leaf materials to prevent disappearing
+    if (material.name && material.name.toLowerCase().includes('leaf')) {
+      material.side = THREE.DoubleSide;
+    }
+    
+    // Force material to be always visible
+    material.visible = true;
   }
 
   private createFallbackTree(type: keyof typeof TREE_MODELS): THREE.Object3D {
@@ -146,13 +172,15 @@ class TreeAssetManagerSingleton {
         new THREE.MeshLambertMaterial({ color: '#8B4513' })
       );
       pineHandle.position.y = 0.6;
+      pineHandle.frustumCulled = false;
       group.add(pineHandle);
       
       const pineCone = new THREE.Mesh(
         new THREE.ConeGeometry(0.5, 1.8, 8),
-        new THREE.MeshLambertMaterial({ color: '#013220' })
+        new THREE.MeshLambertMaterial({ color: '#013220', side: THREE.DoubleSide })
       );
       pineCone.position.y = 1.5;
+      pineCone.frustumCulled = false;
       group.add(pineCone);
     } else if (type === 'stylized') {
       // Stylized tree fallback
@@ -161,13 +189,15 @@ class TreeAssetManagerSingleton {
         new THREE.MeshLambertMaterial({ color: '#8B4513' })
       );
       stylizedHandle.position.y = 0.7;
+      stylizedHandle.frustumCulled = false;
       group.add(stylizedHandle);
       
       const stylizedCanopy = new THREE.Mesh(
         new THREE.SphereGeometry(0.9, 12, 8),
-        new THREE.MeshLambertMaterial({ color: '#228B22' })
+        new THREE.MeshLambertMaterial({ color: '#228B22', side: THREE.DoubleSide })
       );
       stylizedCanopy.position.y = 1.6;
+      stylizedCanopy.frustumCulled = false;
       group.add(stylizedCanopy);
     } else {
       // Realistic tree fallback
@@ -176,13 +206,15 @@ class TreeAssetManagerSingleton {
         new THREE.MeshLambertMaterial({ color: '#8B4513' })
       );
       realisticHandle.position.y = 0.8;
+      realisticHandle.frustumCulled = false;
       group.add(realisticHandle);
       
       const realisticCanopy = new THREE.Mesh(
         new THREE.SphereGeometry(1.1, 12, 8),
-        new THREE.MeshLambertMaterial({ color: '#228B22' })
+        new THREE.MeshLambertMaterial({ color: '#228B22', side: THREE.DoubleSide })
       );
       realisticCanopy.position.y = 1.9;
+      realisticCanopy.frustumCulled = false;
       group.add(realisticCanopy);
     }
     
@@ -192,7 +224,10 @@ class TreeAssetManagerSingleton {
   getCachedModel(type: keyof typeof TREE_MODELS): THREE.Object3D | null {
     const cached = this.cache.get(type);
     if (cached?.scene) {
-      return cached.scene.clone();
+      const cloned = cached.scene.clone();
+      // Apply anti-clipping settings to cloned model
+      this.optimizeTreeModel(cloned);
+      return cloned;
     }
     return null;
   }

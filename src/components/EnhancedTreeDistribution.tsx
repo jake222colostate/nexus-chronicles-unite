@@ -16,12 +16,12 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Terrain height simulation function - FIXED to ensure proper tree placement
+// UPDATED terrain height simulation function
 const getTerrainHeight = (x: number, z: number): number => {
   const baseHeight = Math.sin(x * 0.01) * Math.cos(z * 0.01) * 0.5 + 
                      Math.sin(x * 0.005) * Math.cos(z * 0.005) * 1.0;
   const jitter = (Math.sin(x * 0.1) * Math.cos(z * 0.1)) * 0.1;
-  return Math.max(0, baseHeight + jitter); // Ensure terrain is never below 0
+  return Math.max(0, baseHeight + jitter);
 };
 
 // Check if position is on a steep slope (>45°)
@@ -45,30 +45,38 @@ const isOnSteepSlope = (x: number, z: number): boolean => {
 
 // Check if position is in the main player path corridor
 const isInPlayerPath = (x: number, z: number): boolean => {
-  const pathWidth = 6;
+  const pathWidth = 4; // Reduced from 6 to allow trees closer to path
   return Math.abs(x) < pathWidth;
 };
 
 // Check if position is too close to player starting position
 const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
   const distance = Math.sqrt(x * x + (z + 10) * (z + 10));
-  return distance < 8;
+  return distance < 6;
 };
 
-// FIXED tree positioning to avoid clipping
+// UPDATED: Check if position overlaps with mountain boundaries
+const isInMountainBoundary = (x: number, z: number): boolean => {
+  // Mountains are now at X=±6, so trees should stay outside X=±5 range
+  const mountainBuffer = 5;
+  return Math.abs(x) >= mountainBuffer;
+};
+
+// UPDATED tree positioning with mountain boundary respect
 const isValidTreePosition = (x: number, z: number): boolean => {
   const notInPlayerPath = !isInPlayerPath(x, z);
-  const inValidXRange = Math.abs(x) >= 8 && Math.abs(x) <= 20; // Closer range for better visibility
+  const inValidXRange = Math.abs(x) >= 4.5 && Math.abs(x) <= 4.8; // Tight range between path and mountains
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
+  const notInMountainBoundary = !isInMountainBoundary(x, z);
   
-  return notInPlayerPath && inValidXRange && notOnSteepSlope && notTooCloseToPlayer;
+  return notInPlayerPath && inValidXRange && notOnSteepSlope && notTooCloseToPlayer && notInMountainBoundary;
 };
 
-// Get tree type - REMOVED polygon trees
+// Get tree type
 const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine218' => {
   const random = seededRandom(seed);
-  if (random < 0.7) return 'pine218'; // More pine trees
+  if (random < 0.7) return 'pine218';
   if (random < 0.9) return 'stylized';
   return 'realistic';
 };
@@ -80,7 +88,7 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// Tree component with FIXED positioning to prevent clipping
+// Tree component with ANTI-CLIPPING fixes
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -103,23 +111,23 @@ const GLBTree: React.FC<{
     }
   }, [treeType]);
 
-  // FIXED Y positioning to sit properly on terrain and avoid clipping
+  // Proper Y positioning with terrain integration
   const adjustedPosition: [number, number, number] = [
     position[0],
-    Math.max(0.5, position[1] + TREE_Y_OFFSETS[treeType] + 0.5), // Ensure trees are well above ground
+    Math.max(1.0, position[1] + TREE_Y_OFFSETS[treeType] + 1.0), // Higher placement to prevent clipping
     position[2]
   ];
 
   if (!treeModel) {
     return (
       <group position={adjustedPosition} scale={[scale, scale, scale]} rotation={[0, rotation, 0]}>
-        <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
+        <mesh position={[0, 0.5, 0]} castShadow receiveShadow frustumCulled={false}>
           <cylinderGeometry args={[0.1, 0.15, 1]} />
           <meshLambertMaterial color="#8B4513" />
         </mesh>
-        <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
+        <mesh position={[0, 1.2, 0]} castShadow receiveShadow frustumCulled={false}>
           <coneGeometry args={[0.6, 1.5, 8]} />
-          <meshLambertMaterial color={treeType === 'pine218' ? "#013220" : "#228B22"} />
+          <meshLambertMaterial color={treeType === 'pine218' ? "#013220" : "#228B22"} side={THREE.DoubleSide} />
         </mesh>
       </group>
     );
@@ -136,7 +144,7 @@ const GLBTree: React.FC<{
   );
 };
 
-// Tree group without distance culling
+// Tree group component
 const TreeGroup: React.FC<{
   positions: Array<{ 
     x: number; 
@@ -147,13 +155,13 @@ const TreeGroup: React.FC<{
     treeType: 'realistic' | 'stylized' | 'pine218';
   }>;
 }> = ({ positions }) => {
-  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} trees with fixed positioning`);
+  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} anti-clipping trees respecting mountain boundaries`);
 
   return (
-    <group name="FixedTreeGroup">
+    <group name="AntiClippingTreeGroup">
       {positions.map((pos, index) => (
         <GLBTree
-          key={`fixed-tree-${index}-${pos.treeType}-${pos.x}-${pos.z}`}
+          key={`anti-clip-tree-${index}-${pos.treeType}-${pos.x}-${pos.z}`}
           position={[pos.x, pos.y, pos.z]}
           scale={pos.scale}
           rotation={pos.rotation}
@@ -174,14 +182,14 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees with fixed positioning to prevent clipping');
+    console.log('EnhancedTreeDistribution: Generating trees with mountain boundary respect and anti-clipping');
     const trees = [];
-    const minDistance = 4;
-    const maxAttempts = 50;
+    const minDistance = 3; // Reduced for tighter placement
+    const maxAttempts = 30;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      const treeCount = 3 + Math.floor(seededRandom(seed) * 2); // Fewer trees but better positioned
+      const treeCount = 2; // Fewer trees due to tighter constraints
       const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {
@@ -192,10 +200,11 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157 + chunk.x * 1000 + chunk.z * 100;
           
+          // Controlled positioning between path and mountains
           const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-          const sideOffset = 8 + seededRandom(treeSeed) * 12; // Closer to path for better visibility
+          const sideOffset = 4.6 + seededRandom(treeSeed) * 0.2; // Very tight range: 4.6-4.8
           x = side * sideOffset;
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
+          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
           
           terrainHeight = getTerrainHeight(x, z);
           
@@ -207,7 +216,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           treeType = getTreeType(treeSeed + 2);
           scale = getTreeScale(treeType, treeSeed + 3);
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          finalY = Math.max(0.5, terrainHeight + 0.5); // Ensure trees are elevated above any potential clipping
+          finalY = Math.max(1.0, terrainHeight + 1.0); // Higher elevation for anti-clipping
           
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
@@ -227,7 +236,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with anti-clipping positioning`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with mountain boundary respect and anti-clipping`);
     return trees;
   }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 
