@@ -36,17 +36,12 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const isFullyFaded = useRef(false);
   const [modelLoaded, setModelLoaded] = useState(false);
 
-  // Load vampire bat model with error handling
-  const { scene: batScene, error } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  // Load vampire bat model - useGLTF throws errors, doesn't return them
+  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
     console.log(`BatMinion ${enemyId}: Attempting to load model`);
-    if (error) {
-      console.error(`BatMinion ${enemyId}: Model loading error:`, error);
-      setModelLoaded(false);
-      return;
-    }
-
+    
     if (batScene && batMeshRef.current) {
       console.log(`BatMinion ${enemyId}: Model loaded successfully`);
       
@@ -91,8 +86,11 @@ export const BatMinion: React.FC<BatMinionProps> = ({
         console.error(`BatMinion ${enemyId}: Error setting up model:`, err);
         setModelLoaded(false);
       }
+    } else if (!batScene) {
+      console.warn(`BatMinion ${enemyId}: Model scene not available yet`);
+      setModelLoaded(false);
     }
-  }, [batScene, error, enemyId]);
+  }, [batScene, enemyId]);
 
   // Initialize as enemy with proper flight position
   useEffect(() => {
@@ -211,7 +209,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       <group ref={batMeshRef} />
       
       {/* Enhanced fallback - always visible when model not loaded */}
-      {(!modelLoaded || error) && (
+      {!modelLoaded && (
         <group position={[0, 0, 0]}>
           {/* Main body */}
           <mesh position={[0, 0, 0]}>
