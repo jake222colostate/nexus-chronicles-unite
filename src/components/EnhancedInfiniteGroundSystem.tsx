@@ -53,7 +53,7 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     for (let z = startZ; z <= endZ; z += tileSize) {
       // MULTIPLE ground layers for guaranteed coverage
       for (let layer = 0; layer < 3; layer++) {
-        const layerY = -1.8 - (layer * 0.1); // Stacked layers
+        const layerY = -2.0 - (layer * 0.1); // Lowered layers to avoid clipping
         
         // Main ground plane with massive overlap
         tiles.push({
@@ -93,7 +93,7 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
             object={pathModel.clone()}
             key={tile.key}
             position={tile.position}
-            rotation={[-Math.PI / 2, 0, 0]}
+            rotation={[-Math.PI / 2, Math.PI / 2, 0]} // Align path orientation
             scale={[tile.size / MODEL_WIDTH, 1, tile.size / MODEL_LENGTH]}
             frustumCulled={false}
             matrixAutoUpdate={true}
