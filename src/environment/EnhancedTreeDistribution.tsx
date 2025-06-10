@@ -65,7 +65,7 @@ const isInMountainBoundary = (x: number, z: number): boolean => {
 // UPDATED tree positioning with mountain boundary respect
 const isValidTreePosition = (x: number, z: number): boolean => {
   const notInPlayerPath = !isInPlayerPath(x, z);
-  const inValidXRange = Math.abs(x) >= 4 && Math.abs(x) <= 12; // Allow broader scatter
+  const inValidXRange = Math.abs(x) >= 4 && Math.abs(x) <= 150; // Allow broader scatter
   const notOnSteepSlope = !isOnSteepSlope(x, z);
   const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
   const notInMountainBoundary = !isInMountainBoundary(x, z);
@@ -95,12 +95,10 @@ const GLBTree: React.FC<{
   rotation: number;
   treeType: 'realistic' | 'stylized' | 'pine218';
 }> = ({ position, scale, rotation, treeType }) => {
-  // Use cached model
   const treeModel = useMemo(() => {
     return TreeAssetManager.getCachedModel(treeType);
   }, [treeType]);
 
-  // ENHANCED: Apply MAXIMUM anti-disappearance settings
   const optimizedModel = useMemo(() => {
     if (!treeModel) return null;
 
@@ -159,10 +157,19 @@ const GLBTree: React.FC<{
     return model;
   }, [treeModel]);
 
-  // FIXED: Ground level positioning
+  // UPDATED: Better positioning for mountain sides
+  const distanceFromCenter = Math.abs(position[0]);
+  let adjustedY = -1.8 + TREE_Y_OFFSETS[treeType];
+  
+  // Calculate slope height for trees on mountain sides
+  if (distanceFromCenter > 15) {
+    const slopeHeight = (distanceFromCenter - 15) * 0.12;
+    adjustedY += slopeHeight;
+  }
+
   const adjustedPosition: [number, number, number] = [
     position[0],
-    -1.8 + TREE_Y_OFFSETS[treeType],
+    adjustedY,
     position[2]
   ];
 
@@ -212,39 +219,6 @@ const GLBTree: React.FC<{
   );
 };
 
-// Tree group component with ENHANCED visibility
-const TreeGroup: React.FC<{
-  positions: Array<{ 
-    x: number; 
-    y: number; 
-    z: number; 
-    scale: number; 
-    rotation: number; 
-    treeType: 'realistic' | 'stylized' | 'pine218';
-  }>;
-}> = ({ positions }) => {
-  console.log(`EnhancedTreeDistribution: Rendering ${positions.length} trees with MAXIMUM anti-disappearance measures`);
-
-  return (
-    <group 
-      name="EnhancedVisibilityTreeGroup" 
-      frustumCulled={false}
-      matrixAutoUpdate={true}
-      renderOrder={1}
-    >
-      {positions.map((pos, index) => (
-        <GLBTree
-          key={`enhanced-tree-${index}-${pos.treeType}-${Math.round(pos.x)}-${Math.round(pos.z)}`}
-          position={[pos.x, pos.y, pos.z]}
-          scale={pos.scale}
-          rotation={pos.rotation}
-          treeType={pos.treeType}
-        />
-      ))}
-    </group>
-  );
-};
-
 export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> = ({
   chunks,
   chunkSize,
@@ -255,17 +229,15 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating trees with MAXIMUM anti-disappearance measures');
+    console.log('EnhancedTreeDistribution: Generating trees on mountain sides and valley');
     const trees = [];
-    // Allow trees to be placed closer together for a denser forest feel
-    const minDistance = 2;
-    // Allow a few more attempts to fill the area
-    const maxAttempts = 40;
+    const minDistance = 3; // Closer spacing for denser forest
+    const maxAttempts = 60; // More attempts for better coverage
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      // Generate more trees per chunk for a forest-like density
-      const treeCount = 5 + Math.floor(seededRandom(seed + 99) * 3); // 5-7 trees per chunk
+      // INCREASED tree count for mountain side coverage
+      const treeCount = 8 + Math.floor(seededRandom(seed + 99) * 6); // 8-13 trees per chunk
       const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {
@@ -276,9 +248,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157 + chunk.x * 1000 + chunk.z * 100;
 
-          // Scatter trees randomly within the allowed X range
-          x = (seededRandom(treeSeed) - 0.5) * 24; // [-12, 12]
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
+          // EXPANDED: Generate trees across much wider range for mountain sides
+          x = (seededRandom(treeSeed) - 0.5) * 300; // EXPANDED to ±150 for mountain coverage
+          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
           
           terrainHeight = getTerrainHeight(x, z);
           
@@ -287,10 +259,17 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             continue;
           }
           
-          treeType = getTreeType(treeSeed + 2);
+          // Prefer pine trees on mountain sides (far from center)
+          const distanceFromCenter = Math.abs(x);
+          if (distanceFromCenter > 80) {
+            treeType = seededRandom(treeSeed + 2) < 0.8 ? 'pine218' : 'stylized';
+          } else {
+            treeType = getTreeType(treeSeed + 2);
+          }
+          
           scale = getTreeScale(treeType, treeSeed + 3);
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          finalY = -1.8; // Fixed ground level positioning
+          finalY = -1.8;
           
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
@@ -310,7 +289,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees with enhanced visibility measures`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} trees including mountain sides`);
     return trees;
   }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 
