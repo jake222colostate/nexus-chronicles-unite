@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useRef,
@@ -11,7 +10,7 @@ import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import { Enemy } from './Enemy';
 import { Monster } from './Monster';
-import { EnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
+import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface EnemySystemProps {
   playerPosition: Vector3;
@@ -19,7 +18,7 @@ interface EnemySystemProps {
   spawnDistance?: number;
   onEnemiesChange?: (enemies: EnemyData[]) => void;
   onEnemyInitialize?: (id: string, position: [number, number, number]) => void;
-  damageSystem?: EnemyDamageSystem;
+  damageSystem?: ReturnType<typeof useEnemyDamageSystem>;
 }
 
 export type EnemyType = 'vampire_bat' | 'monster';
