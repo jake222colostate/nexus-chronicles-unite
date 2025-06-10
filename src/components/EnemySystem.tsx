@@ -10,6 +10,7 @@ import React, {
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
 import { Enemy } from './Enemy';
+import { Monster } from './Monster';
 
 interface EnemySystemProps {
   playerPosition: Vector3;
@@ -19,12 +20,14 @@ interface EnemySystemProps {
   onEnemyInitialize?: (id: string, position: [number, number, number]) => void;
 }
 
+export type EnemyType = 'vampire_bat' | 'monster';
+
 export interface EnemyData {
   id: string;
   position: [number, number, number];
   spawnTime: number;
   health: number;
-  type: 'vampire_bat';
+  type: EnemyType;
 }
 
 export interface EnemySystemHandle {
@@ -52,7 +55,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
     }
   }, [enemies.length, onEnemiesChange]);
 
-  // Spawn new vampire bat enemy ahead of player
+  // Spawn new enemy ahead of player
   const spawnEnemy = useCallback(() => {
     const now = Date.now();
     
@@ -71,15 +74,17 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
       // Random X position near the path
       const spawnX = (Math.random() - 0.5) * 20;
       
+      const enemyType: EnemyType = Math.random() < 0.5 ? 'monster' : 'vampire_bat';
+
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
         position: [spawnX, 0, spawnZ],
         spawnTime: now,
         health: 1,
-        type: 'vampire_bat'
+        type: enemyType
       };
 
-      console.log(`EnemySystem: Spawning vampire_bat enemy ${newEnemy.id} at position [${spawnX}, 0, ${spawnZ}]`);
+      console.log(`EnemySystem: Spawning ${enemyType} enemy ${newEnemy.id} at position [${spawnX}, 0, ${spawnZ}]`);
       
       lastSpawnTime.current = now;
       return [...prev, newEnemy];
@@ -136,17 +141,31 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
 
   return (
     <group>
-      {enemies.map((enemy) => (
-        <Enemy
-          key={enemy.id}
-          enemyId={enemy.id}
-          position={enemy.position}
-          playerPosition={playerPosition}
-          enemyType={enemy.type}
-          onReachPlayer={() => removeEnemy(enemy.id)}
-          onInitialize={onEnemyInitialize}
-        />
-      ))}
+      {enemies.map((enemy) => {
+        if (enemy.type === 'monster') {
+          return (
+            <Monster
+              key={enemy.id}
+              enemyId={enemy.id}
+              position={enemy.position}
+              playerPosition={playerPosition}
+              onReachPlayer={() => removeEnemy(enemy.id)}
+              onInitialize={onEnemyInitialize}
+            />
+          );
+        }
+        return (
+          <Enemy
+            key={enemy.id}
+            enemyId={enemy.id}
+            position={enemy.position}
+            playerPosition={playerPosition}
+            enemyType={enemy.type}
+            onReachPlayer={() => removeEnemy(enemy.id)}
+            onInitialize={onEnemyInitialize}
+          />
+        );
+      })}
     </group>
   );
 });

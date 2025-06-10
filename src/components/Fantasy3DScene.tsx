@@ -8,6 +8,7 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { Enemy } from './Enemy';
+import { Monster } from './Monster';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 import { CasualFog } from './CasualFog';
 
@@ -145,10 +146,23 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         />
       )}
 
-      {/* Render vampire bat enemies with health data from damage system */}
+      {/* Render enemies with health data from damage system */}
       {enemies.map((enemy) => {
         const enemyHealth = damageSystem?.getEnemyHealth(enemy.id);
-        
+        if (enemy.type === 'monster') {
+          return (
+            <Monster
+              key={enemy.id}
+              enemyId={enemy.id}
+              position={enemy.position}
+              playerPosition={cameraPosition}
+              enemyHealth={enemyHealth}
+              onReachPlayer={() => handleEnemyHit(enemy.id)}
+              onInitialize={handleEnemyInitialize}
+            />
+          );
+        }
+
         return (
           <Enemy
             key={enemy.id}
