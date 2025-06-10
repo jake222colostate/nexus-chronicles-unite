@@ -54,8 +54,8 @@ export const CleanPathSystem: React.FC<CleanPathSystemProps> = ({
 
   const pathElements = useMemo(() => {
     const elements = [];
-    const pathWidth = 24; // Scaled to cover full playable area between mountains
-    const segmentLength = 6; // Optimized segment length for smooth transitions
+    const pathWidth = 50; // DRAMATICALLY INCREASED from 24 to 50 for much wider coverage
+    const segmentLength = 8; // Slightly increased for better coverage
 
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
@@ -65,18 +65,18 @@ export const CleanPathSystem: React.FC<CleanPathSystemProps> = ({
         const z = worldZ - (i * segmentLength);
         elements.push({
           x: 0, // Perfectly centered on X-axis
-          y: -1.75, // Positioned to sit flush with terrain surface
+          y: -1.7, // Slightly raised for better visibility
           z: z,
-          scaleX: pathWidth / 4, // Scale to cover full width (original model ~4 units wide)
-          scaleY: 1.0, // Maintain vertical scale
-          scaleZ: segmentLength / 4, // Scale length to match segment size
+          scaleX: pathWidth / 2, // MASSIVELY INCREASED scaling (was pathWidth / 4)
+          scaleY: 1.5, // Increased vertical scale for better visibility
+          scaleZ: segmentLength / 2, // INCREASED Z scaling (was segmentLength / 4)
           chunkId: chunk.id,
           index: i
         });
       }
     });
 
-    console.log(`CleanPathSystem: Generated ${elements.length} properly scaled and aligned path segments`);
+    console.log(`CleanPathSystem: Generated ${elements.length} MUCH LARGER path segments with dramatic scaling increase`);
     return elements;
   }, [chunks, chunkSize]);
 
@@ -96,7 +96,7 @@ export const CleanPathSystem: React.FC<CleanPathSystemProps> = ({
         />
       ))}
       
-      {/* Additional terrain blending strips for seamless integration */}
+      {/* ENLARGED terrain blending strips for seamless integration */}
       {pathElements.map((element) => (
         <mesh
           key={`path_blend_${element.chunkId}_${element.index}`}
@@ -105,13 +105,13 @@ export const CleanPathSystem: React.FC<CleanPathSystemProps> = ({
           receiveShadow
           frustumCulled={false}
         >
-          <planeGeometry args={[element.scaleX * 4.2, element.scaleZ * 4.2]} />
+          <planeGeometry args={[element.scaleX * 2.5, element.scaleZ * 2.5]} />
           <meshStandardMaterial
             color="#2d4a2b"
             roughness={0.9}
             metalness={0.05}
             transparent={true}
-            opacity={0.3}
+            opacity={0.4}
             side={THREE.DoubleSide}
           />
         </mesh>
