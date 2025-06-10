@@ -1,4 +1,5 @@
-import React, { useRef, useEffect } from 'react';
+
+import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { Group, Vector3, Mesh } from 'three';
@@ -33,52 +34,65 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const initialized = useRef(false);
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
-  const spawnTime = useRef(Date.now());
+  const [modelLoaded, setModelLoaded] = useState(false);
 
-  // Load vampire bat model from correct path
-  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  // Load vampire bat model with error handling
+  const { scene: batScene, error } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
-    console.log(`BatMinion ${enemyId}: Loading vampire bat model from /assets/vampire-bat/source/bat.glb`);
+    console.log(`BatMinion ${enemyId}: Attempting to load model`);
+    if (error) {
+      console.error(`BatMinion ${enemyId}: Model loading error:`, error);
+      setModelLoaded(false);
+      return;
+    }
+
     if (batScene && batMeshRef.current) {
-      console.log(`BatMinion ${enemyId}: Vampire bat model loaded successfully, children:`, batScene.children.length);
+      console.log(`BatMinion ${enemyId}: Model loaded successfully`);
       
-      // Clear any existing children and add the bat model
+      // Clear any existing children
       batMeshRef.current.clear();
-      const batClone = batScene.clone();
       
-      // Configure materials and shadows
-      batClone.traverse((child) => {
-        if (child instanceof Mesh) {
-          console.log(`BatMinion ${enemyId}: Configuring mesh:`, child.name);
-          child.castShadow = true;
-          child.receiveShadow = true;
-          if (child.material) {
-            child.material.visible = true;
-            child.material.needsUpdate = true;
-            // Ensure proper material transparency
-            if (Array.isArray(child.material)) {
-              child.material.forEach(mat => {
-                mat.transparent = false;
-                mat.opacity = 1.0;
-              });
-            } else {
-              child.material.transparent = false;
-              child.material.opacity = 1.0;
+      try {
+        const batClone = batScene.clone();
+        
+        // Configure materials and shadows
+        batClone.traverse((child) => {
+          if (child instanceof Mesh) {
+            console.log(`BatMinion ${enemyId}: Configuring mesh:`, child.name);
+            child.castShadow = true;
+            child.receiveShadow = true;
+            if (child.material) {
+              child.material.visible = true;
+              child.material.needsUpdate = true;
+              // Ensure proper material transparency
+              if (Array.isArray(child.material)) {
+                child.material.forEach(mat => {
+                  mat.transparent = false;
+                  mat.opacity = 1.0;
+                });
+              } else {
+                child.material.transparent = false;
+                child.material.opacity = 1.0;
+              }
             }
           }
-        }
-      });
+        });
 
-      // Apply proper positioning and scaling
-      batClone.position.set(0, 0, 0);
-      batClone.scale.setScalar(1.2); // Good visibility scale
-      batClone.rotation.set(0, 0, 0); // Start facing forward
-      
-      batMeshRef.current.add(batClone);
-      console.log(`BatMinion ${enemyId}: Vampire bat model configured and scaled`);
+        // Apply proper positioning and scaling
+        batClone.position.set(0, 0, 0);
+        batClone.scale.setScalar(1.5); // Slightly larger for better visibility
+        batClone.rotation.set(0, 0, 0);
+        
+        batMeshRef.current.add(batClone);
+        setModelLoaded(true);
+        console.log(`BatMinion ${enemyId}: Model configured and added to scene`);
+      } catch (err) {
+        console.error(`BatMinion ${enemyId}: Error setting up model:`, err);
+        setModelLoaded(false);
+      }
     }
-  }, [batScene, enemyId]);
+  }, [batScene, error, enemyId]);
 
   // Initialize as enemy with proper flight position
   useEffect(() => {
@@ -101,7 +115,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       }
       
       const currentScale = groupRef.current.scale.x;
-      const newScale = Math.max(0, currentScale - delta * 4); // Faster death animation
+      const newScale = Math.max(0, currentScale - delta * 4);
       groupRef.current.scale.setScalar(newScale);
       
       if (newScale <= 0.1 && !isFullyFaded.current) {
@@ -126,7 +140,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
     
     // Add some dynamic flight patterns
     const time = Date.now() * 0.001;
-    const flightOffset = Math.sin(time + orbitalOffset) * 2; // Side-to-side flight pattern
+    const flightOffset = Math.sin(time + orbitalOffset) * 2;
     targetPosition.x += flightOffset;
     
     // Calculate direction to target
@@ -162,8 +176,8 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       batMeshRef.current.rotation.y = angle;
       
       // Wing flapping and flight dynamics
-      batMeshRef.current.rotation.z = Math.sin(fastTime * 10) * 0.3; // Wing flap
-      batMeshRef.current.rotation.x = Math.sin(fastTime * 8) * 0.15; // Pitch variation
+      batMeshRef.current.rotation.z = Math.sin(fastTime * 10) * 0.3;
+      batMeshRef.current.rotation.x = Math.sin(fastTime * 8) * 0.15;
       
       // Banking during turns
       const turnSpeed = Math.abs(direction.x);
@@ -196,33 +210,46 @@ export const BatMinion: React.FC<BatMinionProps> = ({
       {/* Bat mesh container with proper animation */}
       <group ref={batMeshRef} />
       
-      {/* Enhanced fallback if model doesn't load */}
-      {!batScene && (
+      {/* Enhanced fallback - always visible when model not loaded */}
+      {(!modelLoaded || error) && (
         <group position={[0, 0, 0]}>
+          {/* Main body */}
           <mesh position={[0, 0, 0]}>
-            <sphereGeometry args={[0.4, 8, 8]} />
+            <sphereGeometry args={[0.3, 8, 8]} />
+            <meshStandardMaterial color="#440000" />
+          </mesh>
+          {/* Left wing */}
+          <mesh position={[-0.5, 0.1, 0]} rotation={[0, 0, Math.PI / 6]}>
+            <boxGeometry args={[0.6, 0.05, 0.3]} />
             <meshStandardMaterial color="#660000" />
           </mesh>
-          {/* Wing representations */}
-          <mesh position={[-0.6, 0, 0]} rotation={[0, 0, Math.PI / 4]}>
-            <boxGeometry args={[0.8, 0.1, 0.4]} />
-            <meshStandardMaterial color="#440000" />
+          {/* Right wing */}
+          <mesh position={[0.5, 0.1, 0]} rotation={[0, 0, -Math.PI / 6]}>
+            <boxGeometry args={[0.6, 0.05, 0.3]} />
+            <meshStandardMaterial color="#660000" />
           </mesh>
-          <mesh position={[0.6, 0, 0]} rotation={[0, 0, -Math.PI / 4]}>
-            <boxGeometry args={[0.8, 0.1, 0.4]} />
-            <meshStandardMaterial color="#440000" />
+          {/* Small ears */}
+          <mesh position={[-0.1, 0.2, 0.1]}>
+            <coneGeometry args={[0.05, 0.1]} />
+            <meshStandardMaterial color="#330000" />
+          </mesh>
+          <mesh position={[0.1, 0.2, 0.1]}>
+            <coneGeometry args={[0.05, 0.1]} />
+            <meshStandardMaterial color="#330000" />
           </mesh>
         </group>
       )}
       
-      {/* Debug collision bounds - invisible in production */}
-      <mesh visible={false}>
-        <sphereGeometry args={[2.0]} />
-        <meshBasicMaterial wireframe color="#660000" />
-      </mesh>
+      {/* Debug info */}
+      {!modelLoaded && (
+        <mesh position={[0, -0.8, 0]} visible={false}>
+          <planeGeometry args={[1, 0.2]} />
+          <meshBasicMaterial color="#ff0000" />
+        </mesh>
+      )}
     </group>
   );
 };
 
-// Preload vampire bat model from correct path
+// Preload vampire bat model
 useGLTF.preload('/assets/vampire-bat/source/bat.glb');
