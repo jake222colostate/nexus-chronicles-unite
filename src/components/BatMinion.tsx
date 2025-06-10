@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -37,10 +36,10 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const spawnTime = useRef(Date.now());
 
   // Load vampire bat model from correct path
-  const { scene: batScene } = useGLTF('/assets/vampire-bat/vampire-bat.glb');
+  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
-    console.log(`BatMinion ${enemyId}: Loading vampire bat model from /assets/vampire-bat/vampire-bat.glb`);
+    console.log(`BatMinion ${enemyId}: Loading vampire bat model from /assets/vampire-bat/source/bat.glb`);
     if (batScene && batMeshRef.current) {
       console.log(`BatMinion ${enemyId}: Vampire bat model loaded successfully, children:`, batScene.children.length);
       
@@ -226,4 +225,4 @@ export const BatMinion: React.FC<BatMinionProps> = ({
 };
 
 // Preload vampire bat model from correct path
-useGLTF.preload('/assets/vampire-bat/vampire-bat.glb');
+useGLTF.preload('/assets/vampire-bat/source/bat.glb');
