@@ -157,30 +157,30 @@ export const ProceduralMountainTerrain: React.FC<ProceduralMountainTerrainProps>
         chunkId: chunk.id
       });
 
-      // Left mountain range
+      // Left mountain range (MUCH closer to path)
       terrainPieces.push({
-        position: [worldX - 60, -2, worldZ] as [number, number, number],
-        size: chunkSize * 2,
+        position: [worldX - 35, -2, worldZ] as [number, number, number], // Was -60, now -35
+        size: chunkSize * 1.5, // Slightly smaller
         resolution: 24,
         seed: seed + 1000,
         type: 'left-mountains',
         chunkId: chunk.id
       });
 
-      // Right mountain range
+      // Right mountain range (MUCH closer to path)
       terrainPieces.push({
-        position: [worldX + 60, -2, worldZ] as [number, number, number],
-        size: chunkSize * 2,
+        position: [worldX + 35, -2, worldZ] as [number, number, number], // Was +60, now +35
+        size: chunkSize * 1.5, // Slightly smaller
         resolution: 24,
         seed: seed + 2000,
         type: 'right-mountains',
         chunkId: chunk.id
       });
 
-      // Background mountains
+      // Background mountains (closer but still behind)
       terrainPieces.push({
-        position: [worldX, -2, worldZ - 120] as [number, number, number],
-        size: chunkSize * 3,
+        position: [worldX, -2, worldZ - 80] as [number, number, number], // Was -120, now -80
+        size: chunkSize * 2.5, // Slightly smaller
         resolution: 20,
         seed: seed + 3000,
         type: 'background',

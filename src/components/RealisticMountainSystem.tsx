@@ -227,13 +227,13 @@ export const RealisticMountainSystem: React.FC<RealisticMountainSystemProps> = (
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
       
-      // Close foreground mountains (more detailed, larger)
+      // CLOSER foreground mountains (more detailed, larger, better aligned)
       const foregroundLeftCount = 1 + Math.floor(seededRandom(seed + 100) * 2);
       for (let i = 0; i < foregroundLeftCount; i++) {
         const mountainSeed = seed + i * 67 + 1000;
-        const x = -35 - seededRandom(mountainSeed) * 15; // -35 to -50
-        const z = worldZ - (i * 60) - seededRandom(mountainSeed + 1) * 30;
-        const scale = 1.5 + seededRandom(mountainSeed + 2) * 0.8;
+        const x = -25 - seededRandom(mountainSeed) * 10; // -25 to -35 (much closer)
+        const z = worldZ - (i * 40) - seededRandom(mountainSeed + 1) * 15; // Better parallel alignment
+        const scale = 1.2 + seededRandom(mountainSeed + 2) * 0.6;
         
         positions.push({
           x, y: 0, z, scale, seed: mountainSeed,
@@ -244,9 +244,9 @@ export const RealisticMountainSystem: React.FC<RealisticMountainSystemProps> = (
       const foregroundRightCount = 1 + Math.floor(seededRandom(seed + 200) * 2);
       for (let i = 0; i < foregroundRightCount; i++) {
         const mountainSeed = seed + i * 67 + 2000;
-        const x = 35 + seededRandom(mountainSeed) * 15; // +35 to +50
-        const z = worldZ - (i * 60) - seededRandom(mountainSeed + 1) * 30;
-        const scale = 1.5 + seededRandom(mountainSeed + 2) * 0.8;
+        const x = 25 + seededRandom(mountainSeed) * 10; // +25 to +35 (much closer)
+        const z = worldZ - (i * 40) - seededRandom(mountainSeed + 1) * 15; // Better parallel alignment
+        const scale = 1.2 + seededRandom(mountainSeed + 2) * 0.6;
         
         positions.push({
           x, y: 0, z, scale, seed: mountainSeed,
@@ -254,13 +254,13 @@ export const RealisticMountainSystem: React.FC<RealisticMountainSystemProps> = (
         });
       }
       
-      // Mid-distance mountains
+      // Mid-distance mountains (closer positioning)
       const midLeftCount = 2 + Math.floor(seededRandom(seed + 300) * 2);
       for (let i = 0; i < midLeftCount; i++) {
         const mountainSeed = seed + i * 67 + 3000;
-        const x = -60 - seededRandom(mountainSeed) * 25; // -60 to -85
-        const z = worldZ - (i * 80) - seededRandom(mountainSeed + 1) * 40;
-        const scale = 1.8 + seededRandom(mountainSeed + 2) * 1.0;
+        const x = -40 - seededRandom(mountainSeed) * 15; // -40 to -55 (closer)
+        const z = worldZ - (i * 50) - seededRandom(mountainSeed + 1) * 20; // Better alignment
+        const scale = 1.4 + seededRandom(mountainSeed + 2) * 0.8;
         
         positions.push({
           x, y: 0, z, scale, seed: mountainSeed,
@@ -271,9 +271,9 @@ export const RealisticMountainSystem: React.FC<RealisticMountainSystemProps> = (
       const midRightCount = 2 + Math.floor(seededRandom(seed + 400) * 2);
       for (let i = 0; i < midRightCount; i++) {
         const mountainSeed = seed + i * 67 + 4000;
-        const x = 60 + seededRandom(mountainSeed) * 25; // +60 to +85
-        const z = worldZ - (i * 80) - seededRandom(mountainSeed + 1) * 40;
-        const scale = 1.8 + seededRandom(mountainSeed + 2) * 1.0;
+        const x = 40 + seededRandom(mountainSeed) * 15; // +40 to +55 (closer)
+        const z = worldZ - (i * 50) - seededRandom(mountainSeed + 1) * 20; // Better alignment
+        const scale = 1.4 + seededRandom(mountainSeed + 2) * 0.8;
         
         positions.push({
           x, y: 0, z, scale, seed: mountainSeed,
@@ -281,13 +281,13 @@ export const RealisticMountainSystem: React.FC<RealisticMountainSystemProps> = (
         });
       }
       
-      // Distant background mountains (largest, most atmospheric)
+      // Distant background mountains (still distant but more aligned)
       const backgroundCount = 3 + Math.floor(seededRandom(seed + 500) * 3);
       for (let i = 0; i < backgroundCount; i++) {
         const mountainSeed = seed + i * 67 + 5000;
-        const x = (seededRandom(mountainSeed) - 0.5) * 200; // -100 to +100
-        const z = worldZ - 150 - (i * 100) - seededRandom(mountainSeed + 1) * 50;
-        const scale = 2.5 + seededRandom(mountainSeed + 2) * 1.5;
+        const x = (seededRandom(mountainSeed) - 0.5) * 120; // -60 to +60 (closer than before)
+        const z = worldZ - 100 - (i * 60) - seededRandom(mountainSeed + 1) * 25; // Better parallel alignment
+        const scale = 2.0 + seededRandom(mountainSeed + 2) * 1.2;
         
         positions.push({
           x, y: 0, z, scale, seed: mountainSeed,
