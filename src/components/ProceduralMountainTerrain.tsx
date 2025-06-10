@@ -61,9 +61,9 @@ const TerrainChunk: React.FC<{
       
       // Create mountain ridges and valleys
       const ridgePattern = Math.abs(generateNoise(x * 0.3, z * 0.3, seed + 3000, 1)) * 40;
-      
-      // Combine all noise layers
-      const finalHeight = Math.max(0, baseHeight + ridgeNoise + detailNoise + ridgePattern);
+
+      // Combine all noise layers and reduce overall height for a lower profile
+      const finalHeight = Math.max(0, (baseHeight + ridgeNoise + detailNoise + ridgePattern) * 0.6);
       
       vertices[i + 1] = finalHeight;
     }
@@ -149,37 +149,37 @@ export const ProceduralMountainTerrain: React.FC<ProceduralMountainTerrainProps>
       
       // Main terrain chunk for this area
       terrainPieces.push({
-        position: [worldX, 0, worldZ] as [number, number, number],
+        position: [worldX, -2, worldZ] as [number, number, number],
         size: chunkSize,
         resolution: 32,
         seed: seed,
         type: 'main',
         chunkId: chunk.id
       });
-      
+
       // Left mountain range
       terrainPieces.push({
-        position: [worldX - 80, 0, worldZ] as [number, number, number],
+        position: [worldX - 60, -2, worldZ] as [number, number, number],
         size: chunkSize * 2,
         resolution: 24,
         seed: seed + 1000,
         type: 'left-mountains',
         chunkId: chunk.id
       });
-      
-      // Right mountain range  
+
+      // Right mountain range
       terrainPieces.push({
-        position: [worldX + 80, 0, worldZ] as [number, number, number],
+        position: [worldX + 60, -2, worldZ] as [number, number, number],
         size: chunkSize * 2,
         resolution: 24,
         seed: seed + 2000,
         type: 'right-mountains',
         chunkId: chunk.id
       });
-      
+
       // Background mountains
       terrainPieces.push({
-        position: [worldX, 0, worldZ - 150] as [number, number, number],
+        position: [worldX, -2, worldZ - 120] as [number, number, number],
         size: chunkSize * 3,
         resolution: 20,
         seed: seed + 3000,
