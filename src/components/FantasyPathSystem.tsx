@@ -48,6 +48,11 @@ const FantasyPathTile: React.FC<{
     // Clone the scene to avoid sharing geometry between instances
     const clonedScene = scene.clone();
     
+    // Debug: Log the bounding box to understand model orientation
+    const box = new THREE.Box3().setFromObject(clonedScene);
+    const size = box.getSize(new THREE.Vector3());
+    console.log('Path model dimensions:', { x: size.x, y: size.y, z: size.z });
+    
     // Ensure all meshes receive shadows and apply proper materials
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
@@ -68,12 +73,12 @@ const FantasyPathTile: React.FC<{
       <group position={position}>
         <primitive
           object={clonedScene}
-          // FIXED: Try multiple rotation approaches - rotate around X and Z axes
-          rotation={[Math.PI / 2, 0, Math.PI / 2]}
-          // FIXED: Larger scale and position adjustment
-          scale={[5, 5, 5]}
-          // FIXED: Lower position to ensure it's at ground level
-          position={[0, -0.5, 0]}
+          // FIXED: Try Y-axis rotation first, then X-axis to lay flat
+          rotation={[0, 0, -Math.PI / 2]}
+          // FIXED: Adjust scale based on actual model size
+          scale={[2, 2, 2]}
+          // FIXED: Position at ground level
+          position={[0, 0, 0]}
           receiveShadow
           castShadow
         />
