@@ -88,9 +88,9 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
           <primitive
             object={pathModel.clone()}
             key={tile.key}
-            position={tile.position}
-            rotation={[-Math.PI / 2, 0, 0]}
-            scale={[0.4 * (tile.size / chunkSize), 0.4, 0.4 * (tile.size / chunkSize)]}
+            position={[tile.position[0], tile.position[1] - 1, tile.position[2]]}
+            rotation={[-Math.PI / 2 + Math.PI / 4, 0, 0]}
+            scale={[0.8 * (tile.size / chunkSize), 0.8, 0.8 * (tile.size / chunkSize)]}
             frustumCulled={false}
             matrixAutoUpdate={true}
             renderOrder={-tile.layer}
