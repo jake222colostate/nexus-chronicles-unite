@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 
 export interface EnemyHealth {
   id: string;
@@ -16,16 +16,6 @@ interface UseEnemyDamageSystemProps {
 
 export const useEnemyDamageSystem = ({ playerZ, upgradeLevel }: UseEnemyDamageSystemProps) => {
   const [enemyHealths, setEnemyHealths] = useState<Map<string, EnemyHealth>>(new Map());
-  const lastPlayerZ = useRef(playerZ);
-  const lastUpgradeLevel = useRef(upgradeLevel);
-
-  // Only recalculate when playerZ or upgradeLevel actually changes
-  const shouldUpdate = playerZ !== lastPlayerZ.current || upgradeLevel !== lastUpgradeLevel.current;
-  
-  if (shouldUpdate) {
-    lastPlayerZ.current = playerZ;
-    lastUpgradeLevel.current = upgradeLevel;
-  }
 
   // Calculate base health - exactly 10 shots to kill early enemies
   const calculateMaxHealth = useCallback((enemyZ: number) => {
@@ -37,9 +27,9 @@ export const useEnemyDamageSystem = ({ playerZ, upgradeLevel }: UseEnemyDamageSy
   // Calculate damage - exactly 5 damage base (1/10 of 50 health = 10 shots to kill)
   const projectileDamage = useMemo(() => {
     const baseDamage = 5; // Base damage = 1/10 of 50 health = 10 shots to kill
-    const upgradeBonus = lastUpgradeLevel.current * 2; // Smaller upgrade bonus
+    const upgradeBonus = upgradeLevel * 2; // Smaller upgrade bonus
     return baseDamage + upgradeBonus;
-  }, [lastUpgradeLevel.current]);
+  }, [upgradeLevel]);
 
   // Initialize enemy health when spawned
   const initializeEnemy = useCallback((enemyId: string, position: [number, number, number]) => {
