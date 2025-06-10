@@ -5,7 +5,6 @@ import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { InfiniteEnvironmentSystem } from './InfiniteEnvironmentSystem';
 import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
-import { RockyForestPathSystem } from './RockyForestPathSystem';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: ChunkData[];
@@ -25,11 +24,11 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with infinite ground, rocky path, and tight valley`);
+  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with infinite ground and tight valley`);
 
   return (
     <Suspense fallback={null}>
-      {/* Infinite ground system for seamless terrain */}
+      {/* Infinite ground system for seamless terrain using path model */}
       <EnhancedInfiniteGroundSystem
         chunks={chunks}
         chunkSize={chunkSize}
@@ -37,17 +36,10 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         playerPosition={playerPosition}
       />
       
-      {/* Rocky forest path system - infinite looping path */}
-      <RockyForestPathSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-      />
-      
-      {/* Infinite environment system handles mountains and other elements */}
+      {/* Infinite environment system handles additional environmental elements */}
       <InfiniteEnvironmentSystem playerPosition={playerPosition} />
       
-      {/* Tree system positioned within valley bounds */}
+      {/* Tree system positioned within clamped valley bounds (-12 to 12) */}
       <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}
