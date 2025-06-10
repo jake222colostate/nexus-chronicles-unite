@@ -4,7 +4,7 @@ import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from './EnhancedTreeDistribution';
 import { InfiniteEnvironmentSystem } from './InfiniteEnvironmentSystem';
-import { InfiniteGroundSystem } from './InfiniteGroundSystem';
+import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: ChunkData[];
@@ -28,11 +28,12 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
 
   return (
     <Suspense fallback={null}>
-      {/* Infinite ground system for seamless terrain */}
-      <InfiniteGroundSystem
+      {/* Infinite ground system for seamless terrain using path model */}
+      <EnhancedInfiniteGroundSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
+        playerPosition={playerPosition}
       />
       
       {/* Infinite environment system handles additional environmental elements */}
