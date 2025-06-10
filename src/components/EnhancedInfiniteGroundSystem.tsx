@@ -3,11 +3,6 @@ import React, { useMemo } from 'react';
 import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
-import { useGLTF } from '@react-three/drei';
-
-// Dimensions of dusty_foot_path_way_in_grass_garden.glb determined from bounding box
-const MODEL_WIDTH = 32.905; // approx X size
-const MODEL_LENGTH = 41.633; // approx Z size when laid flat
 
 interface EnhancedInfiniteGroundSystemProps {
   chunks: ChunkData[];
@@ -27,27 +22,14 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     return null;
   }
 
-  const { scene: pathScene } = useGLTF('/assets/dusty_foot_path_way_in_grass_garden.glb');
-
-  const pathModel = useMemo(() => {
-    const clone = pathScene.clone();
-    clone.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
-    });
-    return clone;
-  }, [pathScene]);
-
   const infiniteGroundTiles = useMemo(() => {
     const tiles = [];
     const tileSize = chunkSize;
     
-    // FIXED: Much more aggressive ground coverage to prevent any gaps
+    // Much more aggressive ground coverage to prevent any gaps
     const playerZ = playerPosition.z;
-    const startZ = Math.floor((playerZ - 500) / tileSize) * tileSize; // Increased coverage
-    const endZ = Math.floor((playerZ + 800) / tileSize) * tileSize; // Increased coverage
+    const startZ = Math.floor((playerZ - 500) / tileSize) * tileSize;
+    const endZ = Math.floor((playerZ + 800) / tileSize) * tileSize;
     
     // Generate seamless ground tiles with massive overlap
     for (let z = startZ; z <= endZ; z += tileSize) {
@@ -80,63 +62,45 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} layered ground tiles for seamless coverage`);
     return tiles;
   }, [
-    // FIXED: Reduced recalculation frequency for stability
-    Math.floor(playerPosition.z / 10) * 10, // Reduced frequency
+    Math.floor(playerPosition.z / 10) * 10,
     chunkSize
   ]);
 
   return (
     <group name="EnhancedInfiniteGroundSystem">
       {infiniteGroundTiles.map((tile) => (
-        tile.type === 'main' ? (
-          <primitive
-            object={pathModel.clone()}
-            key={tile.key}
-            position={[tile.position[0], tile.position[1], tile.position[2]]}
-            rotation={[0, 0, 0]} // FIXED: No rotation - keep model in original orientation
-            scale={[
-              tile.size / MODEL_WIDTH,   // Scale X to cover full tile width
-              1,                         // Keep Y scale at 1
-              tile.size / MODEL_LENGTH   // Scale Z to cover full tile length
-            ]}
-            frustumCulled={false}
-            matrixAutoUpdate={true}
-            renderOrder={-tile.layer}
+        <mesh
+          key={tile.key}
+          position={tile.position}
+          rotation={[-Math.PI / 2, 0, 0]}
+          receiveShadow
+          frustumCulled={false}
+          matrixAutoUpdate={true}
+          renderOrder={-tile.layer}
+        >
+          <planeGeometry args={[tile.size, tile.size, 1, 1]} />
+          <meshStandardMaterial
+            color={tile.type === 'main' ? "#2d4a2d" : "#1a3a1b"}
+            roughness={0.9}
+            metalness={0.1}
+            side={THREE.DoubleSide}
+            transparent={false}
+            opacity={1.0}
+            depthTest={true}
+            depthWrite={tile.layer === 0}
+            depthFunc={THREE.LessEqualDepth}
           />
-        ) : (
-          <mesh
-            key={tile.key}
-            position={tile.position}
-            rotation={[-Math.PI / 2, 0, 0]}
-            receiveShadow
-            frustumCulled={false}
-            matrixAutoUpdate={true}
-            renderOrder={-tile.layer}
-          >
-            <planeGeometry args={[tile.size, tile.size, 1, 1]} />
-            <meshStandardMaterial
-              color="#1a3a1b"
-              roughness={0.9}
-              metalness={0.1}
-              side={THREE.DoubleSide}
-              transparent={false}
-              opacity={1.0}
-              depthTest={true}
-              depthWrite={tile.layer === 0}
-              depthFunc={THREE.LessEqualDepth}
-            />
-          </mesh>
-        )
+        </mesh>
       ))}
       
-      {/* ENHANCED: Multiple massive base layers for absolute ground guarantee */}
+      {/* Multiple massive base layers for absolute ground guarantee */}
       {Array.from({ length: 5 }, (_, i) => (
         <mesh 
           key={`mega_base_${i}`}
           position={[0, -2.5 - (i * 0.2), playerPosition.z]} 
           rotation={[-Math.PI / 2, 0, 0]} 
           receiveShadow
-          frustumCulled={false} // CRITICAL: Never cull
+          frustumCulled={false}
           matrixAutoUpdate={true}
           renderOrder={-10 - i}
         >
@@ -156,5 +120,3 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     </group>
   );
 };
-
-useGLTF.preload('/assets/dusty_foot_path_way_in_grass_garden.glb');

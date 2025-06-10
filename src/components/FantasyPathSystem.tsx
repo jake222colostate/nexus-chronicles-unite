@@ -1,10 +1,7 @@
 
-import React, { useMemo, Suspense } from 'react';
-import { useGLTF } from '@react-three/drei';
+import React, { useMemo } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
-
-const FANTASY_PATH_TILE_URL = '/assets/dusty_foot_path_way_in_grass_garden.glb';
 
 // Fallback path tile component using basic geometry
 const FallbackPathTile: React.FC<{ 
@@ -29,65 +26,13 @@ const FallbackPathTile: React.FC<{
   );
 };
 
-// Dimensions of the path model determined from the GLB bounding box
-const MODEL_WIDTH = 32.9; // approx X size of dusty_foot_path_way_in_grass_garden.glb
-const MODEL_LENGTH = 41.6; // approx Z size
-
-// Individual path tile component with proper scaling and rotation
+// Individual path tile component with simple fallback
 const FantasyPathTile: React.FC<{
   position: [number, number, number];
   chunkSize: number;
 }> = ({ position, chunkSize }) => {
-  
-  try {
-    const { scene } = useGLTF(FANTASY_PATH_TILE_URL);
-    
-    if (!scene) {
-      console.warn('Fantasy path tile scene not loaded, using fallback');
-      return <FallbackPathTile position={position} />;
-    }
-
-    console.log('Fantasy path tile loaded successfully - Position:', position);
-    
-    // Clone the scene to avoid sharing geometry between instances
-    const clonedScene = scene.clone();
-    
-    // Ensure all meshes receive shadows and apply proper materials
-    clonedScene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.receiveShadow = true;
-        child.castShadow = true;
-        if (child.material) {
-          child.material.needsUpdate = true;
-          // Ensure proper lighting response
-          if (child.material instanceof THREE.MeshStandardMaterial) {
-            child.material.roughness = 0.8;
-            child.material.metalness = 0.1;
-          }
-        }
-      }
-    });
-    
-    // Scale to match terrain chunk dimensions
-    const widthScale = 36 / MODEL_WIDTH;
-    const lengthScale = chunkSize / MODEL_LENGTH;
-
-    return (
-      <group position={position}>
-        <primitive
-          object={clonedScene}
-          scale={[widthScale, 1, lengthScale]}
-          rotation={[-Math.PI / 2, 0, 0]} // Lay flat along the ground
-          position={[0, 0, 0]} // Centered and at ground level
-          receiveShadow
-          castShadow
-        />
-      </group>
-    );
-  } catch (error) {
-    console.error('Failed to load fantasy path tile model, using fallback:', error);
-    return <FallbackPathTile position={position} />;
-  }
+  // Use fallback since we removed the path asset
+  return <FallbackPathTile position={position} />;
 };
 
 interface FantasyPathSystemProps {
@@ -134,19 +79,15 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
     <group name="FantasyPathSystem">
       {pathTilePositions.map((pos, index) => {
         return (
-          <Suspense key={`fantasy-path-${pos.chunkId}-${pos.tileIndex}`} fallback={null}>
-            <FantasyPathTile
-              position={[pos.x, pos.y, pos.z]}
-              chunkSize={chunkSize}
-            />
-          </Suspense>
+          <FantasyPathTile
+            key={`fantasy-path-${pos.chunkId}-${pos.tileIndex}`}
+            position={[pos.x, pos.y, pos.z]}
+            chunkSize={chunkSize}
+          />
         );
       })}
     </group>
   );
 };
 
-// Preload the model for better performance
-useGLTF.preload(FANTASY_PATH_TILE_URL);
-
-console.log('FantasyPathSystem: Enhanced with proper scaling, rotation, and positioning for seamless path coverage');
+console.log('FantasyPathSystem: Using fallback geometry while waiting for new path asset');
