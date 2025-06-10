@@ -2,6 +2,7 @@
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
 import { FantasyReferenceEnvironment } from './FantasyReferenceEnvironment';
+import { ContinuousMountainSystem } from './ContinuousMountainSystem';
 import { Vector3 } from 'three';
 
 interface FantasyEnvironmentOrchestratorProps {
@@ -24,7 +25,15 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
 
   return (
     <group>
-      {/* Use the new reference-based environment */}
+      {/* Continuous mountain system ensures mountains are always visible */}
+      <ContinuousMountainSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+        playerPosition={playerPosition}
+      />
+      
+      {/* Use the reference-based environment for other elements */}
       <FantasyReferenceEnvironment
         chunks={chunks}
         chunkSize={chunkSize}
