@@ -29,10 +29,15 @@ const FallbackPathTile: React.FC<{
   );
 };
 
+// Dimensions of the path model determined from the GLB bounding box
+const MODEL_WIDTH = 32.9; // approx X size of dusty_foot_path_way_in_grass_garden.glb
+const MODEL_LENGTH = 41.6; // approx Z size
+
 // Individual path tile component with proper scaling and rotation
-const FantasyPathTile: React.FC<{ 
-  position: [number, number, number]; 
-}> = ({ position }) => {
+const FantasyPathTile: React.FC<{
+  position: [number, number, number];
+  chunkSize: number;
+}> = ({ position, chunkSize }) => {
   
   try {
     const { scene } = useGLTF(FANTASY_PATH_TILE_URL);
@@ -63,14 +68,18 @@ const FantasyPathTile: React.FC<{
       }
     });
     
+    // Scale to match terrain chunk dimensions
+    const widthScale = 36 / MODEL_WIDTH;
+    const lengthScale = chunkSize / MODEL_LENGTH;
+
     return (
       <group position={position}>
-        <primitive 
+        <primitive
           object={clonedScene}
-          scale={[9, 1, 2]} // Scale X to span full width (36 units), keep Y flat, scale Z for proper length
-          rotation={[0, 0, 0]} // Keep aligned straight along Z-axis
+          scale={[widthScale, 1, lengthScale]}
+          rotation={[-Math.PI / 2, 0, 0]} // Lay flat along the ground
           position={[0, 0, 0]} // Centered and at ground level
-          receiveShadow 
+          receiveShadow
           castShadow
         />
       </group>
@@ -104,29 +113,22 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
   const pathTilePositions = useMemo(() => {
     console.log('Generating path tile positions for', chunks.length, 'chunks');
     const positions = [];
-    const tileLength = 8; // Length of each tile along Z-axis
-
     chunks.forEach(chunk => {
       const { worldZ } = chunk;
-      
-      // Calculate how many tiles we need for seamless chunk coverage
-      const tilesPerChunk = Math.ceil(chunkSize / tileLength);
-      
-      for (let i = 0; i < tilesPerChunk; i++) {
-        const z = worldZ - (i * tileLength);
-        positions.push({
-          x: 0, // Centered path spanning full width
-          y: 0, // At ground level
-          z: z,
-          chunkId: chunk.id,
-          tileIndex: i
-        });
-      }
+
+      // One path segment per chunk, aligned with the chunk position
+      positions.push({
+        x: 0,
+        y: 0,
+        z: worldZ,
+        chunkId: chunk.id,
+        tileIndex: 0
+      });
     });
-    
+
     console.log(`Total fantasy path tiles generated: ${positions.length}`);
     return positions;
-  }, [chunks, chunkSize]);
+  }, [chunks]);
 
   return (
     <group name="FantasyPathSystem">
@@ -135,6 +137,7 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
           <Suspense key={`fantasy-path-${pos.chunkId}-${pos.tileIndex}`} fallback={null}>
             <FantasyPathTile
               position={[pos.x, pos.y, pos.z]}
+              chunkSize={chunkSize}
             />
           </Suspense>
         );
