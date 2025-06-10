@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -87,36 +88,26 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// FIXED Tree component - removed conditional hooks to prevent hook count mismatch
+// FIXED Tree component - completely restructured to prevent hook count issues
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
   treeType: 'realistic' | 'stylized' | 'pine218';
 }> = ({ position, scale, rotation, treeType }) => {
-  const [treeModel, setTreeModel] = React.useState<THREE.Object3D | null>(null);
+  // FIXED: Use useMemo to get the model instead of useState + useEffect
+  const treeModel = useMemo(() => {
+    return TreeAssetManager.getCachedModel(treeType);
+  }, [treeType]);
 
-  // FIXED: Always call useEffect hooks in the same order - no conditional dependencies
-  React.useEffect(() => {
-    const cachedModel = TreeAssetManager.getCachedModel(treeType);
-    if (cachedModel) {
-      setTreeModel(cachedModel);
-    } else {
-      TreeAssetManager.preloadAllModels().then(() => {
-        const model = TreeAssetManager.getCachedModel(treeType);
-        if (model) {
-          setTreeModel(model);
-        }
-      });
-    }
-  }, [treeType]); // Only depend on treeType, not treeModel
+  // FIXED: Use useMemo for the optimized model to prevent hook dependency issues
+  const optimizedModel = useMemo(() => {
+    if (!treeModel) return null;
 
-  // FIXED: Always call this useEffect, but only execute logic when treeModel exists
-  React.useEffect(() => {
-    if (!treeModel) return;
-
+    const model = treeModel.clone();
+    
     // Apply maximum visibility settings to the tree model
-    treeModel.traverse((child) => {
+    model.traverse((child) => {
       child.frustumCulled = false;
       child.matrixAutoUpdate = true;
       
@@ -145,7 +136,9 @@ const GLBTree: React.FC<{
         }
       }
     });
-  }, [treeModel]); // This is safe now because we always call this hook
+
+    return model;
+  }, [treeModel]);
 
   // ENHANCED Y positioning with terrain integration and elevation boost
   const adjustedPosition: [number, number, number] = [
@@ -154,7 +147,7 @@ const GLBTree: React.FC<{
     position[2]
   ];
 
-  if (!treeModel) {
+  if (!optimizedModel) {
     return (
       <group 
         position={adjustedPosition} 
@@ -185,7 +178,7 @@ const GLBTree: React.FC<{
       rotation={[0, rotation, 0]}
       frustumCulled={false} // CRITICAL: Never cull the entire tree group
     >
-      <primitive object={treeModel} frustumCulled={false} />
+      <primitive object={optimizedModel} frustumCulled={false} />
     </group>
   );
 };
