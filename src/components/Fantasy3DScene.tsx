@@ -9,6 +9,7 @@ import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
 import { WizardStaffWeapon } from './WizardStaffWeapon';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 import { CasualFog } from './CasualFog';
+import { Sun } from './Sun';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -97,14 +98,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         <meshStandardMaterial color="#2d4a2d" />
       </mesh>
 
-      {/* Basic lighting to ensure visibility */}
+      {/* Basic ambient light plus warm sun */}
       <ambientLight intensity={0.6} />
-      <directionalLight
-        position={[10, 10, 5]}
-        intensity={0.8}
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
+      <Sun position={[10, 20, 5]} />
 
       {/* Optimized chunk system with performance limits */}
       <ChunkSystem

@@ -9,6 +9,7 @@ import { WizardStaff } from './WizardStaff';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
 import { CenteredMountainSystem } from './CenteredMountainSystem';
+import { Sun } from './Sun';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 
@@ -112,13 +113,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             sensitivity={0.8}
           />
 
-          {/* Optimized lighting for mobile */}
+          {/* Ambient light with a warm sun */}
           <ambientLight intensity={realm === 'scifi' ? 0.8 : 0.6} />
-          <directionalLight
-            position={[10, 10, 5]}
-            intensity={realm === 'scifi' ? 0.6 : 0.8}
-            castShadow={false}
-          />
+          <Sun position={[10, 20, 5]} />
 
           <FloatingIsland realm={realm} />
 
