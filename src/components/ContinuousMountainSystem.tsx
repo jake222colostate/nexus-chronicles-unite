@@ -45,6 +45,12 @@ const MountainSegment: React.FC<{
         <meshLambertMaterial color="#3A2A43" />
       </mesh>
       
+      {/* Deep underground foundation to completely prevent clipping */}
+      <mesh position={[0, -12, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[baseWidth + 5, baseWidth + 6, 8, segments]} />
+        <meshLambertMaterial color="#2A1A33" />
+      </mesh>
+      
       {/* Forward ridge - repositioned */}
       <mesh 
         position={[0, -0.5, 2.5]} 
@@ -96,7 +102,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
     const segmentSpacing = 5; // Tighter spacing for seamless coverage
     const leftMountainX = -6;  // CLOSER to path (was -8)
     const rightMountainX = 6;  // CLOSER to path (was 8)
-    const MOUNTAIN_Y = -1.8; // Match ground level positioning
+    const MOUNTAIN_Y = -6; // LOWERED from -1.8 to -6 to prevent clipping
     
     chunks.forEach((chunk) => {
       const segmentsPerChunk = Math.ceil(chunkSize / segmentSpacing) + 6;
@@ -106,7 +112,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
         const segmentZ = chunk.worldZ + zOffset;
         const segmentSeed = chunk.seed + i * 67;
         
-        // Left mountain wall - closer positioning
+        // Left mountain wall - closer positioning, lowered
         segments.push({
           key: `left_${chunk.id}_${i}`,
           position: [leftMountainX, MOUNTAIN_Y, segmentZ] as [number, number, number],
@@ -114,7 +120,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
           side: 'left' as const
         });
         
-        // Right mountain wall - closer positioning
+        // Right mountain wall - closer positioning, lowered
         segments.push({
           key: `right_${chunk.id}_${i}`,
           position: [rightMountainX, MOUNTAIN_Y, segmentZ] as [number, number, number],
@@ -124,7 +130,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
       }
     });
     
-    console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments at ground level Y=-1.8`);
+    console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments lowered to Y=-6`);
     return segments;
   }, [chunks, chunkSize]);
 

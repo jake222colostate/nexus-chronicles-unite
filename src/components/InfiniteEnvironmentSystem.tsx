@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Group, Mesh, Vector3 } from 'three';
@@ -46,7 +45,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
   const CLEANUP_DISTANCE = 200;
   const UPDATE_INTERVAL = 100;
 
-  // Create a mountain at specified position - CLOSER to path, parallel alignment
+  // Create a mountain at specified position - LOWERED into ground
   const createMountain = (x: number, z: number, seed: number): Group | null => {
     if (!mountainModel) return null;
     
@@ -59,10 +58,10 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     // Align rotation to be more parallel to path (Z-axis)
     const rotationVariation = seededRandom(seed + 3) * Math.PI * 0.3; // Reduced rotation for better alignment
     
-    // Apply positioning - mountains closer to path but still creating a valley
+    // Apply positioning - mountains LOWERED into ground to prevent clipping
     mountain.position.set(
       x + offsetVariation, 
-      heightVariation, 
+      -8 + heightVariation, // LOWERED from heightVariation to -8 + heightVariation
       z + (seededRandom(seed + 4) - 0.5) * 3 // Reduced Z variation for better parallel alignment
     );
     
@@ -207,7 +206,7 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
       }
     }
     
-    console.log(`Generated chunk ${chunkId} with ${mountains.length} mountains at ±50 units (closer to path) and ${trees.length} trees`);
+    console.log(`Generated chunk ${chunkId} with ${mountains.length} mountains at ±50 units (lowered into ground) and ${trees.length} trees`);
     
     return {
       id: chunkId,
