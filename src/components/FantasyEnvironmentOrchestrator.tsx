@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { FantasyReferenceEnvironment } from './FantasyReferenceEnvironment';
+import { CleanFantasyEnvironment } from './CleanFantasyEnvironment';
 import { Vector3 } from 'three';
 
 interface FantasyEnvironmentOrchestratorProps {
@@ -23,20 +23,11 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
   }
 
   return (
-    <group>
-      {/* Use the new reference-based environment */}
-      <FantasyReferenceEnvironment
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-        playerPosition={playerPosition}
-      />
-      
-      {/* Background color for fantasy dusk */}
-      <color attach="background" args={['#1a0f2e']} />
-      
-      {/* Atmospheric fog */}
-      <fog attach="fog" args={['#2d1b4e', 50, 200]} />
-    </group>
+    <CleanFantasyEnvironment
+      chunks={chunks}
+      chunkSize={chunkSize}
+      realm={realm}
+      playerPosition={playerPosition}
+    />
   );
 };
