@@ -253,12 +253,15 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
     console.log('EnhancedTreeDistribution: Generating trees with MAXIMUM anti-disappearance measures');
     const trees = [];
-    const minDistance = 3;
-    const maxAttempts = 30;
+    // Allow trees to be placed closer together for a denser forest feel
+    const minDistance = 2;
+    // Allow a few more attempts to fill the area
+    const maxAttempts = 40;
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      const treeCount = 3; // Increased slightly for better coverage
+      // Generate more trees per chunk for a forest-like density
+      const treeCount = 5 + Math.floor(seededRandom(seed + 99) * 3); // 5-7 trees per chunk
       const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {
