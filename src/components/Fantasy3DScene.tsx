@@ -8,7 +8,7 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
-import { SwordWeaponSystem } from './SwordWeaponSystem';
+import { StaffWeaponSystem } from './StaffWeaponSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -113,7 +113,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const handleLeechHit = (leechId: string, damage: number) => {
     setLeeches(current => 
       current.map(leech => {
-        if (leech.id === leechId && leech.alive) {
+        if (leech.id === leech && leech.alive) {
           const newHealth = leech.health - damage;
           if (newHealth <= 0) {
             onEnemyKilled?.();
@@ -171,15 +171,16 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         )
       )}
 
-      <SwordWeaponSystem
+      <StaffWeaponSystem
         damage={weaponDamage}
         enemyPositions={aliveLeechPositions}
-        onHitEnemy={(index) => {
+        onHitEnemy={(index, damage) => {
           const aliveLeech = leeches.filter(leech => leech.alive)[index];
           if (aliveLeech) {
-            handleLeechHit(aliveLeech.id, weaponDamage);
+            handleLeechHit(aliveLeech.id, damage);
           }
         }}
+        upgrades={maxUnlockedUpgrade}
       />
 
       {/* Optimized chunk system with performance limits */}
