@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, Html } from '@react-three/drei';
@@ -52,7 +53,7 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
       position={startPosition.toArray() as [number, number, number]}
       visible={visible}
     >
-      <primitive object={scene.clone()} scale={0.6} rotation={[0, Math.PI, 0]} />
+      <primitive object={scene.clone()} scale={0.2} rotation={[0, Math.PI, 0]} />
       <Html
         position={[0, 1.5, 0]}
         center
