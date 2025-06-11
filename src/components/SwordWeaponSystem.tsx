@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFWithCors } from '../lib/useGLTFWithCors';
@@ -18,20 +18,29 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
+  const [loadError, setLoadError] = useState<Error | null>(null);
   
-  // Load the sword model with correct path
-  const { scene, error } = useGLTFWithCors('/sword_uitlbiaga_mid.glb');
+  // Load the sword model with correct path and error handling
+  let scene = null;
+  try {
+    const gltf = useGLTFWithCors('/sword_uitlbiaga_mid.glb');
+    scene = gltf.scene;
+  } catch (error) {
+    if (error instanceof Error) {
+      setLoadError(error);
+    }
+  }
 
   // Debug logging
   useEffect(() => {
     console.log('SwordWeaponSystem: Loading sword model...');
-    if (error) {
-      console.error('SwordWeaponSystem: Error loading sword model:', error);
+    if (loadError) {
+      console.error('SwordWeaponSystem: Error loading sword model:', loadError);
     }
     if (scene) {
       console.log('SwordWeaponSystem: Sword model loaded successfully:', scene);
     }
-  }, [scene, error]);
+  }, [scene, loadError]);
 
   // Ensure the model casts and receives shadows and is visible
   useEffect(() => {
@@ -134,7 +143,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   });
 
   // Enhanced fallback sword with better visibility
-  if (!scene) {
+  if (!scene || loadError) {
     console.log('SwordWeaponSystem: Using fallback sword model');
     return (
       <group ref={groupRef}>
