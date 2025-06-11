@@ -31,7 +31,9 @@ export const Leech: React.FC<LeechProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  const { scene: leechScene } = useGLTF('/assets/leech.glb');
+  // Use the vampire bat model as a placeholder since leech.glb doesn't exist
+  // This will be rendered differently with materials and scaling
+  const { scene: leechScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
 
   useEffect(() => {
     if (leechScene && modelRef.current) {
@@ -41,9 +43,17 @@ export const Leech: React.FC<LeechProps> = ({
         if (child instanceof Mesh) {
           child.castShadow = true;
           child.receiveShadow = true;
+          // Make it look more leech-like with darker colors
+          if (child.material) {
+            const material = child.material.clone();
+            material.color.setHex(0x4a2c2a); // Dark brown leech color
+            child.material = material;
+          }
         }
       });
-      clone.scale.setScalar(0.4); // Smaller scale for leech
+      // Scale and orient for leech-like appearance
+      clone.scale.setScalar(0.3); // Smaller than bat
+      clone.rotation.x = Math.PI / 2; // Rotate to make it more ground-oriented
       modelRef.current.add(clone);
     }
   }, [leechScene]);
@@ -110,6 +120,7 @@ export const Leech: React.FC<LeechProps> = ({
         <EnemyHealthBar enemyHealth={enemyHealth} position={[0, 1.5, 0]} />
       )}
       <group ref={modelRef} />
+      {/* Fallback geometry if model fails to load */}
       {!leechScene && (
         <mesh>
           <cylinderGeometry args={[0.3, 0.4, 1.2, 8]} />
@@ -124,4 +135,5 @@ export const Leech: React.FC<LeechProps> = ({
   );
 };
 
-useGLTF.preload('/assets/leech.glb');
+// Preload the vampire bat model that we're using as a substitute
+useGLTF.preload('/assets/vampire-bat/source/bat.glb');
