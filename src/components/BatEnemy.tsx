@@ -5,31 +5,28 @@ import { Vector3, Group } from 'three';
 import { Progress } from './ui/progress';
 import { assetPath } from '../lib/assetPath';
 
-interface LeechEnemyProps {
+interface BatEnemyProps {
   playerPosition: Vector3;
   startPosition: Vector3;
   onReachPlayer?: () => void;
   visible?: boolean;
 }
 
-export const LeechEnemy: React.FC<LeechEnemyProps> = ({
+export const BatEnemy: React.FC<BatEnemyProps> = ({
   playerPosition,
   startPosition,
   onReachPlayer,
   visible = true
 }) => {
   const groupRef = useRef<Group>(null);
-  const { scene } = useGLTF(assetPath('assets/leech.glb'));
-  const speed = 0.1;
+  const { scene } = useGLTF(assetPath('assets/vampire-bat/source/bat.glb'));
+  const speed = 0.15;
   const [health] = useState(100);
 
-  const groundY = startPosition.y;
-
-  useFrame(() => {
+  useFrame(({ clock }) => {
     if (!groupRef.current || !visible) return;
     const dir = new Vector3();
     dir.subVectors(playerPosition, groupRef.current.position);
-    dir.y = 0; // stay on the ground
     const distance = dir.length();
     if (distance < 1) {
       onReachPlayer && onReachPlayer();
@@ -37,10 +34,9 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
     }
     dir.normalize();
     groupRef.current.position.addScaledVector(dir, speed);
-    groupRef.current.position.y = groundY;
-    groupRef.current.lookAt(
-      new Vector3(playerPosition.x, groundY, playerPosition.z)
-    );
+    groupRef.current.position.y =
+      startPosition.y + Math.sin(clock.elapsedTime * 2) * 0.5;
+    groupRef.current.lookAt(playerPosition);
   });
 
   return (
@@ -65,4 +61,4 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
   );
 };
 
-useGLTF.preload(assetPath('assets/leech.glb'));
+useGLTF.preload(assetPath('assets/vampire-bat/source/bat.glb'));
