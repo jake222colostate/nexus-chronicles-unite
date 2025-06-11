@@ -18,31 +18,33 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
-  const [loadError, setLoadError] = useState<Error | null>(null);
+  const [hasLoadError, setHasLoadError] = useState(false);
   
-  // Load the sword model with correct path and error handling
-  let scene = null;
+  // FIXED: Always call the hook at the top level, handle errors in effect
+  let gltfResult = null;
   try {
-    const gltf = useGLTFWithCors('/sword_uitlbiaga_mid.glb');
-    scene = gltf.scene;
+    gltfResult = useGLTFWithCors('/sword_uitlbiaga_mid.glb');
   } catch (error) {
-    if (error instanceof Error) {
-      setLoadError(error);
-    }
+    // Hook called, but we'll handle the error in useEffect
   }
+  
+  const scene = gltfResult?.scene || null;
 
-  // Debug logging
+  // Handle loading errors in useEffect
   useEffect(() => {
-    console.log('SwordWeaponSystem: Loading sword model...');
-    if (loadError) {
-      console.error('SwordWeaponSystem: Error loading sword model:', loadError);
+    if (!gltfResult) {
+      setHasLoadError(true);
+      console.log('SwordWeaponSystem: Failed to load sword model, using fallback');
+      return;
     }
+    
     if (scene) {
+      setHasLoadError(false);
       console.log('SwordWeaponSystem: Sword model loaded successfully:', scene);
       console.log('SwordWeaponSystem: Scene children count:', scene.children.length);
       console.log('SwordWeaponSystem: Scene bounding box:', scene);
     }
-  }, [scene, loadError]);
+  }, [scene, gltfResult]);
 
   // Ensure the model casts and receives shadows and is visible
   useEffect(() => {
@@ -155,7 +157,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   });
 
   // Enhanced fallback sword with better visibility and debugging
-  if (!scene || loadError) {
+  if (!scene || hasLoadError) {
     console.log('SwordWeaponSystem: Using fallback sword model');
     return (
       <group ref={groupRef}>
