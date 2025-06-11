@@ -1,6 +1,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTFWithCors } from '../lib/useGLTFWithCors';
 import { useGLTF } from '@react-three/drei';
 import { assetPath } from '../lib/assetPath';
 import { Group, Vector3, Mesh } from 'three';
@@ -37,8 +38,8 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const isFullyFaded = useRef(false);
   const [modelLoaded, setModelLoaded] = useState(false);
 
-  // Load vampire bat model - useGLTF throws errors, doesn't return them
-  const { scene: batScene } = useGLTF(assetPath('assets/vampire-bat/source/bat.glb'));
+  // Load vampire bat model with CORS support
+  const { scene: batScene } = useGLTFWithCors(assetPath('assets/vampire-bat/source/bat.glb'));
 
   useEffect(() => {
     console.log(`BatMinion ${enemyId}: Attempting to load model`);

@@ -84,7 +84,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     <div className="w-full h-full relative">
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
-        dpr={[1, 1.5]}
+        dpr={[1, 1]}
         performance={{ min: 0.6 }}
         gl={{ 
           antialias: false, 
