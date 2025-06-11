@@ -5,7 +5,6 @@ import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { InfiniteEnvironmentSystem } from './InfiniteEnvironmentSystem';
 import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
-import { RockyForestPathSystem } from './RockyForestPathSystem';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: ChunkData[];
@@ -25,7 +24,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with infinite ground, rocky path, and tight valley`);
+  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with infinite ground and optimized performance`);
 
   return (
     <Suspense fallback={null}>
@@ -35,13 +34,6 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         chunkSize={chunkSize}
         realm={realm}
         playerPosition={playerPosition}
-      />
-      
-      {/* Rocky forest path system - infinite looping path */}
-      <RockyForestPathSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
       />
       
       {/* Infinite environment system handles mountains and other elements */}
