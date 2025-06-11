@@ -4,7 +4,6 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import { useGLTFWithCors } from '../lib/useGLTFWithCors';
 import * as THREE from 'three';
-import { assetPath } from '../lib/assetPath';
 
 interface SwordWeaponSystemProps {
   damage: number;
@@ -19,12 +18,25 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
-  // Load the sword model with CORS-friendly loader
-  const { scene } = useGLTFWithCors(assetPath('assets/sword_uitlbiaga_mid.glb'));
+  
+  // Load the sword model with correct path
+  const { scene, error } = useGLTFWithCors('/sword_uitlbiaga_mid.glb');
+
+  // Debug logging
+  useEffect(() => {
+    console.log('SwordWeaponSystem: Loading sword model...');
+    if (error) {
+      console.error('SwordWeaponSystem: Error loading sword model:', error);
+    }
+    if (scene) {
+      console.log('SwordWeaponSystem: Sword model loaded successfully:', scene);
+    }
+  }, [scene, error]);
 
   // Ensure the model casts and receives shadows and is visible
   useEffect(() => {
     if (scene) {
+      console.log('SwordWeaponSystem: Setting up sword model visibility');
       scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           const mesh = child as THREE.Mesh;
@@ -59,6 +71,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   useEffect(() => {
     const handleClick = () => {
       if (!swingRef.current) {
+        console.log('SwordWeaponSystem: Starting sword swing');
         swingRef.current = true;
         hitRef.current = false;
         swingProgress.current = 0;
@@ -71,7 +84,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   }, []);
 
   useFrame((_, delta) => {
-    if (!groupRef.current || !camera || !scene) return;
+    if (!groupRef.current || !camera) return;
 
     const cameraForward = new THREE.Vector3();
     const cameraRight = new THREE.Vector3();
@@ -120,14 +133,22 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     }
   });
 
+  // Enhanced fallback sword with better visibility
   if (!scene) {
-    // Fallback sword if model doesn't load
+    console.log('SwordWeaponSystem: Using fallback sword model');
     return (
       <group ref={groupRef}>
+        {/* Blade */}
         <mesh position={[0, 0, 0]} scale={[0.1, 1, 0.02]}>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color="#C0C0C0" metalness={0.8} roughness={0.2} />
         </mesh>
+        {/* Guard */}
+        <mesh position={[0, -0.3, 0]} scale={[0.3, 0.05, 0.05]}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#8B4513" />
+        </mesh>
+        {/* Handle */}
         <mesh position={[0, -0.4, 0]} scale={[0.15, 0.2, 0.05]}>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color="#8B4513" />
@@ -136,6 +157,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     );
   }
 
+  console.log('SwordWeaponSystem: Rendering sword model');
   return (
     <group ref={groupRef}>
       <primitive 
@@ -146,4 +168,4 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   );
 };
 
-useGLTF.preload(assetPath('assets/sword_uitlbiaga_mid.glb'));
+useGLTF.preload('/sword_uitlbiaga_mid.glb');
