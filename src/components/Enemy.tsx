@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { assetPath } from '../lib/assetPath';
 import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
@@ -34,9 +35,9 @@ export const Enemy: React.FC<EnemyProps> = ({
   const isFullyFaded = useRef(false);
 
   // Load the correct model based on enemy type
-  const modelPath = enemyType === 'vampire_bat' 
-    ? '/assets/vampire-bat/source/bat.glb' 
-    : '/assets/monster_rig.glb';
+  const modelPath = enemyType === 'vampire_bat'
+    ? assetPath('assets/vampire-bat/source/bat.glb')
+    : assetPath('assets/monster_rig.glb');
     
   console.log(`Enemy ${enemyId}: Loading model from path: ${modelPath} for type: ${enemyType}`);
   const { scene: enemyScene } = useGLTF(modelPath);
@@ -195,5 +196,5 @@ export const Enemy: React.FC<EnemyProps> = ({
 };
 
 // Preload both models
-useGLTF.preload('/assets/vampire-bat/source/bat.glb');
-useGLTF.preload('/assets/monster_rig.glb');
+useGLTF.preload(assetPath('assets/vampire-bat/source/bat.glb'));
+useGLTF.preload(assetPath('assets/monster_rig.glb'));

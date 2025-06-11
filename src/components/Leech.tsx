@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { assetPath } from '../lib/assetPath';
 import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
@@ -33,7 +34,7 @@ export const Leech: React.FC<LeechProps> = ({
 
   // Use the vampire bat model as a placeholder since leech.glb doesn't exist
   // This will be rendered differently with materials and scaling
-  const { scene: leechScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  const { scene: leechScene } = useGLTF(assetPath('assets/vampire-bat/source/bat.glb'));
 
   useEffect(() => {
     if (leechScene && modelRef.current) {
@@ -136,4 +137,4 @@ export const Leech: React.FC<LeechProps> = ({
 };
 
 // Preload the vampire bat model that we're using as a substitute
-useGLTF.preload('/assets/vampire-bat/source/bat.glb');
+useGLTF.preload(assetPath('assets/vampire-bat/source/bat.glb'));

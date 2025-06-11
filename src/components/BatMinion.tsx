@@ -2,6 +2,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { assetPath } from '../lib/assetPath';
 import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
@@ -37,7 +38,7 @@ export const BatMinion: React.FC<BatMinionProps> = ({
   const [modelLoaded, setModelLoaded] = useState(false);
 
   // Load vampire bat model - useGLTF throws errors, doesn't return them
-  const { scene: batScene } = useGLTF('/assets/vampire-bat/source/bat.glb');
+  const { scene: batScene } = useGLTF(assetPath('assets/vampire-bat/source/bat.glb'));
 
   useEffect(() => {
     console.log(`BatMinion ${enemyId}: Attempting to load model`);
@@ -242,4 +243,4 @@ export const BatMinion: React.FC<BatMinionProps> = ({
 };
 
 // Preload vampire bat model
-useGLTF.preload('/assets/vampire-bat/source/bat.glb');
+useGLTF.preload(assetPath('assets/vampire-bat/source/bat.glb'));

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { assetPath } from '../lib/assetPath';
 import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
 import { EnemyHealth } from '../hooks/useEnemyDamageSystem';
@@ -30,7 +31,7 @@ export const Monster: React.FC<MonsterProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  const { scene: monsterScene } = useGLTF('/assets/monster_rig.glb');
+  const { scene: monsterScene } = useGLTF(assetPath('assets/monster_rig.glb'));
 
   useEffect(() => {
     if (monsterScene && modelRef.current) {
@@ -119,4 +120,4 @@ export const Monster: React.FC<MonsterProps> = ({
   );
 };
 
-useGLTF.preload('/assets/monster_rig.glb');
+useGLTF.preload(assetPath('assets/monster_rig.glb'));
