@@ -17,6 +17,7 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
   realm,
   playerPosition
 }) => {
+  // Only render for fantasy realm
   if (realm !== 'fantasy') {
     return null;
   }
@@ -25,36 +26,43 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     const tiles = [];
     const tileSize = chunkSize;
     
-    // More stable ground coverage that doesn't flicker
-    const playerZ = Math.abs(playerPosition.z);
-    const startZ = Math.floor((playerZ - 300) / tileSize) * tileSize;
-    const endZ = Math.floor((playerZ + 500) / tileSize) * tileSize;
+    // Much more aggressive ground coverage to prevent any gaps
+    const playerZ = playerPosition.z;
+    const startZ = Math.floor((playerZ - 500) / tileSize) * tileSize;
+    const endZ = Math.floor((playerZ + 800) / tileSize) * tileSize;
     
-    // Generate stable ground tiles
+    // Generate seamless ground tiles with massive overlap
     for (let z = startZ; z <= endZ; z += tileSize) {
-      // Main center ground tile
-      tiles.push({
-        key: `infinite_ground_main_${z}`,
-        position: [0, -1.8, -z] as [number, number, number],
-        size: tileSize + 20, // Increased overlap for seamless coverage
-        type: 'main'
-      });
-      
-      // Side extensions for full coverage
-      [-1, 1].forEach(side => {
+      // MULTIPLE ground layers for guaranteed coverage
+      for (let layer = 0; layer < 3; layer++) {
+        const layerY = -1.8 - (layer * 0.1); // Stacked layers
+        
+        // Main ground plane with massive overlap
         tiles.push({
-          key: `infinite_ground_side_${side}_${z}`,
-          position: [side * (tileSize + 10), -1.8, -z] as [number, number, number],
-          size: tileSize + 10,
-          type: 'side'
+          key: `infinite_ground_main_${z}_layer_${layer}`,
+          position: [0, layerY, z] as [number, number, number],
+          size: tileSize + 20, // Massive overlap
+          type: 'main',
+          layer
         });
-      });
+        
+        // Side ground extensions with overlap
+        [-2, -1, 1, 2].forEach(side => {
+          tiles.push({
+            key: `infinite_ground_side_${side}_${z}_layer_${layer}`,
+            position: [side * (tileSize + 5), layerY, z] as [number, number, number],
+            size: tileSize + 10,
+            type: 'side',
+            layer
+          });
+        });
+      }
     }
     
+    console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} layered ground tiles for seamless coverage`);
     return tiles;
   }, [
-    // Less frequent updates to prevent flickering
-    Math.floor(playerPosition.z / 50) * 50,
+    Math.floor(playerPosition.z / 10) * 10,
     chunkSize
   ]);
 
@@ -67,7 +75,8 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
           rotation={[-Math.PI / 2, 0, 0]}
           receiveShadow
           frustumCulled={false}
-          matrixAutoUpdate={false}
+          matrixAutoUpdate={true}
+          renderOrder={-tile.layer}
         >
           <planeGeometry args={[tile.size, tile.size, 1, 1]} />
           <meshStandardMaterial
@@ -77,29 +86,37 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
             side={THREE.DoubleSide}
             transparent={false}
             opacity={1.0}
+            depthTest={true}
+            depthWrite={tile.layer === 0}
+            depthFunc={THREE.LessEqualDepth}
           />
         </mesh>
       ))}
       
-      {/* Persistent base ground layer that never disappears */}
-      <mesh 
-        key="persistent_base_ground"
-        position={[0, -2.5, playerPosition.z]} 
-        rotation={[-Math.PI / 2, 0, 0]} 
-        receiveShadow
-        frustumCulled={false}
-        matrixAutoUpdate={false}
-      >
-        <planeGeometry args={[2000, 2000]} />
-        <meshStandardMaterial 
-          color="#1a2a1b"
-          roughness={1.0}
-          metalness={0.0}
-          side={THREE.DoubleSide}
-          transparent={false}
-          opacity={1.0}
-        />
-      </mesh>
+      {/* Multiple massive base layers for absolute ground guarantee */}
+      {Array.from({ length: 5 }, (_, i) => (
+        <mesh 
+          key={`mega_base_${i}`}
+          position={[0, -2.5 - (i * 0.2), playerPosition.z]} 
+          rotation={[-Math.PI / 2, 0, 0]} 
+          receiveShadow
+          frustumCulled={false}
+          matrixAutoUpdate={true}
+          renderOrder={-10 - i}
+        >
+          <planeGeometry args={[2000 + (i * 200), 2000 + (i * 200)]} />
+          <meshStandardMaterial 
+            color={i === 0 ? "#1a2a1b" : "#0f1f0c"}
+            roughness={1.0}
+            metalness={0.0}
+            side={THREE.DoubleSide}
+            transparent={false}
+            opacity={1.0}
+            depthTest={true}
+            depthWrite={i === 0}
+          />
+        </mesh>
+      ))}
     </group>
   );
 };

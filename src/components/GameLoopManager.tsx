@@ -25,11 +25,11 @@ export const useGameLoopManager = ({
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
   const purchasedUpgradesCount = stablePurchasedUpgrades.length;
 
-  // Optimized game loop for 60fps - use 60fps intervals
+  // Game loop - now includes auto mana generation
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setGameState(prev => {
-        const deltaTime = 1/60; // 60fps intervals
+        const deltaTime = 0.1; // 100ms intervals
         const autoManaGain = prev.autoManaRate * deltaTime;
         
         const newState = {
@@ -39,14 +39,10 @@ export const useGameLoopManager = ({
           lastSaveTime: Date.now(),
         };
         
-        // Save less frequently to avoid blocking
-        if (Date.now() - (prev.lastSaveTime || 0) > 1000) {
-          localStorage.setItem('celestialNexusGame', JSON.stringify(newState));
-        }
-        
+        localStorage.setItem('celestialNexusGame', JSON.stringify(newState));
         return newState;
       });
-    }, 16); // 16ms = 60fps
+    }, 100);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);

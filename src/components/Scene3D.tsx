@@ -1,4 +1,3 @@
-
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -85,17 +84,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     <div className="w-full h-full relative">
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
-        dpr={[0.5, 1]} // Reduced DPR for 60fps
-        performance={{ min: 0.8 }} // Higher performance threshold
+        dpr={[1, 1]}
+        performance={{ min: 0.6 }}
         gl={{ 
           antialias: false, 
           alpha: false,
           powerPreference: "high-performance",
           stencil: false,
-          depth: true,
-          logarithmicDepthBuffer: false // Disable for performance
+          depth: true
         }}
-        frameloop="demand" // Only render when needed
       >
         <Suspense fallback={null}>
           <PerspectiveCamera
@@ -103,8 +100,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             makeDefault
             position={[0, 0, 8]}
             fov={60}
-            near={0.1} // Increased near for better culling
-            far={300} // Reduced far for better culling
+            near={0.01}
+            far={500}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           >
             <WizardStaff />
@@ -127,11 +124,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             <ChunkSystem
               playerPosition={playerPosition}
               chunkSize={50}
-              renderDistance={100} // Reduced for 60fps
+              renderDistance={150}
             >
               {(chunks) => (
                 <FantasyEnvironmentOrchestrator
-                  chunks={chunks.slice(0, 30)} // Limit chunks for 60fps
+                  chunks={chunks}
                   chunkSize={50}
                   realm={realm}
                   playerPosition={playerPosition}
