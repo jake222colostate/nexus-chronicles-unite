@@ -80,10 +80,20 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
 
     // SIMPLIFIED: Position sword in consistent first-person view
     const swordOffset = new THREE.Vector3(0.6, -0.4, -1.0); // Right, down, forward
-    const worldPosition = camera.position.clone().add(
-      swordOffset.clone().applyMatrix3(camera.matrix.extractBasis(new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()))
-    );
     
+    // Get camera's rotation matrix and apply offset
+    const cameraDirection = new THREE.Vector3();
+    const cameraRight = new THREE.Vector3();
+    const cameraUp = new THREE.Vector3();
+    
+    camera.matrix.extractBasis(cameraRight, cameraUp, cameraDirection);
+    
+    const worldOffset = new THREE.Vector3()
+      .addScaledVector(cameraRight, swordOffset.x)
+      .addScaledVector(cameraUp, swordOffset.y)
+      .addScaledVector(cameraDirection, -swordOffset.z); // Negative because camera looks down -Z
+    
+    const worldPosition = camera.position.clone().add(worldOffset);
     groupRef.current.position.copy(worldPosition);
     
     // SIMPLIFIED: Base rotation follows camera with fixed offset
