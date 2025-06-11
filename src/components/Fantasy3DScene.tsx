@@ -8,7 +8,6 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
-import { BatEnemy } from './BatEnemy';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -35,22 +34,16 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 }) => {
   // Track individual enemies
   const [leechAlive, setLeechAlive] = useState(true);
-  const [batAlive, setBatAlive] = useState(true);
 
   const leechSpawnPosition = useMemo(
     () => new Vector3(0, 0, cameraPosition.z - 60),
     [leechAlive]
   );
 
-  const batSpawnPosition = useMemo(
-    () => new Vector3(-3, 3, cameraPosition.z - 55),
-    [batAlive]
-  );
 
   React.useEffect(() => {
-    if (onEnemyCountChange)
-      onEnemyCountChange((leechAlive ? 1 : 0) + (batAlive ? 1 : 0));
-  }, [leechAlive, batAlive, onEnemyCountChange]);
+    if (onEnemyCountChange) onEnemyCountChange(leechAlive ? 1 : 0);
+  }, [leechAlive, onEnemyCountChange]);
 
   return (
     <Suspense fallback={null}>
@@ -87,16 +80,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         />
       )}
 
-      {batAlive && (
-        <BatEnemy
-          playerPosition={cameraPosition}
-          startPosition={batSpawnPosition}
-          onReachPlayer={() => {
-            setBatAlive(false);
-            onEnemyKilled?.();
-          }}
-        />
-      )}
 
       {/* Optimized chunk system with performance limits */}
       <ChunkSystem
