@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFWithCors } from '../lib/useGLTFWithCors';
 import * as THREE from 'three';
 import { assetPath } from '../lib/assetPath';
 
@@ -17,7 +18,18 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
-  const { scene } = useGLTF(assetPath('assets/sword_uitlbiaga_mid.glb'));
+  // Load the sword model with CORS-friendly loader
+  const { scene } = useGLTFWithCors(assetPath('assets/sword_uitlbiaga_mid.glb'));
+
+  // Ensure the model casts and receives shadows
+  useEffect(() => {
+    scene.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+  }, [scene]);
   const swingRef = useRef(false);
   const hitRef = useRef(false);
   const swingProgress = useRef(0);
@@ -82,7 +94,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
 
   return (
     <group ref={groupRef}>
-      <primitive object={scene.clone()} scale={[0.6, 0.6, 0.6]} />
+      <primitive object={scene.clone()} scale={[1, 1, 1]} />
     </group>
   );
 };

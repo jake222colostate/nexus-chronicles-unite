@@ -64,8 +64,9 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
   
   // Tune chunk and render distances for better performance
   const CHUNK_SIZE = 25;
-  const RENDER_DISTANCE = 100; // smaller render distance to reduce draw calls
-  const CLEANUP_DISTANCE = 150; // cleanup sooner to free resources
+  // Increase render distance so mountains spawn further away
+  const RENDER_DISTANCE = 150;
+  const CLEANUP_DISTANCE = 200;
   const UPDATE_INTERVAL = 100;
 
   // Create a mountain at specified position - LOWERED into ground

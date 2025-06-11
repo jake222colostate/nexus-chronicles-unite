@@ -7,7 +7,8 @@ import * as THREE from 'three';
  */
 export const CasualFog = () => {
   const { scene } = useThree();
-  const fogRef = useRef(new THREE.Fog('#2d1b4e', 10, 60));
+  // Denser starting fog to hide far objects until they load
+  const fogRef = useRef(new THREE.Fog('#2d1b4e', 5, 50));
 
   useEffect(() => {
     scene.fog = fogRef.current;
@@ -18,8 +19,8 @@ export const CasualFog = () => {
 
   useFrame(() => {
     const fog = fogRef.current;
-    if (fog.far < 180) {
-      fog.far += 0.5; // gradually increase visibility
+    if (fog.far < 250) {
+      fog.far += 0.7; // gradually increase visibility over time
     }
   });
 
