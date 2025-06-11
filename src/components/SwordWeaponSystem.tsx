@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
-import { useGLTFWithCors } from '../lib/useGLTFWithCors';
 import * as THREE from 'three';
 
 interface SwordWeaponSystemProps {
@@ -18,159 +17,130 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
+  const [isSwinging, setIsSwinging] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
+  const swingProgress = useRef(0);
   
-  // FIXED: Always call the hook at the top level, handle errors in effect
+  // Try to load the sword model
   let gltfResult = null;
   try {
-    gltfResult = useGLTFWithCors('/swordofkasdd.glb');
+    gltfResult = useGLTF('/swordofkasdd.glb');
   } catch (error) {
-    // Hook called, but we'll handle the error in useEffect
+    console.log('SwordWeaponSystem: Failed to load sword model:', error);
+    setHasLoadError(true);
   }
   
   const scene = gltfResult?.scene || null;
 
-  // Handle loading errors in useEffect
-  useEffect(() => {
-    if (!gltfResult) {
-      setHasLoadError(true);
-      console.log('SwordWeaponSystem: Failed to load sword model, using fallback');
-      return;
-    }
-    
-    if (scene) {
-      setHasLoadError(false);
-      console.log('SwordWeaponSystem: Sword model loaded successfully:', scene);
-      console.log('SwordWeaponSystem: Scene children count:', scene.children.length);
-      console.log('SwordWeaponSystem: Scene bounding box:', scene);
-    }
-  }, [scene, gltfResult]);
-
-  // Ensure the model casts and receives shadows and is visible
+  // Handle model setup
   useEffect(() => {
     if (scene) {
-      console.log('SwordWeaponSystem: Setting up sword model visibility');
+      console.log('SwordWeaponSystem: Setting up sword model');
       scene.traverse((child) => {
         if ((child as THREE.Mesh).isMesh) {
           const mesh = child as THREE.Mesh;
           mesh.castShadow = true;
           mesh.receiveShadow = true;
-          mesh.frustumCulled = false; // Prevent disappearing
           mesh.visible = true;
           
-          // Debug mesh info
-          console.log('SwordWeaponSystem: Found mesh:', mesh.name, mesh.geometry, mesh.material);
-          
-          // Ensure materials are visible
           if (mesh.material) {
             if (Array.isArray(mesh.material)) {
               mesh.material.forEach(mat => {
                 mat.transparent = false;
                 mat.opacity = 1.0;
-                mat.visible = true;
               });
             } else {
               mesh.material.transparent = false;
               mesh.material.opacity = 1.0;
-              mesh.material.visible = true;
             }
           }
         }
       });
+    } else {
+      setHasLoadError(true);
     }
   }, [scene]);
 
-  const swingRef = useRef(false);
-  const hitRef = useRef(false);
-  const swingProgress = useRef(0);
-
+  // Handle swing on click
   useEffect(() => {
     const handleClick = () => {
-      if (!swingRef.current) {
+      if (!isSwinging) {
         console.log('SwordWeaponSystem: Starting sword swing');
-        swingRef.current = true;
-        hitRef.current = false;
+        setIsSwinging(true);
         swingProgress.current = 0;
       }
     };
+    
     window.addEventListener('click', handleClick);
-    return () => {
-      window.removeEventListener('click', handleClick);
-    };
-  }, []);
+    return () => window.removeEventListener('click', handleClick);
+  }, [isSwinging]);
 
   useFrame((_, delta) => {
     if (!groupRef.current || !camera) return;
 
-    const cameraForward = new THREE.Vector3();
-    const cameraRight = new THREE.Vector3();
-    const cameraUp = new THREE.Vector3();
-
-    camera.getWorldDirection(cameraForward);
-    cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
-    cameraUp.crossVectors(cameraForward, cameraRight).normalize();
-
-    // IMPROVED: Better first-person sword positioning - much more visible
-    const pos = camera.position.clone()
-      .add(cameraRight.clone().multiplyScalar(0.8))    // Right side but closer
-      .add(cameraUp.clone().multiplyScalar(-0.3))      // Slightly lower
-      .add(cameraForward.clone().multiplyScalar(1.2)); // Much closer to camera
-    groupRef.current.position.copy(pos);
-
-    // IMPROVED: Better first-person sword rotation - more natural grip
+    // SIMPLIFIED: Position sword in consistent first-person view
+    const swordOffset = new THREE.Vector3(0.6, -0.4, -1.0); // Right, down, forward
+    const worldPosition = camera.position.clone().add(
+      swordOffset.clone().applyMatrix3(camera.matrix.extractBasis(new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()))
+    );
+    
+    groupRef.current.position.copy(worldPosition);
+    
+    // SIMPLIFIED: Base rotation follows camera with fixed offset
     groupRef.current.rotation.copy(camera.rotation);
-    groupRef.current.rotateY(-Math.PI / 6);  // Less extreme angle
-    groupRef.current.rotateX(-Math.PI / 12); // Slight downward tilt
-    groupRef.current.rotateZ(Math.PI / 8);   // Natural holding angle
-
-    // Force visibility and scale
+    groupRef.current.rotateY(-0.3); // Slight angle to the right
+    groupRef.current.rotateX(-0.2); // Slight downward angle
+    
+    // Ensure visibility
     groupRef.current.visible = true;
-    groupRef.current.scale.set(1, 1, 1); // Normal scale
+    groupRef.current.scale.set(0.8, 0.8, 0.8);
 
-    if (swingRef.current) {
-      const duration = 0.3;
+    // Handle swing animation
+    if (isSwinging) {
+      const swingDuration = 0.4;
       swingProgress.current += delta;
-      const t = Math.min(swingProgress.current / duration, 1);
+      const t = Math.min(swingProgress.current / swingDuration, 1);
       
-      // Swing animation - diagonal slash from right to left
-      const swingAngle = Math.sin(t * Math.PI) * 0.8;
-      groupRef.current.rotation.z += swingAngle * delta / duration;
-      groupRef.current.rotation.x -= swingAngle * 0.5 * delta / duration;
-
-      if (t > 0.2 && t < 0.7 && !hitRef.current) {
+      // Simple swing animation
+      const swingAngle = Math.sin(t * Math.PI) * 1.2;
+      groupRef.current.rotateZ(swingAngle);
+      
+      // Check for enemy hits during swing
+      if (t > 0.3 && t < 0.8) {
         enemyPositions.forEach((pos, idx) => {
-          if (pos.distanceTo(camera.position) < 2) {
+          if (pos.distanceTo(camera.position) < 3) {
+            console.log('SwordWeaponSystem: Hit enemy!');
             onHitEnemy(idx, damage);
-            hitRef.current = true;
           }
         });
       }
-
+      
+      // End swing
       if (t >= 1) {
-        swingRef.current = false;
+        setIsSwinging(false);
         swingProgress.current = 0;
       }
     }
   });
 
-  // Enhanced fallback sword with better visibility and debugging
+  // Fallback sword if model fails to load
   if (!scene || hasLoadError) {
-    console.log('SwordWeaponSystem: Using fallback sword model');
+    console.log('SwordWeaponSystem: Using fallback sword geometry');
     return (
       <group ref={groupRef}>
-        {/* More visible blade with metallic appearance */}
-        <mesh position={[0, 0, 0]} scale={[0.1, 1.2, 0.03]}>
-          <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#C0C0C0" metalness={0.9} roughness={0.1} />
+        {/* Blade */}
+        <mesh position={[0, 0.3, 0]}>
+          <boxGeometry args={[0.08, 1.0, 0.02]} />
+          <meshStandardMaterial color="#E6E6FA" metalness={0.8} roughness={0.2} />
         </mesh>
         {/* Guard */}
-        <mesh position={[0, -0.3, 0]} scale={[0.3, 0.06, 0.06]}>
-          <boxGeometry args={[1, 1, 1]} />
+        <mesh position={[0, -0.1, 0]}>
+          <boxGeometry args={[0.25, 0.04, 0.04]} />
           <meshStandardMaterial color="#8B4513" />
         </mesh>
         {/* Handle */}
-        <mesh position={[0, -0.5, 0]} scale={[0.15, 0.25, 0.06]}>
-          <boxGeometry args={[1, 1, 1]} />
+        <mesh position={[0, -0.3, 0]}>
+          <cylinderGeometry args={[0.03, 0.03, 0.3]} />
           <meshStandardMaterial color="#654321" />
         </mesh>
       </group>
@@ -182,8 +152,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     <group ref={groupRef}>
       <primitive 
         object={scene.clone()} 
-        scale={[1.5, 1.5, 1.5]}  // Moderate scale for visibility
-        position={[0, 0, 0]}
+        scale={[1.0, 1.0, 1.0]}
       />
     </group>
   );
