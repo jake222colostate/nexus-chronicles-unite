@@ -81,22 +81,28 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
     cameraUp.crossVectors(cameraForward, cameraRight).normalize();
 
-    // Improved positioning - closer to camera and more visible
+    // First-person sword positioning - right side of screen
     const pos = camera.position.clone()
-      .add(cameraRight.clone().multiplyScalar(0.5))  // More to the right
-      .add(cameraUp.clone().multiplyScalar(-0.3))    // Lower
-      .add(cameraForward.clone().multiplyScalar(1.2)); // Further forward
+      .add(cameraRight.clone().multiplyScalar(0.8))   // Further to the right
+      .add(cameraUp.clone().multiplyScalar(-0.6))     // Lower position
+      .add(cameraForward.clone().multiplyScalar(0.8)); // Closer to camera
     groupRef.current.position.copy(pos);
 
+    // First-person sword rotation - angled like being held
     groupRef.current.rotation.copy(camera.rotation);
-    groupRef.current.rotateY(-Math.PI / 4);  // Better angle
-    groupRef.current.rotateZ(Math.PI / 6);   // Tilt for visibility
+    groupRef.current.rotateY(-Math.PI / 3);  // Angle towards center
+    groupRef.current.rotateX(-Math.PI / 6);  // Slight downward tilt
+    groupRef.current.rotateZ(Math.PI / 8);   // Natural holding angle
 
     if (swingRef.current) {
       const duration = 0.3;
       swingProgress.current += delta;
       const t = Math.min(swingProgress.current / duration, 1);
-      groupRef.current.rotation.x -= Math.sin(t * Math.PI) * 1.2 * delta / duration;
+      
+      // Swing animation - diagonal slash from right to left
+      const swingAngle = Math.sin(t * Math.PI) * 0.8;
+      groupRef.current.rotation.z += swingAngle * delta / duration;
+      groupRef.current.rotation.x -= swingAngle * 0.5 * delta / duration;
 
       if (t > 0.2 && t < 0.7 && !hitRef.current) {
         enemyPositions.forEach((pos, idx) => {
@@ -134,7 +140,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     <group ref={groupRef}>
       <primitive 
         object={scene.clone()} 
-        scale={[2, 2, 2]}  // Bigger scale for visibility
+        scale={[1.5, 1.5, 1.5]}  // Appropriate scale for first-person view
       />
     </group>
   );
