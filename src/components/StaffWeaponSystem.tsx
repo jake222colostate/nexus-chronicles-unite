@@ -41,8 +41,8 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   useFrame((state, delta) => {
     if (!staffGroupRef.current || !camera) return;
 
-    // Position staff in the bottom-right corner, visible within mobile screen
-    const staffOffset = new THREE.Vector3(1.2, -0.8, -0.8); // More to the right, lower, closer
+    // Position staff in bottom-right corner, but visible on screen
+    const staffOffset = new THREE.Vector3(0.5, -0.6, -1.5); // Closer to center, forward of camera
     
     // Get camera vectors for positioning
     const cameraRight = new THREE.Vector3();
@@ -62,13 +62,13 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     const worldPosition = camera.position.clone().add(worldOffset);
     staffGroupRef.current.position.copy(worldPosition);
     
-    // Rotate staff to follow camera and angle towards enemies
+    // Rotate staff to follow camera and point forward
     staffGroupRef.current.rotation.copy(camera.rotation);
-    staffGroupRef.current.rotateY(-0.2); // Slight angle towards center
-    staffGroupRef.current.rotateX(-0.2); // Angle down slightly
+    staffGroupRef.current.rotateY(-0.1); // Slight angle towards center
+    staffGroupRef.current.rotateX(-0.15); // Angle down slightly
 
-    // Calculate staff tip position for projectile spawning
-    const staffTipOffset = new THREE.Vector3(0, 1.2, 0); // Top of staff
+    // Calculate staff tip position for projectile spawning (top of staff)
+    const staffTipOffset = new THREE.Vector3(0, 1.0, 0); // Top of staff
     staffTipOffset.applyQuaternion(staffGroupRef.current.quaternion);
     const staffTipPosition = staffGroupRef.current.position.clone().add(staffTipOffset);
 
@@ -139,7 +139,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
       <group ref={staffGroupRef}>
         <primitive 
           object={scene.clone()} 
-          scale={[0.4, 0.4, 0.4]} // Smaller scale for mobile visibility
+          scale={[0.3, 0.3, 0.3]} // Smaller scale to fit better on screen
           rotation={[0, Math.PI, 0]}
         />
       </group>
