@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useRef,
@@ -12,6 +11,7 @@ import { Vector3 } from 'three';
 import { Enemy } from './Enemy';
 import { Monster } from './Monster';
 import { BatMinion } from './BatMinion';
+import { Leech } from './Leech';
 import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 
 interface EnemySystemProps {
@@ -23,7 +23,7 @@ interface EnemySystemProps {
   damageSystem?: ReturnType<typeof useEnemyDamageSystem>;
 }
 
-export type EnemyType = 'vampire_bat' | 'monster';
+export type EnemyType = 'vampire_bat' | 'monster' | 'leech';
 
 export interface EnemyData {
   id: string;
@@ -58,7 +58,7 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
     }
   }, [enemies.length, onEnemiesChange]);
 
-  // IMPROVED: Spawn new enemy more frequently with better distribution
+  // IMPROVED: Spawn new enemy more frequently with better distribution including leech
   const spawnEnemy = useCallback(() => {
     const now = Date.now();
     
@@ -78,18 +78,26 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
       // IMPROVED: Better X position distribution near the path
       const spawnX = (Math.random() - 0.5) * 30; // Wider spread
       
-      // IMPROVED: 75% chance of vampire bat, 25% chance of monster
-      const enemyType: EnemyType = Math.random() < 0.75 ? 'vampire_bat' : 'monster';
+      // IMPROVED: 50% vampire bat, 25% monster, 25% leech
+      const rand = Math.random();
+      let enemyType: EnemyType;
+      if (rand < 0.5) {
+        enemyType = 'vampire_bat';
+      } else if (rand < 0.75) {
+        enemyType = 'monster';
+      } else {
+        enemyType = 'leech';
+      }
 
       const newEnemy: EnemyData = {
         id: `enemy_${now}_${Math.random()}`,
-        position: [spawnX, enemyType === 'vampire_bat' ? 1.5 : 0, spawnZ],
+        position: [spawnX, enemyType === 'vampire_bat' ? 1.5 : enemyType === 'leech' ? 0.2 : 0, spawnZ],
         spawnTime: now,
         health: 1,
         type: enemyType
       };
 
-      console.log(`EnemySystem: Spawning ${enemyType} enemy ${newEnemy.id} at position [${spawnX}, ${enemyType === 'vampire_bat' ? 1.5 : 0}, ${spawnZ}]`);
+      console.log(`EnemySystem: Spawning ${enemyType} enemy ${newEnemy.id} at position [${spawnX}, ${enemyType === 'vampire_bat' ? 1.5 : enemyType === 'leech' ? 0.2 : 0}, ${spawnZ}]`);
       
       lastSpawnTime.current = now;
       return [...prev, newEnemy];
@@ -177,8 +185,24 @@ export const EnemySystem = forwardRef<EnemySystemHandle, EnemySystemProps>(
           );
         }
         
+        if (enemy.type === 'leech') {
+          return (
+            <Leech
+              key={enemy.id}
+              enemyId={enemy.id}
+              position={enemy.position}
+              playerPosition={playerPosition}
+              enemyHealth={enemyHealth}
+              onReachPlayer={() => removeEnemy(enemy.id)}
+              onInitialize={onEnemyInitialize}
+            />
+          );
+        }
+        
         return null;
       })}
     </group>
   );
 });
+
+export default EnemySystem;
