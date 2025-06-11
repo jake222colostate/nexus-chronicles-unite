@@ -32,7 +32,7 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
     dir.y = 0; // stay on the ground
     const distance = dir.length();
     if (distance < 1) {
-      onReachPlayer && onReachPlayer();
+      onReachPlayer?.();
       return;
     }
     dir.normalize();

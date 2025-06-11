@@ -29,7 +29,7 @@ export const BatEnemy: React.FC<BatEnemyProps> = ({
     dir.subVectors(playerPosition, groupRef.current.position);
     const distance = dir.length();
     if (distance < 1) {
-      onReachPlayer && onReachPlayer();
+      onReachPlayer?.();
       return;
     }
     dir.normalize();

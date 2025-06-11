@@ -82,7 +82,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           startPosition={leechSpawnPosition}
           onReachPlayer={() => {
             setLeechAlive(false);
-            onEnemyKilled && onEnemyKilled();
+            onEnemyKilled?.();
           }}
         />
       )}
@@ -93,7 +93,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           startPosition={batSpawnPosition}
           onReachPlayer={() => {
             setBatAlive(false);
-            onEnemyKilled && onEnemyKilled();
+            onEnemyKilled?.();
           }}
         />
       )}
