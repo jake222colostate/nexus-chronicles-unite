@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -21,19 +22,39 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   // Load the sword model with CORS-friendly loader
   const { scene } = useGLTFWithCors(assetPath('assets/sword_uitlbiaga_mid.glb'));
 
-  // Ensure the model casts and receives shadows
+  // Ensure the model casts and receives shadows and is visible
   useEffect(() => {
-    scene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        child.castShadow = true;
-        child.receiveShadow = true;
-      }
-    });
+    if (scene) {
+      scene.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          const mesh = child as THREE.Mesh;
+          mesh.castShadow = true;
+          mesh.receiveShadow = true;
+          mesh.frustumCulled = false; // Prevent disappearing
+          mesh.visible = true;
+          
+          // Ensure materials are visible
+          if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+              mesh.material.forEach(mat => {
+                mat.transparent = false;
+                mat.opacity = 1.0;
+                mat.visible = true;
+              });
+            } else {
+              mesh.material.transparent = false;
+              mesh.material.opacity = 1.0;
+              mesh.material.visible = true;
+            }
+          }
+        }
+      });
+    }
   }, [scene]);
+
   const swingRef = useRef(false);
   const hitRef = useRef(false);
   const swingProgress = useRef(0);
-
 
   useEffect(() => {
     const handleClick = () => {
@@ -50,7 +71,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   }, []);
 
   useFrame((_, delta) => {
-    if (!groupRef.current || !camera) return;
+    if (!groupRef.current || !camera || !scene) return;
 
     const cameraForward = new THREE.Vector3();
     const cameraRight = new THREE.Vector3();
@@ -60,15 +81,16 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
     cameraUp.crossVectors(cameraForward, cameraRight).normalize();
 
+    // Improved positioning - closer to camera and more visible
     const pos = camera.position.clone()
-      .add(cameraRight.clone().multiplyScalar(0.35))
-      .add(cameraUp.clone().multiplyScalar(-0.25))
-      .add(cameraForward.clone().multiplyScalar(0.5));
+      .add(cameraRight.clone().multiplyScalar(0.5))  // More to the right
+      .add(cameraUp.clone().multiplyScalar(-0.3))    // Lower
+      .add(cameraForward.clone().multiplyScalar(1.2)); // Further forward
     groupRef.current.position.copy(pos);
 
     groupRef.current.rotation.copy(camera.rotation);
-    groupRef.current.rotateY(-Math.PI / 6);
-    groupRef.current.rotateZ(Math.PI / 4);
+    groupRef.current.rotateY(-Math.PI / 4);  // Better angle
+    groupRef.current.rotateZ(Math.PI / 6);   // Tilt for visibility
 
     if (swingRef.current) {
       const duration = 0.3;
@@ -92,9 +114,28 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     }
   });
 
+  if (!scene) {
+    // Fallback sword if model doesn't load
+    return (
+      <group ref={groupRef}>
+        <mesh position={[0, 0, 0]} scale={[0.1, 1, 0.02]}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#C0C0C0" metalness={0.8} roughness={0.2} />
+        </mesh>
+        <mesh position={[0, -0.4, 0]} scale={[0.15, 0.2, 0.05]}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#8B4513" />
+        </mesh>
+      </group>
+    );
+  }
+
   return (
     <group ref={groupRef}>
-      <primitive object={scene.clone()} scale={[1, 1, 1]} />
+      <primitive 
+        object={scene.clone()} 
+        scale={[2, 2, 2]}  // Bigger scale for visibility
+      />
     </group>
   );
 };
