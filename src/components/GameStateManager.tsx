@@ -23,6 +23,7 @@ export interface GameState {
   enemiesKilled: number;
   autoManaLevel: number;
   autoManaRate: number;
+  manaPerKill: number;
 }
 
 export interface Building {
@@ -47,6 +48,8 @@ export const scifiBuildings: Building[] = [
   { id: 'reactor', name: 'Fusion Reactor', cost: 150, production: 10, costMultiplier: 1.2, description: 'Advanced nuclear fusion technology', icon: '⚡' },
   { id: 'station', name: 'Space Station', cost: 1500, production: 64, costMultiplier: 1.25, description: 'Orbital platforms generating massive energy', icon: '🛰️' },
   { id: 'megastructure', name: 'Dyson Sphere', cost: 20000, production: 430, costMultiplier: 1.3, description: 'Planet-scale energy harvesting systems', icon: '🌌' },
+  { id: 'orbital_array', name: 'Orbital Array', cost: 150000, production: 1200, costMultiplier: 1.35, description: 'Rings of satellites beaming power', icon: '📡' },
+  { id: 'singularity_core', name: 'Singularity Core', cost: 1000000, production: 8000, costMultiplier: 1.4, description: 'Harnesses miniature black holes', icon: '🕳️' },
 ];
 
 const defaultGameState: GameState = {
@@ -69,6 +72,7 @@ const defaultGameState: GameState = {
   enemiesKilled: 0,
   autoManaLevel: 0,
   autoManaRate: 0,
+  manaPerKill: 5,
 };
 
 export const useGameStateManager = () => {
@@ -89,6 +93,7 @@ export const useGameStateManager = () => {
         enemiesKilled: parsedState.enemiesKilled || 0,
         autoManaLevel: parsedState.autoManaLevel || 0,
         autoManaRate: parsedState.autoManaRate || 0,
+        manaPerKill: parsedState.manaPerKill || 5,
       };
     }
     return defaultGameState;

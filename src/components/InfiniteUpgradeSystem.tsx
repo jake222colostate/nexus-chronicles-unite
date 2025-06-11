@@ -56,6 +56,9 @@ export const useInfiniteUpgrades = ({
       const tierMultiplier = Math.pow(10, tier); // Each tier is 10x more expensive
       const costMultiplier = Math.pow(2, i); // Base exponential growth
       const manaMultiplier = Math.pow(2, i);
+
+      const isSpecial = (i + 1) % 10 === 0;
+      const specialMultiplier = isSpecial ? 5 : 1;
       
       // Position calculation - alternating sides with increasing distance
       const side = i % 2 === 0 ? -1 : 1;
@@ -76,11 +79,11 @@ export const useInfiniteUpgrades = ({
       upgrades.push({
         id: i + 1,
         name: finalName,
-        baseCost: 50,
-        baseManaPerSecond: 10,
-        cost: Math.floor(50 * costMultiplier * tierMultiplier),
-        manaPerSecond: Math.floor(10 * manaMultiplier * tierMultiplier),
-        unlocked: i <= maxUnlockedUpgrade,
+        baseCost: 50 * specialMultiplier,
+        baseManaPerSecond: 10 * specialMultiplier,
+        cost: Math.floor(50 * costMultiplier * tierMultiplier * specialMultiplier),
+        manaPerSecond: Math.floor(10 * manaMultiplier * tierMultiplier * specialMultiplier),
+        unlocked: i <= maxUnlockedUpgrade + 1,
         modelUrl: template.modelUrl,
         position: [x, y, z] as [number, number, number],
         scale: finalScale,

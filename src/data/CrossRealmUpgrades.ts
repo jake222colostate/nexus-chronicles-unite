@@ -59,6 +59,21 @@ export const crossRealmUpgrades: CrossRealmUpgrade[] = [
       journeyDistance: 500
     }
   },
+  {
+    id: 'fantasy_essence_leech',
+    name: 'Essence Leech',
+    description: 'Steal essence to gain mana per kill',
+    icon: '🩸',
+    realm: 'fantasy',
+    level: 0,
+    maxLevel: 5,
+    baseCost: 200,
+    effect: { manaPerKill: 2 },
+    unlockRequirement: {
+      otherRealm: 'scifi',
+      journeyDistance: 300
+    }
+  },
 
   // Sci-Fi Realm Upgrades
   {
@@ -115,6 +130,36 @@ export const crossRealmUpgrades: CrossRealmUpgrade[] = [
     unlockRequirement: {
       otherRealm: 'fantasy',
       journeyDistance: 500
+    }
+  },
+  {
+    id: 'scifi_mana_siphon',
+    name: 'Mana Siphon',
+    description: 'Harvest energy from defeated foes',
+    icon: '🔋',
+    realm: 'scifi',
+    level: 0,
+    maxLevel: 5,
+    baseCost: 200,
+    effect: { manaPerKill: 3 },
+    unlockRequirement: {
+      otherRealm: 'fantasy',
+      journeyDistance: 300
+    }
+  },
+  {
+    id: 'scifi_gravity_well',
+    name: 'Gravity Well',
+    description: 'Enhances energy generation with gravity fields',
+    icon: '🌀',
+    realm: 'scifi',
+    level: 0,
+    maxLevel: 8,
+    baseCost: 250,
+    effect: { energyPerSecond: 3 },
+    unlockRequirement: {
+      otherRealm: 'fantasy',
+      journeyDistance: 600
     }
   }
 ];

@@ -53,6 +53,7 @@ export const useGameLoopManager = ({
   useEffect(() => {
     let manaRate = 0;
     let energyRate = 0;
+    let manaPerKill = 5;
 
     // Base production from buildings
     fantasyBuildings.forEach(building => {
@@ -75,6 +76,9 @@ export const useGameLoopManager = ({
         }
         if (upgrade.effect.energyPerSecond && upgrade.realm === 'scifi') {
           energyRate += upgrade.effect.energyPerSecond * upgrade.level;
+        }
+        if (upgrade.effect.manaPerKill) {
+          manaPerKill += upgrade.effect.manaPerKill * upgrade.level;
         }
       }
     });
@@ -104,6 +108,7 @@ export const useGameLoopManager = ({
       ...prev,
       manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
+      manaPerKill,
     }));
   }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels, setGameState]);
 

@@ -111,6 +111,14 @@ const GameEngine: React.FC = () => {
     setEnemyCount(count);
   }, []);
 
+  const handleEnemyKilled = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      mana: prev.mana + prev.manaPerKill,
+      enemiesKilled: prev.enemiesKilled + 1,
+    }));
+  }, [setGameState]);
+
   const handleJourneyUpdate = useCallback((distance: number) => {
     const currentDistance = currentRealm === 'fantasy' ? stableGameState.fantasyJourneyDistance : stableGameState.scifiJourneyDistance;
     
@@ -270,6 +278,7 @@ const GameEngine: React.FC = () => {
           onTapEffectComplete={handleTapEffectComplete}
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
           onEnemyCountChange={handleEnemyCountChange}
+          onEnemyKilled={handleEnemyKilled}
           weaponDamage={weaponStats.damage}
         />
 

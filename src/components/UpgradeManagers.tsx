@@ -220,6 +220,7 @@ export const useUpgradeManagers = ({
         scifiJourneyDistance: gameState.scifiJourneyDistance,
         autoManaLevel: gameState.autoManaLevel,
         autoManaRate: gameState.autoManaRate,
+        manaPerKill: gameState.manaPerKill,
       });
     }
   }, [gameState, setGameState]);
