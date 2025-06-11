@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, Html } from '@react-three/drei';
 import { Vector3, Group } from 'three';
@@ -9,6 +9,8 @@ interface LeechEnemyProps {
   playerPosition: Vector3;
   startPosition: Vector3;
   onReachPlayer?: () => void;
+  onUpdatePosition?: (pos: Vector3) => void;
+  health: number;
   visible?: boolean;
 }
 
@@ -16,13 +18,13 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
   playerPosition,
   startPosition,
   onReachPlayer,
+  onUpdatePosition,
+  health,
   visible = true
 }) => {
   const groupRef = useRef<Group>(null);
   const { scene } = useGLTF(assetPath('assets/leech.glb'));
   const speed = 0.1;
-  const [health] = useState(100);
-
   const groundY = startPosition.y;
 
   useFrame(() => {
@@ -41,6 +43,7 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
     groupRef.current.lookAt(
       new Vector3(playerPosition.x, groundY, playerPosition.z)
     );
+    onUpdatePosition?.(groupRef.current.position);
   });
 
   return (
@@ -59,9 +62,9 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
       >
         <div className="w-16">
           <Progress
-            value={health}
+            value={(health / 5) * 100}
             direction="rtl"
-            indicatorClassName={health < 100 ? 'bg-red-600' : 'bg-green-500'}
+            indicatorClassName={health < 5 ? 'bg-red-600' : 'bg-green-500'}
             className="h-2"
           />
         </div>

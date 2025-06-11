@@ -16,6 +16,7 @@ interface Fantasy3DUpgradeWorldProps {
   onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
   onEnemyCountChange?: (count: number) => void;
   onEnemyKilled?: () => void;
+  weaponDamage: number;
 }
 
 export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
@@ -26,7 +27,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   realm = 'fantasy',
   onPlayerPositionUpdate,
   onEnemyCountChange,
-  onEnemyKilled
+  onEnemyKilled,
+  weaponDamage
 }) => {
   const {
     cameraPosition,
@@ -77,6 +79,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
           renderDistance={RENDER_DISTANCE}
           onEnemyCountChange={onEnemyCountChange}
           onEnemyKilled={onEnemyKilled}
+          weaponDamage={weaponDamage}
         />
 
         <Fantasy3DUpgradePedestals
