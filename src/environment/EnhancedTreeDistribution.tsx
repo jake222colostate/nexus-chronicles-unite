@@ -2,6 +2,7 @@ import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from '../components/ChunkSystem';
 import * as THREE from 'three';
 import { TreeAssetManager, TREE_DISTRIBUTION, TREE_SCALES, TREE_Y_OFFSETS } from './TreeAssetManager';
+import { useRegisterCollider } from '@/lib/CollisionContext';
 
 interface EnhancedTreeDistributionProps {
   chunks: ChunkData[];
@@ -184,6 +185,12 @@ const GLBTree: React.FC<{
     adjustedY,
     position[2]
   ];
+
+  useRegisterCollider(
+    `tree-${position[0]}-${position[2]}`,
+    new THREE.Vector3(...adjustedPosition),
+    scale
+  );
 
   if (!optimizedModel) {
     return (

@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF, Html } from '@react-three/drei';
 import { Vector3, Group } from 'three';
+import { useCollisionContext } from '@/lib/CollisionContext';
 import { Progress } from './ui/progress';
 import { assetPath } from '../lib/assetPath';
 
@@ -27,6 +28,17 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
   const { scene } = useGLTF(assetPath('assets/leech.glb'));
   const speed = 0.1;
   const groundY = startPosition.y;
+  const collision = useCollisionContext();
+
+  const colliderIdRef = React.useRef<string>('');
+  React.useEffect(() => {
+    if (!collision) return;
+    const id = `leech-${startPosition.x}-${startPosition.z}-${Math.random()}`;
+    colliderIdRef.current = id;
+    const collider = { id, position: startPosition.clone(), radius: 0.8 };
+    collision.registerCollider(collider);
+    return () => collision.removeCollider(id);
+  }, [collision, startPosition]);
 
   useFrame(() => {
     if (!groupRef.current || !visible) return;
@@ -39,12 +51,28 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
       return;
     }
     dir.normalize();
-    groupRef.current.position.addScaledVector(dir, speed);
+    const newPos = groupRef.current.position.clone().addScaledVector(dir, speed);
+    let blocked = false;
+    if (collision) {
+      for (const col of collision.colliders.current.values()) {
+        if (col.id === colliderIdRef.current) continue;
+        if (newPos.distanceTo(col.position) < 0.8 + col.radius) {
+          blocked = true;
+          break;
+        }
+      }
+    }
+    if (!blocked) {
+      groupRef.current.position.copy(newPos);
+    }
     groupRef.current.position.y = groundY;
     groupRef.current.lookAt(
       new Vector3(playerPosition.x, groundY, playerPosition.z)
     );
     onUpdatePosition?.(groupRef.current.position);
+    if (collision && colliderIdRef.current) {
+      collision.updateCollider(colliderIdRef.current, groupRef.current.position);
+    }
   });
 
   return (

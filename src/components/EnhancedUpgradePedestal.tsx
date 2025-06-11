@@ -1,7 +1,8 @@
 
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh } from 'three';
+import { Mesh, Vector3 } from 'three';
+import { useRegisterCollider } from '@/lib/CollisionContext';
 
 interface EnhancedUpgradePedestalProps {
   position: [number, number, number];
@@ -25,6 +26,12 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   const meshRef = useRef<Mesh>(null);
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
+
+  useRegisterCollider(
+    `upgrade-${upgrade.id}`,
+    new Vector3(...position),
+    1.5
+  );
   
   useFrame((state) => {
     if (meshRef.current) {

@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
+import { useCollisionContext } from '@/lib/CollisionContext';
 
 interface Enhanced360ControllerProps {
   position: [number, number, number];
@@ -63,7 +64,8 @@ const findSafePosition = (
   currentX: number,
   currentZ: number,
   enemies: Vector3[] = [],
-  enemyRadius = 1.5
+  enemyRadius = 1.5,
+  colliders: { position: Vector3; radius: number }[] = []
 ) => {
   // If no collision, return target position
   if (!checkMountainCollision(targetX, targetZ)) {
@@ -74,6 +76,16 @@ const findSafePosition = (
       if (Math.sqrt(dx * dx + dz * dz) < enemyRadius) {
         blocked = true;
         break;
+      }
+    }
+    if (!blocked) {
+      for (const c of colliders) {
+        const dx = targetX - c.position.x;
+        const dz = targetZ - c.position.z;
+        if (Math.sqrt(dx * dx + dz * dz) < enemyRadius + c.radius) {
+          blocked = true;
+          break;
+        }
       }
     }
     if (!blocked) return { x: targetX, z: targetZ };
@@ -116,6 +128,15 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   const lastNotifiedPosition = useRef(new Vector3());
   const isMousePressed = useRef(false);
   const frameCount = useRef(0);
+  const collision = useCollisionContext();
+  const playerColliderId = 'player';
+
+  useEffect(() => {
+    if (collision) {
+      collision.registerCollider({ id: playerColliderId, position: camera.position.clone(), radius: 1 });
+      return () => collision.removeCollider(playerColliderId);
+    }
+  }, [collision]);
 
   // Initialize camera at GUARANTEED safe valley center position
   useEffect(() => {
@@ -267,18 +288,33 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     const newTargetPosition = targetPosition.current.clone().add(velocity.current.clone().multiplyScalar(delta));
     
     // Check for mountain collision and find safe position
+    const additionalColliders = collision
+      ? Array.from(collision.colliders.current.values()).filter(c => c.id !== playerColliderId)
+      : [];
     const safePosition = findSafePosition(
       newTargetPosition.x,
       newTargetPosition.z,
       targetPosition.current.x,
       targetPosition.current.z,
       enemyPositions,
-      enemyRadius
+      enemyRadius,
+      additionalColliders
     );
-    
-    // Update position with collision-safe coordinates
-    targetPosition.current.x = safePosition.x;
-    targetPosition.current.z = safePosition.z;
+
+    let blocked = false;
+    for (const col of additionalColliders) {
+      const dx = safePosition.x - col.position.x;
+      const dz = safePosition.z - col.position.z;
+      if (Math.sqrt(dx * dx + dz * dz) < 1 + col.radius) {
+        blocked = true;
+        break;
+      }
+    }
+
+    if (!blocked) {
+      targetPosition.current.x = safePosition.x;
+      targetPosition.current.z = safePosition.z;
+    }
     
     // Keep within the wide valley bounds (mountains are at ±140, so allow ±120 for safety)
     targetPosition.current.x = Math.max(-120, Math.min(120, targetPosition.current.x));
@@ -287,6 +323,9 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     // Update camera
     camera.position.copy(targetPosition.current);
     camera.rotation.set(pitchAngle.current, yawAngle.current, 0, 'YXZ');
+    if (collision) {
+      collision.updateCollider(playerColliderId, targetPosition.current);
+    }
     
     // More responsive position updates
     const distanceMoved = targetPosition.current.distanceTo(lastNotifiedPosition.current);
