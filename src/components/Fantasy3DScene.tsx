@@ -35,7 +35,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Notify that there are no enemies
   const [enemyAlive, setEnemyAlive] = useState(true);
 
-  const spawnPosition = useMemo(() => new Vector3(0, 0, cameraPosition.z - 60), [cameraPosition.z]);
+  const spawnPosition = useMemo(
+    () => new Vector3(0, 0, cameraPosition.z - 60),
+    [enemyAlive]
+  );
 
   React.useEffect(() => {
     if (onEnemyCountChange) onEnemyCountChange(enemyAlive ? 1 : 0);
