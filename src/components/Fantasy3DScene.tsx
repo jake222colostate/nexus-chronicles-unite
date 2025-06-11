@@ -113,7 +113,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       <ChunkSystem
         playerPosition={cameraPosition}
         chunkSize={chunkSize}
-        renderDistance={Math.min(renderDistance, 150)}
+        renderDistance={renderDistance}
       >
         {(chunks: ChunkData[]) => (
           <OptimizedFantasyEnvironment
