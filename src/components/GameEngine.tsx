@@ -21,6 +21,7 @@ import { FantasyAutoClickerUpgradeSystem } from './FantasyAutoClickerUpgradeSyst
 import { useAutoManaSystem } from '@/hooks/useAutoManaSystem';
 import { useAutoEnergySystem } from '@/hooks/useAutoEnergySystem';
 import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
+import { CollisionProvider } from '@/lib/CollisionContext';
 
 const GameEngine: React.FC = () => {
   const {
@@ -223,6 +224,7 @@ const GameEngine: React.FC = () => {
   }, [setGameState]);
 
   return (
+    <CollisionProvider>
     <div className={`h-[667px] w-full relative overflow-hidden bg-black ${false ? 'animate-pulse bg-red-900/20' : ''}`}>
       {/* Enhanced background with better layering */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
@@ -389,6 +391,7 @@ const GameEngine: React.FC = () => {
         </div>
       )}
     </div>
+    </CollisionProvider>
   );
 };
 
