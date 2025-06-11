@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
@@ -19,22 +19,14 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   chunkSize,
   realm = 'fantasy'
 }) => {
-  // Only load GLB model if in fantasy realm
-  const shouldLoadModel = realm === 'fantasy';
-  
-  let scene = null;
-  if (shouldLoadModel) {
-    try {
-      const gltf = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain_draco.glb');
-      scene = gltf.scene;
-    } catch (error) {
-      console.warn('Failed to load Draco-compressed fantasy mountain model:', error);
-    }
-  }
+  const gltf = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain_draco.glb');
+  const scene = gltf.scene;
+
+  const shouldRender = realm === 'fantasy';
   
   // Memoize mountain instances to prevent re-creation on every render
   const mountainInstances = useMemo(() => {
-    if (!scene || !shouldLoadModel) return [];
+    if (!shouldRender) return [];
     
     const instances = [];
     
@@ -81,22 +73,18 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
     });
     
     return instances;
-  }, [chunks, chunkSize, scene, shouldLoadModel]);
+  }, [chunks, chunkSize, scene, shouldRender]);
 
-  // Don't render anything if not in fantasy realm or no model loaded
-  if (!shouldLoadModel || !scene) {
-    return null;
-  }
+  const mountainElements = useMemo(() => {
+    if (!shouldRender) return [];
 
-  return (
-    <group>
-      {mountainInstances.map((instance) => {
-        const clonedScene = scene.clone();
-        
-        clonedScene.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            // Completely remove tree meshes from Fantasy realm
-            if (realm === 'fantasy') {
+    return mountainInstances.map((instance) => {
+      const clonedScene = scene.clone();
+
+      clonedScene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          // Completely remove tree meshes from Fantasy realm
+          if (realm === 'fantasy') {
               const isTree = child.name.toLowerCase().includes('tree') || 
                            child.name.toLowerCase().includes('forest') ||
                            child.name.toLowerCase().includes('vegetation') ||
@@ -127,18 +115,23 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
           }
         });
         
-        return (
-          <primitive
-            key={instance.key}
-            object={clonedScene}
-            position={instance.position}
-            rotation={instance.rotation}
-            scale={instance.scale}
-          />
-        );
-      })}
-    </group>
-  );
+      return (
+        <primitive
+          key={instance.key}
+          object={clonedScene}
+          position={instance.position}
+          rotation={instance.rotation}
+          scale={instance.scale}
+        />
+      );
+    });
+  }, [mountainInstances, scene, realm, shouldRender]);
+
+  if (!shouldRender) {
+    return null;
+  }
+
+  return <group>{mountainElements}</group>;
 };
 
 // Only preload the Draco-compressed model for fantasy realm
