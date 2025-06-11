@@ -1,5 +1,5 @@
 
-import React, { Suspense, useRef, useMemo, useCallback } from 'react';
+import React, { Suspense, useRef, useMemo, useCallback, useState } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
@@ -7,6 +7,7 @@ import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
+import { LeechEnemy } from './LeechEnemy';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -32,9 +33,13 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   maxUnlockedUpgrade
 }) => {
   // Notify that there are no enemies
+  const [enemyAlive, setEnemyAlive] = useState(true);
+
+  const spawnPosition = useMemo(() => new Vector3(0, 0, cameraPosition.z - 60), [cameraPosition.z]);
+
   React.useEffect(() => {
-    if (onEnemyCountChange) onEnemyCountChange(0);
-  }, [onEnemyCountChange]);
+    if (onEnemyCountChange) onEnemyCountChange(enemyAlive ? 1 : 0);
+  }, [enemyAlive, onEnemyCountChange]);
 
   return (
     <Suspense fallback={null}>
@@ -59,6 +64,17 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       {/* Basic ambient light plus warm sun */}
       <ambientLight intensity={0.6} />
       <Sun position={[10, 20, 5]} />
+
+      {enemyAlive && (
+        <LeechEnemy
+          playerPosition={cameraPosition}
+          startPosition={spawnPosition}
+          onReachPlayer={() => {
+            setEnemyAlive(false);
+            onEnemyKilled && onEnemyKilled();
+          }}
+        />
+      )}
 
       {/* Optimized chunk system with performance limits */}
       <ChunkSystem
