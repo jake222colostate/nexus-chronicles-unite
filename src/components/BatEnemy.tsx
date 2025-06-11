@@ -19,7 +19,7 @@ export const BatEnemy: React.FC<BatEnemyProps> = ({
   visible = true
 }) => {
   const groupRef = useRef<Group>(null);
-  const { scene } = useGLTF(assetPath('assets/vampire-bat/source/bat.glb'));
+  const { scene } = useGLTF(assetPath('assets/newbat.glb'));
   const speed = 0.15;
   const [health] = useState(100);
 
@@ -61,4 +61,4 @@ export const BatEnemy: React.FC<BatEnemyProps> = ({
   );
 };
 
-useGLTF.preload(assetPath('assets/vampire-bat/source/bat.glb'));
+useGLTF.preload(assetPath('assets/newbat.glb'));
