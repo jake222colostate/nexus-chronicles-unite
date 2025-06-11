@@ -19,20 +19,30 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   const groupRef = useRef<THREE.Group>(null);
   const [isSwinging, setIsSwinging] = useState(false);
   const [hasLoadError, setHasLoadError] = useState(false);
+  const [isModelLoaded, setIsModelLoaded] = useState(false);
   const swingProgress = useRef(0);
   
-  // Try to load the sword model
+  // Try to load the sword model safely
   let gltfResult = null;
+  let loadError = false;
+  
   try {
     gltfResult = useGLTF('/swordofkasdd.glb');
   } catch (error) {
     console.log('SwordWeaponSystem: Failed to load sword model:', error);
-    setHasLoadError(true);
+    loadError = true;
   }
   
   const scene = gltfResult?.scene || null;
 
-  // Handle model setup
+  // Handle load error in useEffect to prevent re-render loops
+  useEffect(() => {
+    if (loadError) {
+      setHasLoadError(true);
+    }
+  }, [loadError]);
+
+  // Handle model setup in useEffect to prevent re-render loops
   useEffect(() => {
     if (scene) {
       console.log('SwordWeaponSystem: Setting up sword model');
@@ -56,10 +66,12 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
           }
         }
       });
-    } else {
+      setIsModelLoaded(true);
+    } else if (!loadError) {
+      // Only set error if we haven't already detected a load error
       setHasLoadError(true);
     }
-  }, [scene]);
+  }, [scene, loadError]);
 
   // Handle swing on click
   useEffect(() => {
@@ -134,7 +146,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   });
 
   // Fallback sword if model fails to load
-  if (!scene || hasLoadError) {
+  if (!scene || hasLoadError || !isModelLoaded) {
     console.log('SwordWeaponSystem: Using fallback sword geometry');
     return (
       <group ref={groupRef}>
