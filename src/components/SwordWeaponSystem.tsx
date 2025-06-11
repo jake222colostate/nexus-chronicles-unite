@@ -23,7 +23,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   // FIXED: Always call the hook at the top level, handle errors in effect
   let gltfResult = null;
   try {
-    gltfResult = useGLTFWithCors('/sword_uitlbiaga_mid.glb');
+    gltfResult = useGLTFWithCors('/swordofkasdd.glb');
   } catch (error) {
     // Hook called, but we'll handle the error in useEffect
   }
@@ -189,4 +189,4 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   );
 };
 
-useGLTF.preload('/sword_uitlbiaga_mid.glb');
+useGLTF.preload('/swordofkasdd.glb');
