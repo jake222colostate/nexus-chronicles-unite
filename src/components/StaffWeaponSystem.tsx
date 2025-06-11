@@ -37,8 +37,8 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   useFrame((state, delta) => {
     if (!staffGroupRef.current || !camera) return;
 
-    // Position staff in front and to the right of camera - much more visible
-    const staffOffset = new THREE.Vector3(1.2, -0.8, -2.5); // Further right, lower, and farther away
+    // Position staff MUCH farther away and to the side - very visible
+    const staffOffset = new THREE.Vector3(3.0, -1.5, -6.0); // Much further right, lower, and much farther away
     
     // Get camera vectors for positioning
     const cameraRight = new THREE.Vector3();
@@ -60,61 +60,66 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     
     // Rotate staff to point forward like being held
     staffGroupRef.current.rotation.copy(camera.rotation);
-    staffGroupRef.current.rotateY(-0.4); // Angle towards center
-    staffGroupRef.current.rotateX(-0.1); // Slight downward angle
-    staffGroupRef.current.rotateZ(0.15); // Slight tilt like being held
+    staffGroupRef.current.rotateY(-0.5); // More angle towards center
+    staffGroupRef.current.rotateX(-0.2); // More downward angle
+    staffGroupRef.current.rotateZ(0.2); // More tilt like being held
 
     // Update staff tip position for projectile system (at the top of the staff)
-    const staffTipOffset = new THREE.Vector3(0, 1.5, 0); // Higher up the staff
+    const staffTipOffset = new THREE.Vector3(0, 2.0, 0); // Even higher up the staff
     staffTipOffset.applyQuaternion(staffGroupRef.current.quaternion);
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
     
     // Debug log to see staff position
     console.log('Staff position:', staffGroupRef.current.position);
+    console.log('Staff tip position:', staffTipPositionRef.current);
   });
 
-  // Create fallback staff if model fails to load
+  // Create fallback staff if model fails to load - much bigger and brighter
   const createFallbackStaff = () => (
     <group>
-      {/* Staff handle */}
+      {/* Staff handle - much bigger */}
       <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.06, 0.08, 3, 8]} />
+        <cylinderGeometry args={[0.12, 0.15, 4, 8]} />
         <meshStandardMaterial color="#8B4513" />
       </mesh>
-      {/* Staff crystal */}
-      <mesh position={[0, 1.6, 0]}>
-        <sphereGeometry args={[0.2, 12, 8]} />
+      {/* Staff crystal - much bigger and brighter */}
+      <mesh position={[0, 2.2, 0]}>
+        <sphereGeometry args={[0.4, 12, 8]} />
         <meshStandardMaterial 
           color="#4B0082" 
           emissive="#4B0082" 
-          emissiveIntensity={0.8} 
+          emissiveIntensity={1.2} 
         />
       </mesh>
-      {/* Glow around crystal */}
-      <mesh position={[0, 1.6, 0]}>
-        <sphereGeometry args={[0.25, 12, 8]} />
+      {/* Glow around crystal - much more visible */}
+      <mesh position={[0, 2.2, 0]}>
+        <sphereGeometry args={[0.5, 12, 8]} />
         <meshBasicMaterial 
           color="#4B0082" 
           transparent
-          opacity={0.4}
+          opacity={0.6}
         />
       </mesh>
+      {/* Additional bright light source */}
+      <pointLight position={[0, 2.2, 0]} color="#4B0082" intensity={2} distance={10} />
     </group>
   );
 
   return (
     <group>
-      {/* Staff model */}
+      {/* Staff model - much bigger and with lighting */}
       <group ref={staffGroupRef}>
         {staffScene ? (
           <primitive 
             object={staffScene.clone()} 
-            scale={[1.0, 1.0, 1.0]} // Even bigger and more visible
+            scale={[2.0, 2.0, 2.0]} // Much bigger and more visible
             rotation={[0, Math.PI, 0]}
           />
         ) : (
           createFallbackStaff()
         )}
+        {/* Add a bright light at the staff position to make it more visible */}
+        <pointLight position={[0, 1, 0]} color="#ffffff" intensity={1} distance={5} />
       </group>
 
       {/* Optimized projectile system */}
