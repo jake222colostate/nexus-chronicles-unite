@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { assetPath } from '../lib/assetPath';
 
@@ -17,17 +17,11 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const groupRef = useRef<THREE.Group>(null);
-  const [model, setModel] = useState<THREE.Object3D | null>(null);
+  const { scene } = useGLTF(assetPath('assets/sword_uitlbiaga_mid.glb'));
   const swingRef = useRef(false);
   const hitRef = useRef(false);
   const swingProgress = useRef(0);
 
-  useEffect(() => {
-    const loader = new GLTFLoader();
-    loader.load(assetPath('assets/sword_uitlbiaga_mid.glb'), gltf => {
-      setModel(gltf.scene);
-    });
-  }, []);
 
   useEffect(() => {
     const handleClick = () => {
@@ -86,11 +80,11 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     }
   });
 
-  if (!model) return null;
-
   return (
     <group ref={groupRef}>
-      <primitive object={model} scale={[0.6, 0.6, 0.6]} />
+      <primitive object={scene.clone()} scale={[0.6, 0.6, 0.6]} />
     </group>
   );
 };
+
+useGLTF.preload(assetPath('assets/sword_uitlbiaga_mid.glb'));
