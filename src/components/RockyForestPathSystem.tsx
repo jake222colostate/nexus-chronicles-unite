@@ -51,7 +51,7 @@ const RockyPathSegment: React.FC<{
     return (
       <group 
         position={position} 
-        rotation={[0, rotation, 0]}
+        rotation={[0, rotation + Math.PI / 2, 0]} // Rotate 90 degrees to face forward
         scale={[1, 1, 1]}
       >
         <primitive object={clonedScene} />
@@ -73,23 +73,23 @@ export const RockyForestPathSystem: React.FC<RockyForestPathSystemProps> = ({
     return null;
   }
 
-  // Generate path segments for infinite looping
+  // Generate path segments for infinite looping with proper connection
   const pathSegments = useMemo(() => {
     const segments = [];
-    const segmentLength = 6; // Adjust based on your model's actual length
+    const segmentLength = 8; // Increased segment length for better connection
     
     chunks.forEach(chunk => {
       const { worldZ } = chunk;
       
       // Calculate how many segments we need per chunk for seamless coverage
-      const segmentsPerChunk = Math.ceil(chunkSize / segmentLength) + 1; // +1 for overlap
+      const segmentsPerChunk = Math.ceil(chunkSize / segmentLength) + 2; // +2 for better overlap
       
       for (let i = 0; i < segmentsPerChunk; i++) {
         const z = worldZ - (i * segmentLength);
         
         segments.push({
           x: 0, // Path runs down the center
-          y: -0.5, // Slightly below ground level for terrain integration
+          y: -0.3, // Slightly lower for better ground integration
           z: z,
           rotation: 0, // Keep straight for now, can add variation later
           chunkId: chunk.id,
@@ -98,7 +98,7 @@ export const RockyForestPathSystem: React.FC<RockyForestPathSystemProps> = ({
       }
     });
     
-    console.log(`RockyForestPathSystem: Generated ${segments.length} path segments for infinite looping`);
+    console.log(`RockyForestPathSystem: Generated ${segments.length} path segments facing forward with proper connections`);
     return segments;
   }, [chunks, chunkSize]);
 
