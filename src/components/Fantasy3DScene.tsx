@@ -38,37 +38,35 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   return (
     <Suspense fallback={null}>
-      {/* Camera controller with guaranteed safe valley center starting position */}
       <Enhanced360Controller
-        position={[0, 2, 20]} // Start far back in the valley center for absolute safety
+        position={[0, 2, 20]}
         onPositionChange={onPositionChange}
       />
 
-      {/* Background color for fantasy dusk */}
       <color attach="background" args={['#2d1b4e']} />
 
-      {/* Subtle fog that fades as you progress */}
-      <CasualFog />
+      {/* Simplified fog for 60fps */}
+      <fog attach="fog" args={['#2d1b4e', 30, 150]} />
 
-      {/* Ground plane to ensure there's always a visible floor */}
+      {/* Simplified ground plane */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-        <planeGeometry args={[300, 300]} />
+        <planeGeometry args={[200, 200]} />
         <meshStandardMaterial color="#2d4a2d" />
       </mesh>
 
-      {/* Basic ambient light plus warm sun */}
-      <ambientLight intensity={0.6} />
+      {/* Reduced lighting for 60fps */}
+      <ambientLight intensity={0.5} />
       <Sun position={[10, 20, 5]} />
 
-      {/* Optimized chunk system with performance limits */}
+      {/* Optimized chunk system with strict performance limits */}
       <ChunkSystem
         playerPosition={cameraPosition}
         chunkSize={chunkSize}
-        renderDistance={Math.min(renderDistance, 150)}
+        renderDistance={Math.min(renderDistance, 100)}
       >
         {(chunks: ChunkData[]) => (
           <OptimizedFantasyEnvironment
-            chunks={chunks}
+            chunks={chunks.slice(0, 50)} // Limit chunks for 60fps
             chunkSize={chunkSize}
             realm={realm}
             playerPosition={cameraPosition}
@@ -79,10 +77,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       {/* Simplified contact shadows */}
       <ContactShadows 
         position={[0, -1.4, cameraPosition.z]} 
-        opacity={0.05}
-        scale={15}
-        blur={2} 
-        far={4}
+        opacity={0.03}
+        scale={10}
+        blur={1} 
+        far={3}
       />
     </Suspense>
   );

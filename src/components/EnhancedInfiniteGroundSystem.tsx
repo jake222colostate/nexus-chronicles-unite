@@ -17,7 +17,6 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
   realm,
   playerPosition
 }) => {
-  // Only render for fantasy realm
   if (realm !== 'fantasy') {
     return null;
   }
@@ -26,32 +25,31 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     const tiles = [];
     const tileSize = chunkSize;
     
-    // Much more aggressive ground coverage to prevent any gaps
+    // Reduced ground coverage for 60fps
     const playerZ = playerPosition.z;
-    const startZ = Math.floor((playerZ - 500) / tileSize) * tileSize;
-    const endZ = Math.floor((playerZ + 800) / tileSize) * tileSize;
+    const startZ = Math.floor((playerZ - 200) / tileSize) * tileSize;
+    const endZ = Math.floor((playerZ + 400) / tileSize) * tileSize;
     
-    // Generate seamless ground tiles with massive overlap
+    // Reduced layers for 60fps
     for (let z = startZ; z <= endZ; z += tileSize) {
-      // MULTIPLE ground layers for guaranteed coverage
-      for (let layer = 0; layer < 3; layer++) {
-        const layerY = -1.8 - (layer * 0.1); // Stacked layers
+      // Only 2 layers instead of 3
+      for (let layer = 0; layer < 2; layer++) {
+        const layerY = -1.8 - (layer * 0.1);
         
-        // Main ground plane with massive overlap
         tiles.push({
           key: `infinite_ground_main_${z}_layer_${layer}`,
           position: [0, layerY, z] as [number, number, number],
-          size: tileSize + 20, // Massive overlap
+          size: tileSize + 10, // Reduced overlap
           type: 'main',
           layer
         });
         
-        // Side ground extensions with overlap
-        [-2, -1, 1, 2].forEach(side => {
+        // Reduced side extensions
+        [-1, 1].forEach(side => {
           tiles.push({
             key: `infinite_ground_side_${side}_${z}_layer_${layer}`,
             position: [side * (tileSize + 5), layerY, z] as [number, number, number],
-            size: tileSize + 10,
+            size: tileSize + 5,
             type: 'side',
             layer
           });
@@ -59,10 +57,9 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
       }
     }
     
-    console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} layered ground tiles for seamless coverage`);
     return tiles;
   }, [
-    Math.floor(playerPosition.z / 10) * 10,
+    Math.floor(playerPosition.z / 20) * 20,
     chunkSize
   ]);
 
@@ -75,7 +72,7 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
           rotation={[-Math.PI / 2, 0, 0]}
           receiveShadow
           frustumCulled={false}
-          matrixAutoUpdate={true}
+          matrixAutoUpdate={false}
           renderOrder={-tile.layer}
         >
           <planeGeometry args={[tile.size, tile.size, 1, 1]} />
@@ -86,25 +83,22 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
             side={THREE.DoubleSide}
             transparent={false}
             opacity={1.0}
-            depthTest={true}
-            depthWrite={tile.layer === 0}
-            depthFunc={THREE.LessEqualDepth}
           />
         </mesh>
       ))}
       
-      {/* Multiple massive base layers for absolute ground guarantee */}
-      {Array.from({ length: 5 }, (_, i) => (
+      {/* Reduced base layers for 60fps */}
+      {Array.from({ length: 2 }, (_, i) => (
         <mesh 
           key={`mega_base_${i}`}
           position={[0, -2.5 - (i * 0.2), playerPosition.z]} 
           rotation={[-Math.PI / 2, 0, 0]} 
           receiveShadow
           frustumCulled={false}
-          matrixAutoUpdate={true}
+          matrixAutoUpdate={false}
           renderOrder={-10 - i}
         >
-          <planeGeometry args={[2000 + (i * 200), 2000 + (i * 200)]} />
+          <planeGeometry args={[1000 + (i * 100), 1000 + (i * 100)]} />
           <meshStandardMaterial 
             color={i === 0 ? "#1a2a1b" : "#0f1f0c"}
             roughness={1.0}
@@ -112,8 +106,6 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
             side={THREE.DoubleSide}
             transparent={false}
             opacity={1.0}
-            depthTest={true}
-            depthWrite={i === 0}
           />
         </mesh>
       ))}
