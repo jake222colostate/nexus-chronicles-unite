@@ -1,5 +1,5 @@
 
-import React, { Suspense, useRef, useMemo, useCallback, useState } from 'react';
+import React, { Suspense, useMemo, useState } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
@@ -8,6 +8,7 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
+import { SwordWeaponSystem } from './SwordWeaponSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -20,6 +21,7 @@ interface Fantasy3DSceneProps {
   renderDistance: number;
   onEnemyCountChange?: (count: number) => void;
   onEnemyKilled?: () => void;
+  weaponDamage: number;
 }
 
 export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
@@ -30,10 +32,15 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   renderDistance,
   onEnemyCountChange,
   onEnemyKilled,
-  maxUnlockedUpgrade
+  maxUnlockedUpgrade,
+  weaponDamage
 }) => {
   // Track individual enemies
   const [leechAlive, setLeechAlive] = useState(true);
+  const [leechHealth, setLeechHealth] = useState(5);
+  const [leechPosition, setLeechPosition] = useState(() =>
+    new Vector3(0, 0, cameraPosition.z - 60)
+  );
 
   const leechSpawnPosition = useMemo(
     () => new Vector3(0, 0, cameraPosition.z - 60),
@@ -51,6 +58,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       <Enhanced360Controller
         position={[0, 2, 20]} // Start far back in the valley center for absolute safety
         onPositionChange={onPositionChange}
+        enemyPositions={leechAlive ? [leechPosition] : []}
       />
 
       {/* Background color for fantasy dusk */}
@@ -73,12 +81,32 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         <LeechEnemy
           playerPosition={cameraPosition}
           startPosition={leechSpawnPosition}
+          health={leechHealth}
+          onUpdatePosition={(pos) => setLeechPosition(pos.clone())}
           onReachPlayer={() => {
             setLeechAlive(false);
             onEnemyKilled?.();
           }}
         />
       )}
+
+      <SwordWeaponSystem
+        damage={weaponDamage}
+        enemyPositions={leechAlive ? [leechPosition] : []}
+        onHitEnemy={() => {
+          if (leechAlive) {
+            setLeechHealth((h) => {
+              const nh = h - weaponDamage;
+              if (nh <= 0) {
+                setLeechAlive(false);
+                onEnemyKilled?.();
+                return 0;
+              }
+              return nh;
+            });
+          }
+        }}
+      />
 
 
       {/* Optimized chunk system with performance limits */}

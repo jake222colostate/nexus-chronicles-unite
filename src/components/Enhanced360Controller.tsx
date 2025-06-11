@@ -5,6 +5,8 @@ import { Vector3 } from 'three';
 interface Enhanced360ControllerProps {
   position: [number, number, number];
   onPositionChange: (position: Vector3) => void;
+  enemyPositions?: Vector3[];
+  enemyRadius?: number;
 }
 
 interface MovementKeys {
@@ -55,10 +57,26 @@ const checkMountainCollision = (x: number, z: number) => {
 };
 
 // Find the nearest safe position if collision is detected
-const findSafePosition = (targetX: number, targetZ: number, currentX: number, currentZ: number) => {
+const findSafePosition = (
+  targetX: number,
+  targetZ: number,
+  currentX: number,
+  currentZ: number,
+  enemies: Vector3[] = [],
+  enemyRadius = 1.5
+) => {
   // If no collision, return target position
   if (!checkMountainCollision(targetX, targetZ)) {
-    return { x: targetX, z: targetZ };
+    let blocked = false;
+    for (const e of enemies) {
+      const dx = targetX - e.x;
+      const dz = targetZ - e.z;
+      if (Math.sqrt(dx * dx + dz * dz) < enemyRadius) {
+        blocked = true;
+        break;
+      }
+    }
+    if (!blocked) return { x: targetX, z: targetZ };
   }
   
   // Try moving back towards current position incrementally
@@ -79,7 +97,9 @@ const findSafePosition = (targetX: number, targetZ: number, currentX: number, cu
 
 export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   position,
-  onPositionChange
+  onPositionChange,
+  enemyPositions = [],
+  enemyRadius = 1.5
 }) => {
   const { camera } = useThree();
   const keys = useRef<MovementKeys>({
@@ -251,7 +271,9 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       newTargetPosition.x,
       newTargetPosition.z,
       targetPosition.current.x,
-      targetPosition.current.z
+      targetPosition.current.z,
+      enemyPositions,
+      enemyRadius
     );
     
     // Update position with collision-safe coordinates

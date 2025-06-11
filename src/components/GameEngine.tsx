@@ -86,6 +86,7 @@ const GameEngine: React.FC = () => {
   const {
     combatUpgrades,
     weaponUpgrades,
+    weaponStats,
     buyBuilding,
     performConvergence,
     purchaseUpgrade,
@@ -267,6 +268,7 @@ const GameEngine: React.FC = () => {
           onTapEffectComplete={handleTapEffectComplete}
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
           onEnemyCountChange={handleEnemyCountChange}
+          weaponDamage={weaponStats.damage}
         />
 
         {/* Realm Transition Effect */}
