@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useFantasy3DUpgradeWorld } from './hooks/useFantasy3DUpgradeWorld';
 import { Fantasy3DScene } from './Fantasy3DScene';
@@ -30,6 +30,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   onEnemyKilled,
   weaponDamage
 }) => {
+  const [isCanvasReady, setIsCanvasReady] = useState(false);
+
   const {
     cameraPosition,
     selectedUpgrade,
@@ -50,45 +52,69 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     onPlayerPositionUpdate
   });
 
-  // Only render if realm is fantasy
+  // Force Canvas to initialize properly on mount
+  useEffect(() => {
+    console.log('Fantasy3DUpgradeWorld: Initializing for realm:', realm);
+    if (realm === 'fantasy') {
+      // Small delay to ensure proper initialization
+      const timer = setTimeout(() => {
+        setIsCanvasReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [realm]);
+
+  // Only render if realm is fantasy and canvas is ready
   if (realm !== 'fantasy') {
     return null;
   }
 
   return (
     <div className="absolute inset-0 w-full h-full">
-      <Canvas
-        dpr={[1, 1]}
-        camera={{ 
-          position: [0, 5, 12], 
-          fov: 50,
-          near: 0.1,
-          far: 1200
-        }}
-        shadows
-        gl={{ antialias: true, alpha: true }}
-      >
-        <Fantasy3DScene
-          cameraPosition={cameraPosition}
-          onPositionChange={handlePositionChange}
-          realm={realm}
-          maxUnlockedUpgrade={maxUnlockedUpgrade}
-          upgradeSpacing={UPGRADE_SPACING}
-          onTierProgression={handleTierProgression}
-          chunkSize={CHUNK_SIZE}
-          renderDistance={RENDER_DISTANCE}
-          onEnemyCountChange={onEnemyCountChange}
-          onEnemyKilled={onEnemyKilled}
-          weaponDamage={weaponDamage}
-        />
+      {isCanvasReady && (
+        <Canvas
+          key="fantasy-canvas" // Force re-mount if needed
+          dpr={[1, 1]}
+          camera={{ 
+            position: [0, 5, 12], 
+            fov: 50,
+            near: 0.1,
+            far: 1200
+          }}
+          shadows
+          gl={{ 
+            antialias: true, 
+            alpha: true,
+            powerPreference: "high-performance"
+          }}
+          onCreated={(state) => {
+            console.log('Fantasy3DUpgradeWorld: Canvas created successfully');
+            // Ensure camera is properly set up
+            state.camera.updateProjectionMatrix();
+          }}
+        >
+          <Fantasy3DScene
+            cameraPosition={cameraPosition}
+            onPositionChange={handlePositionChange}
+            realm={realm}
+            maxUnlockedUpgrade={maxUnlockedUpgrade}
+            upgradeSpacing={UPGRADE_SPACING}
+            onTierProgression={handleTierProgression}
+            chunkSize={CHUNK_SIZE}
+            renderDistance={RENDER_DISTANCE}
+            onEnemyCountChange={onEnemyCountChange}
+            onEnemyKilled={onEnemyKilled}
+            weaponDamage={weaponDamage}
+          />
 
-        <Fantasy3DUpgradePedestals
-          upgrades={upgrades}
-          cameraPosition={cameraPosition}
-          currentManaRef={currentManaRef}
-          onUpgradeClick={handleUpgradeClick}
-        />
-      </Canvas>
+          <Fantasy3DUpgradePedestals
+            upgrades={upgrades}
+            cameraPosition={cameraPosition}
+            currentManaRef={currentManaRef}
+            onUpgradeClick={handleUpgradeClick}
+          />
+        </Canvas>
+      )}
 
       <Fantasy3DInsufficientManaMessage show={showInsufficientMana} />
 

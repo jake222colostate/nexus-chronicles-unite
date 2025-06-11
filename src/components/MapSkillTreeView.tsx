@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Scene3D } from './Scene3D';
 import { Fantasy3DUpgradeWorld } from './Fantasy3DUpgradeWorld';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
@@ -59,6 +59,11 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
+  // Log realm changes for debugging
+  useEffect(() => {
+    console.log('MapSkillTreeView: Realm changed to:', realm);
+  }, [realm]);
+
   const handleUpgradeClick = useCallback((upgradeId: string) => {
     setSelectedUpgrade(upgradeId);
   }, []);
@@ -97,6 +102,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
       {/* 3D Scene - Use Fantasy 3D World for fantasy realm, Scene3D for sci-fi */}
       {realm === 'fantasy' ? (
         <Fantasy3DUpgradeWorld
+          key="fantasy-world" // Force re-mount on realm switch
           onUpgradeClick={handle3DUpgradeClick}
           showTapEffect={showTapEffect}
           onTapEffectComplete={onTapEffectComplete}
@@ -109,6 +115,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
         />
       ) : (
         <Scene3D
+          key="scifi-world" // Force re-mount on realm switch
           realm={realm}
           gameState={gameState}
           onUpgradeClick={handleUpgradeClick}
