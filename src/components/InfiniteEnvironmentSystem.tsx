@@ -62,9 +62,10 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
   const playerPositionRef = useRef(new Vector3(0, 0, 0));
   const lastUpdateRef = useRef(0);
   
+  // Tune chunk and render distances for better performance
   const CHUNK_SIZE = 25;
-  const RENDER_DISTANCE = 200; // INCREASED for continuous generation
-  const CLEANUP_DISTANCE = 300; // INCREASED cleanup distance
+  const RENDER_DISTANCE = 100; // smaller render distance to reduce draw calls
+  const CLEANUP_DISTANCE = 150; // cleanup sooner to free resources
   const UPDATE_INTERVAL = 100;
 
   // Create a mountain at specified position - LOWERED into ground
@@ -151,8 +152,9 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     const trees: Group[] = [];
     
     // Generate mountains MUCH FURTHER from the path - create a very wide valley
-    const mountainSpacing = 3; // Closer spacing for better continuity
-    const mountainCount = Math.ceil(CHUNK_SIZE / mountainSpacing) + 3; // More mountains for continuity
+    // Fewer mountains to lighten scene complexity
+    const mountainSpacing = 5;
+    const mountainCount = Math.ceil(CHUNK_SIZE / mountainSpacing);
     
     for (let i = 0; i < mountainCount; i++) {
       const z = chunkZ - (i * mountainSpacing);
@@ -174,7 +176,8 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     }
     
     // Generate trees in the space between much farther mountains
-    const treeCount = 12 + Math.floor(seededRandom(chunkId * 137) * 8); // INCREASED tree count
+    // Slightly lower tree density for smoother performance
+    const treeCount = 6 + Math.floor(seededRandom(chunkId * 137) * 5);
     const minDistance = 3; // Reduced minimum distance for denser placement
     const maxAttempts = 50; // More attempts for better coverage
     const treePositions: Array<{x: number, z: number}> = [];
