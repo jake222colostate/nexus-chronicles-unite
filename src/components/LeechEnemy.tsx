@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, Html } from '@react-three/drei';
 import { Vector3, Group } from 'three';
+import { Progress } from './ui/progress';
 import { assetPath } from '../lib/assetPath';
 
 interface LeechEnemyProps {
@@ -20,6 +21,7 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
   const groupRef = useRef<Group>(null);
   const { scene } = useGLTF(assetPath('assets/leech.glb'));
   const speed = 0.1;
+  const [health] = useState(100);
 
   useFrame(() => {
     if (!groupRef.current || !visible) return;
@@ -32,16 +34,23 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
     }
     dir.normalize();
     groupRef.current.position.addScaledVector(dir, speed);
+    groupRef.current.lookAt(playerPosition);
+    groupRef.current.rotateY(Math.PI);
   });
 
   return (
-    <primitive
+    <group
       ref={groupRef}
-      object={scene.clone()}
-      scale={0.6}
       position={startPosition.toArray() as [number, number, number]}
       visible={visible}
-    />
+    >
+      <primitive object={scene.clone()} scale={0.6} rotation={[0, Math.PI, 0]} />
+      <Html position={[0, 1.5, 0]} center style={{ pointerEvents: 'none' }}>
+        <div className="w-16">
+          <Progress value={health} />
+        </div>
+      </Html>
+    </group>
   );
 };
 
