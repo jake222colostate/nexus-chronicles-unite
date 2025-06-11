@@ -144,7 +144,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
         <group key={projectile.id} position={projectile.position.toArray()}>
           <mesh>
             <sphereGeometry args={[0.1, 8, 8]} />
-            <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.5} />
+            <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.5} />
           </mesh>
           {/* Glowing effect */}
           <pointLight intensity={0.5} color="#00ffff" distance={3} />

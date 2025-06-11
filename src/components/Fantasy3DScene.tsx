@@ -113,7 +113,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const handleLeechHit = (leechId: string, damage: number) => {
     setLeeches(current => 
       current.map(leech => {
-        if (leech.id === leech && leech.alive) {
+        if (leech.id === leechId && leech.alive) {
           const newHealth = leech.health - damage;
           if (newHealth <= 0) {
             onEnemyKilled?.();
