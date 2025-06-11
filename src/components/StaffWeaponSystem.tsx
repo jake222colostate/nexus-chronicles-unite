@@ -25,7 +25,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   // Load staff model with proper path and error handling
   let staffScene = null;
   try {
-    const { scene } = useGLTF('staffs/staff_4.glb'); // Removed leading slash
+    const { scene } = useGLTF('staffs/staff_4.glb');
     staffScene = scene;
   } catch (error) {
     console.warn('Failed to load staff model, using fallback:', error);
@@ -37,8 +37,8 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   useFrame((state, delta) => {
     if (!staffGroupRef.current || !camera) return;
 
-    // Position staff farther away but still visible on the right side
-    const staffOffset = new THREE.Vector3(0.4, -0.5, -1.8); // Moved farther back for visibility
+    // Position staff like it's being held in the right hand
+    const staffOffset = new THREE.Vector3(0.6, -0.4, -1.0); // Right side, slightly lower, closer
     
     // Get camera vectors for positioning
     const cameraRight = new THREE.Vector3();
@@ -58,13 +58,14 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     const worldPosition = camera.position.clone().add(worldOffset);
     staffGroupRef.current.position.copy(worldPosition);
     
-    // Rotate staff to follow camera
+    // Rotate staff to look like it's being held and pointed forward
     staffGroupRef.current.rotation.copy(camera.rotation);
-    staffGroupRef.current.rotateY(-0.08);
-    staffGroupRef.current.rotateX(-0.12);
+    staffGroupRef.current.rotateY(-0.3); // Angle towards center
+    staffGroupRef.current.rotateX(-0.2); // Slight downward angle
+    staffGroupRef.current.rotateZ(0.1); // Slight tilt like being held
 
-    // Update staff tip position for projectile system
-    const staffTipOffset = new THREE.Vector3(0, 0.8, 0);
+    // Update staff tip position for projectile system (at the top of the staff)
+    const staffTipOffset = new THREE.Vector3(0, 1.2, 0); // Higher up the staff
     staffTipOffset.applyQuaternion(staffGroupRef.current.quaternion);
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
   });
@@ -74,16 +75,25 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     <group>
       {/* Staff handle */}
       <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.02, 0.03, 1.5, 8]} />
+        <cylinderGeometry args={[0.04, 0.06, 2.5, 8]} />
         <meshStandardMaterial color="#8B4513" />
       </mesh>
       {/* Staff crystal */}
-      <mesh position={[0, 0.8, 0]}>
-        <sphereGeometry args={[0.08, 12, 8]} />
+      <mesh position={[0, 1.3, 0]}>
+        <sphereGeometry args={[0.15, 12, 8]} />
         <meshStandardMaterial 
           color="#4B0082" 
           emissive="#4B0082" 
-          emissiveIntensity={0.3} 
+          emissiveIntensity={0.5} 
+        />
+      </mesh>
+      {/* Glow around crystal */}
+      <mesh position={[0, 1.3, 0]}>
+        <sphereGeometry args={[0.2, 12, 8]} />
+        <meshBasicMaterial 
+          color="#4B0082" 
+          transparent
+          opacity={0.3}
         />
       </mesh>
     </group>
@@ -96,7 +106,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
         {staffScene ? (
           <primitive 
             object={staffScene.clone()} 
-            scale={[0.4, 0.4, 0.4]}
+            scale={[0.8, 0.8, 0.8]} // Made bigger (was 0.4)
             rotation={[0, Math.PI, 0]}
           />
         ) : (

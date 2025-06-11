@@ -36,12 +36,16 @@ export const OptimizedProjectileSystem: React.FC<OptimizedProjectileSystemProps>
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
-  const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.08, 6, 6), []);
+  
+  // Make projectiles bigger and more visible
+  const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.15, 8, 8), []); // Bigger (was 0.08)
   const projectileMaterial = useMemo(() => 
     new THREE.MeshStandardMaterial({ 
       color: '#00ffff',
       emissive: '#00ffff',
-      emissiveIntensity: 0.3
+      emissiveIntensity: 0.8, // Much brighter (was 0.3)
+      transparent: true,
+      opacity: 0.9
     }), []
   );
 
@@ -118,6 +122,8 @@ export const OptimizedProjectileSystem: React.FC<OptimizedProjectileSystemProps>
     // Setup mesh
     mesh.position.copy(staffPos);
     mesh.visible = true;
+    
+    console.log('Fired projectile from', staffPos, 'to target', closestIndex);
   };
 
   useFrame((state, delta) => {
@@ -166,8 +172,8 @@ export const OptimizedProjectileSystem: React.FC<OptimizedProjectileSystemProps>
 
   return (
     <group ref={groupRef}>
-      {/* Single ambient light for all projectiles */}
-      <ambientLight intensity={0.1} color="#00ffff" />
+      {/* Brighter ambient light for projectiles */}
+      <ambientLight intensity={0.3} color="#00ffff" />
     </group>
   );
 };
