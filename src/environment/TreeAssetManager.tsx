@@ -1,35 +1,34 @@
-
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Tree model URLs - Prioritize fastest loading models
+// Tree model URLs - Updated to prioritize local pine_tree_218poly
 export const TREE_MODELS = {
-  // Use local assets for faster loading
+  // Use bundled assets to avoid loading errors that caused placeholder trees
   realistic: '/assets/realistic_tree.glb',
   stylized: '/assets/stylized_tree.glb',
   pine218: '/assets/pine_tree_218poly.glb'
 } as const;
 
-// OPTIMIZED distribution to favor lighter models
+// Updated distribution ratios to prioritize pine_tree_218poly
 export const TREE_DISTRIBUTION = {
-  pine218: 0.8,   // 80% pine_tree_218poly (lightest model)
-  stylized: 0.15, // 15% stylized
-  realistic: 0.05 // 5% realistic (heaviest model)
+  pine218: 0.6,   // 60% pine_tree_218poly (increased)
+  stylized: 0.2,  // 20% stylized
+  realistic: 0.2  // 20% realistic
 } as const;
 
-// Reduced scale ranges for better performance
+// Scale configurations optimized for pine_tree_218poly
 export const TREE_SCALES = {
-  realistic: { min: 0.6, max: 0.8 },  // Smaller range
-  stylized: { min: 0.7, max: 0.9 },   // Smaller range
-  pine218: { min: 0.4, max: 0.7 }     // Smaller range
+  realistic: { min: 0.75, max: 1.0 },
+  stylized: { min: 0.9, max: 1.1 },
+  pine218: { min: 0.5, max: 0.8 } // Good scale range for pine_tree_218poly
 } as const;
 
 // Y-offset adjustments for proper alignment
 export const TREE_Y_OFFSETS = {
   realistic: 0,
   stylized: -0.1,
-  pine218: 0
+  pine218: 0 // Pine trees sit well at ground level
 } as const;
 
 interface CachedTreeModel {
@@ -41,134 +40,234 @@ interface CachedTreeModel {
 class TreeAssetManagerSingleton {
   private cache = new Map<string, CachedTreeModel>();
   private preloadPromises = new Map<string, Promise<void>>();
-  private instancedMeshes = new Map<string, THREE.InstancedMesh>();
 
   async preloadAllModels(): Promise<void> {
-    console.log('TreeAssetManager: Fast preload with performance priority...');
+    console.log('TreeAssetManager: Starting preload with pine_tree_218poly priority...');
     
-    // Load only pine218 initially for fastest startup
-    const criticalModel = 'pine218';
-    if (!this.preloadPromises.has(criticalModel)) {
-      const promise = this.preloadModel(criticalModel, TREE_MODELS[criticalModel]);
-      this.preloadPromises.set(criticalModel, promise);
-      await promise; // Wait for critical model
+    // Prioritize pine_tree_218poly loading first
+    const preloadOrder = ['pine218', 'stylized', 'realistic'] as const;
+    
+    for (const type of preloadOrder) {
+      const url = TREE_MODELS[type];
+      if (!this.preloadPromises.has(type)) {
+        const promise = this.preloadModel(type, url);
+        this.preloadPromises.set(type, promise);
+        
+        // Wait for pine_tree_218poly to load first
+        if (type === 'pine218') {
+          await promise;
+        }
+      }
     }
     
-    // Load other models in background
-    const backgroundModels = ['stylized', 'realistic'] as const;
-    backgroundModels.forEach(type => {
-      if (!this.preloadPromises.has(type)) {
-        const promise = this.preloadModel(type, TREE_MODELS[type]);
-        this.preloadPromises.set(type, promise);
-        // Don't await - load in background
-      }
-    });
-    
-    console.log('TreeAssetManager: Critical model loaded, others loading in background');
+    // Load remaining models in parallel
+    const remainingPromises = Array.from(this.preloadPromises.values());
+    await Promise.allSettled(remainingPromises);
+    console.log('TreeAssetManager: Model preload completed with pine_tree_218poly priority');
   }
 
   private async preloadModel(type: keyof typeof TREE_MODELS, url: string): Promise<void> {
     try {
+      console.log(`TreeAssetManager: Preloading ${type} from: ${url}`);
+      
       const gltf = await new Promise<any>((resolve, reject) => {
         const loader = new GLTFLoader();
         loader.load(url, resolve, undefined, reject);
       });
 
       if (gltf?.scene) {
-        // AGGRESSIVE optimization for performance
-        this.optimizeForPerformance(gltf.scene);
+        // Optimize the loaded model and fix clipping issues
+        this.optimizeTreeModel(gltf.scene);
         
         this.cache.set(type, {
           scene: gltf.scene,
           loaded: true
         });
-        console.log(`TreeAssetManager: Optimized ${type} model for 60fps`);
+        console.log(`TreeAssetManager: Successfully cached ${type} model`);
       }
     } catch (error) {
-      console.warn(`TreeAssetManager: Failed to preload ${type}, using lightweight fallback`);
+      console.warn(`TreeAssetManager: Failed to preload ${type}:`, error);
       this.cache.set(type, {
-        scene: this.createLightweightFallback(type),
+        scene: this.createFallbackTree(type),
         loaded: false,
         error: error as Error
       });
     }
   }
 
-  private optimizeForPerformance(model: THREE.Object3D): void {
+  private optimizeTreeModel(model: THREE.Object3D): void {
+    console.log('TreeAssetManager: Optimizing model to prevent clipping and disappearance');
+    
     model.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        // PERFORMANCE: Disable expensive features
-        child.castShadow = false;     // Major performance gain
-        child.receiveShadow = false;  // Major performance gain
-        child.frustumCulled = true;   // Enable culling for performance
+        child.castShadow = true;
+        child.receiveShadow = true;
         
-        // Optimize geometry
+        // CRITICAL FIX: Disable frustum culling to prevent tree disappearing
+        child.frustumCulled = false;
+        
+        // ENHANCED: Prevent near clipping and LOD issues
+        child.matrixAutoUpdate = true;
+        child.matrixWorldNeedsUpdate = true;
+        
+        // Ensure proper bounding box calculation - FIXED TypeScript errors
         if (child.geometry) {
-          // Reduce geometry complexity if needed
-          child.geometry.deleteAttribute('uv2');
-          child.geometry.deleteAttribute('normal'); // Let Three.js compute normals
-          child.geometry.computeVertexNormals();
+          child.geometry.computeBoundingBox();
+          child.geometry.computeBoundingSphere();
+          
+          // Expand bounding box significantly to prevent edge clipping
+          if (child.geometry.boundingBox) {
+            child.geometry.boundingBox.expandByScalar(2.0); // Increased expansion
+          }
+          if (child.geometry.boundingSphere) {
+            child.geometry.boundingSphere.radius += 2.0; // Increased radius
+          }
         }
         
-        // Optimize materials for performance
+        // Fix material properties to prevent transparency and disappearance issues
         if (child.material) {
           if (Array.isArray(child.material)) {
-            child.material.forEach(mat => this.optimizeMaterial(mat));
+            child.material.forEach(mat => {
+              this.fixMaterialProperties(mat);
+            });
           } else {
-            this.optimizeMaterial(child.material);
+            this.fixMaterialProperties(child.material);
           }
         }
       }
     });
+    
+    // Force the entire model to never be culled
+    model.traverse((child) => {
+      child.frustumCulled = false;
+      child.matrixAutoUpdate = true;
+      
+      // ENHANCED: Force visibility at all distances
+      if (child instanceof THREE.Object3D) {
+        child.renderOrder = 0; // Ensure proper render order
+        child.visible = true;
+      }
+    });
   }
 
-  private optimizeMaterial(material: THREE.Material): void {
-    // PERFORMANCE: Use fastest material settings
+  private fixMaterialProperties(material: THREE.Material): void {
+    // ENHANCED: Ensure materials are always visible and opaque
     material.transparent = false;
     material.opacity = 1.0;
-    material.needsUpdate = false; // Prevent unnecessary updates
+    material.alphaTest = 0;
+    material.needsUpdate = true;
     
-    // Use fastest rendering mode
-    if (material instanceof THREE.MeshStandardMaterial) {
-      material.roughness = 0.8;
-      material.metalness = 0.0;
-      material.envMapIntensity = 0; // Disable env mapping for performance
-    }
+    // Disable back face culling for all materials to prevent disappearing
+    material.side = THREE.DoubleSide;
     
-    if (material instanceof THREE.MeshLambertMaterial) {
-      material.combine = THREE.MixOperation; // Fastest combine mode
+    // ENHANCED: Prevent material-based disappearance
+    material.visible = true;
+    material.depthTest = true;
+    material.depthWrite = true;
+    
+    // Force material to render at all distances
+    if (material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshLambertMaterial) {
+      material.wireframe = false;
     }
   }
 
-  private createLightweightFallback(type: keyof typeof TREE_MODELS): THREE.Object3D {
+  private createFallbackTree(type: keyof typeof TREE_MODELS): THREE.Object3D {
+    console.log(`TreeAssetManager: Creating enhanced fallback ${type} tree with anti-disappearance settings`);
     const group = new THREE.Group();
     
-    // ULTRA lightweight fallback geometry
-    const trunkGeometry = new THREE.CylinderGeometry(0.05, 0.08, 0.6, 6); // Reduced segments
-    const canopyGeometry = type === 'pine218' 
-      ? new THREE.ConeGeometry(0.3, 0.8, 6)     // Reduced segments
-      : new THREE.SphereGeometry(0.4, 8, 6);    // Reduced segments
+    // Enhanced fallback trees with better visibility
+    if (type === 'pine218') {
+      const pineHandle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.1, 0.15, 1.2),
+        new THREE.MeshLambertMaterial({ 
+          color: '#8B4513',
+          side: THREE.DoubleSide,
+          transparent: false
+        })
+      );
+      pineHandle.position.y = 0.6;
+      pineHandle.frustumCulled = false;
+      pineHandle.matrixAutoUpdate = true;
+      group.add(pineHandle);
+      
+      const pineCone = new THREE.Mesh(
+        new THREE.ConeGeometry(0.5, 1.8, 8),
+        new THREE.MeshLambertMaterial({ 
+          color: '#013220', 
+          side: THREE.DoubleSide,
+          transparent: false
+        })
+      );
+      pineCone.position.y = 1.5;
+      pineCone.frustumCulled = false;
+      pineCone.matrixAutoUpdate = true;
+      group.add(pineCone);
+    } else if (type === 'stylized') {
+      // Stylized tree fallback
+      const stylizedHandle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.18, 1.4),
+        new THREE.MeshLambertMaterial({ 
+          color: '#8B4513',
+          side: THREE.DoubleSide,
+          transparent: false
+        })
+      );
+      stylizedHandle.position.y = 0.7;
+      stylizedHandle.frustumCulled = false;
+      group.add(stylizedHandle);
+      
+      const stylizedCanopy = new THREE.Mesh(
+        new THREE.SphereGeometry(0.9, 12, 8),
+        new THREE.MeshLambertMaterial({ 
+          color: '#228B22', 
+          side: THREE.DoubleSide,
+          transparent: false
+        })
+      );
+      stylizedCanopy.position.y = 1.6;
+      stylizedCanopy.frustumCulled = false;
+      group.add(stylizedCanopy);
+    } else {
+      // Realistic tree fallback
+      const realisticHandle = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.15, 0.2, 1.6),
+        new THREE.MeshLambertMaterial({ 
+          color: '#8B4513',
+          side: THREE.DoubleSide,
+          transparent: false
+        })
+      );
+      realisticHandle.position.y = 0.8;
+      realisticHandle.frustumCulled = false;
+      group.add(realisticHandle);
+      
+      const realisticCanopy = new THREE.Mesh(
+        new THREE.SphereGeometry(1.1, 12, 8),
+        new THREE.MeshLambertMaterial({ 
+          color: '#228B22', 
+          side: THREE.DoubleSide,
+          transparent: false
+        })
+      );
+      realisticCanopy.position.y = 1.9;
+      realisticCanopy.frustumCulled = false;
+      group.add(realisticCanopy);
+    }
     
-    // Use basic materials for best performance
-    const trunkMaterial = new THREE.MeshBasicMaterial({ color: '#8B4513' });
-    const canopyMaterial = new THREE.MeshBasicMaterial({ 
-      color: type === 'pine218' ? '#013220' : '#228B22' 
-    });
+    // Apply anti-disappearance settings to entire fallback group
+    group.frustumCulled = false;
+    group.matrixAutoUpdate = true;
     
-    const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-    trunk.position.y = 0.3;
-    
-    const canopy = new THREE.Mesh(canopyGeometry, canopyMaterial);
-    canopy.position.y = type === 'pine218' ? 0.9 : 0.8;
-    
-    group.add(trunk, canopy);
     return group;
   }
 
   getCachedModel(type: keyof typeof TREE_MODELS): THREE.Object3D | null {
     const cached = this.cache.get(type);
     if (cached?.scene) {
-      return cached.scene.clone();
+      const cloned = cached.scene.clone();
+      // Apply enhanced anti-clipping settings to cloned model
+      this.optimizeTreeModel(cloned);
+      return cloned;
     }
     return null;
   }
@@ -178,10 +277,11 @@ class TreeAssetManagerSingleton {
   }
 
   clearCache(): void {
+    console.log('TreeAssetManager: Clearing all cached models');
     this.cache.clear();
     this.preloadPromises.clear();
-    this.instancedMeshes.clear();
     
+    // Clear useGLTF cache
     Object.values(TREE_MODELS).forEach(url => {
       useGLTF.clear(url);
     });
@@ -196,7 +296,7 @@ class TreeAssetManagerSingleton {
 
 export const TreeAssetManager = new TreeAssetManagerSingleton();
 
-// Start preloading immediately for faster startup
+// Initialize preloading with pine_tree_218poly priority
 TreeAssetManager.preloadAllModels().catch(error => {
-  console.warn('TreeAssetManager: Fast preload failed, using fallbacks');
+  console.warn('TreeAssetManager: Initial preload failed:', error);
 });
