@@ -51,8 +51,8 @@ const RockyPathSegment: React.FC<{
     return (
       <group 
         position={position} 
-        rotation={[0, rotation, 0]} // Remove the +Math.PI/2 rotation to face forward naturally
-        scale={[2.5, 1, 4]} // Much larger: 2.5x width, 1x height, 4x length for better coverage
+        rotation={[0, rotation, 0]} // Try different rotation values if needed
+        scale={[2.5, 1, 4]} // Keep the larger scale for better coverage
       >
         <primitive object={clonedScene} />
       </group>
@@ -73,15 +73,15 @@ export const RockyForestPathSystem: React.FC<RockyForestPathSystemProps> = ({
     return null;
   }
 
-  // Generate path segments for infinite looping with much larger segments
+  // Generate path segments for infinite looping with proper grounding
   const pathSegments = useMemo(() => {
     const segments = [];
-    const segmentLength = 20; // Much larger segments (increased from 8 to 20)
+    const segmentLength = 20; // Large segments for fewer pieces
     
     chunks.forEach(chunk => {
       const { worldZ } = chunk;
       
-      // Calculate how many segments we need per chunk - fewer needed due to larger size
+      // Calculate how many segments we need per chunk
       const segmentsPerChunk = Math.ceil(chunkSize / segmentLength) + 1; // +1 for overlap
       
       for (let i = 0; i < segmentsPerChunk; i++) {
@@ -89,16 +89,16 @@ export const RockyForestPathSystem: React.FC<RockyForestPathSystemProps> = ({
         
         segments.push({
           x: 0, // Path runs down the center
-          y: -0.2, // Slightly above ground for better visibility
+          y: -2.0, // FIXED: Lower the path significantly to ground level
           z: z,
-          rotation: 0, // No rotation - let the model face its natural forward direction
+          rotation: Math.PI, // FIXED: Try 180-degree rotation to face forward
           chunkId: chunk.id,
           segmentIndex: i
         });
       }
     });
     
-    console.log(`RockyForestPathSystem: Generated ${segments.length} large path segments facing forward naturally`);
+    console.log(`RockyForestPathSystem: Generated ${segments.length} properly grounded path segments with corrected orientation`);
     return segments;
   }, [chunks, chunkSize]);
 
