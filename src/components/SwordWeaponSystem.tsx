@@ -39,6 +39,8 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     }
     if (scene) {
       console.log('SwordWeaponSystem: Sword model loaded successfully:', scene);
+      console.log('SwordWeaponSystem: Scene children count:', scene.children.length);
+      console.log('SwordWeaponSystem: Scene bounding box:', scene);
     }
   }, [scene, loadError]);
 
@@ -53,6 +55,9 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
           mesh.receiveShadow = true;
           mesh.frustumCulled = false; // Prevent disappearing
           mesh.visible = true;
+          
+          // Debug mesh info
+          console.log('SwordWeaponSystem: Found mesh:', mesh.name, mesh.geometry, mesh.material);
           
           // Ensure materials are visible
           if (mesh.material) {
@@ -103,18 +108,25 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
     cameraUp.crossVectors(cameraForward, cameraRight).normalize();
 
-    // First-person sword positioning - right side of screen
+    // FIXED: Better first-person sword positioning - more visible
     const pos = camera.position.clone()
-      .add(cameraRight.clone().multiplyScalar(0.8))   // Further to the right
-      .add(cameraUp.clone().multiplyScalar(-0.6))     // Lower position
-      .add(cameraForward.clone().multiplyScalar(0.8)); // Closer to camera
+      .add(cameraRight.clone().multiplyScalar(1.2))   // Further right for visibility
+      .add(cameraUp.clone().multiplyScalar(-0.8))     // Lower position
+      .add(cameraForward.clone().multiplyScalar(1.5)); // Proper distance from camera
     groupRef.current.position.copy(pos);
 
-    // First-person sword rotation - angled like being held
+    // FIXED: Improved first-person sword rotation
     groupRef.current.rotation.copy(camera.rotation);
-    groupRef.current.rotateY(-Math.PI / 3);  // Angle towards center
-    groupRef.current.rotateX(-Math.PI / 6);  // Slight downward tilt
-    groupRef.current.rotateZ(Math.PI / 8);   // Natural holding angle
+    groupRef.current.rotateY(-Math.PI / 4);  // Angle towards center
+    groupRef.current.rotateX(-Math.PI / 8);  // Slight downward tilt
+    groupRef.current.rotateZ(Math.PI / 6);   // Natural holding angle
+
+    // Debug positioning every few frames
+    if (Math.random() < 0.01) { // Log occasionally to avoid spam
+      console.log('SwordWeaponSystem: Sword position:', groupRef.current.position);
+      console.log('SwordWeaponSystem: Camera position:', camera.position);
+      console.log('SwordWeaponSystem: Sword visible:', groupRef.current.visible);
+    }
 
     if (swingRef.current) {
       const duration = 0.3;
@@ -142,37 +154,48 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
     }
   });
 
-  // Enhanced fallback sword with better visibility
+  // Enhanced fallback sword with better visibility and debugging
   if (!scene || loadError) {
     console.log('SwordWeaponSystem: Using fallback sword model');
     return (
       <group ref={groupRef}>
-        {/* Blade */}
-        <mesh position={[0, 0, 0]} scale={[0.1, 1, 0.02]}>
+        {/* Larger, more visible blade */}
+        <mesh position={[0, 0, 0]} scale={[0.15, 1.5, 0.05]}>
           <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#C0C0C0" metalness={0.8} roughness={0.2} />
+          <meshStandardMaterial color="#E6E6FA" metalness={0.9} roughness={0.1} />
         </mesh>
         {/* Guard */}
-        <mesh position={[0, -0.3, 0]} scale={[0.3, 0.05, 0.05]}>
+        <mesh position={[0, -0.4, 0]} scale={[0.4, 0.08, 0.08]}>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color="#8B4513" />
         </mesh>
         {/* Handle */}
-        <mesh position={[0, -0.4, 0]} scale={[0.15, 0.2, 0.05]}>
+        <mesh position={[0, -0.6, 0]} scale={[0.2, 0.3, 0.08]}>
           <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color="#8B4513" />
+          <meshStandardMaterial color="#654321" />
+        </mesh>
+        {/* Debug sphere to show sword position */}
+        <mesh position={[0, 0, 0]} scale={[0.1, 0.1, 0.1]}>
+          <sphereGeometry args={[1]} />
+          <meshBasicMaterial color="#FF0000" />
         </mesh>
       </group>
     );
   }
 
-  console.log('SwordWeaponSystem: Rendering sword model');
+  console.log('SwordWeaponSystem: Rendering loaded sword model');
   return (
     <group ref={groupRef}>
       <primitive 
         object={scene.clone()} 
-        scale={[1.5, 1.5, 1.5]}  // Appropriate scale for first-person view
+        scale={[2, 2, 2]}  // Increased scale for better visibility
+        position={[0, 0, 0]}
       />
+      {/* Debug sphere to show sword position */}
+      <mesh position={[0, 0, 0]} scale={[0.1, 0.1, 0.1]}>
+        <sphereGeometry args={[1]} />
+        <meshBasicMaterial color="#00FF00" />
+      </mesh>
     </group>
   );
 };
