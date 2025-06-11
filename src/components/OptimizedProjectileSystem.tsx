@@ -38,7 +38,7 @@ export const OptimizedProjectileSystem: React.FC<OptimizedProjectileSystemProps>
   const lastFireTimeRef = useRef(0);
   const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.08, 6, 6), []);
   const projectileMaterial = useMemo(() => 
-    new THREE.MeshBasicMaterial({ 
+    new THREE.MeshStandardMaterial({ 
       color: '#00ffff',
       emissive: '#00ffff',
       emissiveIntensity: 0.3
