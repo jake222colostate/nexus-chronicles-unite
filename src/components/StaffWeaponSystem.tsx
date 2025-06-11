@@ -41,10 +41,10 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   useFrame((state, delta) => {
     if (!staffGroupRef.current || !camera) return;
 
-    // Position staff on the right side of the screen in first-person view
-    const staffOffset = new THREE.Vector3(0.8, -0.5, -1.2); // Right, down, forward
+    // Position staff in the bottom-right corner, visible within mobile screen
+    const staffOffset = new THREE.Vector3(1.2, -0.8, -0.8); // More to the right, lower, closer
     
-    // Get camera vectors
+    // Get camera vectors for positioning
     const cameraRight = new THREE.Vector3();
     const cameraUp = new THREE.Vector3();
     const cameraForward = new THREE.Vector3();
@@ -53,7 +53,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
     cameraUp.crossVectors(cameraForward, cameraRight).normalize();
     
-    // Calculate world position
+    // Calculate world position relative to camera
     const worldOffset = new THREE.Vector3()
       .addScaledVector(cameraRight, staffOffset.x)
       .addScaledVector(cameraUp, staffOffset.y)
@@ -62,10 +62,15 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     const worldPosition = camera.position.clone().add(worldOffset);
     staffGroupRef.current.position.copy(worldPosition);
     
-    // Rotate staff to follow camera
+    // Rotate staff to follow camera and angle towards enemies
     staffGroupRef.current.rotation.copy(camera.rotation);
-    staffGroupRef.current.rotateY(-0.3); // Angle towards right side
-    staffGroupRef.current.rotateX(-0.1); // Slight downward angle
+    staffGroupRef.current.rotateY(-0.2); // Slight angle towards center
+    staffGroupRef.current.rotateX(-0.2); // Angle down slightly
+
+    // Calculate staff tip position for projectile spawning
+    const staffTipOffset = new THREE.Vector3(0, 1.2, 0); // Top of staff
+    staffTipOffset.applyQuaternion(staffGroupRef.current.quaternion);
+    const staffTipPosition = staffGroupRef.current.position.clone().add(staffTipOffset);
 
     // Auto-fire at closest enemy
     const now = Date.now();
@@ -75,22 +80,22 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
       let closestDistance = Infinity;
       
       enemyPositions.forEach((enemyPos, index) => {
-        const distance = camera.position.distanceTo(enemyPos);
+        const distance = staffTipPosition.distanceTo(enemyPos);
         if (distance < closestDistance) {
           closestDistance = distance;
           closestIndex = index;
         }
       });
 
-      // Create projectile towards closest enemy
+      // Create projectile from staff tip towards closest enemy
       const targetPosition = enemyPositions[closestIndex];
       const direction = new THREE.Vector3()
-        .subVectors(targetPosition, camera.position)
+        .subVectors(targetPosition, staffTipPosition)
         .normalize();
 
       const newProjectile: Projectile = {
         id: `proj_${projectileIdCounter.current++}`,
-        position: camera.position.clone(),
+        position: staffTipPosition.clone(),
         direction: direction,
         speed: 20,
         damage: damage,
@@ -134,7 +139,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
       <group ref={staffGroupRef}>
         <primitive 
           object={scene.clone()} 
-          scale={[0.6, 0.6, 0.6]}
+          scale={[0.4, 0.4, 0.4]} // Smaller scale for mobile visibility
           rotation={[0, Math.PI, 0]}
         />
       </group>
