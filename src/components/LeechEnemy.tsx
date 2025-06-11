@@ -58,7 +58,12 @@ export const LeechEnemy: React.FC<LeechEnemyProps> = ({
         distanceFactor={8}
       >
         <div className="w-16">
-          <Progress value={health} />
+          <Progress
+            value={health}
+            direction="rtl"
+            indicatorClassName={health < 100 ? 'bg-red-600' : 'bg-green-500'}
+            className="h-2"
+          />
         </div>
       </Html>
     </group>
