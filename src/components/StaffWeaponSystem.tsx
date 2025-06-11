@@ -1,17 +1,9 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-
-interface Projectile {
-  id: string;
-  position: THREE.Vector3;
-  direction: THREE.Vector3;
-  speed: number;
-  damage: number;
-  targetIndex: number;
-}
+import { OptimizedProjectileSystem } from './OptimizedProjectileSystem';
 
 interface StaffWeaponSystemProps {
   damage: number;
@@ -28,21 +20,19 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const staffGroupRef = useRef<THREE.Group>(null);
-  const [projectiles, setProjectiles] = useState<Projectile[]>([]);
-  const lastFireTime = useRef(0);
-  const projectileIdCounter = useRef(0);
+  const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
   
-  // Load staff model
+  // Load staff model with error handling
   const { scene } = useGLTF('/staffs/staff_4.glb');
   
-  // Calculate fire rate based on upgrades (1 second base, faster with upgrades)
-  const fireRate = Math.max(300, 1000 - (upgrades * 100)); // Faster with more upgrades
+  // Calculate fire rate based on upgrades (faster with more upgrades)
+  const fireRate = Math.max(200, 800 - (upgrades * 80));
 
   useFrame((state, delta) => {
     if (!staffGroupRef.current || !camera) return;
 
-    // Position staff in bottom-right corner, but visible on screen
-    const staffOffset = new THREE.Vector3(0.5, -0.6, -1.5); // Closer to center, forward of camera
+    // Position staff in bottom-right corner
+    const staffOffset = new THREE.Vector3(0.45, -0.6, -1.2);
     
     // Get camera vectors for positioning
     const cameraRight = new THREE.Vector3();
@@ -62,75 +52,15 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     const worldPosition = camera.position.clone().add(worldOffset);
     staffGroupRef.current.position.copy(worldPosition);
     
-    // Rotate staff to follow camera and point forward
+    // Rotate staff to follow camera
     staffGroupRef.current.rotation.copy(camera.rotation);
-    staffGroupRef.current.rotateY(-0.1); // Slight angle towards center
-    staffGroupRef.current.rotateX(-0.15); // Angle down slightly
+    staffGroupRef.current.rotateY(-0.08);
+    staffGroupRef.current.rotateX(-0.12);
 
-    // Calculate staff tip position for projectile spawning (top of staff)
-    const staffTipOffset = new THREE.Vector3(0, 1.0, 0); // Top of staff
+    // Update staff tip position for projectile system
+    const staffTipOffset = new THREE.Vector3(0, 0.8, 0);
     staffTipOffset.applyQuaternion(staffGroupRef.current.quaternion);
-    const staffTipPosition = staffGroupRef.current.position.clone().add(staffTipOffset);
-
-    // Auto-fire at closest enemy
-    const now = Date.now();
-    if (now - lastFireTime.current >= fireRate && enemyPositions.length > 0) {
-      // Find closest enemy
-      let closestIndex = 0;
-      let closestDistance = Infinity;
-      
-      enemyPositions.forEach((enemyPos, index) => {
-        const distance = staffTipPosition.distanceTo(enemyPos);
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestIndex = index;
-        }
-      });
-
-      // Create projectile from staff tip towards closest enemy
-      const targetPosition = enemyPositions[closestIndex];
-      const direction = new THREE.Vector3()
-        .subVectors(targetPosition, staffTipPosition)
-        .normalize();
-
-      const newProjectile: Projectile = {
-        id: `proj_${projectileIdCounter.current++}`,
-        position: staffTipPosition.clone(),
-        direction: direction,
-        speed: 20,
-        damage: damage,
-        targetIndex: closestIndex
-      };
-
-      setProjectiles(prev => [...prev, newProjectile]);
-      lastFireTime.current = now;
-    }
-
-    // Update projectiles
-    setProjectiles(prev => {
-      return prev.map(projectile => {
-        // Move projectile
-        const newPosition = projectile.position.clone()
-          .add(projectile.direction.clone().multiplyScalar(projectile.speed * delta));
-        
-        // Check if projectile hit target
-        const targetPos = enemyPositions[projectile.targetIndex];
-        if (targetPos && newPosition.distanceTo(targetPos) < 2) {
-          onHitEnemy(projectile.targetIndex, projectile.damage);
-          return null; // Remove projectile
-        }
-        
-        // Remove projectile if too far
-        if (newPosition.distanceTo(camera.position) > 100) {
-          return null;
-        }
-        
-        return {
-          ...projectile,
-          position: newPosition
-        };
-      }).filter(Boolean) as Projectile[];
-    });
+    staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
   });
 
   return (
@@ -139,22 +69,19 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
       <group ref={staffGroupRef}>
         <primitive 
           object={scene.clone()} 
-          scale={[0.3, 0.3, 0.3]} // Smaller scale to fit better on screen
+          scale={[0.25, 0.25, 0.25]}
           rotation={[0, Math.PI, 0]}
         />
       </group>
 
-      {/* Render projectiles */}
-      {projectiles.map(projectile => (
-        <group key={projectile.id} position={projectile.position.toArray()}>
-          <mesh>
-            <sphereGeometry args={[0.1, 8, 8]} />
-            <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.5} />
-          </mesh>
-          {/* Glowing effect */}
-          <pointLight intensity={0.5} color="#00ffff" distance={3} />
-        </group>
-      ))}
+      {/* Optimized projectile system */}
+      <OptimizedProjectileSystem
+        staffTipPosition={staffTipPositionRef.current}
+        targetPositions={enemyPositions}
+        damage={damage}
+        fireRate={fireRate}
+        onHitEnemy={onHitEnemy}
+      />
     </group>
   );
 };
