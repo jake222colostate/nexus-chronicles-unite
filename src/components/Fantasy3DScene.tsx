@@ -59,7 +59,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         const newLeeches: LeechData[] = [];
         
         for (let i = 0; i < neededLeeches; i++) {
-          const spawnDistance = playerProgress + 40 + (i * 15);
+          const spawnDistance = playerProgress + 80 + (i * 25); // Increased from 40 to 80, spacing from 15 to 25
           const spawnX = (Math.random() - 0.5) * 20; // Random X position within range
           const spawnPosition = new Vector3(spawnX, 0, -spawnDistance);
           
