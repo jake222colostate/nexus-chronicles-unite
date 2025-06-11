@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFWithCors } from '../lib/useGLTFWithCors';
 import { assetPath } from '../lib/assetPath';
 import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
@@ -33,8 +34,8 @@ export const Leech: React.FC<LeechProps> = ({
   const isFullyFaded = useRef(false);
 
   // Use the vampire bat model as a placeholder since leech.glb doesn't exist
-  // This will be rendered differently with materials and scaling
-  const { scene: leechScene } = useGLTF(assetPath('assets/vampire-bat/source/bat.glb'));
+  // Load with CORS support to avoid texture issues
+  const { scene: leechScene } = useGLTFWithCors(assetPath('assets/vampire-bat/source/bat.glb'));
 
   useEffect(() => {
     if (leechScene && modelRef.current) {

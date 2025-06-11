@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFWithCors } from '../lib/useGLTFWithCors';
 import { assetPath } from '../lib/assetPath';
 import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
@@ -31,7 +32,8 @@ export const Monster: React.FC<MonsterProps> = ({
   const fadeOutStarted = useRef(false);
   const isFullyFaded = useRef(false);
 
-  const { scene: monsterScene } = useGLTF(assetPath('assets/monster_rig.glb'));
+  // Load monster model with CORS support
+  const { scene: monsterScene } = useGLTFWithCors(assetPath('assets/monster_rig.glb'));
 
   useEffect(() => {
     if (monsterScene && modelRef.current) {

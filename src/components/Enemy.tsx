@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
+import { useGLTFWithCors } from '../lib/useGLTFWithCors';
 import { assetPath } from '../lib/assetPath';
 import { Group, Vector3, Mesh } from 'three';
 import { EnemyHealthBar } from './EnemyHealthBar';
@@ -40,7 +41,7 @@ export const Enemy: React.FC<EnemyProps> = ({
     : assetPath('assets/monster_rig.glb');
     
   console.log(`Enemy ${enemyId}: Loading model from path: ${modelPath} for type: ${enemyType}`);
-  const { scene: enemyScene } = useGLTF(modelPath);
+  const { scene: enemyScene } = useGLTFWithCors(modelPath);
 
   useEffect(() => {
     if (enemyScene && modelRef.current) {

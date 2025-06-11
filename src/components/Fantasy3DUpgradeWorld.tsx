@@ -56,7 +56,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   return (
     <div className="absolute inset-0 w-full h-full">
       <Canvas
-        dpr={[1, 2]}
+        dpr={[1, 1]}
         camera={{ 
           position: [0, 5, 12], 
           fov: 50,
