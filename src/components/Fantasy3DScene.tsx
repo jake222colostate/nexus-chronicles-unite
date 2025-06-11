@@ -8,6 +8,7 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
+import { BatEnemy } from './BatEnemy';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -32,17 +33,24 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   onEnemyKilled,
   maxUnlockedUpgrade
 }) => {
-  // Notify that there are no enemies
-  const [enemyAlive, setEnemyAlive] = useState(true);
+  // Track individual enemies
+  const [leechAlive, setLeechAlive] = useState(true);
+  const [batAlive, setBatAlive] = useState(true);
 
-  const spawnPosition = useMemo(
+  const leechSpawnPosition = useMemo(
     () => new Vector3(0, 0, cameraPosition.z - 60),
-    [enemyAlive]
+    [leechAlive]
+  );
+
+  const batSpawnPosition = useMemo(
+    () => new Vector3(-3, 3, cameraPosition.z - 55),
+    [batAlive]
   );
 
   React.useEffect(() => {
-    if (onEnemyCountChange) onEnemyCountChange(enemyAlive ? 1 : 0);
-  }, [enemyAlive, onEnemyCountChange]);
+    if (onEnemyCountChange)
+      onEnemyCountChange((leechAlive ? 1 : 0) + (batAlive ? 1 : 0));
+  }, [leechAlive, batAlive, onEnemyCountChange]);
 
   return (
     <Suspense fallback={null}>
@@ -68,12 +76,23 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       <ambientLight intensity={0.6} />
       <Sun position={[10, 20, 5]} />
 
-      {enemyAlive && (
+      {leechAlive && (
         <LeechEnemy
           playerPosition={cameraPosition}
-          startPosition={spawnPosition}
+          startPosition={leechSpawnPosition}
           onReachPlayer={() => {
-            setEnemyAlive(false);
+            setLeechAlive(false);
+            onEnemyKilled && onEnemyKilled();
+          }}
+        />
+      )}
+
+      {batAlive && (
+        <BatEnemy
+          playerPosition={cameraPosition}
+          startPosition={batSpawnPosition}
+          onReachPlayer={() => {
+            setBatAlive(false);
             onEnemyKilled && onEnemyKilled();
           }}
         />
