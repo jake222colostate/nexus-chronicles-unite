@@ -12,6 +12,7 @@ interface GameState {
   convergenceCount: number;
   fantasyBuildings: { [key: string]: number };
   scifiBuildings: { [key: string]: number };
+  manaPerKill: number;
 }
 
 interface UseUIStateManagerProps {

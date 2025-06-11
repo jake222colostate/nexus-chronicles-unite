@@ -18,6 +18,7 @@ export interface CrossRealmUpgrade {
     range?: number;
     manaPerSecond?: number;
     energyPerSecond?: number;
+    manaPerKill?: number;
   };
   unlockRequirement?: {
     otherRealm: 'fantasy' | 'scifi';
@@ -187,6 +188,9 @@ export const CrossRealmUpgradeSystem: React.FC<CrossRealmUpgradeSystemProps> = (
                     )}
                     {upgrade.effect.energyPerSecond && (
                       <div>Energy/sec: +{upgrade.effect.energyPerSecond * (upgrade.level + 1)}</div>
+                    )}
+                    {upgrade.effect.manaPerKill && (
+                      <div>Mana/kill: +{upgrade.effect.manaPerKill * (upgrade.level + 1)}</div>
                     )}
                   </div>
                 )}

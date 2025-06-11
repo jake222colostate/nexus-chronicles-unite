@@ -73,7 +73,7 @@ export const useFantasy3DUpgradeWorld = ({
     if (currentManaRef.current >= upgrade.cost) {
       currentManaRef.current -= upgrade.cost;
       totalManaPerSecondRef.current += upgrade.manaPerSecond;
-      setMaxUnlockedUpgrade(prev => Math.max(prev, upgrade.id - 1));
+      setMaxUnlockedUpgrade(prev => Math.max(prev, upgrade.id));
       setSelectedUpgrade(null);
       console.log(`Unlocked ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
     } else {
