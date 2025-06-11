@@ -37,8 +37,8 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   useFrame((state, delta) => {
     if (!staffGroupRef.current || !camera) return;
 
-    // Position staff much more forward and to the right for better visibility
-    const staffOffset = new THREE.Vector3(0.35, -0.5, -0.6); // Moved much closer (was -1.2)
+    // Position staff farther away but still visible on the right side
+    const staffOffset = new THREE.Vector3(0.4, -0.5, -1.8); // Moved farther back for visibility
     
     // Get camera vectors for positioning
     const cameraRight = new THREE.Vector3();
