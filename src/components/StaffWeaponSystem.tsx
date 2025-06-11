@@ -22,8 +22,14 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   const staffGroupRef = useRef<THREE.Group>(null);
   const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
   
-  // Load staff model with error handling
-  const { scene } = useGLTF('/staffs/staff_4.glb');
+  // Load staff model with proper path and error handling
+  let staffScene = null;
+  try {
+    const { scene } = useGLTF('staffs/staff_4.glb'); // Removed leading slash
+    staffScene = scene;
+  } catch (error) {
+    console.warn('Failed to load staff model, using fallback:', error);
+  }
   
   // Calculate fire rate based on upgrades (faster with more upgrades)
   const fireRate = Math.max(200, 800 - (upgrades * 80));
@@ -63,15 +69,39 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
   });
 
+  // Create fallback staff if model fails to load
+  const createFallbackStaff = () => (
+    <group>
+      {/* Staff handle */}
+      <mesh position={[0, 0, 0]}>
+        <cylinderGeometry args={[0.02, 0.03, 1.5, 8]} />
+        <meshStandardMaterial color="#8B4513" />
+      </mesh>
+      {/* Staff crystal */}
+      <mesh position={[0, 0.8, 0]}>
+        <sphereGeometry args={[0.08, 12, 8]} />
+        <meshStandardMaterial 
+          color="#4B0082" 
+          emissive="#4B0082" 
+          emissiveIntensity={0.3} 
+        />
+      </mesh>
+    </group>
+  );
+
   return (
     <group>
       {/* Staff model */}
       <group ref={staffGroupRef}>
-        <primitive 
-          object={scene.clone()} 
-          scale={[0.25, 0.25, 0.25]}
-          rotation={[0, Math.PI, 0]}
-        />
+        {staffScene ? (
+          <primitive 
+            object={staffScene.clone()} 
+            scale={[0.25, 0.25, 0.25]}
+            rotation={[0, Math.PI, 0]}
+          />
+        ) : (
+          createFallbackStaff()
+        )}
       </group>
 
       {/* Optimized projectile system */}
@@ -86,4 +116,9 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   );
 };
 
-useGLTF.preload('/staffs/staff_4.glb');
+// Preload with correct path
+try {
+  useGLTF.preload('staffs/staff_4.glb');
+} catch (error) {
+  console.warn('Failed to preload staff model:', error);
+}
