@@ -1,13 +1,10 @@
 
-import React, { Suspense, useRef, useState, useCallback, useMemo } from 'react';
+import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
-import { EnemySystem, EnemySystemHandle, EnemyData } from './EnemySystem';
-import { WizardStaffWeapon } from './WizardStaffWeapon';
-import { useEnemyDamageSystem } from '../hooks/useEnemyDamageSystem';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 
@@ -34,49 +31,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   onEnemyKilled,
   maxUnlockedUpgrade
 }) => {
-  const enemySystemRef = useRef<EnemySystemHandle>(null);
-  const [enemies, setEnemies] = useState<EnemyData[]>([]);
-
-  // Calculate weapon upgrade level based on maxUnlockedUpgrade (ensure non-negative)
-  const weaponUpgradeLevel = Math.max(0, Math.min(Math.floor(maxUnlockedUpgrade / 3), 2));
-
-  // Use a much more stable player Z to prevent infinite updates
-  const stablePlayerZ = useMemo(() => {
-    return Math.floor(cameraPosition.z / 50) * 50; // Changed from 20 to 50 for more stability
-  }, [Math.floor(cameraPosition.z / 50)]); // Simplified dependency
-
-  // Initialize shared damage system with stable player Z
-  const damageSystem = useEnemyDamageSystem({
-    playerZ: stablePlayerZ,
-    upgradeLevel: weaponUpgradeLevel
-  });
-
-  // Stable enemy change handler
-  const handleEnemiesChange = useCallback(
-    (list: EnemyData[]) => {
-      console.log(`Fantasy3DScene: Enemies changed, count: ${list.length}`);
-      setEnemies(list);
-      if (onEnemyCountChange) onEnemyCountChange(list.length);
-    },
-    [onEnemyCountChange]
-  );
-
-  // Handle enemy hits - stable reference
-  const handleEnemyHit = useCallback(
-    (id: string) => {
-      enemySystemRef.current?.damageEnemy(id, 1);
-      console.log(`Enemy ${id} removed from enemy system`);
-    },
-    []
-  );
-
-  // Initialize enemies in damage system when they spawn - stable reference
-  const handleEnemyInitialize = useCallback((id: string, position: [number, number, number]) => {
-    console.log(`Fantasy3DScene: Initializing enemy ${id} in damage system at position:`, position);
-    if (damageSystem) {
-      damageSystem.initializeEnemy(id, position);
-    }
-  }, [damageSystem]);
+  // Notify that there are no enemies
+  React.useEffect(() => {
+    if (onEnemyCountChange) onEnemyCountChange(0);
+  }, [onEnemyCountChange]);
 
   return (
     <Suspense fallback={null}>
@@ -117,29 +75,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           />
         )}
       </ChunkSystem>
-
-      {/* Enemy System - handles both enemy creation and rendering */}
-      <EnemySystem
-        ref={enemySystemRef}
-        playerPosition={cameraPosition}
-        maxEnemies={3}
-        spawnDistance={80}
-        onEnemiesChange={handleEnemiesChange}
-        onEnemyInitialize={handleEnemyInitialize}
-        damageSystem={damageSystem}
-      />
-
-      {/* Wizard Staff Weapon - only render when damage system is ready */}
-      {damageSystem && (
-        <WizardStaffWeapon 
-          enemies={enemies} 
-          onEnemyHit={handleEnemyHit}
-          upgradeLevel={weaponUpgradeLevel}
-          playerPosition={cameraPosition}
-          onEnemyKilled={onEnemyKilled}
-          damageSystem={damageSystem}
-        />
-      )}
 
       {/* Simplified contact shadows */}
       <ContactShadows 
