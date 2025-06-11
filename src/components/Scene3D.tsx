@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -159,5 +160,3 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 });
 
 Scene3D.displayName = 'Scene3D';
-
-}
