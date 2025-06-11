@@ -27,24 +27,23 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
   const activeChunks = useMemo(() => {
     const chunks: ChunkData[] = [];
     
-    // Much less aggressive position rounding for 60fps
-    const roundedPlayerX = Math.round(playerPosition.x / 10) * 10;
-    const roundedPlayerZ = Math.round(Math.abs(playerPosition.z) / 10) * 10;
+    // Much more stable position tracking to prevent constant recalculation
+    const roundedPlayerX = Math.round(playerPosition.x / 25) * 25;
+    const roundedPlayerZ = Math.round(Math.abs(playerPosition.z) / 25) * 25;
     
     const playerChunkX = Math.floor(roundedPlayerX / chunkSize);
     const playerChunkZ = Math.floor(roundedPlayerZ / chunkSize);
     
-    // Reduced render distance for 60fps
-    const maxRenderDistance = Math.min(renderDistance, 150);
+    // Conservative render distance for stability
+    const maxRenderDistance = Math.min(renderDistance, 200);
     const chunkRadius = Math.ceil(maxRenderDistance / chunkSize);
-    const farAheadChunks = Math.ceil(maxRenderDistance / chunkSize);
     
-    // Reduced chunk limit for 60fps
+    // Stable chunk generation without rapid cleanup
     let chunkCount = 0;
-    const maxChunks = 200;
+    const maxChunks = 100; // Reduced for stability
     
     for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius && chunkCount < maxChunks; x++) {
-      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + chunkRadius + farAheadChunks && chunkCount < maxChunks; z++) {
+      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + chunkRadius + 2 && chunkCount < maxChunks; z++) {
         if (z >= -Math.ceil(maxRenderDistance / chunkSize)) {
           const worldX = x * chunkSize;
           const worldZ = -z * chunkSize;
@@ -74,11 +73,11 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     
     return chunks;
   }, [
-    // Reduced recalculation frequency for 60fps
-    Math.floor(playerPosition.x / 20) * 20,
-    Math.floor(Math.abs(playerPosition.z) / 20) * 20,
+    // Much less frequent recalculation to prevent ground flickering
+    Math.floor(playerPosition.x / 50) * 50,
+    Math.floor(Math.abs(playerPosition.z) / 50) * 50,
     chunkSize, 
-    Math.min(renderDistance, 150)
+    Math.min(renderDistance, 200)
   ]);
 
   return <>{children(activeChunks)}</>;

@@ -25,41 +25,36 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     const tiles = [];
     const tileSize = chunkSize;
     
-    // Reduced ground coverage for 60fps
-    const playerZ = playerPosition.z;
-    const startZ = Math.floor((playerZ - 200) / tileSize) * tileSize;
-    const endZ = Math.floor((playerZ + 400) / tileSize) * tileSize;
+    // More stable ground coverage that doesn't flicker
+    const playerZ = Math.abs(playerPosition.z);
+    const startZ = Math.floor((playerZ - 300) / tileSize) * tileSize;
+    const endZ = Math.floor((playerZ + 500) / tileSize) * tileSize;
     
-    // Reduced layers for 60fps
+    // Generate stable ground tiles
     for (let z = startZ; z <= endZ; z += tileSize) {
-      // Only 2 layers instead of 3
-      for (let layer = 0; layer < 2; layer++) {
-        const layerY = -1.8 - (layer * 0.1);
-        
+      // Main center ground tile
+      tiles.push({
+        key: `infinite_ground_main_${z}`,
+        position: [0, -1.8, -z] as [number, number, number],
+        size: tileSize + 20, // Increased overlap for seamless coverage
+        type: 'main'
+      });
+      
+      // Side extensions for full coverage
+      [-1, 1].forEach(side => {
         tiles.push({
-          key: `infinite_ground_main_${z}_layer_${layer}`,
-          position: [0, layerY, z] as [number, number, number],
-          size: tileSize + 10, // Reduced overlap
-          type: 'main',
-          layer
+          key: `infinite_ground_side_${side}_${z}`,
+          position: [side * (tileSize + 10), -1.8, -z] as [number, number, number],
+          size: tileSize + 10,
+          type: 'side'
         });
-        
-        // Reduced side extensions
-        [-1, 1].forEach(side => {
-          tiles.push({
-            key: `infinite_ground_side_${side}_${z}_layer_${layer}`,
-            position: [side * (tileSize + 5), layerY, z] as [number, number, number],
-            size: tileSize + 5,
-            type: 'side',
-            layer
-          });
-        });
-      }
+      });
     }
     
     return tiles;
   }, [
-    Math.floor(playerPosition.z / 20) * 20,
+    // Less frequent updates to prevent flickering
+    Math.floor(playerPosition.z / 50) * 50,
     chunkSize
   ]);
 
@@ -73,7 +68,6 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
           receiveShadow
           frustumCulled={false}
           matrixAutoUpdate={false}
-          renderOrder={-tile.layer}
         >
           <planeGeometry args={[tile.size, tile.size, 1, 1]} />
           <meshStandardMaterial
@@ -87,28 +81,25 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
         </mesh>
       ))}
       
-      {/* Reduced base layers for 60fps */}
-      {Array.from({ length: 2 }, (_, i) => (
-        <mesh 
-          key={`mega_base_${i}`}
-          position={[0, -2.5 - (i * 0.2), playerPosition.z]} 
-          rotation={[-Math.PI / 2, 0, 0]} 
-          receiveShadow
-          frustumCulled={false}
-          matrixAutoUpdate={false}
-          renderOrder={-10 - i}
-        >
-          <planeGeometry args={[1000 + (i * 100), 1000 + (i * 100)]} />
-          <meshStandardMaterial 
-            color={i === 0 ? "#1a2a1b" : "#0f1f0c"}
-            roughness={1.0}
-            metalness={0.0}
-            side={THREE.DoubleSide}
-            transparent={false}
-            opacity={1.0}
-          />
-        </mesh>
-      ))}
+      {/* Persistent base ground layer that never disappears */}
+      <mesh 
+        key="persistent_base_ground"
+        position={[0, -2.5, playerPosition.z]} 
+        rotation={[-Math.PI / 2, 0, 0]} 
+        receiveShadow
+        frustumCulled={false}
+        matrixAutoUpdate={false}
+      >
+        <planeGeometry args={[2000, 2000]} />
+        <meshStandardMaterial 
+          color="#1a2a1b"
+          roughness={1.0}
+          metalness={0.0}
+          side={THREE.DoubleSide}
+          transparent={false}
+          opacity={1.0}
+        />
+      </mesh>
     </group>
   );
 };
