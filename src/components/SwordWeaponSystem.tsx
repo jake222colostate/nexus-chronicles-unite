@@ -27,7 +27,7 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   let loadError = false;
   
   try {
-    gltfResult = useGLTF('/swordofkasdd.glb');
+    gltfResult = useGLTF('/assets/swordofkasdd.glb');
   } catch (error) {
     console.log('SwordWeaponSystem: Failed to load sword model:', error);
     loadError = true;
@@ -180,4 +180,4 @@ export const SwordWeaponSystem: React.FC<SwordWeaponSystemProps> = ({
   );
 };
 
-useGLTF.preload('/swordofkasdd.glb');
+useGLTF.preload('/assets/swordofkasdd.glb');
