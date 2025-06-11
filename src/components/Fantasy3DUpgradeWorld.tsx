@@ -6,6 +6,7 @@ import { Fantasy3DScene } from './Fantasy3DScene';
 import { Fantasy3DUpgradePedestals } from './Fantasy3DUpgradePedestals';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { Fantasy3DInsufficientManaMessage } from './Fantasy3DInsufficientManaMessage';
+import { TreeAssetManager } from '../environment/TreeAssetManager';
 
 interface Fantasy3DUpgradeWorldProps {
   onUpgradeClick: (upgradeName: string) => void;
@@ -31,6 +32,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   weaponDamage
 }) => {
   const [isCanvasReady, setIsCanvasReady] = useState(false);
+  const [assetsLoaded, setAssetsLoaded] = useState(false);
 
   const {
     cameraPosition,
@@ -52,6 +54,17 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     onPlayerPositionUpdate
   });
 
+  // Preload environment assets once on mount
+  useEffect(() => {
+    let cancelled = false;
+    TreeAssetManager.preloadAllModels().then(() => {
+      if (!cancelled) setAssetsLoaded(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Force Canvas to initialize properly on mount
   useEffect(() => {
     console.log('Fantasy3DUpgradeWorld: Initializing for realm:', realm);
@@ -71,7 +84,12 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
 
   return (
     <div className="absolute inset-0 w-full h-full">
-      {isCanvasReady && (
+      {(!assetsLoaded || !isCanvasReady) && (
+        <div className="absolute inset-0 flex items-center justify-center text-white bg-black">
+          Loading Fantasy World...
+        </div>
+      )}
+      {isCanvasReady && assetsLoaded && (
         <Canvas
           key="fantasy-canvas" // Force re-mount if needed
           dpr={[1, 1]}
