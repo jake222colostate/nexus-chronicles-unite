@@ -1,7 +1,8 @@
+
 import React, { useRef } from 'react';
 import { useFBX } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { Vector3 } from 'three';
+import { Vector3, Group } from 'three';
 
 interface AsteroidProps {
   startPosition?: [number, number, number];
@@ -14,7 +15,7 @@ export const Asteroid: React.FC<AsteroidProps> = ({
   speed = 0.02,
   onReachTarget
 }) => {
-  const group = useRef<THREE.Group>(null);
+  const group = useRef<Group>(null);
   const fbx = useFBX('/assets/asteroid_01.fbx');
 
   useFrame(() => {
@@ -27,10 +28,8 @@ export const Asteroid: React.FC<AsteroidProps> = ({
   });
 
   return (
-    <group ref={group} position={startPosition as Vector3}>
+    <group ref={group} position={new Vector3(...startPosition)}>
       <primitive object={fbx.clone()} scale={0.005} />
     </group>
   );
 };
-
-

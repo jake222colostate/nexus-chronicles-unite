@@ -1,14 +1,15 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFBX } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { Vector3 } from 'three';
+import { Vector3, Group } from 'three';
 
 interface ScifiCannonProps {
   target?: Vector3;
 }
 
 export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
-  const group = useRef<THREE.Group>(null);
+  const group = useRef<Group>(null);
   const fbx = useFBX('/assets/c1/scifi-cannon/source/300_Gun.fbx');
 
   useFrame(() => {
@@ -28,5 +29,3 @@ export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
     <primitive ref={group} object={fbx.clone()} position={[0, -1.5, 4]} scale={0.003} />
   );
 };
-
-
