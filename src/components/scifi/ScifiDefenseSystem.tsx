@@ -51,7 +51,10 @@ export const ScifiDefenseSystem: React.FC = () => {
         {
           id: Date.now(),
           position: spawnPos,
-          velocity: dir.multiplyScalar(0.2),
+          // Asteroids were moving too quickly to react to. Reduce
+          // their velocity so players have a fair chance to shoot
+          // them down before they reach the target area.
+          velocity: dir.multiplyScalar(0.05),
           health: 5
         }
       ]);
