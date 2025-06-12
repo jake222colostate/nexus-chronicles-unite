@@ -53,11 +53,12 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     }
   });
 
+  const tierColors = ['#a7f3d0', '#7dd3fc', '#818cf8', '#c084fc'];
   const getCrystalColor = () => {
-    if (isPurchased) return '#10B981'; // Green
-    if (isUnlocked && canAfford) return '#8B5CF6'; // Purple
-    if (isUnlocked) return '#6366F1'; // Blue
-    return '#6B7280'; // Gray
+    if (isPurchased) return '#10B981';
+    const base = tierColors[Math.min(tier - 1, tierColors.length - 1)] || '#6B7280';
+    if (isUnlocked) return base;
+    return '#6B7280';
   };
 
   const getPedestalTier = () => {
@@ -106,7 +107,10 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         scale={hovered ? 1.1 : 1}
         castShadow
       >
-        <octahedronGeometry args={[0.6]} />
+        {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
+        {tier === 2 && <octahedronGeometry args={[0.6]} />}
+        {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
+        {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
         <meshLambertMaterial
           color={getCrystalColor()}
           transparent

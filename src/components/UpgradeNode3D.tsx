@@ -26,29 +26,33 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  // Memoize colors to prevent recalculation
+  const tierColors = ['#a7f3d0', '#7dd3fc', '#818cf8', '#c084fc'];
+
   const nodeColor = useMemo(() => {
-    if (isPurchased) return '#10b981'; // Green
-    if (isUnlocked && canAfford) return realm === 'fantasy' ? '#8b5cf6' : '#06b6d4';
-    if (isUnlocked) return realm === 'fantasy' ? '#6b46c1' : '#0e7490';
-    return '#6b7280'; // Gray
-  }, [isPurchased, isUnlocked, canAfford, realm]);
+    const base = tierColors[Math.min(upgrade.tier - 1, tierColors.length - 1)] || '#6b7280';
+    if (isPurchased) return '#10b981';
+    if (isUnlocked && canAfford) return base;
+    if (isUnlocked) return base;
+    return '#6b7280';
+  }, [isPurchased, isUnlocked, canAfford, upgrade.tier]);
 
   const glowColor = useMemo(() => {
     if (isPurchased) return '#34d399';
-    return realm === 'fantasy' ? '#c084fc' : '#67e8f9';
-  }, [isPurchased, realm]);
+    return tierColors[Math.min(upgrade.tier - 1, tierColors.length - 1)] || '#c084fc';
+  }, [isPurchased, upgrade.tier]);
 
-  // Memoize geometry based on upgrade type
   const geometry = useMemo(() => {
-    if (upgrade.id.includes('core') || upgrade.id.includes('engine')) {
-      return <octahedronGeometry args={[0.5]} />;
-    } else if (upgrade.id.includes('dragon') || upgrade.id.includes('beacon')) {
-      return <coneGeometry args={[0.5, 1, 6]} />;
-    } else {
-      return <dodecahedronGeometry args={[0.5]} />;
+    switch (upgrade.tier) {
+      case 1:
+        return <tetrahedronGeometry args={[0.4]} />;
+      case 2:
+        return <octahedronGeometry args={[0.5]} />;
+      case 3:
+        return <dodecahedronGeometry args={[0.6]} />;
+      default:
+        return <icosahedronGeometry args={[0.7, 1]} />;
     }
-  }, [upgrade.id]);
+  }, [upgrade.tier]);
 
   // Optimized animation with reduced frequency
   useFrame((state) => {
