@@ -4,9 +4,21 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { ScifiCannon } from './ScifiCannon';
 import { Asteroid } from './Asteroid';
 
+const UPGRADE_TARGETS = [
+  new Vector3(0, 4, 0),
+  new Vector3(-2, 2.5, -1),
+  new Vector3(2, 2.5, -1),
+  new Vector3(-3, 1, -2),
+  new Vector3(0, 1, -2),
+  new Vector3(3, 1, -2),
+  new Vector3(-1, -0.5, -3),
+  new Vector3(0, -2, -4)
+];
+
 interface SpawnedAsteroid {
   id: number;
-  position: [number, number, number];
+  position: Vector3;
+  velocity: Vector3;
   health: number;
 }
 
@@ -27,21 +39,27 @@ export const ScifiDefenseSystem: React.FC = () => {
 
   useEffect(() => {
     spawnIntervalRef.current = setInterval(() => {
-      const x = Math.random() * 6 - 3;
-      const y = Math.random() * 2 + 3;
-      setAsteroids((prev) => [
+      const spawnDist = 20;
+      const side = Math.random() < 0.5 ? -1 : 1;
+      const x = side * (10 + Math.random() * 5);
+      const y = Math.random() * 5 + 2;
+      const spawnPos = new Vector3(x, y, camera.position.z + spawnDist);
+      const target = UPGRADE_TARGETS[Math.floor(Math.random() * UPGRADE_TARGETS.length)];
+      const dir = target.clone().sub(spawnPos).normalize();
+      setAsteroids(prev => [
         ...prev,
-        { id: Date.now(), position: [x, y, -10], health: 5 }
+        {
+          id: Date.now(),
+          position: spawnPos,
+          velocity: dir.multiplyScalar(0.2),
+          health: 5
+        }
       ]);
     }, 4000);
     return () => {
       if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
     };
-  }, []);
-
-  const handleAsteroidReach = useCallback((id: number) => {
-    setAsteroids((prev) => prev.filter((a) => a.id !== id));
-  }, []);
+  }, [camera.position.z]);
 
   const handleAsteroidHit = useCallback((id: number, damage: number) => {
     setAsteroids((prev) =>
@@ -66,7 +84,7 @@ export const ScifiDefenseSystem: React.FC = () => {
       if (!cannonGroup.current || asteroids.length === 0) return;
       const start = new Vector3();
       cannonGroup.current.getWorldPosition(start);
-      const targetPos = new Vector3(...asteroids[0].position);
+      const targetPos = asteroids[0].position.clone();
       const dir = targetPos.clone().sub(start).normalize();
       setProjectiles((prev) => [
         ...prev,
@@ -80,6 +98,27 @@ export const ScifiDefenseSystem: React.FC = () => {
 
   // Update projectiles each frame
   useFrame(() => {
+    setAsteroids(prev => {
+      const updated = prev.map(a => ({
+        ...a,
+        position: a.position.clone().add(a.velocity)
+      }));
+
+      for (let i = 0; i < updated.length; i++) {
+        for (let j = i + 1; j < updated.length; j++) {
+          const a = updated[i];
+          const b = updated[j];
+          if (a.position.distanceTo(b.position) < 1) {
+            const temp = a.velocity.clone();
+            a.velocity = b.velocity.clone();
+            b.velocity = temp;
+          }
+        }
+      }
+
+      return updated.filter(a => a.position.z < 0);
+    });
+
     setProjectiles((prev) => {
       return prev
         .map((p) => {
@@ -88,8 +127,7 @@ export const ScifiDefenseSystem: React.FC = () => {
             .add(p.direction.clone().multiplyScalar(p.speed));
           let hit = false;
           for (const ast of asteroids) {
-            const astPos = new Vector3(...ast.position);
-            if (newPos.distanceTo(astPos) < 0.7) {
+            if (newPos.distanceTo(ast.position) < 0.7) {
               handleAsteroidHit(ast.id, 1);
               hit = true;
               break;
@@ -102,7 +140,7 @@ export const ScifiDefenseSystem: React.FC = () => {
     });
   });
 
-  const target = asteroids[0] ? new Vector3(...asteroids[0].position) : undefined;
+  const target = asteroids[0] ? asteroids[0].position.clone() : undefined;
 
   return (
     <group>
@@ -110,12 +148,7 @@ export const ScifiDefenseSystem: React.FC = () => {
         <ScifiCannon target={target} />
       </group>
       {asteroids.map((ast) => (
-        <Asteroid
-          key={ast.id}
-          startPosition={ast.position}
-          health={ast.health}
-          onReachTarget={() => handleAsteroidReach(ast.id)}
-        />
+        <Asteroid key={ast.id} position={ast.position} health={ast.health} />
       ))}
       {projectiles.map((p) => (
         <mesh key={p.id} position={p.position}>
