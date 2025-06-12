@@ -80,6 +80,14 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
 
   return (
     <>
+      {/* Simple, consistent lighting */}
+      <ambientLight intensity={0.6} />
+      <directionalLight 
+        position={[10, 10, 5]} 
+        intensity={0.8} 
+        castShadow 
+      />
+
       {/* Environment with chunk system */}
       <ChunkSystem
         playerPosition={cameraPosition}
@@ -118,7 +126,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
         staffTipPosition={staffTipPosition}
         targetPositions={enemies.map(enemy => enemy.position)}
         damage={weaponDamage}
-        fireRate={1000} // Fire every 1 second
+        fireRate={1000}
         onHitEnemy={handleEnemyHit}
       />
 
@@ -135,7 +143,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
       ))}
 
       {/* Debug: Show staff tip position */}
-      <mesh position={[staffTipPosition.x, staffTipPosition.y, staffTipPosition.z]}>
+      <mesh position={staffTipPosition}>
         <sphereGeometry args={[0.2]} />
         <meshBasicMaterial color="#00ff00" />
       </mesh>

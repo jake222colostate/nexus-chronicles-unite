@@ -3,7 +3,6 @@ import React, { Suspense } from 'react';
 import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
-import { InfiniteEnvironmentSystem } from './InfiniteEnvironmentSystem';
 import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
 
 interface OptimizedFantasyEnvironmentProps {
@@ -24,11 +23,9 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with infinite ground and optimized performance`);
-
   return (
     <Suspense fallback={null}>
-      {/* Infinite ground system for seamless terrain */}
+      {/* Simple ground system */}
       <EnhancedInfiniteGroundSystem
         chunks={chunks}
         chunkSize={chunkSize}
@@ -36,15 +33,15 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         playerPosition={playerPosition}
       />
       
-      {/* Infinite environment system handles mountains and other elements */}
-      <InfiniteEnvironmentSystem playerPosition={playerPosition} />
-      
-      {/* Tree system positioned within valley bounds */}
+      {/* Tree system */}
       <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
       />
+
+      {/* Simple fog */}
+      <fog attach="fog" args={['#87CEEB', 50, 200]} />
     </Suspense>
   );
 };
