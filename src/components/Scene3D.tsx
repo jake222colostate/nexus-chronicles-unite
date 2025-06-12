@@ -12,6 +12,7 @@ import { Sun } from './Sun';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
+import { ScifiDefenseSystem } from './scifi/ScifiDefenseSystem';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -118,6 +119,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <ImprovedFantasyLighting />
 
           <FloatingIsland realm={realm} />
+          {realm === 'scifi' && <ScifiDefenseSystem />}
 
           {/* Fantasy environment with polygon mountains removed and fixed tree positioning */}
           {realm === 'fantasy' && (
