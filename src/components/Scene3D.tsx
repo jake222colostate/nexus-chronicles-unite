@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useMemo, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -43,6 +44,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   showTapEffect = false,
   onTapEffectComplete
 }) => {
+  console.log('Scene3D: Rendering with realm:', realm);
+  
   const cameraRef = useRef();
 
   // Stable player position for chunk system - centered in the mountain valley
@@ -62,6 +65,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
   // Memoize upgrade nodes to prevent unnecessary re-renders
   const upgradeNodes = useMemo(() => {
+    console.log('Scene3D: Creating upgrade nodes');
     return UPGRADE_POSITIONS.map((position) => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
       if (!upgrade) return null;
@@ -80,6 +84,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
       );
     }).filter(Boolean);
   }, [gameState.purchasedUpgrades, gameState.nexusShards, checkUpgradeUnlocked, onUpgradeClick, realm]);
+
+  console.log('Scene3D: About to render Canvas');
 
   return (
     <div className="w-full h-full relative">
