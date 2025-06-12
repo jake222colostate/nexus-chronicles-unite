@@ -1,6 +1,5 @@
 
 import React, { useRef } from 'react';
-import { useFBX } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
 
@@ -16,7 +15,6 @@ export const Asteroid: React.FC<AsteroidProps> = ({
   onReachTarget
 }) => {
   const group = useRef<Group>(null);
-  const fbx = useFBX('/assets/asteroid_01.fbx');
 
   useFrame(() => {
     if (group.current) {
@@ -29,7 +27,10 @@ export const Asteroid: React.FC<AsteroidProps> = ({
 
   return (
     <group ref={group} position={new Vector3(...startPosition)}>
-      <primitive object={fbx.clone()} scale={0.005} />
+      <mesh scale={0.5}>
+        <icosahedronGeometry args={[1, 1]} />
+        <meshStandardMaterial color="#888" />
+      </mesh>
     </group>
   );
 };
