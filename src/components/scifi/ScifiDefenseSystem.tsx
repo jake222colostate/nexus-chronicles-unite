@@ -61,6 +61,22 @@ export const ScifiDefenseSystem: React.FC = () => {
     };
   }, [camera]);
 
+  useEffect(() => {
+    const handleClick = () => {
+      if (!cannonGroup.current || asteroids.length === 0) return;
+      const start = new Vector3();
+      cannonGroup.current.getWorldPosition(start);
+      const targetPos = asteroids[0].position.clone();
+      const dir = targetPos.clone().sub(start).normalize();
+      setProjectiles(prev => [
+        ...prev,
+        { id: Date.now(), position: start, direction: dir, speed: 0.5 }
+      ]);
+    };
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, [asteroids]);
+
   const handleAsteroidHit = useCallback((id: number, damage: number) => {
     setAsteroids((prev) =>
       prev.map((a) =>
