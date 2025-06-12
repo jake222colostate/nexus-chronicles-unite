@@ -10,6 +10,7 @@ import { QuickHelpModal } from './QuickHelpModal';
 import { CombatUpgradeSystem } from './CombatUpgradeSystem';
 import { JourneyTracker } from './JourneyTracker';
 import { WeaponUpgradeSystem } from './WeaponUpgradeSystem';
+import { ScifiWeaponUpgradeSystem } from './ScifiWeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem } from './CrossRealmUpgradeSystem';
 import { useGameStateManager, fantasyBuildings, scifiBuildings } from './GameStateManager';
 import { useGameLoopManager } from './GameLoopManager';
@@ -87,12 +88,15 @@ const GameEngine: React.FC = () => {
   const {
     combatUpgrades,
     weaponUpgrades,
+    scifiWeaponUpgrades,
     weaponStats,
+    scifiWeaponStats,
     buyBuilding,
     performConvergence,
     purchaseUpgrade,
     purchaseCombatUpgrade,
     purchaseWeaponUpgrade,
+    purchaseScifiWeaponUpgrade,
     purchaseCrossRealmUpgrade
   } = useUpgradeManagers({
     gameState: stableGameState,
@@ -279,7 +283,7 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
           onEnemyCountChange={handleEnemyCountChange}
           onEnemyKilled={handleEnemyKilled}
-          weaponDamage={weaponStats.damage}
+          weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
         />
 
         {/* Realm Transition Effect */}
@@ -349,12 +353,21 @@ const GameEngine: React.FC = () => {
 
       {/* Weapon Upgrades Modal */}
       {showWeaponUpgrades && (
-        <WeaponUpgradeSystem
-          upgrades={weaponUpgrades}
-          mana={stableGameState.mana}
-          onUpgrade={purchaseWeaponUpgrade}
-          onClose={() => setShowWeaponUpgrades(false)}
-        />
+        currentRealm === 'fantasy' ? (
+          <WeaponUpgradeSystem
+            upgrades={weaponUpgrades}
+            mana={stableGameState.mana}
+            onUpgrade={purchaseWeaponUpgrade}
+            onClose={() => setShowWeaponUpgrades(false)}
+          />
+        ) : (
+          <ScifiWeaponUpgradeSystem
+            upgrades={scifiWeaponUpgrades}
+            energyCredits={stableGameState.energyCredits}
+            onUpgrade={purchaseScifiWeaponUpgrade}
+            onClose={() => setShowWeaponUpgrades(false)}
+          />
+        )
       )}
 
       {/* Cross-Realm Upgrades Modal */}
