@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
 import { Html, useFBX } from '@react-three/drei';
 import { Progress } from '../ui/progress';
+import { assetPath } from '../../lib/assetPath';
 
 const MAX_HEALTH = 5;
 
@@ -19,7 +20,7 @@ export const Asteroid: React.FC<AsteroidProps> = ({
   onReachTarget
 }) => {
   const group = useRef<Group>(null);
-  const fbx = useFBX('/assets/asteroid_01.fbx');
+  const fbx = useFBX(assetPath('assets/asteroid_01.fbx'));
 
   useFrame(() => {
     if (group.current) {

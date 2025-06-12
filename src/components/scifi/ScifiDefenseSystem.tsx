@@ -43,7 +43,7 @@ export const ScifiDefenseSystem: React.FC = () => {
       const side = Math.random() < 0.5 ? -1 : 1;
       const x = side * (10 + Math.random() * 5);
       const y = Math.random() * 5 + 2;
-      const spawnPos = new Vector3(x, y, camera.position.z + spawnDist);
+      const spawnPos = new Vector3(x, y, camera.position.z - spawnDist);
       const target = UPGRADE_TARGETS[Math.floor(Math.random() * UPGRADE_TARGETS.length)];
       const dir = target.clone().sub(spawnPos).normalize();
       setAsteroids(prev => [
@@ -59,7 +59,7 @@ export const ScifiDefenseSystem: React.FC = () => {
     return () => {
       if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
     };
-  }, [camera.position.z]);
+  }, [camera]);
 
   const handleAsteroidHit = useCallback((id: number, damage: number) => {
     setAsteroids((prev) =>
@@ -116,7 +116,7 @@ export const ScifiDefenseSystem: React.FC = () => {
         }
       }
 
-      return updated.filter(a => a.position.z < 0);
+      return updated.filter(a => a.position.z < camera.position.z);
     });
 
     setProjectiles((prev) => {
