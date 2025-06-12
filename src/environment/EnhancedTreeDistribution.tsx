@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from '../components/ChunkSystem';
 import * as THREE from 'three';
@@ -242,7 +243,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   realm
 }) => {
   const treePositions = useMemo(() => {
-    if (realm !== 'fantasy') {
+    if (realm !== 'fantasy' || !chunks || !Array.isArray(chunks)) {
+      console.log('EnhancedTreeDistribution: Invalid chunks or not fantasy realm');
       return [];
     }
 
@@ -309,7 +311,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     
     console.log(`EnhancedTreeDistribution: Generated ${trees.length} properly grounded trees`);
     return trees;
-  }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
+  }, [chunks, chunkSize, realm]);
 
   if (realm !== 'fantasy' || treePositions.length === 0) {
     return null;

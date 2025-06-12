@@ -7,6 +7,7 @@ import { Enhanced360Controller } from './Enhanced360Controller';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { OptimizedProjectileSystem } from './OptimizedProjectileSystem';
 import { LeechEnemy } from './LeechEnemy';
+import { ChunkSystem } from './ChunkSystem';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -79,13 +80,21 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
 
   return (
     <>
-      {/* Environment */}
-      <OptimizedFantasyEnvironment
-        cameraPosition={cameraPosition}
+      {/* Environment with chunk system */}
+      <ChunkSystem
+        playerPosition={cameraPosition}
         chunkSize={chunkSize}
         renderDistance={renderDistance}
-        realm={realm}
-      />
+      >
+        {(chunks) => (
+          <OptimizedFantasyEnvironment
+            chunks={chunks}
+            chunkSize={chunkSize}
+            realm={realm}
+            playerPosition={cameraPosition}
+          />
+        )}
+      </ChunkSystem>
 
       {/* Camera Controller */}
       <Enhanced360Controller
@@ -117,7 +126,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
       {enemies.map((enemy, index) => (
         <LeechEnemy
           key={enemy.id}
-          position={[enemy.position.x, enemy.position.y, enemy.position.z]}
+          position={[enemy.position.x, enemy.position.y, enemy.position.z] as [number, number, number]}
           onDeath={() => handleEnemyHit(index, weaponDamage)}
         />
       ))}

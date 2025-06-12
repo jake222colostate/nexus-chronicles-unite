@@ -101,7 +101,9 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return 'tier1';
   }, [upgradeLevel]);
 
-  // Load staff model with proper fallback
+  // Load staff model with proper fallback using useGLTF
+  const { scene: gltfScene, error } = useGLTF(STAFF_MODELS[staffTier], true);
+
   useEffect(() => {
     if (!visible) return;
 
@@ -112,35 +114,28 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       return;
     }
 
-    // Try to load from public assets
-    const loader = new THREE.GLTFLoader();
-    loader.load(
-      STAFF_MODELS[staffTier],
-      (gltf) => {
-        console.log(`Successfully loaded ${staffTier} staff model`);
-        const model = gltf.scene.clone();
-        
-        // Optimize model
-        model.traverse((child) => {
-          if (child instanceof THREE.Mesh) {
-            child.castShadow = true;
-            child.receiveShadow = false;
-            child.frustumCulled = false;
-          }
-        });
-        
-        staffCache.setCachedModel(staffTier, model);
-        setStaffModel(model.clone());
-      },
-      undefined,
-      (error) => {
-        console.warn(`Failed to load ${staffTier} staff, using fallback:`, error);
-        const fallback = staffCache.createFallback(staffTier);
-        staffCache.setCachedModel(staffTier, fallback);
-        setStaffModel(fallback.clone());
-      }
-    );
-  }, [visible, staffTier, staffCache]);
+    if (gltfScene && !error) {
+      console.log(`Successfully loaded ${staffTier} staff model`);
+      const model = gltfScene.clone();
+      
+      // Optimize model
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = false;
+          child.frustumCulled = false;
+        }
+      });
+      
+      staffCache.setCachedModel(staffTier, model);
+      setStaffModel(model.clone());
+    } else if (error) {
+      console.warn(`Failed to load ${staffTier} staff, using fallback:`, error);
+      const fallback = staffCache.createFallback(staffTier);
+      staffCache.setCachedModel(staffTier, fallback);
+      setStaffModel(fallback.clone());
+    }
+  }, [visible, staffTier, gltfScene, error, staffCache]);
 
   // First-person weapon positioning and staff tip tracking
   useFrame(() => {
