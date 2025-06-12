@@ -126,8 +126,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = ({
       {enemies.map((enemy, index) => (
         <LeechEnemy
           key={enemy.id}
-          position={[enemy.position.x, enemy.position.y, enemy.position.z] as [number, number, number]}
-          onDeath={() => handleEnemyHit(index, weaponDamage)}
+          playerPosition={cameraPosition}
+          startPosition={enemy.position}
+          onReachPlayer={() => handleEnemyHit(index, weaponDamage)}
+          health={5}
+          visible={true}
         />
       ))}
 

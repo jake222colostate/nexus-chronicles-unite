@@ -102,7 +102,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   }, [upgradeLevel]);
 
   // Load staff model with proper fallback using useGLTF
-  const { scene: gltfScene, error } = useGLTF(STAFF_MODELS[staffTier], true);
+  const { scene: gltfScene } = useGLTF(STAFF_MODELS[staffTier], true);
 
   useEffect(() => {
     if (!visible) return;
@@ -114,7 +114,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       return;
     }
 
-    if (gltfScene && !error) {
+    if (gltfScene) {
       console.log(`Successfully loaded ${staffTier} staff model`);
       const model = gltfScene.clone();
       
@@ -129,13 +129,13 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       
       staffCache.setCachedModel(staffTier, model);
       setStaffModel(model.clone());
-    } else if (error) {
-      console.warn(`Failed to load ${staffTier} staff, using fallback:`, error);
+    } else {
+      console.warn(`Failed to load ${staffTier} staff, using fallback`);
       const fallback = staffCache.createFallback(staffTier);
       staffCache.setCachedModel(staffTier, fallback);
       setStaffModel(fallback.clone());
     }
-  }, [visible, staffTier, gltfScene, error, staffCache]);
+  }, [visible, staffTier, gltfScene, staffCache]);
 
   // First-person weapon positioning and staff tip tracking
   useFrame(() => {
