@@ -16,6 +16,7 @@ export interface GameState {
   lastSaveTime: number;
   combatUpgrades: { [key: string]: number };
   weaponUpgrades?: { [key: string]: number };
+  scifiWeaponUpgrades?: { [key: string]: number };
   crossRealmUpgrades?: { [key: string]: number };
   fantasyJourneyDistance: number;
   scifiJourneyDistance: number;
@@ -65,6 +66,7 @@ const defaultGameState: GameState = {
   lastSaveTime: Date.now(),
   combatUpgrades: {},
   weaponUpgrades: {},
+  scifiWeaponUpgrades: {},
   crossRealmUpgrades: {},
   fantasyJourneyDistance: 0,
   scifiJourneyDistance: 0,
@@ -86,6 +88,7 @@ export const useGameStateManager = () => {
         lastSaveTime: parsedState.lastSaveTime || Date.now(),
         combatUpgrades: parsedState.combatUpgrades || {},
         weaponUpgrades: parsedState.weaponUpgrades || {},
+        scifiWeaponUpgrades: parsedState.scifiWeaponUpgrades || {},
         crossRealmUpgrades: parsedState.crossRealmUpgrades || {},
         fantasyJourneyDistance: parsedState.fantasyJourneyDistance || 0,
         scifiJourneyDistance: parsedState.scifiJourneyDistance || 0,

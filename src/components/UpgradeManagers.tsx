@@ -111,6 +111,39 @@ const defaultWeaponUpgrades: WeaponUpgrade[] = [
   }
 ];
 
+const defaultScifiWeaponUpgrades: WeaponUpgrade[] = [
+  {
+    id: 'damage',
+    name: 'Blaster Damage',
+    description: 'Improve cannon damage',
+    icon: '🔫',
+    level: 0,
+    maxLevel: 20,
+    baseCost: 25,
+    effect: { damage: 1 }
+  },
+  {
+    id: 'fireRate',
+    name: 'Firing Speed',
+    description: 'Faster cannon shots',
+    icon: '🚀',
+    level: 0,
+    maxLevel: 15,
+    baseCost: 40,
+    effect: { fireRate: 200 }
+  },
+  {
+    id: 'range',
+    name: 'Targeting Range',
+    description: 'Increase targeting distance',
+    icon: '🎯',
+    level: 0,
+    maxLevel: 10,
+    baseCost: 60,
+    effect: { range: 5 }
+  }
+];
+
 interface UpgradeManagersProps {
   gameState: GameState;
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
@@ -140,6 +173,13 @@ export const useUpgradeManagers = ({
     }));
   }, [gameState.weaponUpgrades]);
 
+  const scifiWeaponUpgrades = useMemo(() => {
+    return defaultScifiWeaponUpgrades.map(upgrade => ({
+      ...upgrade,
+      level: gameState.scifiWeaponUpgrades?.[upgrade.id] || 0
+    }));
+  }, [gameState.scifiWeaponUpgrades]);
+
   // Combat stats with improved damage calculation
   const combatStats = useMemo(() => {
     const manaBlasterLevel = gameState.combatUpgrades.manaBlaster || 0;
@@ -167,6 +207,18 @@ export const useUpgradeManagers = ({
       range: 10 + (rangeLevel * 5)
     };
   }, [gameState.weaponUpgrades]);
+
+  const scifiWeaponStats = useMemo(() => {
+    const damageLevel = gameState.scifiWeaponUpgrades?.damage || 0;
+    const fireRateLevel = gameState.scifiWeaponUpgrades?.fireRate || 0;
+    const rangeLevel = gameState.scifiWeaponUpgrades?.range || 0;
+
+    return {
+      damage: 1 + damageLevel,
+      fireRate: Math.max(500, 2000 - (fireRateLevel * 200)),
+      range: 10 + (rangeLevel * 5)
+    };
+  }, [gameState.scifiWeaponUpgrades]);
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
@@ -262,6 +314,7 @@ export const useUpgradeManagers = ({
       setGameState(prev => ({
         ...prev,
         mana: prev.mana - cost,
+        energyPerSecond: prev.energyPerSecond + 1,
         weaponUpgrades: {
           ...prev.weaponUpgrades,
           [upgradeId]: (prev.weaponUpgrades?.[upgradeId] || 0) + 1
@@ -269,6 +322,24 @@ export const useUpgradeManagers = ({
       }));
     }
   }, [gameState.mana, weaponUpgrades, setGameState]);
+
+  const purchaseScifiWeaponUpgrade = useCallback((upgradeId: string) => {
+    const upgrade = scifiWeaponUpgrades.find(u => u.id === upgradeId);
+    if (!upgrade) return;
+
+    const cost = Math.floor(upgrade.baseCost * Math.pow(1.8, upgrade.level));
+    if (gameState.energyCredits >= cost && upgrade.level < upgrade.maxLevel) {
+      setGameState(prev => ({
+        ...prev,
+        energyCredits: prev.energyCredits - cost,
+        manaPerSecond: prev.manaPerSecond + 1,
+        scifiWeaponUpgrades: {
+          ...prev.scifiWeaponUpgrades,
+          [upgradeId]: (prev.scifiWeaponUpgrades?.[upgradeId] || 0) + 1
+        }
+      }));
+    }
+  }, [gameState.energyCredits, scifiWeaponUpgrades, setGameState]);
 
   const purchaseCrossRealmUpgrade = useCallback((upgradeId: string) => {
     const upgrade = crossRealmUpgradesWithLevels.find(u => u.id === upgradeId);
@@ -293,13 +364,16 @@ export const useUpgradeManagers = ({
   return {
     combatUpgrades,
     weaponUpgrades,
+    scifiWeaponUpgrades,
     combatStats,
     weaponStats,
+    scifiWeaponStats,
     buyBuilding,
     performConvergence,
     purchaseUpgrade,
     purchaseCombatUpgrade,
     purchaseWeaponUpgrade,
+    purchaseScifiWeaponUpgrade,
     purchaseCrossRealmUpgrade
   };
 };
