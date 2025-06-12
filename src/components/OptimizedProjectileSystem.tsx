@@ -1,5 +1,5 @@
 
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -9,6 +9,10 @@ interface OptimizedProjectileSystemProps {
   damage: number;
   fireRate: number;
   onHitEnemy: (index: number, damage: number) => void;
+}
+
+export interface OptimizedProjectileSystemHandle {
+  manualFire: () => void;
 }
 
 interface ProjectileData {
@@ -25,13 +29,10 @@ const MAX_PROJECTILES = 20; // Pool size
 const PROJECTILE_SPEED = 25;
 const MAX_LIFE = 5; // Seconds
 
-export const OptimizedProjectileSystem: React.FC<OptimizedProjectileSystemProps> = ({
-  staffTipPosition,
-  targetPositions,
-  damage,
-  fireRate,
-  onHitEnemy
-}) => {
+export const OptimizedProjectileSystem = forwardRef<
+  OptimizedProjectileSystemHandle,
+  OptimizedProjectileSystemProps
+>(({ staffTipPosition, targetPositions, damage, fireRate, onHitEnemy }, ref) => {
   const projectilePoolRef = useRef<ProjectileData[]>([]);
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
@@ -127,9 +128,16 @@ export const OptimizedProjectileSystem: React.FC<OptimizedProjectileSystemProps>
     // Setup mesh
     mesh.position.copy(staffPos);
     mesh.visible = true;
-    
+
     console.log('Fired projectile from', staffPos, 'to target', closestIndex, 'at position', targets[closestIndex]);
   };
+
+  const manualFire = () => {
+    fireProjectile(staffTipPosition, targetPositions);
+    lastFireTimeRef.current = Date.now();
+  };
+
+  useImperativeHandle(ref, () => ({ manualFire }), [manualFire]);
 
   useFrame((state, delta) => {
     const now = Date.now();
@@ -182,4 +190,4 @@ export const OptimizedProjectileSystem: React.FC<OptimizedProjectileSystemProps>
       <ambientLight intensity={0.8} color="#00ffff" />
     </group>
   );
-};
+});

@@ -3,7 +3,10 @@ import React, { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { OptimizedProjectileSystem } from './OptimizedProjectileSystem';
+import {
+  OptimizedProjectileSystem,
+  OptimizedProjectileSystemHandle
+} from './OptimizedProjectileSystem';
 
 interface StaffWeaponSystemProps {
   damage: number;
@@ -21,6 +24,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   const { camera } = useThree();
   const staffGroupRef = useRef<THREE.Group>(null);
   const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
   
   // Load staff model with proper path and error handling
   let staffScene = null;
@@ -33,6 +37,14 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   
   // Calculate fire rate based on upgrades (faster with more upgrades)
   const fireRate = Math.max(200, 800 - (upgrades * 80));
+
+  useEffect(() => {
+    const handleClick = () => {
+      projectileSystemRef.current?.manualFire();
+    };
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
 
   useFrame((state, delta) => {
     if (!staffGroupRef.current || !camera) return;
@@ -124,6 +136,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
 
       {/* Optimized projectile system */}
       <OptimizedProjectileSystem
+        ref={projectileSystemRef}
         staffTipPosition={staffTipPositionRef.current}
         targetPositions={enemyPositions}
         damage={damage}
