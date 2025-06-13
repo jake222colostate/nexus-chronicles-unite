@@ -2,8 +2,9 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
 import { Sparkles, Zap, Star } from 'lucide-react';
-import { AutoManaUpgradeSystem } from './AutoManaUpgradeSystem';
+import { useAutoClickerStore } from '@/stores/useAutoClickerStore';
 
 interface MobileResourceSidebarProps {
   realm: 'fantasy' | 'scifi';
@@ -28,6 +29,8 @@ export const MobileResourceSidebar: React.FC<MobileResourceSidebarProps> = ({
   autoManaRate,
   onAutoManaUpgrade
 }) => {
+  const { level, upgradeCost, upgrade } = useAutoClickerStore();
+
   const formatNumber = (num: number): string => {
     if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
     if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
@@ -40,6 +43,15 @@ export const MobileResourceSidebar: React.FC<MobileResourceSidebarProps> = ({
     if (rate >= 1e3) return (rate / 1e3).toFixed(1) + 'K';
     return rate.toFixed(1);
   };
+
+  const handleAutoManaUpgrade = () => {
+    if (mana >= upgradeCost) {
+      onAutoManaUpgrade(upgradeCost);
+      upgrade();
+    }
+  };
+
+  const canAfford = mana >= upgradeCost;
 
   return (
     <div className="fixed top-0 left-0 z-50 flex flex-col gap-1.5 w-[170px] sm:w-[190px] pt-[5vh] px-1">
@@ -67,19 +79,27 @@ export const MobileResourceSidebar: React.FC<MobileResourceSidebarProps> = ({
         </div>
       </Card>
 
-      {/* Auto Mana Upgrade System - Compact Mobile Version */}
+      {/* Auto Mana Upgrade System - Integrated into sidebar */}
       <Card className={`backdrop-blur-md border transition-all duration-300 ${
         realm === 'fantasy'
           ? 'bg-gradient-to-br from-purple-900/90 to-violet-800/90 border-purple-400/40'
           : 'bg-gradient-to-br from-slate-800/90 to-gray-700/90 border-slate-400/40'
       }`}>
-        <div className="p-1.5">
-          <AutoManaUpgradeSystem
-            autoManaLevel={autoManaLevel}
-            autoManaRate={autoManaRate}
-            currentMana={mana}
-            onUpgrade={onAutoManaUpgrade}
-          />
+        <div className="p-2">
+          <Button
+            onClick={handleAutoManaUpgrade}
+            disabled={!canAfford}
+            className={`w-full h-8 text-xs font-bold transition-all duration-300 ${
+              canAfford
+                ? 'bg-gradient-to-r from-purple-500/95 to-violet-500/95 hover:from-purple-600/95 hover:to-violet-600/95 border-purple-400/70 text-white'
+                : 'bg-gray-600/50 border-gray-500/50 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            🧙‍♂️ Auto Lvl {level} - {upgradeCost}
+          </Button>
+          <div className="text-center text-xs text-purple-300 font-medium mt-1">
+            +{autoManaRate}/sec
+          </div>
         </div>
       </Card>
 

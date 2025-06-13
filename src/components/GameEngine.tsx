@@ -297,14 +297,6 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Fantasy AutoClicker Upgrade System - positioned top-center, only in fantasy realm */}
-        {currentRealm === 'fantasy' && (
-          <FantasyAutoClickerUpgradeSystem
-            currentMana={stableGameState.mana}
-            onUpgrade={handleFantasyAutoClickerUpgrade}
-          />
-        )}
-
         {/* Sci-Fi AutoClicker Upgrade System - positioned top-center, only in sci-fi realm */}
         {currentRealm === 'scifi' && (
           <ScifiAutoClickerUpgradeSystem
