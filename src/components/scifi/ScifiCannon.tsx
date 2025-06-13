@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
-import { useFBX } from '@react-three/drei';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useLoader, useThree } from '@react-three/fiber';
+import { USDZLoader } from 'three/examples/jsm/loaders/USDZLoader.js';
 import { Vector3, Group } from 'three';
 import * as THREE from 'three';
 
@@ -12,20 +12,20 @@ interface ScifiCannonProps {
 export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
   const { camera } = useThree();
   const weaponGroupRef = useRef<Group>(null);
-  const fbx = useFBX('/assets/c1/scifi-cannon/source/300_Gun.fbx');
+  const laserRifle = useLoader(USDZLoader, '/assets/c1/laserrifle.usdz');
 
-  // Initialize and optimize the cannon model
+  // Initialize and optimize the laser rifle model
   useEffect(() => {
-    if (fbx && weaponGroupRef.current) {
+    if (laserRifle && weaponGroupRef.current) {
       // Clone the model to avoid modifying the original
-      const cannonModel = fbx.clone();
+      const rifleModel = laserRifle.clone();
       
       // Clear any existing children
       weaponGroupRef.current.clear();
-      weaponGroupRef.current.add(cannonModel);
+      weaponGroupRef.current.add(rifleModel);
       
       // Optimize the model for first-person view
-      cannonModel.traverse((child) => {
+      rifleModel.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.castShadow = true;
           child.receiveShadow = false;
@@ -49,9 +49,9 @@ export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
         }
       });
       
-      console.log('Cannon model loaded and optimized for first-person view');
+      console.log('Laser rifle model loaded and optimized for first-person view');
     }
-  }, [fbx]);
+  }, [laserRifle]);
 
   // First-person weapon positioning - follows camera exactly like the staff
   useFrame(() => {
@@ -65,32 +65,31 @@ export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Position cannon for first-person view - optimized for iPhone screen
-      // Similar positioning to the staff but adjusted for the cannon model
-      const cannonPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.4))     // X = 0.4 (slightly to the right)
-        .add(cameraUp.clone().multiplyScalar(-0.3))        // Y = -0.3 (lower for cannon)
-        .add(cameraForward.clone().multiplyScalar(0.5));   // Z = 0.5 (close to camera)
+      // Position weapon for first-person view - optimized for iPhone screen
+      const riflePosition = camera.position.clone()
+        .add(cameraRight.clone().multiplyScalar(0.5))     // X = 0.5 (right side of screen)
+        .add(cameraUp.clone().multiplyScalar(-0.25))      // Y = -0.25 (slightly lower)
+        .add(cameraForward.clone().multiplyScalar(0.7));   // Z = 0.7 (in front of camera)
+
+      weaponGroupRef.current.position.copy(riflePosition);
       
-      weaponGroupRef.current.position.copy(cannonPosition);
-      
-      // Rotation to match camera orientation with adjustments for cannon
+      // Rotation to match camera orientation with adjustments for rifle
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-10 * Math.PI / 180); // Y = -10° (slight angle)
-      weaponGroupRef.current.rotateZ(15 * Math.PI / 180);  // Z = 15° (slight tilt)
-      weaponGroupRef.current.rotateX(-5 * Math.PI / 180);  // X = -5° (slight downward angle)
+      weaponGroupRef.current.rotateY(-8 * Math.PI / 180); // Y = -8° slight inward angle
+      weaponGroupRef.current.rotateZ(12 * Math.PI / 180);  // Z = 12° slight tilt
+      weaponGroupRef.current.rotateX(-3 * Math.PI / 180);  // X = -3° downward
       
       // If there's a target, slightly adjust aim towards it
       if (target) {
-        const targetDirection = new Vector3().subVectors(target, cannonPosition).normalize();
+        const targetDirection = new Vector3().subVectors(target, riflePosition).normalize();
         const currentForward = new Vector3(0, 0, -1).applyQuaternion(weaponGroupRef.current.quaternion);
         const adjustmentAngle = currentForward.angleTo(targetDirection) * 0.1; // Subtle adjustment
         
         if (adjustmentAngle > 0.01) { // Only adjust if significant difference
           weaponGroupRef.current.lookAt(
-            cannonPosition.x + targetDirection.x * 0.1,
-            cannonPosition.y + targetDirection.y * 0.1,
-            cannonPosition.z + targetDirection.z * 0.1
+            riflePosition.x + targetDirection.x * 0.1,
+            riflePosition.y + targetDirection.y * 0.1,
+            riflePosition.z + targetDirection.z * 0.1
           );
         }
       }
@@ -99,14 +98,14 @@ export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
 
   return (
     <group ref={weaponGroupRef}>
-      {fbx && (
-        <primitive 
-          object={fbx} 
+      {laserRifle && (
+        <primitive
+          object={laserRifle}
           scale={[0.004, 0.004, 0.004]} // Slightly larger for better visibility
           rotation={[Math.PI / 2, 0, 0]} // Initial rotation correction
         />
       )}
-      {/* Add a subtle light to make the cannon more visible */}
+      {/* Subtle light to highlight the rifle */}
       <pointLight position={[0, 0.2, 0]} color="#00ffff" intensity={0.3} distance={2} />
     </group>
   );
