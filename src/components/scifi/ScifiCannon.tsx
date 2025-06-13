@@ -33,9 +33,9 @@ export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
       
       // Rotation to match camera orientation with adjustments for cannon
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Angle slightly inward
+      weaponGroupRef.current.rotateX(-Math.PI / 2);        // Aim down screen
+      weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Slight inward angle
       weaponGroupRef.current.rotateZ(8 * Math.PI / 180);   // Slight tilt
-      weaponGroupRef.current.rotateX(-5 * Math.PI / 180);  // Slight downward angle
     }
   });
 
