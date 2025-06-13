@@ -1,7 +1,9 @@
 
 import React, { useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { assetPath } from '../lib/assetPath';
 
 interface OptimizedProjectileSystemProps {
   staffTipPosition: THREE.Vector3;
@@ -34,21 +36,18 @@ export const OptimizedProjectileSystem = forwardRef<
   OptimizedProjectileSystemProps
 >(({ staffTipPosition, targetPositions, damage, fireRate, onHitEnemy }, ref) => {
   const projectilePoolRef = useRef<ProjectileData[]>([]);
-  const meshPoolRef = useRef<THREE.Mesh[]>([]);
+  const meshPoolRef = useRef<THREE.Object3D[]>([]);
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
+
+  // Load lightning bolt models for projectiles
+  const { scene: lightningScene } = useGLTF(assetPath('assets/3_pack_of_storm_lightning.glb'));
+  const lightningBolts = useMemo<THREE.Object3D[]>(() => {
+    return lightningScene ? lightningScene.children.map(child => child.clone()) : [];
+  }, [lightningScene]);
   
-  // Make projectiles MUCH bigger and more visible
-  const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.3, 12, 12), []); // Much bigger (was 0.15)
-  const projectileMaterial = useMemo(() => 
-    new THREE.MeshStandardMaterial({ 
-      color: '#00ffff',
-      emissive: '#00ffff',
-      emissiveIntensity: 1.5, // Much brighter (was 0.8)
-      transparent: true,
-      opacity: 1.0 // Fully opaque
-    }), []
-  );
+  // Scale applied to lightning bolt models
+  const projectileScale = 0.5;
 
   // Initialize projectile pool
   useMemo(() => {
@@ -72,20 +71,19 @@ export const OptimizedProjectileSystem = forwardRef<
   useMemo(() => {
     if (meshPoolRef.current.length === 0) {
       for (let i = 0; i < MAX_PROJECTILES; i++) {
-        const mesh = new THREE.Mesh(projectileGeometry, projectileMaterial);
-        mesh.visible = false;
-        
-        // Add a point light to each projectile to make it glow
+        const container = new THREE.Group();
+        container.visible = false;
+
         const light = new THREE.PointLight('#00ffff', 1, 3);
-        mesh.add(light);
-        
-        meshPoolRef.current.push(mesh);
+        container.add(light);
+
+        meshPoolRef.current.push(container);
         if (groupRef.current) {
-          groupRef.current.add(mesh);
+          groupRef.current.add(container);
         }
       }
     }
-  }, [projectileGeometry, projectileMaterial]);
+  }, []);
 
   const getInactiveProjectile = (): number => {
     for (let i = 0; i < projectilePoolRef.current.length; i++) {
@@ -116,6 +114,18 @@ export const OptimizedProjectileSystem = forwardRef<
 
     const projectile = projectilePoolRef.current[projectileIndex];
     const mesh = meshPoolRef.current[projectileIndex];
+
+    // Attach a random lightning bolt model
+    if (lightningBolts.length > 0) {
+      // remove previous model but keep light as first child
+      while (mesh.children.length > 1) {
+        mesh.remove(mesh.children[1]);
+      }
+      const boltIndex = Math.floor(Math.random() * lightningBolts.length);
+      const bolt = lightningBolts[boltIndex].clone();
+      bolt.scale.setScalar(projectileScale);
+      mesh.add(bolt);
+    }
     
     // Setup projectile
     projectile.position.copy(staffPos);
@@ -191,3 +201,5 @@ export const OptimizedProjectileSystem = forwardRef<
     </group>
   );
 });
+
+useGLTF.preload(assetPath('assets/3_pack_of_storm_lightning.glb'));
