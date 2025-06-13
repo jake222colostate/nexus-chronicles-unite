@@ -1,63 +1,15 @@
 
-import React, { useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import { Vector3, Group } from 'three';
-import * as THREE from 'three';
+import React from 'react';
+import { Vector3 } from 'three';
 
 interface ScifiCannonProps {
   target?: Vector3;
 }
 
 export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
-  const { camera } = useThree();
-  const weaponGroupRef = useRef<Group>(null);
-
-  // First-person weapon positioning - follows camera exactly
-  useFrame(() => {
-    if (weaponGroupRef.current && camera) {
-      // Get camera vectors for positioning
-      const cameraForward = new Vector3();
-      const cameraRight = new Vector3();
-      const cameraUp = new Vector3();
-      
-      camera.getWorldDirection(cameraForward);
-      cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
-      cameraUp.crossVectors(cameraForward, cameraRight).normalize();
-      
-      // Position weapon for first-person view - optimized for better visibility
-      const cannonPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.8))     // X = 0.8 (more to the right)
-        .add(cameraUp.clone().multiplyScalar(-0.4))       // Y = -0.4 (lower for better view)
-        .add(cameraForward.clone().multiplyScalar(1.2));   // Z = 1.2 (closer to camera)
-
-      weaponGroupRef.current.position.copy(cannonPosition);
-      
-      // Rotation to match camera orientation with adjustments for cannon
-      weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Y = -15° more inward angle
-      weaponGroupRef.current.rotateZ(8 * Math.PI / 180);   // Z = 8° slight tilt
-      weaponGroupRef.current.rotateX(-5 * Math.PI / 180);  // X = -5° more downward
-      
-      // If there's a target, slightly adjust aim towards it
-      if (target) {
-        const targetDirection = new Vector3().subVectors(target, cannonPosition).normalize();
-        const currentForward = new Vector3(0, 0, -1).applyQuaternion(weaponGroupRef.current.quaternion);
-        const adjustmentAngle = currentForward.angleTo(targetDirection) * 0.1; // Subtle adjustment
-        
-        if (adjustmentAngle > 0.01) { // Only adjust if significant difference
-          weaponGroupRef.current.lookAt(
-            cannonPosition.x + targetDirection.x * 0.1,
-            cannonPosition.y + targetDirection.y * 0.1,
-            cannonPosition.z + targetDirection.z * 0.1
-          );
-        }
-      }
-    }
-  });
-
   return (
-    <group ref={weaponGroupRef}>
-      {/* Procedural Sci-Fi Cannon - scaled up for better visibility */}
+    <group position={[2, 1, -3]} rotation={[0, -0.3, 0]}>
+      {/* Procedural Sci-Fi Cannon - static positioning */}
       <group scale={[1.2, 1.2, 1.2]} rotation={[0, 0, 0]}>
         {/* Main barrel - longer and thicker */}
         <mesh position={[0, 0, -0.6]}>
