@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -185,7 +186,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   }, [visible, staffTier, staffCache]);
 
-  // First-person weapon positioning with exact specifications
+  // First-person weapon positioning optimized for iPhone screen visibility
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && staffModel) {
       // Get camera vectors for positioning
@@ -197,20 +198,22 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Exact positioning as specified:
-      // X: 0.45 (right side), Y: -0.3 (down), Z: 0.6 (forward)
+      // Optimized positioning for iPhone screen visibility:
+      // X: 0.3 (closer to center), Y: -0.2 (slightly down), Z: 0.4 (closer to camera)
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.45))    // X = 0.45
-        .add(cameraUp.clone().multiplyScalar(-0.3))        // Y = -0.3
-        .add(cameraForward.clone().multiplyScalar(0.6));   // Z = 0.6
+        .add(cameraRight.clone().multiplyScalar(0.3))     // X = 0.3 (more centered)
+        .add(cameraUp.clone().multiplyScalar(-0.2))        // Y = -0.2 (slightly down)
+        .add(cameraForward.clone().multiplyScalar(0.4));   // Z = 0.4 (closer for visibility)
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Exact rotation as specified:
-      // Y: -20°, Z: 30°
+      // Optimized rotation for better visibility:
+      // Y: -15° (less angle), Z: 20° (less tilt)
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-20 * Math.PI / 180); // Y = -20°
-      weaponGroupRef.current.rotateZ(30 * Math.PI / 180);  // Z = 30°
+      weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Y = -15° (less angle)
+      weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20° (less tilt)
+      
+      console.log('Staff positioned for iPhone visibility:', staffPosition);
     }
   });
 
@@ -219,8 +222,8 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return null;
   }
 
-  // Scale to fit screen without clipping
-  const staffScale = staffTier === 'tier1' ? 0.4 : staffTier === 'tier2' ? 0.45 : 0.5;
+  // Larger scale for better iPhone screen visibility
+  const staffScale = staffTier === 'tier1' ? 0.6 : staffTier === 'tier2' ? 0.65 : 0.7;
 
   return (
     <group ref={weaponGroupRef}>
@@ -228,6 +231,8 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
         object={staffModel} 
         scale={[staffScale, staffScale, staffScale]}
       />
+      {/* Add a subtle light to make the staff more visible */}
+      <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.5} distance={3} />
     </group>
   );
 };

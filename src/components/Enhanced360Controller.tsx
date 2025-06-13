@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
@@ -138,14 +139,16 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     }
   }, [collision]);
 
-  // Initialize camera at GUARANTEED safe valley center position
+  // Initialize camera at optimal position for iPhone screen and staff visibility
   useEffect(() => {
-    const safePosition = new Vector3(0, 3, 0); // Center of wide valley, higher up
+    const safePosition = new Vector3(0, 2, 10); // Higher up and farther back for better staff visibility
     targetPosition.current.copy(safePosition);
     camera.position.copy(safePosition);
-    camera.lookAt(0, 2, -10); // Look down the valley path
+    camera.lookAt(0, 1, 0); // Look slightly down toward center
+    camera.fov = 65; // Wider field of view for iPhone
+    camera.updateProjectionMatrix();
     lastNotifiedPosition.current.copy(safePosition);
-    console.log('Camera initialized at guaranteed safe valley center:', safePosition);
+    console.log('Camera initialized for optimal staff visibility:', safePosition);
   }, [camera]);
 
   // Keyboard event handlers
@@ -318,7 +321,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     
     // Keep within the wide valley bounds (mountains are at ±140, so allow ±120 for safety)
     targetPosition.current.x = Math.max(-120, Math.min(120, targetPosition.current.x));
-    targetPosition.current.y = Math.max(1, Math.min(10, targetPosition.current.y)); // Allow some vertical movement
+    targetPosition.current.y = Math.max(1.5, Math.min(8, targetPosition.current.y)); // Better height range for staff visibility
     
     // Update camera
     camera.position.copy(targetPosition.current);
@@ -334,11 +337,11 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     if ((frameCount.current % 20 === 0 && distanceMoved > 0.05) || distanceMoved > 5) {
       lastNotifiedPosition.current.copy(targetPosition.current);
       onPositionChange(targetPosition.current.clone());
-      console.log('Camera position updated:', targetPosition.current);
+      console.log('Camera position updated for staff visibility:', targetPosition.current);
     }
     
     if (isMoving && frameCount.current % 40 === 0) {
-      console.log('Player moving in wide valley at position:', targetPosition.current);
+      console.log('Player moving with staff in view at position:', targetPosition.current);
     }
   });
 

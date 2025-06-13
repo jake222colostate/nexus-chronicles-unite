@@ -5,7 +5,7 @@ import { PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
-import { WizardStaff } from './WizardStaff';
+import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { VerticalCameraController } from './VerticalCameraController';
 import { ChunkSystem } from './ChunkSystem';
 import { FantasyEnvironmentOrchestrator } from './FantasyEnvironmentOrchestrator';
@@ -108,14 +108,18 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <PerspectiveCamera
             ref={cameraRef}
             makeDefault
-            position={[0, 0, 8]}
-            fov={60}
+            position={[0, 2, 10]}
+            fov={65}
             near={0.01}
             far={500}
             aspect={375 / 667}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           >
-            <WizardStaff />
+            {/* Render MagicStaffWeaponSystem instead of deprecated WizardStaff */}
+            <MagicStaffWeaponSystem 
+              upgradeLevel={gameState.weaponUpgradeLevel || 0}
+              visible={realm === 'fantasy'}
+            />
           </PerspectiveCamera>
 
           <VerticalCameraController 
