@@ -22,6 +22,7 @@ interface Scene3DProps {
   isTransitioning?: boolean;
   showTapEffect?: boolean;
   onTapEffectComplete?: () => void;
+  onMeteorDestroyed?: () => void;
 }
 
 // Memoized upgrade positions - no need to recalculate every render
@@ -42,7 +43,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   onUpgradeClick,
   isTransitioning = false,
   showTapEffect = false,
-  onTapEffectComplete
+  onTapEffectComplete,
+  onMeteorDestroyed
 }) => {
   console.log('Scene3D: Rendering with realm:', realm);
   
@@ -125,7 +127,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <ImprovedFantasyLighting />
 
           <FloatingIsland realm={realm} />
-          {realm === 'scifi' && <ScifiDefenseSystem />}
+          {realm === 'scifi' && <ScifiDefenseSystem onMeteorDestroyed={onMeteorDestroyed} />}
 
           {/* Fantasy environment with polygon mountains removed and fixed tree positioning */}
           {realm === 'fantasy' && (

@@ -25,6 +25,7 @@ interface MapSkillTreeViewProps {
   onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
   onEnemyCountChange?: (count: number) => void;
   onEnemyKilled?: () => void;
+  onMeteorDestroyed?: () => void;
   weaponDamage: number;
 }
 
@@ -44,6 +45,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   onPlayerPositionUpdate,
   onEnemyCountChange,
   onEnemyKilled,
+  onMeteorDestroyed,
   weaponDamage
 }) => {
   console.log('MapSkillTreeView: Rendering with realm:', realm);
@@ -129,6 +131,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
             isTransitioning={isTransitioning}
             showTapEffect={showTapEffect}
             onTapEffectComplete={onTapEffectComplete}
+            onMeteorDestroyed={onMeteorDestroyed}
           />
         )}
 

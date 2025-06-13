@@ -29,7 +29,11 @@ interface Projectile {
   speed: number;
 }
 
-export const ScifiDefenseSystem: React.FC = () => {
+interface ScifiDefenseSystemProps {
+  onMeteorDestroyed?: () => void;
+}
+
+export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteorDestroyed }) => {
   const [asteroids, setAsteroids] = useState<SpawnedAsteroid[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const spawnIntervalRef = useRef<NodeJS.Timeout>();
@@ -81,12 +85,20 @@ export const ScifiDefenseSystem: React.FC = () => {
   }, [asteroids]);
 
   const handleAsteroidHit = useCallback((id: number, damage: number) => {
-    setAsteroids((prev) =>
-      prev.map((a) =>
-        a.id === id ? { ...a, health: a.health - damage } : a
-      ).filter((a) => a.health > 0)
-    );
-  }, []);
+    let destroyed = false;
+    setAsteroids((prev) => {
+      const updated = prev.map((a) => {
+        if (a.id === id) {
+          const newHealth = a.health - damage;
+          if (newHealth <= 0) destroyed = true;
+          return { ...a, health: newHealth };
+        }
+        return a;
+      }).filter((a) => a.health > 0);
+      return updated;
+    });
+    if (destroyed) onMeteorDestroyed?.();
+  }, [onMeteorDestroyed]);
 
   // Keep cannon attached to the player's camera
   const offset = useRef(new Vector3(0, -1.5, -3));
