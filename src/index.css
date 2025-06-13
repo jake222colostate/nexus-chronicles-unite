@@ -5,7 +5,8 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Default background should be black so the iPhone frame blends with the page */
+    --background: 0 0% 0%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;

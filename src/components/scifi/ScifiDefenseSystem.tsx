@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Vector3, Group } from 'three';
+import { Vector3, Group, Vector2 } from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { ScifiCannon } from './ScifiCannon';
 import { Asteroid } from './Asteroid';
@@ -36,6 +36,7 @@ interface ScifiDefenseSystemProps {
 export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteorDestroyed }) => {
   const [asteroids, setAsteroids] = useState<SpawnedAsteroid[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
+  const [targetAsteroidId, setTargetAsteroidId] = useState<number | null>(null);
   const spawnIntervalRef = useRef<NodeJS.Timeout>();
   const fireIntervalRef = useRef<NodeJS.Timeout>();
   const cannonGroup = useRef<Group>(null);
@@ -68,21 +69,46 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     };
   }, [camera]);
 
+  // Allow the user to click near an asteroid to manually fire at it
   useEffect(() => {
-    const handleClick = () => {
+    const handleClick = (e: MouseEvent) => {
       if (!cannonGroup.current || asteroids.length === 0) return;
-      const start = new Vector3();
-      cannonGroup.current.getWorldPosition(start);
-      const targetPos = asteroids[0].position.clone();
-      const dir = targetPos.clone().sub(start).normalize();
-      setProjectiles(prev => [
-        ...prev,
-        { id: Date.now(), position: start, direction: dir, speed: 0.5 }
-      ]);
+      const rect = (e.target as Element).getBoundingClientRect?.() ?? {
+        left: 0,
+        top: 0,
+        width: window.innerWidth,
+        height: window.innerHeight
+      };
+      const ndc = new Vector2(
+        ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        -((e.clientY - rect.top) / rect.height) * 2 + 1
+      );
+
+      let closest: SpawnedAsteroid | null = null;
+      let minDist = Infinity;
+      for (const ast of asteroids) {
+        const screen = ast.position.clone().project(camera);
+        const dist = Math.hypot(screen.x - ndc.x, screen.y - ndc.y);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = ast;
+        }
+      }
+
+      if (closest && minDist < 0.2) {
+        setTargetAsteroidId(closest.id);
+        const start = new Vector3();
+        cannonGroup.current.getWorldPosition(start);
+        const dir = closest.position.clone().sub(start).normalize();
+        setProjectiles(prev => [
+          ...prev,
+          { id: Date.now(), position: start, direction: dir, speed: 0.5 }
+        ]);
+      }
     };
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
-  }, [asteroids]);
+  }, [asteroids, camera]);
 
   const handleAsteroidHit = useCallback((id: number, damage: number) => {
     let destroyed = false;
@@ -109,14 +135,16 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     }
   });
 
-  // Fire projectiles at the closest asteroid
+  // Periodically fire at the currently selected asteroid
   useEffect(() => {
     fireIntervalRef.current = setInterval(() => {
       if (!cannonGroup.current || asteroids.length === 0) return;
+      const targetAst =
+        asteroids.find(a => a.id === targetAsteroidId) || asteroids[0];
+      if (!targetAst) return;
       const start = new Vector3();
       cannonGroup.current.getWorldPosition(start);
-      const targetPos = asteroids[0].position.clone();
-      const dir = targetPos.clone().sub(start).normalize();
+      const dir = targetAst.position.clone().sub(start).normalize();
       setProjectiles((prev) => [
         ...prev,
         { id: Date.now(), position: start, direction: dir, speed: 0.5 }
@@ -125,7 +153,7 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     return () => {
       if (fireIntervalRef.current) clearInterval(fireIntervalRef.current);
     };
-  }, [asteroids]);
+  }, [asteroids, targetAsteroidId]);
 
   // Update projectiles each frame
   useFrame(() => {
@@ -147,7 +175,19 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
         }
       }
 
-      return updated.filter(a => a.position.z < camera.position.z);
+      const filtered = updated.filter(a => {
+        const screen = a.position.clone().project(camera);
+        const onScreen =
+          screen.x > -1 && screen.x < 1 && screen.y > -1 && screen.y < 1 &&
+          a.position.z < camera.position.z;
+        return onScreen;
+      });
+
+      if (targetAsteroidId && !filtered.some(a => a.id === targetAsteroidId)) {
+        setTargetAsteroidId(null);
+      }
+
+      return filtered;
     });
 
     setProjectiles((prev) => {
@@ -171,7 +211,9 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     });
   });
 
-  const target = asteroids[0] ? asteroids[0].position.clone() : undefined;
+  const targetAst =
+    asteroids.find(a => a.id === targetAsteroidId) || asteroids[0];
+  const target = targetAst ? targetAst.position.clone() : undefined;
 
   return (
     <group>
