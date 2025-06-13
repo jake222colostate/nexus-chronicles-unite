@@ -43,34 +43,46 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
 
   useEffect(() => {
     spawnIntervalRef.current = setInterval(() => {
-      const spawnDist = 20;
-      const side = Math.random() < 0.5 ? -1 : 1;
-      const x = side * (10 + Math.random() * 5);
-      const y = Math.random() * 5 + 2;
-      const spawnPos = new Vector3(x, y, camera.position.z - spawnDist);
-      const target = UPGRADE_TARGETS[Math.floor(Math.random() * UPGRADE_TARGETS.length)];
-      const dir = target.clone().sub(spawnPos).normalize();
-      setAsteroids(prev => [
-        ...prev,
-        {
-          id: Date.now(),
-          position: spawnPos,
-          velocity: dir.multiplyScalar(0.05),
-          health: 5
-        }
-      ]);
+      setAsteroids(prev => {
+        if (prev.length >= 3) return prev;
+        const spawnDist = 20;
+        const x = (Math.random() - 0.5) * 6;
+        const y = Math.random() * 5 + 2;
+        const spawnPos = new Vector3(x, y, camera.position.z - spawnDist);
+        const target = UPGRADE_TARGETS[Math.floor(Math.random() * UPGRADE_TARGETS.length)];
+        const dir = target.clone().sub(spawnPos).normalize();
+        return [
+          ...prev,
+          {
+            id: Date.now(),
+            position: spawnPos,
+            velocity: dir.multiplyScalar(0.05),
+            health: 5
+          }
+        ];
+      });
     }, 4000);
     return () => {
       if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
     };
   }, [camera]);
 
+  const isAsteroidVisible = useCallback(
+    (pos: Vector3) => {
+      const ndc = pos.clone().project(camera);
+      return Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1 && ndc.z < 1;
+    },
+    [camera]
+  );
+
   useEffect(() => {
     const handleClick = () => {
-      if (!cannonGroup.current || asteroids.length === 0) return;
+      if (!cannonGroup.current) return;
+      const visible = asteroids.filter(a => isAsteroidVisible(a.position));
+      if (visible.length === 0) return;
       const start = new Vector3();
       cannonGroup.current.getWorldPosition(start);
-      const targetPos = asteroids[0].position.clone();
+      const targetPos = visible[0].position.clone();
       const dir = targetPos.clone().sub(start).normalize();
       setProjectiles(prev => [
         ...prev,
@@ -79,7 +91,7 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     };
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
-  }, [asteroids]);
+  }, [asteroids, isAsteroidVisible]);
 
   const handleAsteroidHit = useCallback((id: number, damage: number) => {
     let destroyed = false;
@@ -110,10 +122,12 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
 
   useEffect(() => {
     fireIntervalRef.current = setInterval(() => {
-      if (!cannonGroup.current || asteroids.length === 0) return;
+      if (!cannonGroup.current) return;
+      const visible = asteroids.filter(a => isAsteroidVisible(a.position));
+      if (visible.length === 0) return;
       const start = new Vector3();
       cannonGroup.current.getWorldPosition(start);
-      const targetPos = asteroids[0].position.clone();
+      const targetPos = visible[0].position.clone();
       const dir = targetPos.clone().sub(start).normalize();
       setProjectiles(prev => [
         ...prev,
@@ -123,7 +137,7 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     return () => {
       if (fireIntervalRef.current) clearInterval(fireIntervalRef.current);
     };
-  }, [asteroids]);
+  }, [asteroids, isAsteroidVisible]);
 
   useFrame(() => {
     setAsteroids(prev => {
