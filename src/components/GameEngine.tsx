@@ -1,3 +1,4 @@
+
 import React, { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -244,7 +245,7 @@ const GameEngine: React.FC = () => {
 
   return (
     <CollisionProvider>
-    <div className={`h-[667px] w-full relative overflow-hidden bg-black ${false ? 'animate-pulse bg-red-900/20' : ''}`}>
+    <div className={`h-[667px] w-full relative overflow-hidden bg-black boundary-constrained iphone-screen-container ${false ? 'animate-pulse bg-red-900/20' : ''}`}>
       {/* Enhanced background with better layering */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
       
@@ -257,22 +258,24 @@ const GameEngine: React.FC = () => {
         onJourneyUpdate={handleJourneyUpdate}
       />
 
-      {/* Clean TopHUD with cross-realm upgrade button */}
-      <TopHUD
-        realm={currentRealm}
-        mana={stableGameState.mana}
-        energyCredits={stableGameState.energyCredits}
-        nexusShards={stableGameState.nexusShards}
-        convergenceProgress={convergenceProgress}
-        manaPerSecond={stableGameState.manaPerSecond}
-        energyPerSecond={stableGameState.energyPerSecond}
-        onHelpClick={handleShowHelp}
-        onCombatUpgradesClick={handleShowCombatUpgrades}
-        enemyCount={enemyCount}
-      />
+      {/* Clean TopHUD with cross-realm upgrade button - Constrained */}
+      <div className="boundary-absolute top-0 left-0 right-0 z-40 iphone-safe-area">
+        <TopHUD
+          realm={currentRealm}
+          mana={stableGameState.mana}
+          energyCredits={stableGameState.energyCredits}
+          nexusShards={stableGameState.nexusShards}
+          convergenceProgress={convergenceProgress}
+          manaPerSecond={stableGameState.manaPerSecond}
+          energyPerSecond={stableGameState.energyPerSecond}
+          onHelpClick={handleShowHelp}
+          onCombatUpgradesClick={handleShowCombatUpgrades}
+          enemyCount={enemyCount}
+        />
+      </div>
 
-      {/* Main Game Area */}
-      <div className="absolute inset-0 pt-12 pb-32">
+      {/* Main Game Area - Fully constrained */}
+      <div className="absolute inset-0 pt-12 pb-20 boundary-constrained iphone-safe-area">
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -297,44 +300,48 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Fantasy AutoClicker Upgrade System - positioned top-center, only in fantasy realm */}
+        {/* Fantasy AutoClicker Upgrade System - positioned within bounds */}
         {currentRealm === 'fantasy' && (
-          <FantasyAutoClickerUpgradeSystem
-            currentMana={stableGameState.mana}
-            onUpgrade={handleFantasyAutoClickerUpgrade}
-          />
+          <div className="boundary-absolute top-16 left-1/2 transform -translate-x-1/2 z-30">
+            <FantasyAutoClickerUpgradeSystem
+              currentMana={stableGameState.mana}
+              onUpgrade={handleFantasyAutoClickerUpgrade}
+            />
+          </div>
         )}
 
-        {/* Sci-Fi AutoClicker Upgrade System - positioned top-center, only in sci-fi realm */}
+        {/* Sci-Fi AutoClicker Upgrade System - positioned within bounds */}
         {currentRealm === 'scifi' && (
-          <ScifiAutoClickerUpgradeSystem
-            currentEnergy={stableGameState.energyCredits}
-            onUpgrade={handleScifiAutoClickerUpgrade}
-          />
+          <div className="boundary-absolute top-16 left-1/2 transform -translate-x-1/2 z-30">
+            <ScifiAutoClickerUpgradeSystem
+              currentEnergy={stableGameState.energyCredits}
+              onUpgrade={handleScifiAutoClickerUpgrade}
+            />
+          </div>
         )}
 
-        {/* Weapon Upgrade Button */}
-        <div className="absolute top-16 right-4 z-30">
+        {/* Weapon Upgrade Button - Constrained positioning */}
+        <div className="boundary-absolute top-16 right-2 z-30">
           <Button 
             onClick={handleShowWeaponUpgrades}
-            className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0"
+            className="h-9 w-9 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0 text-sm"
           >
             🏹
           </Button>
         </div>
 
-        {/* Cross-Realm Upgrades Button */}
-        <div className="absolute top-16 left-4 z-30">
+        {/* Cross-Realm Upgrades Button - Constrained positioning */}
+        <div className="boundary-absolute top-16 left-2 z-30">
           <Button 
             onClick={handleShowCrossRealmUpgrades}
-            className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
+            className="h-9 w-9 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0 text-sm"
           >
             🏰
           </Button>
         </div>
       </div>
 
-      {/* Enhanced Bottom Action Bar with realm-specific journey progress */}
+      {/* Enhanced Bottom Action Bar - Constrained within iPhone bounds */}
       <BottomActionBar
         currentRealm={currentRealm}
         onRealmChange={switchRealm}
@@ -343,66 +350,71 @@ const GameEngine: React.FC = () => {
         playerDistance={currentJourneyDistance}
       />
 
-      {/* Quick Help Modal */}
+      {/* Quick Help Modal - Constrained */}
       <QuickHelpModal
         isOpen={showQuickHelp}
         onClose={() => setShowQuickHelp(false)}
       />
 
-      {/* Combat Upgrades Modal */}
+      {/* Combat Upgrades Modal - Constrained */}
       {showCombatUpgrades && (
-        <CombatUpgradeSystem
-          upgrades={combatUpgrades}
-          mana={stableGameState.mana}
-          onUpgrade={purchaseCombatUpgrade}
-          onClose={() => setShowCombatUpgrades(false)}
-        />
+        <div className="boundary-fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
+          <div className="w-full max-w-sm">
+            <CombatUpgradeSystem
+              upgrades={combatUpgrades}
+              mana={stableGameState.mana}
+              onUpgrade={purchaseCombatUpgrade}
+              onClose={() => setShowCombatUpgrades(false)}
+            />
+          </div>
+        </div>
       )}
 
-      {/* Weapon Upgrades Modal */}
+      {/* Weapon Upgrades Modal - Constrained */}
       {showWeaponUpgrades && (
-        currentRealm === 'fantasy' ? (
-          <WeaponUpgradeSystem
-            upgrades={weaponUpgrades}
-            mana={stableGameState.mana}
-            onUpgrade={purchaseWeaponUpgrade}
-            onClose={() => setShowWeaponUpgrades(false)}
-          />
-        ) : (
-          <ScifiWeaponUpgradeSystem
-            upgrades={scifiWeaponUpgrades}
-            energyCredits={stableGameState.energyCredits}
-            onUpgrade={purchaseScifiWeaponUpgrade}
-            onClose={() => setShowWeaponUpgrades(false)}
-          />
-        )
+        <div className="boundary-fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
+          <div className="w-full max-w-sm">
+            {currentRealm === 'fantasy' ? (
+              <WeaponUpgradeSystem
+                upgrades={weaponUpgrades}
+                mana={stableGameState.mana}
+                onUpgrade={purchaseWeaponUpgrade}
+                onClose={() => setShowWeaponUpgrades(false)}
+              />
+            ) : (
+              <ScifiWeaponUpgradeSystem
+                upgrades={scifiWeaponUpgrades}
+                energyCredits={stableGameState.energyCredits}
+                onUpgrade={purchaseScifiWeaponUpgrade}
+                onClose={() => setShowWeaponUpgrades(false)}
+              />
+            )}
+          </div>
+        </div>
       )}
 
-      {/* Cross-Realm Upgrades Modal */}
+      {/* Cross-Realm Upgrades Modal - Constrained */}
       {showCrossRealmUpgrades && (
-        <CrossRealmUpgradeSystem
-          upgrades={crossRealmUpgradesWithLevels}
-          currentRealm={currentRealm}
-          mana={stableGameState.mana}
-          energyCredits={stableGameState.energyCredits}
-          fantasyJourneyDistance={stableGameState.fantasyJourneyDistance}
-          scifiJourneyDistance={stableGameState.scifiJourneyDistance}
-          onUpgrade={purchaseCrossRealmUpgrade}
-          onClose={() => setShowCrossRealmUpgrades(false)}
-        />
+        <div className="boundary-fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
+          <div className="w-full max-w-sm">
+            <CrossRealmUpgradeSystem
+              upgrades={crossRealmUpgradesWithLevels}
+              currentRealm={currentRealm}
+              mana={stableGameState.mana}
+              energyCredits={stableGameState.energyCredits}
+              fantasyJourneyDistance={stableGameState.fantasyJourneyDistance}
+              scifiJourneyDistance={stableGameState.scifiJourneyDistance}
+              onUpgrade={purchaseCrossRealmUpgrade}
+              onClose={() => setShowCrossRealmUpgrades(false)}
+            />
+          </div>
+        </div>
       )}
 
-      {/* Convergence Modal - only show when manually triggered */}
+      {/* Convergence Modal - Constrained */}
       {showConvergence && (
-        <div 
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              handleConvergenceClose();
-            }
-          }}
-        >
-          <div className="max-w-[90%] w-full max-w-sm">
+        <div className="boundary-fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
+          <div className="w-full max-w-sm">
             <ConvergenceSystem
               gameState={stableGameState}
               onPerformConvergence={handlePerformConvergence}
