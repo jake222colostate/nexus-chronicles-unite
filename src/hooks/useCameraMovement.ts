@@ -1,6 +1,7 @@
+
 import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Vector3 } from 'three';
+import { Vector3, PerspectiveCamera } from 'three';
 
 interface MovementKeys {
   forward: boolean;
@@ -33,9 +34,11 @@ export const useCameraMovement = ({
     targetPosition.current.set(0, 2, 12);
     camera.position.copy(targetPosition.current);
     
-    // Set proper aspect ratio for iPhone screen (375/667)
-    camera.aspect = 375 / 667;
-    camera.updateProjectionMatrix();
+    // Set proper aspect ratio for iPhone screen (375/667) only for PerspectiveCamera
+    if (camera instanceof PerspectiveCamera) {
+      camera.aspect = 375 / 667;
+      camera.updateProjectionMatrix();
+    }
     
     console.log('Camera initialized at position:', camera.position);
   }, [camera]);
@@ -90,9 +93,11 @@ export const useCameraMovement = ({
     camera.position.copy(targetPosition.current);
     camera.rotation.set(pitchAngle.current, yawAngle.current, 0, 'YXZ');
     
-    // Ensure aspect ratio stays correct for iPhone
-    camera.aspect = 375 / 667;
-    camera.updateProjectionMatrix();
+    // Ensure aspect ratio stays correct for iPhone only for PerspectiveCamera
+    if (camera instanceof PerspectiveCamera) {
+      camera.aspect = 375 / 667;
+      camera.updateProjectionMatrix();
+    }
     
     // Notify parent of position changes
     onPositionChange(camera.position);

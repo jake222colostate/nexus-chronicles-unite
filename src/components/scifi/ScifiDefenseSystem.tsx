@@ -1,7 +1,7 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Vector3, Group, Mesh, BufferGeometry, Material } from 'three';
+import { Vector3, Group, Mesh, BufferGeometry, Material, Euler } from 'three';
 import { ScifiCannon } from './ScifiCannon';
 
 interface Asteroid {
@@ -9,7 +9,7 @@ interface Asteroid {
   position: Vector3;
   velocity: Vector3;
   size: number;
-  rotation: Vector3;
+  rotation: Euler;
   rotationVelocity: Vector3;
 }
 
@@ -66,7 +66,7 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
           (Math.random() - 0.5) * 1   // Slight depth movement
         ),
         size: 0.5 + Math.random() * 1,
-        rotation: new Vector3(0, 0, 0),
+        rotation: new Euler(0, 0, 0),
         rotationVelocity: new Vector3(
           (Math.random() - 0.5) * 0.02,
           (Math.random() - 0.5) * 0.02,
@@ -84,8 +84,10 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
         // Update position
         asteroid.position.add(asteroid.velocity.clone().multiplyScalar(0.016));
         
-        // Update rotation
-        asteroid.rotation.add(asteroid.rotationVelocity);
+        // Update rotation - convert Vector3 to Euler properly
+        asteroid.rotation.x += asteroid.rotationVelocity.x;
+        asteroid.rotation.y += asteroid.rotationVelocity.y;
+        asteroid.rotation.z += asteroid.rotationVelocity.z;
         
         return asteroid;
       }).filter(asteroid => {
