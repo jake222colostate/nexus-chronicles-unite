@@ -3,6 +3,7 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Sparkles, Zap, Star } from 'lucide-react';
+import { AutoManaUpgradeSystem } from './AutoManaUpgradeSystem';
 
 interface MobileResourceSidebarProps {
   realm: 'fantasy' | 'scifi';
@@ -63,6 +64,22 @@ export const MobileResourceSidebar: React.FC<MobileResourceSidebarProps> = ({
               className="h-1.5"
             />
           </div>
+        </div>
+      </Card>
+
+      {/* Auto Mana Upgrade System - Compact Mobile Version */}
+      <Card className={`backdrop-blur-md border transition-all duration-300 ${
+        realm === 'fantasy'
+          ? 'bg-gradient-to-br from-purple-900/90 to-violet-800/90 border-purple-400/40'
+          : 'bg-gradient-to-br from-slate-800/90 to-gray-700/90 border-slate-400/40'
+      }`}>
+        <div className="p-1.5">
+          <AutoManaUpgradeSystem
+            autoManaLevel={autoManaLevel}
+            autoManaRate={autoManaRate}
+            currentMana={mana}
+            onUpgrade={onAutoManaUpgrade}
+          />
         </div>
       </Card>
 
