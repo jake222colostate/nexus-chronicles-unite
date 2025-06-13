@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3, Group, Mesh, BufferGeometry, Material, Euler } from 'three';
@@ -11,6 +10,7 @@ interface Asteroid {
   size: number;
   rotation: Euler;
   rotationVelocity: Vector3;
+  health: number;
 }
 
 interface ScifiDefenseSystemProps {
@@ -24,100 +24,96 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
   const lastSpawnTime = useRef(0);
   const asteroidCounter = useRef(0);
 
-  // Check if asteroid is within camera view bounds
-  const isAsteroidInView = (asteroid: Asteroid): boolean => {
-    const worldPosition = asteroid.position.clone();
-    const screenPosition = worldPosition.project(camera);
-    
-    // Convert to screen coordinates and check if within iPhone screen bounds
-    const x = (screenPosition.x * 0.5 + 0.5) * viewport.width;
-    const y = (screenPosition.y * -0.5 + 0.5) * viewport.height;
-    
-    // iPhone screen bounds (375x667)
-    const screenWidth = 375;
-    const screenHeight = 667;
-    const margin = 50; // Small margin for smooth transitions
-    
-    return (
-      x >= -margin && 
-      x <= screenWidth + margin && 
-      y >= -margin && 
-      y <= screenHeight + margin &&
-      worldPosition.z > camera.position.z - 50 // Not too far behind camera
-    );
-  };
-
-  // Spawn asteroids periodically
+  // Enhanced asteroid spawn system
   useFrame((state) => {
     const currentTime = state.clock.elapsedTime;
     
-    // Spawn new asteroid every 3-5 seconds
-    if (currentTime - lastSpawnTime.current > 3 + Math.random() * 2) {
+    // Spawn new asteroid every 2-4 seconds for better gameplay
+    if (currentTime - lastSpawnTime.current > 2 + Math.random() * 2) {
+      const spawnDistance = 15 + Math.random() * 10;
+      const angle = Math.random() * Math.PI * 2;
+      
       const newAsteroid: Asteroid = {
         id: asteroidCounter.current++,
         position: new Vector3(
-          (Math.random() - 0.5) * 30, // Random X within reasonable bounds
-          10 + Math.random() * 10,    // Start above view
-          (Math.random() - 0.5) * 20  // Random Z depth
+          Math.cos(angle) * spawnDistance,
+          8 + Math.random() * 5,    // Start above camera view
+          Math.sin(angle) * spawnDistance
         ),
         velocity: new Vector3(
-          (Math.random() - 0.5) * 2,  // Slight horizontal drift
-          -2 - Math.random() * 3,     // Downward motion
-          (Math.random() - 0.5) * 1   // Slight depth movement
+          -Math.cos(angle) * (1 + Math.random() * 2), // Move toward center
+          -1 - Math.random() * 2,     // Downward motion
+          -Math.sin(angle) * (1 + Math.random() * 2)  // Move toward center
         ),
-        size: 0.5 + Math.random() * 1,
-        rotation: new Euler(0, 0, 0),
+        size: 0.3 + Math.random() * 0.7,
+        rotation: new Euler(
+          Math.random() * Math.PI * 2,
+          Math.random() * Math.PI * 2,
+          Math.random() * Math.PI * 2
+        ),
         rotationVelocity: new Vector3(
-          (Math.random() - 0.5) * 0.02,
-          (Math.random() - 0.5) * 0.02,
-          (Math.random() - 0.5) * 0.02
-        )
+          (Math.random() - 0.5) * 0.03,
+          (Math.random() - 0.5) * 0.03,
+          (Math.random() - 0.5) * 0.03
+        ),
+        health: 1
       };
       
       setAsteroids(prev => [...prev, newAsteroid]);
       lastSpawnTime.current = currentTime;
+      console.log('Spawned new asteroid:', newAsteroid.id);
     }
 
-    // Update asteroid positions and remove those outside view or below screen
+    // Update asteroid positions and remove those that are too far away
     setAsteroids(prev => {
       return prev.map(asteroid => {
         // Update position
         asteroid.position.add(asteroid.velocity.clone().multiplyScalar(0.016));
         
-        // Update rotation - convert Vector3 to Euler properly
+        // Update rotation
         asteroid.rotation.x += asteroid.rotationVelocity.x;
         asteroid.rotation.y += asteroid.rotationVelocity.y;
         asteroid.rotation.z += asteroid.rotationVelocity.z;
         
         return asteroid;
       }).filter(asteroid => {
-        // Remove asteroids that are too far below or outside camera frustum
-        const inView = isAsteroidInView(asteroid);
-        const notTooLow = asteroid.position.y > -15;
+        // Keep asteroids that are within reasonable distance and not too low
+        const distanceFromCamera = asteroid.position.distanceTo(camera.position);
+        const notTooFar = distanceFromCamera < 50;
+        const notTooLow = asteroid.position.y > -10;
         
-        return inView && notTooLow;
+        return notTooFar && notTooLow;
       });
     });
 
-    // Update targeted asteroid - only target if in view
-    if (targetedAsteroid && !isAsteroidInView(targetedAsteroid)) {
-      setTargetedAsteroid(null);
-    } else if (!targetedAsteroid && asteroids.length > 0) {
-      // Find closest asteroid that's in view
-      const visibleAsteroids = asteroids.filter(isAsteroidInView);
+    // Update targeting system - target closest asteroid to camera
+    if (asteroids.length > 0) {
+      const visibleAsteroids = asteroids.filter(asteroid => {
+        const distanceFromCamera = asteroid.position.distanceTo(camera.position);
+        return distanceFromCamera < 30 && asteroid.position.y > camera.position.y - 5;
+      });
+      
       if (visibleAsteroids.length > 0) {
         const closest = visibleAsteroids.reduce((closest, current) => {
           const closestDist = closest.position.distanceTo(camera.position);
           const currentDist = current.position.distanceTo(camera.position);
           return currentDist < closestDist ? current : closest;
         });
-        setTargetedAsteroid(closest);
+        
+        if (!targetedAsteroid || targetedAsteroid.id !== closest.id) {
+          setTargetedAsteroid(closest);
+        }
+      } else {
+        setTargetedAsteroid(null);
       }
+    } else {
+      setTargetedAsteroid(null);
     }
   });
 
-  // Handle asteroid click/destruction
+  // Handle asteroid destruction
   const handleAsteroidDestroy = (asteroidId: number) => {
+    console.log('Destroying asteroid:', asteroidId);
     setAsteroids(prev => prev.filter(a => a.id !== asteroidId));
     if (targetedAsteroid?.id === asteroidId) {
       setTargetedAsteroid(null);
@@ -130,34 +126,82 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
       {/* Cannon that targets asteroids */}
       <ScifiCannon target={targetedAsteroid?.position} />
       
-      {/* Render asteroids */}
+      {/* Render asteroids with enhanced visuals */}
       {asteroids.map(asteroid => (
-        <group key={asteroid.id} position={asteroid.position} rotation={asteroid.rotation}>
+        <group 
+          key={asteroid.id} 
+          position={asteroid.position} 
+          rotation={asteroid.rotation}
+        >
+          {/* Main asteroid body */}
           <mesh
             onClick={() => handleAsteroidDestroy(asteroid.id)}
             scale={asteroid.size}
+            castShadow
+            receiveShadow
           >
-            <icosahedronGeometry args={[1, 0]} />
+            <icosahedronGeometry args={[1, 1]} />
             <meshStandardMaterial 
-              color="#8B4513" 
-              roughness={0.8}
-              metalness={0.2}
+              color="#654321" 
+              roughness={0.9}
+              metalness={0.1}
             />
           </mesh>
           
-          {/* Glow effect for targeted asteroid */}
+          {/* Targeting indicator for targeted asteroid */}
           {targetedAsteroid?.id === asteroid.id && (
-            <mesh scale={asteroid.size * 1.5}>
-              <icosahedronGeometry args={[1, 0]} />
-              <meshBasicMaterial 
-                color="#ff4444" 
-                transparent 
-                opacity={0.3}
-              />
-            </mesh>
+            <>
+              {/* Red glow effect */}
+              <mesh scale={asteroid.size * 1.8}>
+                <icosahedronGeometry args={[1, 0]} />
+                <meshBasicMaterial 
+                  color="#ff0000" 
+                  transparent 
+                  opacity={0.2}
+                />
+              </mesh>
+              
+              {/* Targeting reticle */}
+              <group>
+                <mesh position={[0, 0, 1.2 * asteroid.size]}>
+                  <ringGeometry args={[0.8 * asteroid.size, 1.0 * asteroid.size, 8]} />
+                  <meshBasicMaterial 
+                    color="#ff4444" 
+                    transparent 
+                    opacity={0.8}
+                  />
+                </mesh>
+              </group>
+            </>
           )}
+          
+          {/* Asteroid trail effect */}
+          <mesh 
+            position={[0, 0, 0.5 * asteroid.size]}
+            scale={[asteroid.size * 0.3, asteroid.size * 0.3, asteroid.size * 2]}
+          >
+            <coneGeometry args={[0.2, 1, 4]} />
+            <meshBasicMaterial 
+              color="#ff6600" 
+              transparent 
+              opacity={0.4}
+            />
+          </mesh>
         </group>
       ))}
+      
+      {/* Debug info */}
+      {asteroids.length > 0 && (
+        <group>
+          {/* Add some ambient particles for atmosphere */}
+          <pointLight 
+            position={[0, 10, 0]} 
+            color="#4080ff" 
+            intensity={0.3} 
+            distance={20}
+          />
+        </group>
+      )}
     </group>
   );
 };
