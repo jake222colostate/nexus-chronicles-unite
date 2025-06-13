@@ -1,15 +1,47 @@
 
-import React from 'react';
-import { Vector3 } from 'three';
+import React, { useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { Vector3, Group } from 'three';
 
 interface ScifiCannonProps {
   target?: Vector3;
 }
 
 export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
+  const { camera } = useThree();
+  const weaponGroupRef = useRef<Group>(null);
+
+  // First-person weapon positioning - follows camera exactly
+  useFrame(() => {
+    if (weaponGroupRef.current && camera) {
+      // Get camera vectors for positioning
+      const cameraForward = new Vector3();
+      const cameraRight = new Vector3();
+      const cameraUp = new Vector3();
+      
+      camera.getWorldDirection(cameraForward);
+      cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
+      cameraUp.crossVectors(cameraForward, cameraRight).normalize();
+      
+      // Position weapon for first-person view - positioned relative to camera
+      const cannonPosition = camera.position.clone()
+        .add(cameraRight.clone().multiplyScalar(0.8))     // Move to the right
+        .add(cameraUp.clone().multiplyScalar(-0.4))       // Move down slightly
+        .add(cameraForward.clone().multiplyScalar(1.2));   // Move forward from camera
+
+      weaponGroupRef.current.position.copy(cannonPosition);
+      
+      // Rotation to match camera orientation with adjustments for cannon
+      weaponGroupRef.current.rotation.copy(camera.rotation);
+      weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Angle slightly inward
+      weaponGroupRef.current.rotateZ(8 * Math.PI / 180);   // Slight tilt
+      weaponGroupRef.current.rotateX(-5 * Math.PI / 180);  // Slight downward angle
+    }
+  });
+
   return (
-    <group position={[2, 1, -3]} rotation={[0, -0.3, 0]}>
-      {/* Procedural Sci-Fi Cannon - static positioning */}
+    <group ref={weaponGroupRef}>
+      {/* Procedural Sci-Fi Cannon - follows camera */}
       <group scale={[1.2, 1.2, 1.2]} rotation={[0, 0, 0]}>
         {/* Main barrel - longer and thicker */}
         <mesh position={[0, 0, -0.6]}>
