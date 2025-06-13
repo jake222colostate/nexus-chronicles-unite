@@ -48,7 +48,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   };
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-40 px-2 py-2">
+    <div className="fixed top-0 left-0 right-0 z-40 px-2 py-2 pointer-events-auto" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
       <div 
         className="flex items-center justify-between bg-black/85 backdrop-blur-xl px-3 py-2 rounded-lg border border-white/20 relative min-h-[36px] ml-[148px]"
         style={{
@@ -63,7 +63,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
           onClick={onHelpClick}
           size="sm"
           variant="ghost"
-          className="h-7 w-7 p-0 rounded-lg bg-transparent hover:bg-white/15 hover:scale-105 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0"
+          className="h-7 w-7 p-0 rounded-lg bg-transparent hover:bg-white/15 hover:scale-105 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 pointer-events-auto"
         >
           <HelpCircle size={16} />
         </Button>
@@ -95,7 +95,7 @@ export const TopHUD: React.FC<TopHUDProps> = ({
             onClick={onCombatUpgradesClick}
             size="sm"
             variant="ghost"
-            className="h-7 w-7 p-0 rounded-lg bg-transparent hover:bg-red-500/20 hover:scale-105 text-red-400 hover:text-red-300 transition-all duration-200 relative flex-shrink-0"
+            className="h-7 w-7 p-0 rounded-lg bg-transparent hover:bg-red-500/20 hover:scale-105 text-red-400 hover:text-red-300 transition-all duration-200 relative flex-shrink-0 pointer-events-auto"
           >
             <Sword size={16} />
             {enemyCount > 0 && (

@@ -42,7 +42,7 @@ export const MobileResourceSidebar: React.FC<MobileResourceSidebarProps> = ({
   };
 
   return (
-    <div className="boundary-fixed top-0 left-0 z-50 flex flex-col gap-2 w-[140px] pt-4 px-2 iphone-safe-area">
+    <div className="fixed top-0 left-0 z-50 flex flex-col gap-2 w-[140px] pt-2 px-2 pointer-events-auto" style={{ maxWidth: 'var(--iphone-screen-width)' }}>
       {/* Mana Resource */}
       <Card className={`backdrop-blur-md border transition-all duration-300 ${
         realm === 'fantasy'

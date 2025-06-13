@@ -36,9 +36,9 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   };
 
   return (
-    <div className="boundary-absolute bottom-0 left-0 right-0 z-30 boundary-constrained">
+    <div className="fixed bottom-0 left-0 right-0 z-30 pointer-events-auto" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
       {/* Simple Journey Progress Bar */}
-      <div className="px-3 pb-1 iphone-safe-area">
+      <div className="px-3 pb-1">
         <div className="text-center mb-1">
           <span className="text-white/90 text-xs font-medium">
             Journey: {Math.floor(playerDistance)}m | Realm: {currentRealm === 'fantasy' ? 'Fantasy' : 'Sci-Fi'}
@@ -52,15 +52,15 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
         </div>
       </div>
 
-      {/* Main Control Bar - Constrained within iPhone bounds */}
-      <div className="bg-black/95 backdrop-blur-xl border-t border-white/20 py-4 iphone-safe-area">
+      {/* Main Control Bar - Fixed at bottom with proper pointer events */}
+      <div className="bg-black/95 backdrop-blur-xl border-t border-white/20 py-4 pointer-events-auto">
         <div className="flex items-center justify-center px-4">
           <div className="flex items-center justify-center w-full max-w-full gap-3">
-            {/* Fantasy Realm Button - Smaller for mobile */}
+            {/* Fantasy Realm Button - Interactive */}
             <Button
               onClick={() => handleRealmSwitch('fantasy')}
               disabled={isTransitioning}
-              className={`h-12 px-4 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden font-medium border-2 flex-shrink-0 text-xs ${
+              className={`h-12 px-4 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden font-medium border-2 flex-shrink-0 text-xs pointer-events-auto cursor-pointer ${
                 currentRealm === 'fantasy'
                   ? 'bg-purple-600/95 hover:bg-purple-700/95 border-purple-400/80 text-purple-100 scale-105'
                   : 'bg-black/70 border-purple-400/60 text-purple-300 hover:bg-purple-900/50 hover:border-purple-400/80 hover:text-purple-200'
@@ -68,7 +68,8 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
               style={{
                 boxShadow: currentRealm === 'fantasy' 
                   ? '0 4px 20px rgba(168, 85, 247, 0.6), 0 2px 10px rgba(0,0,0,0.4)' 
-                  : '0 2px 10px rgba(0,0,0,0.3)'
+                  : '0 2px 10px rgba(0,0,0,0.3)',
+                pointerEvents: 'auto'
               }}
             >
               <span className="relative z-10 font-bold">Fantasy</span>
@@ -81,13 +82,14 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
             <Button 
               id="tap-button"
               onClick={handleTap}
-              className={`h-14 w-32 rounded-full transition-all duration-200 hover:scale-110 active:scale-92 font-bold text-2xl backdrop-blur-xl border-3 relative overflow-hidden shadow-2xl ${
+              className={`h-14 w-32 rounded-full transition-all duration-200 hover:scale-110 active:scale-92 font-bold text-2xl backdrop-blur-xl border-3 relative overflow-hidden shadow-2xl pointer-events-auto cursor-pointer ${
                 currentRealm === 'fantasy'
                   ? 'bg-gradient-to-br from-purple-600/95 to-violet-700/95 hover:from-purple-500/95 hover:to-violet-600/95 border-purple-400/80 text-purple-100'
                   : 'bg-gradient-to-br from-cyan-600/95 to-blue-700/95 hover:from-cyan-500/95 hover:to-blue-600/95 border-cyan-400/80 text-cyan-100'
               }`}
               style={{
                 boxShadow: `0 0 40px ${currentRealm === 'fantasy' ? 'rgba(168, 85, 247, 0.9)' : 'rgba(34, 211, 238, 0.9)'}, 0 8px 30px rgba(0,0,0,0.6)`,
+                pointerEvents: 'auto'
               }}
             >
               {/* Enhanced glassmorphism inner glow */}
@@ -110,11 +112,11 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
               } blur-sm`} />
             </Button>
 
-            {/* Sci-Fi Realm Button - Smaller for mobile */}
+            {/* Sci-Fi Realm Button - Interactive */}
             <Button
               onClick={() => handleRealmSwitch('scifi')}
               disabled={isTransitioning}
-              className={`h-12 px-4 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden font-medium border-2 flex-shrink-0 text-xs ${
+              className={`h-12 px-4 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95 relative overflow-hidden font-medium border-2 flex-shrink-0 text-xs pointer-events-auto cursor-pointer ${
                 currentRealm === 'scifi'
                   ? 'bg-cyan-600/95 hover:bg-cyan-700/95 border-cyan-400/80 text-cyan-100 scale-105'
                   : 'bg-black/70 border-cyan-400/60 text-cyan-300 hover:bg-cyan-900/50 hover:border-cyan-400/80 hover:text-cyan-200'
@@ -122,7 +124,8 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
               style={{
                 boxShadow: currentRealm === 'scifi' 
                   ? '0 4px 20px rgba(34, 211, 238, 0.6), 0 2px 10px rgba(0,0,0,0.4)' 
-                  : '0 2px 10px rgba(0,0,0,0.3)'
+                  : '0 2px 10px rgba(0,0,0,0.3)',
+                pointerEvents: 'auto'
               }}
             >
               <span className="relative z-10 font-bold">Sci-Fi</span>

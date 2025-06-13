@@ -105,7 +105,6 @@ const GameEngine: React.FC = () => {
     crossRealmUpgradesWithLevels
   });
 
-  // Memoize all handlers to prevent re-renders
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
     // Removed state update to prevent infinite loops - position tracking handled elsewhere
     console.log('Player position updated:', position);
@@ -257,24 +256,22 @@ const GameEngine: React.FC = () => {
         onJourneyUpdate={handleJourneyUpdate}
       />
 
-      {/* Clean TopHUD - Constrained */}
-      <div className="boundary-absolute top-0 left-0 right-0 z-40 iphone-safe-area">
-        <TopHUD
-          realm={currentRealm}
-          mana={stableGameState.mana}
-          energyCredits={stableGameState.energyCredits}
-          nexusShards={stableGameState.nexusShards}
-          convergenceProgress={convergenceProgress}
-          manaPerSecond={stableGameState.manaPerSecond}
-          energyPerSecond={stableGameState.energyPerSecond}
-          onHelpClick={handleShowHelp}
-          onCombatUpgradesClick={handleShowCombatUpgrades}
-          enemyCount={enemyCount}
-        />
-      </div>
+      {/* Clean TopHUD - Fixed at top */}
+      <TopHUD
+        realm={currentRealm}
+        mana={stableGameState.mana}
+        energyCredits={stableGameState.energyCredits}
+        nexusShards={stableGameState.nexusShards}
+        convergenceProgress={convergenceProgress}
+        manaPerSecond={stableGameState.manaPerSecond}
+        energyPerSecond={stableGameState.energyPerSecond}
+        onHelpClick={handleShowHelp}
+        onCombatUpgradesClick={handleShowCombatUpgrades}
+        enemyCount={enemyCount}
+      />
 
-      {/* Main Game Area - Fully constrained */}
-      <div className="absolute inset-0 pt-12 pb-20 boundary-constrained iphone-safe-area">
+      {/* Main Game Area - Properly positioned below fixed elements */}
+      <div className="absolute inset-0 pt-12 pb-20" style={{ pointerEvents: 'none' }}>
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -299,48 +296,28 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Fantasy AutoClicker Upgrade System - positioned within bounds */}
-        {currentRealm === 'fantasy' && (
-          <div className="boundary-absolute top-16 left-1/2 transform -translate-x-1/2 z-30">
-            <FantasyAutoClickerUpgradeSystem
-              currentMana={stableGameState.mana}
-              onUpgrade={handleFantasyAutoClickerUpgrade}
-            />
-          </div>
-        )}
-
-        {/* Sci-Fi AutoClicker Upgrade System - positioned within bounds */}
-        {currentRealm === 'scifi' && (
-          <div className="boundary-absolute top-16 left-1/2 transform -translate-x-1/2 z-30">
-            <ScifiAutoClickerUpgradeSystem
-              currentEnergy={stableGameState.energyCredits}
-              onUpgrade={handleScifiAutoClickerUpgrade}
-            />
-          </div>
-        )}
-
-        {/* Weapon Upgrade Button - Top right corner */}
-        <div className="boundary-absolute top-2 right-2 z-30">
+        {/* Weapon Upgrade Button - Top right corner, properly positioned */}
+        <div className="fixed top-16 right-2 z-30 pointer-events-auto">
           <Button 
             onClick={handleShowWeaponUpgrades}
-            className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0"
+            className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0 pointer-events-auto cursor-pointer"
           >
             🏹
           </Button>
         </div>
 
         {/* Cross-Realm Upgrades Button - Top right, below weapon button */}
-        <div className="boundary-absolute top-14 right-2 z-30">
+        <div className="fixed top-28 right-2 z-30 pointer-events-auto">
           <Button 
             onClick={handleShowCrossRealmUpgrades}
-            className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
+            className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0 pointer-events-auto cursor-pointer"
           >
             🏰
           </Button>
         </div>
       </div>
 
-      {/* Enhanced Bottom Action Bar - Constrained within iPhone bounds */}
+      {/* Enhanced Bottom Action Bar - Fixed at bottom */}
       <BottomActionBar
         currentRealm={currentRealm}
         onRealmChange={switchRealm}
@@ -349,16 +326,16 @@ const GameEngine: React.FC = () => {
         playerDistance={currentJourneyDistance}
       />
 
-      {/* Quick Help Modal - Constrained */}
+      {/* Quick Help Modal - Constrained to screen */}
       <QuickHelpModal
         isOpen={showQuickHelp}
         onClose={() => setShowQuickHelp(false)}
       />
 
-      {/* Combat Upgrades Modal - Constrained */}
+      {/* Combat Upgrades Modal - Constrained to screen bounds */}
       {showCombatUpgrades && (
-        <div className="boundary-fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
-          <div className="w-full max-w-sm">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
+          <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
             <CombatUpgradeSystem
               upgrades={combatUpgrades}
               mana={stableGameState.mana}
@@ -369,10 +346,10 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Weapon Upgrades Modal - Constrained */}
+      {/* Weapon Upgrades Modal - Constrained to screen bounds */}
       {showWeaponUpgrades && (
-        <div className="boundary-fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
-          <div className="w-full max-w-sm">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
+          <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
             {currentRealm === 'fantasy' ? (
               <WeaponUpgradeSystem
                 upgrades={weaponUpgrades}
@@ -392,10 +369,10 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Cross-Realm Upgrades Modal - Constrained */}
+      {/* Cross-Realm Upgrades Modal - Constrained to screen bounds */}
       {showCrossRealmUpgrades && (
-        <div className="boundary-fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
-          <div className="w-full max-w-sm">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
+          <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
             <CrossRealmUpgradeSystem
               upgrades={crossRealmUpgradesWithLevels}
               currentRealm={currentRealm}
@@ -410,10 +387,10 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Convergence Modal - Constrained */}
+      {/* Convergence Modal - Constrained to screen bounds */}
       {showConvergence && (
-        <div className="boundary-fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
-          <div className="w-full max-w-sm">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
+          <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
             <ConvergenceSystem
               gameState={stableGameState}
               onPerformConvergence={handlePerformConvergence}
