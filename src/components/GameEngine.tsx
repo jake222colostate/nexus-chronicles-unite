@@ -1,4 +1,3 @@
-
 import React, { useCallback, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -258,7 +257,7 @@ const GameEngine: React.FC = () => {
         onJourneyUpdate={handleJourneyUpdate}
       />
 
-      {/* Clean TopHUD with cross-realm upgrade button - Constrained */}
+      {/* Clean TopHUD - Constrained */}
       <div className="boundary-absolute top-0 left-0 right-0 z-40 iphone-safe-area">
         <TopHUD
           realm={currentRealm}
@@ -320,21 +319,21 @@ const GameEngine: React.FC = () => {
           </div>
         )}
 
-        {/* Weapon Upgrade Button - Constrained positioning */}
-        <div className="boundary-absolute top-16 right-2 z-30">
+        {/* Weapon Upgrade Button - Top right corner */}
+        <div className="boundary-absolute top-2 right-2 z-30">
           <Button 
             onClick={handleShowWeaponUpgrades}
-            className="h-9 w-9 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0 text-sm"
+            className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0"
           >
             🏹
           </Button>
         </div>
 
-        {/* Cross-Realm Upgrades Button - Constrained positioning */}
-        <div className="boundary-absolute top-16 left-2 z-30">
+        {/* Cross-Realm Upgrades Button - Top right, below weapon button */}
+        <div className="boundary-absolute top-14 right-2 z-30">
           <Button 
             onClick={handleShowCrossRealmUpgrades}
-            className="h-9 w-9 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0 text-sm"
+            className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
           >
             🏰
           </Button>
