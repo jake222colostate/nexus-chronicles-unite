@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Vector3 } from 'three';
+import { Vector3, PerspectiveCamera } from 'three';
 import { useCollisionContext } from '@/lib/CollisionContext';
 
 interface Enhanced360ControllerProps {
@@ -145,8 +145,13 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     targetPosition.current.copy(safePosition);
     camera.position.copy(safePosition);
     camera.lookAt(0, 1, 0); // Look slightly down toward center
-    camera.fov = 65; // Wider field of view for iPhone
-    camera.updateProjectionMatrix();
+    
+    // Only set fov if it's a PerspectiveCamera
+    if (camera instanceof PerspectiveCamera) {
+      camera.fov = 65; // Wider field of view for iPhone
+      camera.updateProjectionMatrix();
+    }
+    
     lastNotifiedPosition.current.copy(safePosition);
     console.log('Camera initialized for optimal staff visibility:', safePosition);
   }, [camera]);
