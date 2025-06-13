@@ -23,6 +23,7 @@ import { useAutoManaSystem } from '@/hooks/useAutoManaSystem';
 import { useAutoEnergySystem } from '@/hooks/useAutoEnergySystem';
 import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
+import { AutoManaDropdown } from './AutoManaDropdown';
 
 const GameEngine: React.FC = () => {
   const {
@@ -313,6 +314,14 @@ const GameEngine: React.FC = () => {
           >
             🏹
           </Button>
+        </div>
+
+        {/* Auto Mana Dropdown - positioned between upgrade buttons */}
+        <div className="absolute top-16 right-1/2 transform translate-x-1/2 z-30">
+          <AutoManaDropdown
+            currentMana={stableGameState.mana}
+            onUpgrade={handleFantasyAutoClickerUpgrade}
+          />
         </div>
 
         {/* Cross-Realm Upgrades Button */}
