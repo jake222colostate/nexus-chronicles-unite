@@ -123,6 +123,13 @@ const GameEngine: React.FC = () => {
     }));
   }, [setGameState]);
 
+  const handleMeteorDestroyed = useCallback(() => {
+    setGameState(prev => ({
+      ...prev,
+      energyCredits: prev.energyCredits + 5,
+    }));
+  }, [setGameState]);
+
   const handleJourneyUpdate = useCallback((distance: number) => {
     const currentDistance = currentRealm === 'fantasy' ? stableGameState.fantasyJourneyDistance : stableGameState.scifiJourneyDistance;
     
@@ -283,6 +290,7 @@ const GameEngine: React.FC = () => {
           onPlayerPositionUpdate={handlePlayerPositionUpdate}
           onEnemyCountChange={handleEnemyCountChange}
           onEnemyKilled={handleEnemyKilled}
+          onMeteorDestroyed={handleMeteorDestroyed}
           weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
         />
 
