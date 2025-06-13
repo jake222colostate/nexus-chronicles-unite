@@ -1,7 +1,6 @@
 
-import React, { useRef, useEffect } from 'react';
-import { useFrame, useLoader, useThree } from '@react-three/fiber';
-import { USDZLoader } from 'three/examples/jsm/loaders/USDZLoader.js';
+import React, { useRef } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
 import * as THREE from 'three';
 
@@ -12,48 +11,8 @@ interface ScifiCannonProps {
 export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
   const { camera } = useThree();
   const weaponGroupRef = useRef<Group>(null);
-  const laserRifle = useLoader(USDZLoader, '/assets/c1/laserrifle.usdz');
 
-  // Initialize and optimize the laser rifle model
-  useEffect(() => {
-    if (laserRifle && weaponGroupRef.current) {
-      // Clone the model to avoid modifying the original
-      const rifleModel = laserRifle.clone();
-      
-      // Clear any existing children
-      weaponGroupRef.current.clear();
-      weaponGroupRef.current.add(rifleModel);
-      
-      // Optimize the model for first-person view
-      rifleModel.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = true;
-          child.receiveShadow = false;
-          child.frustumCulled = false; // Prevent first-person culling issues
-          
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach(mat => {
-                mat.transparent = false;
-                mat.opacity = 1.0;
-                mat.side = THREE.DoubleSide;
-                mat.needsUpdate = true;
-              });
-            } else {
-              child.material.transparent = false;
-              child.material.opacity = 1.0;
-              child.material.side = THREE.DoubleSide;
-              child.material.needsUpdate = true;
-            }
-          }
-        }
-      });
-      
-      console.log('Laser rifle model loaded and optimized for first-person view');
-    }
-  }, [laserRifle]);
-
-  // First-person weapon positioning - follows camera exactly like the staff
+  // First-person weapon positioning - follows camera exactly
   useFrame(() => {
     if (weaponGroupRef.current && camera) {
       // Get camera vectors for positioning
@@ -66,14 +25,14 @@ export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
       // Position weapon for first-person view - optimized for iPhone screen
-      const riflePosition = camera.position.clone()
+      const cannonPosition = camera.position.clone()
         .add(cameraRight.clone().multiplyScalar(0.5))     // X = 0.5 (right side of screen)
         .add(cameraUp.clone().multiplyScalar(-0.25))      // Y = -0.25 (slightly lower)
         .add(cameraForward.clone().multiplyScalar(0.7));   // Z = 0.7 (in front of camera)
 
-      weaponGroupRef.current.position.copy(riflePosition);
+      weaponGroupRef.current.position.copy(cannonPosition);
       
-      // Rotation to match camera orientation with adjustments for rifle
+      // Rotation to match camera orientation with adjustments for cannon
       weaponGroupRef.current.rotation.copy(camera.rotation);
       weaponGroupRef.current.rotateY(-8 * Math.PI / 180); // Y = -8° slight inward angle
       weaponGroupRef.current.rotateZ(12 * Math.PI / 180);  // Z = 12° slight tilt
@@ -81,15 +40,15 @@ export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
       
       // If there's a target, slightly adjust aim towards it
       if (target) {
-        const targetDirection = new Vector3().subVectors(target, riflePosition).normalize();
+        const targetDirection = new Vector3().subVectors(target, cannonPosition).normalize();
         const currentForward = new Vector3(0, 0, -1).applyQuaternion(weaponGroupRef.current.quaternion);
         const adjustmentAngle = currentForward.angleTo(targetDirection) * 0.1; // Subtle adjustment
         
         if (adjustmentAngle > 0.01) { // Only adjust if significant difference
           weaponGroupRef.current.lookAt(
-            riflePosition.x + targetDirection.x * 0.1,
-            riflePosition.y + targetDirection.y * 0.1,
-            riflePosition.z + targetDirection.z * 0.1
+            cannonPosition.x + targetDirection.x * 0.1,
+            cannonPosition.y + targetDirection.y * 0.1,
+            cannonPosition.z + targetDirection.z * 0.1
           );
         }
       }
@@ -98,15 +57,73 @@ export const ScifiCannon: React.FC<ScifiCannonProps> = ({ target }) => {
 
   return (
     <group ref={weaponGroupRef}>
-      {laserRifle && (
-        <primitive
-          object={laserRifle}
-          scale={[0.004, 0.004, 0.004]} // Slightly larger for better visibility
-          rotation={[Math.PI / 2, 0, 0]} // Initial rotation correction
-        />
-      )}
-      {/* Subtle light to highlight the rifle */}
-      <pointLight position={[0, 0.2, 0]} color="#00ffff" intensity={0.3} distance={2} />
+      {/* Procedural Sci-Fi Cannon */}
+      <group scale={[0.8, 0.8, 0.8]} rotation={[0, 0, 0]}>
+        {/* Main barrel */}
+        <mesh position={[0, 0, -0.5]}>
+          <cylinderGeometry args={[0.06, 0.08, 1.2, 8]} />
+          <meshStandardMaterial color="#4a5568" metalness={0.8} roughness={0.2} />
+        </mesh>
+        
+        {/* Barrel tip */}
+        <mesh position={[0, 0, -1.1]}>
+          <cylinderGeometry args={[0.04, 0.06, 0.1, 8]} />
+          <meshStandardMaterial color="#2d3748" metalness={0.9} roughness={0.1} />
+        </mesh>
+        
+        {/* Main body */}
+        <mesh position={[0, 0, 0.2]}>
+          <boxGeometry args={[0.2, 0.15, 0.6]} />
+          <meshStandardMaterial color="#2d3748" metalness={0.7} roughness={0.3} />
+        </mesh>
+        
+        {/* Grip */}
+        <mesh position={[0, -0.15, 0.4]} rotation={[0.3, 0, 0]}>
+          <boxGeometry args={[0.08, 0.3, 0.1]} />
+          <meshStandardMaterial color="#1a202c" metalness={0.5} roughness={0.4} />
+        </mesh>
+        
+        {/* Trigger guard */}
+        <mesh position={[0, -0.1, 0.2]}>
+          <torusGeometry args={[0.06, 0.02, 8, 16]} />
+          <meshStandardMaterial color="#4a5568" metalness={0.8} roughness={0.2} />
+        </mesh>
+        
+        {/* Side details */}
+        <mesh position={[0.08, 0.05, 0.1]}>
+          <boxGeometry args={[0.04, 0.02, 0.3]} />
+          <meshStandardMaterial color="#63b3ed" metalness={0.9} roughness={0.1} emissive="#1e40af" emissiveIntensity={0.2} />
+        </mesh>
+        
+        <mesh position={[-0.08, 0.05, 0.1]}>
+          <boxGeometry args={[0.04, 0.02, 0.3]} />
+          <meshStandardMaterial color="#63b3ed" metalness={0.9} roughness={0.1} emissive="#1e40af" emissiveIntensity={0.2} />
+        </mesh>
+        
+        {/* Scope */}
+        <mesh position={[0, 0.12, -0.2]}>
+          <cylinderGeometry args={[0.03, 0.03, 0.4, 8]} />
+          <meshStandardMaterial color="#1a202c" metalness={0.8} roughness={0.2} />
+        </mesh>
+      </group>
+      
+      {/* Muzzle glow effect */}
+      <pointLight 
+        position={[0, 0, -1.1]} 
+        color="#00ffff" 
+        intensity={0.5} 
+        distance={3}
+        decay={2}
+      />
+      
+      {/* Weapon highlight light */}
+      <pointLight 
+        position={[0, 0.2, 0]} 
+        color="#4299e1" 
+        intensity={0.3} 
+        distance={2}
+        decay={1}
+      />
     </group>
   );
 };
