@@ -1,4 +1,3 @@
-
 import { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
@@ -25,14 +24,19 @@ export const useCameraMovement = ({
   yawAngle,
   pitchAngle
 }: CameraMovementProps) => {
-  const { camera } = useThree();
+  const { camera, viewport } = useThree();
   const targetPosition = useRef(new Vector3(...position));
   const velocity = useRef(new Vector3());
 
-  // Initialize camera at lower position
+  // Initialize camera at lower position with iPhone aspect ratio constraints
   useEffect(() => {
     targetPosition.current.set(0, 2, 12);
     camera.position.copy(targetPosition.current);
+    
+    // Set proper aspect ratio for iPhone screen (375/667)
+    camera.aspect = 375 / 667;
+    camera.updateProjectionMatrix();
+    
     console.log('Camera initialized at position:', camera.position);
   }, [camera]);
 
@@ -74,15 +78,21 @@ export const useCameraMovement = ({
       velocity.current.multiplyScalar(damping);
     }
     
-    // Update position
+    // Update position with boundary constraints for iPhone screen
     targetPosition.current.add(velocity.current.clone().multiplyScalar(delta));
     
-    // Keep camera at reasonable height above ground
+    // Keep camera within reasonable bounds for iPhone viewport
+    targetPosition.current.x = Math.max(-20, Math.min(20, targetPosition.current.x));
     targetPosition.current.y = Math.max(1.5, Math.min(4, targetPosition.current.y));
+    targetPosition.current.z = Math.max(-50, Math.min(50, targetPosition.current.z));
     
     // Update camera position and rotation
     camera.position.copy(targetPosition.current);
     camera.rotation.set(pitchAngle.current, yawAngle.current, 0, 'YXZ');
+    
+    // Ensure aspect ratio stays correct for iPhone
+    camera.aspect = 375 / 667;
+    camera.updateProjectionMatrix();
     
     // Notify parent of position changes
     onPositionChange(camera.position);

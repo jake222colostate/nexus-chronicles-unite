@@ -1,32 +1,16 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Vector3, Group } from 'three';
-import { useThree, useFrame } from '@react-three/fiber';
+
+import React, { useRef, useState, useEffect } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { Vector3, Group, Mesh, BufferGeometry, Material } from 'three';
 import { ScifiCannon } from './ScifiCannon';
-import { Asteroid } from './Asteroid';
 
-const UPGRADE_TARGETS = [
-  new Vector3(0, 4, 0),
-  new Vector3(-2, 2.5, -1),
-  new Vector3(2, 2.5, -1),
-  new Vector3(-3, 1, -2),
-  new Vector3(0, 1, -2),
-  new Vector3(3, 1, -2),
-  new Vector3(-1, -0.5, -3),
-  new Vector3(0, -2, -4)
-];
-
-interface SpawnedAsteroid {
+interface Asteroid {
   id: number;
   position: Vector3;
   velocity: Vector3;
-  health: number;
-}
-
-interface Projectile {
-  id: number;
-  position: Vector3;
-  direction: Vector3;
-  speed: number;
+  size: number;
+  rotation: Vector3;
+  rotationVelocity: Vector3;
 }
 
 interface ScifiDefenseSystemProps {
@@ -34,161 +18,144 @@ interface ScifiDefenseSystemProps {
 }
 
 export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteorDestroyed }) => {
-  const [asteroids, setAsteroids] = useState<SpawnedAsteroid[]>([]);
-  const [projectiles, setProjectiles] = useState<Projectile[]>([]);
-  const spawnIntervalRef = useRef<NodeJS.Timeout>();
-  const fireIntervalRef = useRef<NodeJS.Timeout>();
-  const cannonGroup = useRef<Group>(null);
-  const { camera } = useThree();
+  const { camera, viewport } = useThree();
+  const [asteroids, setAsteroids] = useState<Asteroid[]>([]);
+  const [targetedAsteroid, setTargetedAsteroid] = useState<Asteroid | null>(null);
+  const lastSpawnTime = useRef(0);
+  const asteroidCounter = useRef(0);
 
-  useEffect(() => {
-    spawnIntervalRef.current = setInterval(() => {
-      const spawnDist = 20;
-      const side = Math.random() < 0.5 ? -1 : 1;
-      const x = side * (10 + Math.random() * 5);
-      const y = Math.random() * 5 + 2;
-      const spawnPos = new Vector3(x, y, camera.position.z - spawnDist);
-      const target = UPGRADE_TARGETS[Math.floor(Math.random() * UPGRADE_TARGETS.length)];
-      const dir = target.clone().sub(spawnPos).normalize();
-      setAsteroids(prev => [
-        ...prev,
-        {
-          id: Date.now(),
-          position: spawnPos,
-          // Asteroids were moving too quickly to react to. Reduce
-          // their velocity so players have a fair chance to shoot
-          // them down before they reach the target area.
-          velocity: dir.multiplyScalar(0.05),
-          health: 5
-        }
-      ]);
-    }, 4000);
-    return () => {
-      if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
-    };
-  }, [camera]);
+  // Check if asteroid is within camera view bounds
+  const isAsteroidInView = (asteroid: Asteroid): boolean => {
+    const worldPosition = asteroid.position.clone();
+    const screenPosition = worldPosition.project(camera);
+    
+    // Convert to screen coordinates and check if within iPhone screen bounds
+    const x = (screenPosition.x * 0.5 + 0.5) * viewport.width;
+    const y = (screenPosition.y * -0.5 + 0.5) * viewport.height;
+    
+    // iPhone screen bounds (375x667)
+    const screenWidth = 375;
+    const screenHeight = 667;
+    const margin = 50; // Small margin for smooth transitions
+    
+    return (
+      x >= -margin && 
+      x <= screenWidth + margin && 
+      y >= -margin && 
+      y <= screenHeight + margin &&
+      worldPosition.z > camera.position.z - 50 // Not too far behind camera
+    );
+  };
 
-  useEffect(() => {
-    const handleClick = () => {
-      if (!cannonGroup.current || asteroids.length === 0) return;
-      const start = new Vector3();
-      cannonGroup.current.getWorldPosition(start);
-      const targetPos = asteroids[0].position.clone();
-      const dir = targetPos.clone().sub(start).normalize();
-      setProjectiles(prev => [
-        ...prev,
-        { id: Date.now(), position: start, direction: dir, speed: 0.5 }
-      ]);
-    };
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
-  }, [asteroids]);
+  // Spawn asteroids periodically
+  useFrame((state) => {
+    const currentTime = state.clock.elapsedTime;
+    
+    // Spawn new asteroid every 3-5 seconds
+    if (currentTime - lastSpawnTime.current > 3 + Math.random() * 2) {
+      const newAsteroid: Asteroid = {
+        id: asteroidCounter.current++,
+        position: new Vector3(
+          (Math.random() - 0.5) * 30, // Random X within reasonable bounds
+          10 + Math.random() * 10,    // Start above view
+          (Math.random() - 0.5) * 20  // Random Z depth
+        ),
+        velocity: new Vector3(
+          (Math.random() - 0.5) * 2,  // Slight horizontal drift
+          -2 - Math.random() * 3,     // Downward motion
+          (Math.random() - 0.5) * 1   // Slight depth movement
+        ),
+        size: 0.5 + Math.random() * 1,
+        rotation: new Vector3(0, 0, 0),
+        rotationVelocity: new Vector3(
+          (Math.random() - 0.5) * 0.02,
+          (Math.random() - 0.5) * 0.02,
+          (Math.random() - 0.5) * 0.02
+        )
+      };
+      
+      setAsteroids(prev => [...prev, newAsteroid]);
+      lastSpawnTime.current = currentTime;
+    }
 
-  const handleAsteroidHit = useCallback((id: number, damage: number) => {
-    let destroyed = false;
-    setAsteroids((prev) => {
-      const updated = prev.map((a) => {
-        if (a.id === id) {
-          const newHealth = a.health - damage;
-          if (newHealth <= 0) destroyed = true;
-          return { ...a, health: newHealth };
-        }
-        return a;
-      }).filter((a) => a.health > 0);
-      return updated;
+    // Update asteroid positions and remove those outside view or below screen
+    setAsteroids(prev => {
+      return prev.map(asteroid => {
+        // Update position
+        asteroid.position.add(asteroid.velocity.clone().multiplyScalar(0.016));
+        
+        // Update rotation
+        asteroid.rotation.add(asteroid.rotationVelocity);
+        
+        return asteroid;
+      }).filter(asteroid => {
+        // Remove asteroids that are too far below or outside camera frustum
+        const inView = isAsteroidInView(asteroid);
+        const notTooLow = asteroid.position.y > -15;
+        
+        return inView && notTooLow;
+      });
     });
-    if (destroyed) onMeteorDestroyed?.();
-  }, [onMeteorDestroyed]);
 
-  // Keep cannon attached to the player's camera
-  const offset = useRef(new Vector3(0, -1.5, -3));
-  useFrame(() => {
-    if (cannonGroup.current) {
-      cannonGroup.current.position.copy(camera.position).add(offset.current);
-      cannonGroup.current.quaternion.copy(camera.quaternion);
+    // Update targeted asteroid - only target if in view
+    if (targetedAsteroid && !isAsteroidInView(targetedAsteroid)) {
+      setTargetedAsteroid(null);
+    } else if (!targetedAsteroid && asteroids.length > 0) {
+      // Find closest asteroid that's in view
+      const visibleAsteroids = asteroids.filter(isAsteroidInView);
+      if (visibleAsteroids.length > 0) {
+        const closest = visibleAsteroids.reduce((closest, current) => {
+          const closestDist = closest.position.distanceTo(camera.position);
+          const currentDist = current.position.distanceTo(camera.position);
+          return currentDist < closestDist ? current : closest;
+        });
+        setTargetedAsteroid(closest);
+      }
     }
   });
 
-  // Fire projectiles at the closest asteroid
-  useEffect(() => {
-    fireIntervalRef.current = setInterval(() => {
-      if (!cannonGroup.current || asteroids.length === 0) return;
-      const start = new Vector3();
-      cannonGroup.current.getWorldPosition(start);
-      const targetPos = asteroids[0].position.clone();
-      const dir = targetPos.clone().sub(start).normalize();
-      setProjectiles((prev) => [
-        ...prev,
-        { id: Date.now(), position: start, direction: dir, speed: 0.5 }
-      ]);
-    }, 1000);
-    return () => {
-      if (fireIntervalRef.current) clearInterval(fireIntervalRef.current);
-    };
-  }, [asteroids]);
-
-  // Update projectiles each frame
-  useFrame(() => {
-    setAsteroids(prev => {
-      const updated = prev.map(a => ({
-        ...a,
-        position: a.position.clone().add(a.velocity)
-      }));
-
-      for (let i = 0; i < updated.length; i++) {
-        for (let j = i + 1; j < updated.length; j++) {
-          const a = updated[i];
-          const b = updated[j];
-          if (a.position.distanceTo(b.position) < 1) {
-            const temp = a.velocity.clone();
-            a.velocity = b.velocity.clone();
-            b.velocity = temp;
-          }
-        }
-      }
-
-      return updated.filter(a => a.position.z < camera.position.z);
-    });
-
-    setProjectiles((prev) => {
-      return prev
-        .map((p) => {
-          const newPos = p.position
-            .clone()
-            .add(p.direction.clone().multiplyScalar(p.speed));
-          let hit = false;
-          for (const ast of asteroids) {
-            if (newPos.distanceTo(ast.position) < 0.7) {
-              handleAsteroidHit(ast.id, 1);
-              hit = true;
-              break;
-            }
-          }
-          if (hit || newPos.distanceTo(camera.position) > 50) return null;
-          return { ...p, position: newPos } as Projectile;
-        })
-        .filter(Boolean) as Projectile[];
-    });
-  });
-
-  const target = asteroids[0] ? asteroids[0].position.clone() : undefined;
+  // Handle asteroid click/destruction
+  const handleAsteroidDestroy = (asteroidId: number) => {
+    setAsteroids(prev => prev.filter(a => a.id !== asteroidId));
+    if (targetedAsteroid?.id === asteroidId) {
+      setTargetedAsteroid(null);
+    }
+    onMeteorDestroyed?.();
+  };
 
   return (
     <group>
-      <group ref={cannonGroup}>
-        <ScifiCannon target={target} />
-      </group>
-      {asteroids.map((ast) => (
-        <Asteroid key={ast.id} position={ast.position} health={ast.health} />
-      ))}
-      {projectiles.map((p) => (
-        <mesh key={p.id} position={p.position}>
-          <sphereGeometry args={[0.1, 8, 8]} />
-          <meshStandardMaterial color="#ff0000" />
-        </mesh>
+      {/* Cannon that targets asteroids */}
+      <ScifiCannon target={targetedAsteroid?.position} />
+      
+      {/* Render asteroids */}
+      {asteroids.map(asteroid => (
+        <group key={asteroid.id} position={asteroid.position} rotation={asteroid.rotation}>
+          <mesh
+            onClick={() => handleAsteroidDestroy(asteroid.id)}
+            scale={asteroid.size}
+          >
+            <icosahedronGeometry args={[1, 0]} />
+            <meshStandardMaterial 
+              color="#8B4513" 
+              roughness={0.8}
+              metalness={0.2}
+            />
+          </mesh>
+          
+          {/* Glow effect for targeted asteroid */}
+          {targetedAsteroid?.id === asteroid.id && (
+            <mesh scale={asteroid.size * 1.5}>
+              <icosahedronGeometry args={[1, 0]} />
+              <meshBasicMaterial 
+                color="#ff4444" 
+                transparent 
+                opacity={0.3}
+              />
+            </mesh>
+          )}
+        </group>
       ))}
     </group>
   );
 };
-
-

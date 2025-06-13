@@ -90,11 +90,12 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   console.log('Scene3D: About to render Canvas');
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative overflow-hidden">
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
         dpr={[1, 1]}
         performance={{ min: 0.6 }}
+        style={{ width: '375px', height: '667px' }}
         gl={{ 
           antialias: false, 
           alpha: false,
@@ -111,6 +112,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             fov={60}
             near={0.01}
             far={500}
+            aspect={375 / 667}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           >
             <WizardStaff />
