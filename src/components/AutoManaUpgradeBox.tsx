@@ -32,22 +32,22 @@ export const AutoManaUpgradeBox: React.FC<AutoManaUpgradeBoxProps> = ({
   };
 
   return (
-    <div className="fixed top-16 left-1/2 transform -translate-x-1/2 z-30 pointer-events-auto boundary-constrained">
-      <Card className="bg-purple-900/90 border-purple-400/50 backdrop-blur-xl px-4 py-2 min-w-[280px]">
+    <div className="fixed top-12 left-1/2 transform -translate-x-1/2 z-30 pointer-events-auto boundary-constrained">
+      <Card className="bg-purple-900/90 border-purple-400/50 backdrop-blur-sm px-3 py-1.5 min-w-[260px]">
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 mb-1">
-            <span className="text-sm">🧙‍♂️</span>
-            <span className="text-white font-semibold text-sm">Auto Mana Lvl {autoManaLevel}</span>
-            <span className="text-purple-300 text-sm">- {formatNumber(upgradeCost)} Mana</span>
+            <span className="text-xs">🧙‍♂️</span>
+            <span className="text-white font-medium text-xs">Auto Mana Lvl {autoManaLevel}</span>
+            <span className="text-purple-300 text-xs">- {formatNumber(upgradeCost)} Mana</span>
           </div>
-          <div className="text-purple-200 text-xs mb-2">
+          <div className="text-purple-200 text-xs mb-1.5">
             +{autoManaRate} mana/sec
           </div>
           <Button
             onClick={handleUpgrade}
             disabled={!canUpgrade}
             size="sm"
-            className={`w-full text-xs h-7 ${
+            className={`w-full text-xs h-6 ${
               canUpgrade
                 ? 'bg-purple-600 hover:bg-purple-700 text-white'
                 : 'bg-gray-600 text-gray-400 cursor-not-allowed'

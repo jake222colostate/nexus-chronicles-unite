@@ -256,157 +256,157 @@ const GameEngine: React.FC = () => {
 
   return (
     <CollisionProvider>
-    <div className="h-[667px] w-full relative overflow-hidden bg-black boundary-constrained iphone-screen-container">
-      {/* Enhanced background with better layering */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
-      
-      {/* Enhanced particle background for visual depth */}
-      <EnhancedParticleBackground realm={currentRealm} />
+      <div className="h-[667px] w-full max-w-[375px] mx-auto relative overflow-hidden bg-black boundary-constrained iphone-screen-container">
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
+        
+        {/* Enhanced particle background */}
+        <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Journey Tracker - invisible component that tracks real movement */}
-      <JourneyTracker 
-        playerPosition={stablePlayerPosition}
-        onJourneyUpdate={handleJourneyUpdate}
-      />
+        {/* Journey Tracker - invisible component */}
+        <JourneyTracker 
+          playerPosition={stablePlayerPosition}
+          onJourneyUpdate={handleJourneyUpdate}
+        />
 
-      {/* Top HUD - Fixed at top with proper spacing */}
-      <TopHUD
-        realm={currentRealm}
-        mana={stableGameState.mana}
-        energyCredits={stableGameState.energyCredits}
-        nexusShards={stableGameState.nexusShards}
-        convergenceProgress={convergenceProgress}
-        manaPerSecond={stableGameState.manaPerSecond}
-        energyPerSecond={stableGameState.energyPerSecond}
-        onHelpClick={handleShowHelp}
-        onCombatUpgradesClick={handleShowCombatUpgrades}
-        enemyCount={enemyCount}
-      />
-
-      {/* Auto Mana Upgrade Box - Centered below top bar */}
-      <AutoManaUpgradeBox
-        autoManaLevel={stableGameState.autoManaLevel}
-        autoManaRate={stableGameState.autoManaRate}
-        currentMana={stableGameState.mana}
-        onUpgrade={handleAutoManaUpgrade}
-      />
-
-      {/* Main Game Area - Properly positioned to avoid overlap */}
-      <div className="absolute inset-0 pt-24 pb-24" style={{ pointerEvents: 'none' }}>
-        <MapSkillTreeView
+        {/* Top HUD - Fixed at top */}
+        <TopHUD
           realm={currentRealm}
-          buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : stableGameState.scifiBuildings}
+          mana={stableGameState.mana}
+          energyCredits={stableGameState.energyCredits}
+          nexusShards={stableGameState.nexusShards}
+          convergenceProgress={convergenceProgress}
           manaPerSecond={stableGameState.manaPerSecond}
           energyPerSecond={stableGameState.energyPerSecond}
-          onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
-          buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
-          currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
-          gameState={stableGameState}
-          onPurchaseUpgrade={purchaseUpgrade}
+          onHelpClick={handleShowHelp}
+          onCombatUpgradesClick={handleShowCombatUpgrades}
+          enemyCount={enemyCount}
+        />
+
+        {/* Auto Mana Upgrade Box - Centered below top bar */}
+        <AutoManaUpgradeBox
+          autoManaLevel={stableGameState.autoManaLevel}
+          autoManaRate={stableGameState.autoManaRate}
+          currentMana={stableGameState.mana}
+          onUpgrade={handleAutoManaUpgrade}
+        />
+
+        {/* Main Game Area - Positioned to avoid overlap */}
+        <div className="absolute inset-0 pt-[120px] pb-[140px]" style={{ pointerEvents: 'none' }}>
+          <MapSkillTreeView
+            realm={currentRealm}
+            buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : stableGameState.scifiBuildings}
+            manaPerSecond={stableGameState.manaPerSecond}
+            energyPerSecond={stableGameState.energyPerSecond}
+            onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
+            buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
+            currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
+            gameState={stableGameState}
+            onPurchaseUpgrade={purchaseUpgrade}
+            isTransitioning={isTransitioning}
+            showTapEffect={showTapEffect}
+            onTapEffectComplete={handleTapEffectComplete}
+            onPlayerPositionUpdate={handlePlayerPositionUpdate}
+            onEnemyCountChange={handleEnemyCountChange}
+            onEnemyKilled={handleEnemyKilled}
+            onMeteorDestroyed={handleMeteorDestroyed}
+            weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
+          />
+
+          {/* Realm Transition Effect */}
+          <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
+        </div>
+
+        {/* Bottom Action Bar - Fixed at bottom */}
+        <BottomActionBar
+          currentRealm={currentRealm}
+          onRealmChange={switchRealm}
+          onTap={handleTapResource}
           isTransitioning={isTransitioning}
-          showTapEffect={showTapEffect}
-          onTapEffectComplete={handleTapEffectComplete}
-          onPlayerPositionUpdate={handlePlayerPositionUpdate}
-          onEnemyCountChange={handleEnemyCountChange}
-          onEnemyKilled={handleEnemyKilled}
-          onMeteorDestroyed={handleMeteorDestroyed}
-          weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
+          playerDistance={currentJourneyDistance}
         />
 
-        {/* Realm Transition Effect */}
-        <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
-      </div>
+        {/* All modal overlays - properly constrained */}
+        {showQuickHelp && (
+          <QuickHelpModal
+            isOpen={showQuickHelp}
+            onClose={() => setShowQuickHelp(false)}
+          />
+        )}
 
-      {/* Bottom Action Bar - Fixed at bottom */}
-      <BottomActionBar
-        currentRealm={currentRealm}
-        onRealmChange={switchRealm}
-        onTap={handleTapResource}
-        isTransitioning={isTransitioning}
-        playerDistance={currentJourneyDistance}
-      />
-
-      {/* All modal overlays - properly constrained */}
-      {showQuickHelp && (
-        <QuickHelpModal
-          isOpen={showQuickHelp}
-          onClose={() => setShowQuickHelp(false)}
-        />
-      )}
-
-      {showCombatUpgrades && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
-          <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
-            <CombatUpgradeSystem
-              upgrades={combatUpgrades}
-              mana={stableGameState.mana}
-              onUpgrade={purchaseCombatUpgrade}
-              onClose={() => setShowCombatUpgrades(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {showWeaponUpgrades && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
-          <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
-            {currentRealm === 'fantasy' ? (
-              <WeaponUpgradeSystem
-                upgrades={weaponUpgrades}
+        {showCombatUpgrades && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
+            <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
+              <CombatUpgradeSystem
+                upgrades={combatUpgrades}
                 mana={stableGameState.mana}
-                onUpgrade={purchaseWeaponUpgrade}
-                onClose={() => setShowWeaponUpgrades(false)}
+                onUpgrade={purchaseCombatUpgrade}
+                onClose={() => setShowCombatUpgrades(false)}
               />
-            ) : (
-              <ScifiWeaponUpgradeSystem
-                upgrades={scifiWeaponUpgrades}
-                energyCredits={stableGameState.energyCredits}
-                onUpgrade={purchaseScifiWeaponUpgrade}
-                onClose={() => setShowWeaponUpgrades(false)}
-              />
-            )}
-          </div>
-        </div>
-      )}
-
-      {showCrossRealmUpgrades && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
-          <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
-            <CrossRealmUpgradeSystem
-              upgrades={crossRealmUpgradesWithLevels}
-              currentRealm={currentRealm}
-              mana={stableGameState.mana}
-              energyCredits={stableGameState.energyCredits}
-              fantasyJourneyDistance={stableGameState.fantasyJourneyDistance}
-              scifiJourneyDistance={stableGameState.scifiJourneyDistance}
-              onUpgrade={purchaseCrossRealmUpgrade}
-              onClose={() => setShowCrossRealmUpgrades(false)}
-            />
-          </div>
-        </div>
-      )}
-
-      {showConvergence && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
-          <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
-            <ConvergenceSystem
-              gameState={stableGameState}
-              onPerformConvergence={handlePerformConvergence}
-            />
-            <div className="mt-3 text-center">
-              <Button 
-                onClick={handleConvergenceClose}
-                variant="outline"
-                size="sm"
-                className="border-gray-400 text-gray-300 hover:bg-white/10 transition-all duration-200"
-              >
-                Cancel
-              </Button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+
+        {showWeaponUpgrades && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
+            <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
+              {currentRealm === 'fantasy' ? (
+                <WeaponUpgradeSystem
+                  upgrades={weaponUpgrades}
+                  mana={stableGameState.mana}
+                  onUpgrade={purchaseWeaponUpgrade}
+                  onClose={() => setShowWeaponUpgrades(false)}
+                />
+              ) : (
+                <ScifiWeaponUpgradeSystem
+                  upgrades={scifiWeaponUpgrades}
+                  energyCredits={stableGameState.energyCredits}
+                  onUpgrade={purchaseScifiWeaponUpgrade}
+                  onClose={() => setShowWeaponUpgrades(false)}
+                />
+              )}
+            </div>
+          </div>
+        )}
+
+        {showCrossRealmUpgrades && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
+            <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
+              <CrossRealmUpgradeSystem
+                upgrades={crossRealmUpgradesWithLevels}
+                currentRealm={currentRealm}
+                mana={stableGameState.mana}
+                energyCredits={stableGameState.energyCredits}
+                fantasyJourneyDistance={stableGameState.fantasyJourneyDistance}
+                scifiJourneyDistance={stableGameState.scifiJourneyDistance}
+                onUpgrade={purchaseCrossRealmUpgrade}
+                onClose={() => setShowCrossRealmUpgrades(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        {showConvergence && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
+            <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
+              <ConvergenceSystem
+                gameState={stableGameState}
+                onPerformConvergence={handlePerformConvergence}
+              />
+              <div className="mt-3 text-center">
+                <Button 
+                  onClick={handleConvergenceClose}
+                  variant="outline"
+                  size="sm"
+                  className="border-gray-400 text-gray-300 hover:bg-white/10 transition-all duration-200"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </CollisionProvider>
   );
 };
