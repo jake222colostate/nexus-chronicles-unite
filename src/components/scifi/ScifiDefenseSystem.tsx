@@ -70,7 +70,12 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
   const isAsteroidVisible = useCallback(
     (pos: Vector3) => {
       const ndc = pos.clone().project(camera);
-      return Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1 && ndc.z < 1;
+      return (
+        Math.abs(ndc.x) <= 1 &&
+        Math.abs(ndc.y) <= 1 &&
+        ndc.z >= -1 &&
+        ndc.z <= 1
+      );
     },
     [camera]
   );
