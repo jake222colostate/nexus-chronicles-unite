@@ -12,6 +12,7 @@ import { JourneyTracker } from './JourneyTracker';
 import { WeaponUpgradeSystem } from './WeaponUpgradeSystem';
 import { ScifiWeaponUpgradeSystem } from './ScifiWeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem } from './CrossRealmUpgradeSystem';
+import { AutoManaUpgradeBox } from './AutoManaUpgradeBox';
 import { useGameStateManager, fantasyBuildings, scifiBuildings } from './GameStateManager';
 import { useGameLoopManager } from './GameLoopManager';
 import { useUpgradeManagers } from './UpgradeManagers';
@@ -105,8 +106,24 @@ const GameEngine: React.FC = () => {
     crossRealmUpgradesWithLevels
   });
 
+  // Auto mana upgrade handler
+  const handleAutoManaUpgrade = useCallback((cost: number) => {
+    if (stableGameState.mana >= cost) {
+      setGameState(prev => {
+        const newLevel = prev.autoManaLevel + 1;
+        const newRate = newLevel * 2; // 2 mana/sec per level
+        
+        return {
+          ...prev,
+          mana: prev.mana - cost,
+          autoManaLevel: newLevel,
+          autoManaRate: newRate
+        };
+      });
+    }
+  }, [stableGameState.mana, setGameState]);
+
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
-    // Removed state update to prevent infinite loops - position tracking handled elsewhere
     console.log('Player position updated:', position);
   }, []);
 
@@ -132,7 +149,6 @@ const GameEngine: React.FC = () => {
   const handleJourneyUpdate = useCallback((distance: number) => {
     const currentDistance = currentRealm === 'fantasy' ? stableGameState.fantasyJourneyDistance : stableGameState.scifiJourneyDistance;
     
-    // Only update if distance changed significantly
     if (Math.abs(distance - currentDistance) > 0.5) {
       setGameState(prev => ({
         ...prev,
@@ -170,7 +186,6 @@ const GameEngine: React.FC = () => {
       mana: prev.mana + 1,
     }));
     
-    // Show +1 mana animation
     const tapButton = document.getElementById('tap-button');
     if (tapButton) {
       const rect = tapButton.getBoundingClientRect();
@@ -207,7 +222,6 @@ const GameEngine: React.FC = () => {
     setShowConvergence(false);
   }, [performConvergence, setShowConvergence]);
 
-  // Add AutoClicker effect
   const handleAutoManaGeneration = useCallback((amount: number) => {
     setGameState(prev => ({
       ...prev,
@@ -224,7 +238,6 @@ const GameEngine: React.FC = () => {
     }));
   }, [setGameState]);
 
-  // Add AutoEnergy effect for sci-fi realm
   const handleAutoEnergyGeneration = useCallback((amount: number) => {
     setGameState(prev => ({
       ...prev,
@@ -243,7 +256,7 @@ const GameEngine: React.FC = () => {
 
   return (
     <CollisionProvider>
-    <div className={`h-[667px] w-full relative overflow-hidden bg-black boundary-constrained iphone-screen-container ${false ? 'animate-pulse bg-red-900/20' : ''}`}>
+    <div className="h-[667px] w-full relative overflow-hidden bg-black boundary-constrained iphone-screen-container">
       {/* Enhanced background with better layering */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
       
@@ -256,7 +269,7 @@ const GameEngine: React.FC = () => {
         onJourneyUpdate={handleJourneyUpdate}
       />
 
-      {/* Clean TopHUD - Fixed at top */}
+      {/* Top HUD - Fixed at top with proper spacing */}
       <TopHUD
         realm={currentRealm}
         mana={stableGameState.mana}
@@ -270,9 +283,16 @@ const GameEngine: React.FC = () => {
         enemyCount={enemyCount}
       />
 
-      {/* Main Game Area - Properly positioned below fixed elements */}
-      <div className="absolute inset-0 pt-12 pb-20" style={{ pointerEvents: 'none' }}>
-        {/* Main game view without overlays */}
+      {/* Auto Mana Upgrade Box - Centered below top bar */}
+      <AutoManaUpgradeBox
+        autoManaLevel={stableGameState.autoManaLevel}
+        autoManaRate={stableGameState.autoManaRate}
+        currentMana={stableGameState.mana}
+        onUpgrade={handleAutoManaUpgrade}
+      />
+
+      {/* Main Game Area - Properly positioned to avoid overlap */}
+      <div className="absolute inset-0 pt-24 pb-24" style={{ pointerEvents: 'none' }}>
         <MapSkillTreeView
           realm={currentRealm}
           buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : stableGameState.scifiBuildings}
@@ -295,29 +315,9 @@ const GameEngine: React.FC = () => {
 
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
-
-        {/* Weapon Upgrade Button - Top right corner, properly positioned */}
-        <div className="fixed top-16 right-2 z-30 pointer-events-auto">
-          <Button 
-            onClick={handleShowWeaponUpgrades}
-            className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0 pointer-events-auto cursor-pointer"
-          >
-            🏹
-          </Button>
-        </div>
-
-        {/* Cross-Realm Upgrades Button - Top right, below weapon button */}
-        <div className="fixed top-28 right-2 z-30 pointer-events-auto">
-          <Button 
-            onClick={handleShowCrossRealmUpgrades}
-            className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0 pointer-events-auto cursor-pointer"
-          >
-            🏰
-          </Button>
-        </div>
       </div>
 
-      {/* Enhanced Bottom Action Bar - Fixed at bottom */}
+      {/* Bottom Action Bar - Fixed at bottom */}
       <BottomActionBar
         currentRealm={currentRealm}
         onRealmChange={switchRealm}
@@ -326,15 +326,16 @@ const GameEngine: React.FC = () => {
         playerDistance={currentJourneyDistance}
       />
 
-      {/* Quick Help Modal - Constrained to screen */}
-      <QuickHelpModal
-        isOpen={showQuickHelp}
-        onClose={() => setShowQuickHelp(false)}
-      />
+      {/* All modal overlays - properly constrained */}
+      {showQuickHelp && (
+        <QuickHelpModal
+          isOpen={showQuickHelp}
+          onClose={() => setShowQuickHelp(false)}
+        />
+      )}
 
-      {/* Combat Upgrades Modal - Constrained to screen bounds */}
       {showCombatUpgrades && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
           <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
             <CombatUpgradeSystem
               upgrades={combatUpgrades}
@@ -346,9 +347,8 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Weapon Upgrades Modal - Constrained to screen bounds */}
       {showWeaponUpgrades && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
           <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
             {currentRealm === 'fantasy' ? (
               <WeaponUpgradeSystem
@@ -369,9 +369,8 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Cross-Realm Upgrades Modal - Constrained to screen bounds */}
       {showCrossRealmUpgrades && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
           <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
             <CrossRealmUpgradeSystem
               upgrades={crossRealmUpgradesWithLevels}
@@ -387,9 +386,8 @@ const GameEngine: React.FC = () => {
         </div>
       )}
 
-      {/* Convergence Modal - Constrained to screen bounds */}
       {showConvergence && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 boundary-constrained">
           <div className="w-full max-w-sm max-h-[80vh] overflow-y-auto">
             <ConvergenceSystem
               gameState={stableGameState}

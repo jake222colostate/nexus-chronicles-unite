@@ -48,54 +48,60 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-40 px-2 py-2 pointer-events-auto" style={{ maxWidth: 'var(--iphone-screen-width)', margin: '0 auto' }}>
+    <div className="fixed top-0 left-0 right-0 z-40 px-3 py-2 pointer-events-auto boundary-constrained">
       <div 
-        className="flex items-center justify-between bg-black/85 backdrop-blur-xl px-3 py-2 rounded-lg border border-white/20 relative min-h-[36px] ml-[148px]"
+        className="flex items-center justify-between bg-black/85 backdrop-blur-xl px-4 py-2 rounded-lg border border-white/20 relative min-h-[40px]"
         style={{
           boxShadow: '0 2px 15px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.08)',
         }}
       >
-        {/* Enhanced glassmorphism effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/10 pointer-events-none rounded-lg" />
-        
         {/* Help Button */}
         <Button
           onClick={onHelpClick}
           size="sm"
           variant="ghost"
-          className="h-7 w-7 p-0 rounded-lg bg-transparent hover:bg-white/15 hover:scale-105 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 pointer-events-auto"
+          className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-white/15 text-white/80 hover:text-white transition-all duration-200 flex-shrink-0 pointer-events-auto"
         >
           <HelpCircle size={16} />
         </Button>
 
-        {/* Main Resources - centered and properly spaced */}
-        <div className="flex items-center justify-center gap-3 text-sm font-bold text-white relative z-10 flex-1">
+        {/* Main Resources - evenly spaced across the center */}
+        <div className="flex items-center justify-center gap-6 text-sm font-bold text-white relative z-10 flex-1">
           {/* Mana */}
-          <div className="flex items-center gap-1" data-mana-display>
-            <span className="text-sm">🧙‍♂️</span>
-            <span className="text-purple-300 font-bold text-xs">{formatNumber(mana)}</span>
+          <div className="flex items-center gap-1.5" data-mana-display>
+            <span className="text-base">🧙‍♂️</span>
+            <div className="flex flex-col items-center">
+              <span className="text-purple-300 font-bold text-sm">{formatNumber(mana)}</span>
+              <span className="text-purple-200 text-xs">+{formatRate(manaPerSecond)}/s</span>
+            </div>
           </div>
           
           {/* Energy */}
-          <div className="flex items-center gap-1" data-energy-display>
-            <span className="text-sm">⚡</span>
-            <span className="text-cyan-300 font-bold text-xs">{formatNumber(energyCredits)}</span>
+          <div className="flex items-center gap-1.5" data-energy-display>
+            <span className="text-base">⚡</span>
+            <div className="flex flex-col items-center">
+              <span className="text-cyan-300 font-bold text-sm">{formatNumber(energyCredits)}</span>
+              <span className="text-cyan-200 text-xs">+{formatRate(energyPerSecond)}/s</span>
+            </div>
           </div>
           
           {/* Nexus Shards */}
-          <div className="flex items-center gap-1">
-            <span className="text-sm">💎</span>
-            <span className="text-yellow-300 font-bold text-xs">{formatNumber(nexusShards)}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-base">💎</span>
+            <div className="flex flex-col items-center">
+              <span className="text-yellow-300 font-bold text-sm">{formatNumber(nexusShards)}</span>
+              <span className="text-yellow-200 text-xs">gems</span>
+            </div>
           </div>
         </div>
 
-        {/* Combat Button */}
+        {/* Weapon Button */}
         {onCombatUpgradesClick && (
           <Button
             onClick={onCombatUpgradesClick}
             size="sm"
             variant="ghost"
-            className="h-7 w-7 p-0 rounded-lg bg-transparent hover:bg-red-500/20 hover:scale-105 text-red-400 hover:text-red-300 transition-all duration-200 relative flex-shrink-0 pointer-events-auto"
+            className="h-8 w-8 p-0 rounded-lg bg-transparent hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-200 relative flex-shrink-0 pointer-events-auto"
           >
             <Sword size={16} />
             {enemyCount > 0 && (
