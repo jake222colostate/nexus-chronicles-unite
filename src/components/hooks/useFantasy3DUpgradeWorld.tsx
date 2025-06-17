@@ -16,6 +16,7 @@ export const useFantasy3DUpgradeWorld = ({
   const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
   const [maxUnlockedUpgrade, setMaxUnlockedUpgrade] = useState(-1);
+  const [purchasedUpgrades, setPurchasedUpgrades] = useState<Set<number>>(new Set());
   
   // Use refs for values that don't need to trigger re-renders
   const currentManaRef = useRef(gameState?.mana || 100);
@@ -69,11 +70,16 @@ export const useFantasy3DUpgradeWorld = ({
 
   const handleUpgradePurchase = useCallback((upgrade: any) => {
     console.log(`Attempting to purchase ${upgrade.name} for ${upgrade.cost} mana. Current mana: ${currentManaRef.current}`);
-    
+
     if (currentManaRef.current >= upgrade.cost) {
       currentManaRef.current -= upgrade.cost;
       totalManaPerSecondRef.current += upgrade.manaPerSecond;
       setMaxUnlockedUpgrade(prev => Math.max(prev, upgrade.id));
+      setPurchasedUpgrades(prev => {
+        const next = new Set(prev);
+        next.add(upgrade.id);
+        return next;
+      });
       setSelectedUpgrade(null);
       console.log(`Unlocked ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
     } else {
@@ -102,6 +108,7 @@ export const useFantasy3DUpgradeWorld = ({
     handleUpgradeClick,
     handleUpgradePurchase,
     handleTierProgression,
-    setSelectedUpgrade
+    setSelectedUpgrade,
+    purchasedUpgrades
   };
 };

@@ -4,6 +4,10 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {
+  OptimizedProjectileSystem,
+  OptimizedProjectileSystemHandle
+} from './OptimizedProjectileSystem';
 
 // Staff model URLs from GitHub repository - Updated to use Draco-compressed versions
 const STAFF_MODELS = {
@@ -163,6 +167,9 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const weaponGroupRef = useRef<THREE.Group>(null);
+  const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
+  const targetRef = useRef<THREE.Vector3[]>([new THREE.Vector3()]);
   const [staffModel, setStaffModel] = React.useState<THREE.Object3D | null>(null);
   const staffCache = StaffModelCache.getInstance();
 
@@ -172,6 +179,8 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     if (upgradeLevel >= 1) return 'tier2';
     return 'tier1';
   }, [upgradeLevel]);
+
+  const staffScale = staffTier === 'tier1' ? 0.6 : staffTier === 'tier2' ? 0.65 : 0.7;
 
   // Load staff model based on tier
   useEffect(() => {
@@ -185,6 +194,14 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       });
     }
   }, [visible, staffTier, staffCache]);
+
+  useEffect(() => {
+    const handleClick = () => {
+      projectileSystemRef.current?.manualFire();
+    };
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
+  }, []);
 
   // First-person weapon positioning optimized for iPhone screen visibility
   useFrame(() => {
@@ -212,8 +229,12 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       weaponGroupRef.current.rotation.copy(camera.rotation);
       weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Y = -15° (less angle)
       weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20° (less tilt)
-      
-      console.log('Staff positioned for iPhone visibility:', staffPosition);
+
+      const tipOffset = new THREE.Vector3(0, 1.2 * staffScale, 0);
+      tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
+      staffTipPositionRef.current.copy(weaponGroupRef.current.position).add(tipOffset);
+      const forwardTarget = staffTipPositionRef.current.clone().add(cameraForward.multiplyScalar(30));
+      targetRef.current[0] = forwardTarget;
     }
   });
 
@@ -222,17 +243,22 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return null;
   }
 
-  // Larger scale for better iPhone screen visibility
-  const staffScale = staffTier === 'tier1' ? 0.6 : staffTier === 'tier2' ? 0.65 : 0.7;
-
   return (
     <group ref={weaponGroupRef}>
-      <primitive 
-        object={staffModel} 
+      <primitive
+        object={staffModel}
         scale={[staffScale, staffScale, staffScale]}
       />
       {/* Add a subtle light to make the staff more visible */}
       <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.5} distance={3} />
+      <OptimizedProjectileSystem
+        ref={projectileSystemRef}
+        staffTipPosition={staffTipPositionRef.current}
+        targetPositions={targetRef.current}
+        damage={1}
+        fireRate={500}
+        onHitEnemy={() => {}}
+      />
     </group>
   );
 };
