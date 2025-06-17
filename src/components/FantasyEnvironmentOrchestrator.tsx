@@ -11,13 +11,15 @@ interface FantasyEnvironmentOrchestratorProps {
   chunkSize: number;
   realm: 'fantasy' | 'scifi';
   playerPosition?: Vector3;
+  onEnemyPositionUpdate?: (positions: Vector3[]) => void;
 }
 
 export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestratorProps> = ({
   chunks,
   chunkSize,
   realm,
-  playerPosition = new Vector3(0, 0, 0)
+  playerPosition = new Vector3(0, 0, 0),
+  onEnemyPositionUpdate
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
