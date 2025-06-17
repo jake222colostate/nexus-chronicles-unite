@@ -40,16 +40,34 @@ export const OptimizedProjectileSystem = forwardRef<
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
 
-  // Load orb model for projectiles
-  const { scene: orbScene } = useGLTF(
-    assetPath('assets/orb/uttm_core_accurate.glb')
-  );
+  // Load orb model for projectiles with fallback
+  let orbScene = null;
+  try {
+    const gltfResult = useGLTF(assetPath('assets/orb/uttm_core_accurate.glb'));
+    orbScene = gltfResult.scene;
+  } catch (error) {
+    console.warn('Failed to load orb model, using fallback sphere:', error);
+    orbScene = null;
+  }
+
   const orbModel = useMemo<THREE.Object3D | null>(() => {
-    return orbScene ? orbScene.clone() : null;
+    if (orbScene) {
+      return orbScene.clone();
+    }
+    // Create fallback sphere if model fails to load
+    const fallbackGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+    const fallbackMaterial = new THREE.MeshBasicMaterial({ 
+      color: '#00ffff', 
+      emissive: '#00ffff', 
+      emissiveIntensity: 0.5 
+    });
+    const fallbackMesh = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
+    console.log('Using fallback sphere for projectile');
+    return fallbackMesh;
   }, [orbScene]);
 
   // Scale applied to orb model
-  const projectileScale = 0.5;
+  const projectileScale = 0.8; // Increased size for better visibility
 
   // Initialize projectile pool
   useMemo(() => {
@@ -76,7 +94,8 @@ export const OptimizedProjectileSystem = forwardRef<
         const container = new THREE.Group();
         container.visible = false;
 
-        const light = new THREE.PointLight('#00ffff', 1, 3);
+        // Brighter light for better visibility
+        const light = new THREE.PointLight('#00ffff', 2, 5);
         container.add(light);
 
         meshPoolRef.current.push(container);
@@ -117,7 +136,7 @@ export const OptimizedProjectileSystem = forwardRef<
     const projectile = projectilePoolRef.current[projectileIndex];
     const mesh = meshPoolRef.current[projectileIndex];
 
-    // Attach orb model
+    // Attach orb model - ensure it's visible
     if (orbModel) {
       // remove previous model but keep light as first child
       while (mesh.children.length > 1) {
@@ -125,7 +144,22 @@ export const OptimizedProjectileSystem = forwardRef<
       }
       const orb = orbModel.clone();
       orb.scale.setScalar(projectileScale);
+      orb.visible = true; // Explicitly set visible
+      
+      // Make sure all child meshes are visible and have proper materials
+      orb.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.visible = true;
+          child.material = new THREE.MeshBasicMaterial({ 
+            color: '#00ffff', 
+            emissive: '#00ffff', 
+            emissiveIntensity: 0.8 
+          });
+        }
+      });
+      
       mesh.add(orb);
+      console.log('Added orb to projectile mesh');
     }
     
     // Setup projectile
@@ -136,7 +170,7 @@ export const OptimizedProjectileSystem = forwardRef<
     projectile.active = true;
     projectile.life = MAX_LIFE;
     
-    // Setup mesh
+    // Setup mesh - ensure visibility
     mesh.position.copy(staffPos);
     mesh.visible = true;
 
@@ -198,9 +232,14 @@ export const OptimizedProjectileSystem = forwardRef<
   return (
     <group ref={groupRef}>
       {/* Much brighter ambient light for projectiles */}
-      <ambientLight intensity={0.8} color="#00ffff" />
+      <ambientLight intensity={1.2} color="#00ffff" />
     </group>
   );
 });
 
-useGLTF.preload(assetPath('assets/orb/uttm_core_accurate.glb'));
+// Preload with error handling
+try {
+  useGLTF.preload(assetPath('assets/orb/uttm_core_accurate.glb'));
+} catch (error) {
+  console.warn('Failed to preload orb model:', error);
+}

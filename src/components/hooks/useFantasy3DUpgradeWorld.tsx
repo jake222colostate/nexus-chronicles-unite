@@ -22,6 +22,9 @@ export const useFantasy3DUpgradeWorld = ({
   const currentManaRef = useRef(gameState?.mana || 100);
   const totalManaPerSecondRef = useRef(gameState?.manaPerSecond || 0);
   
+  // Ref to prevent double purchases
+  const isPurchasingRef = useRef(false);
+  
   // Enhanced infinite world parameters
   const CHUNK_SIZE = 80;
   const RENDER_DISTANCE = 200;
@@ -55,6 +58,12 @@ export const useFantasy3DUpgradeWorld = ({
   }, [onPlayerPositionUpdate]);
 
   const handleUpgradeClick = useCallback((upgrade: any) => {
+    // Prevent multiple clicks during purchase process
+    if (isPurchasingRef.current) {
+      console.log('Purchase already in progress, ignoring click');
+      return;
+    }
+    
     console.log(`Clicked upgrade: ${upgrade.name}`);
     
     const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
@@ -69,9 +78,25 @@ export const useFantasy3DUpgradeWorld = ({
   }, [cameraPosition]);
 
   const handleUpgradePurchase = useCallback((upgrade: any) => {
+    // Prevent double purchase
+    if (isPurchasingRef.current) {
+      console.log('Purchase already in progress, blocking duplicate purchase');
+      return;
+    }
+    
+    // Check if already purchased
+    if (purchasedUpgrades.has(upgrade.id)) {
+      console.log('Upgrade already purchased, blocking duplicate purchase');
+      setSelectedUpgrade(null);
+      return;
+    }
+    
     console.log(`Attempting to purchase ${upgrade.name} for ${upgrade.cost} mana. Current mana: ${currentManaRef.current}`);
 
     if (currentManaRef.current >= upgrade.cost) {
+      // Set purchasing flag to prevent multiple purchases
+      isPurchasingRef.current = true;
+      
       currentManaRef.current -= upgrade.cost;
       totalManaPerSecondRef.current += upgrade.manaPerSecond;
       setMaxUnlockedUpgrade(prev => Math.max(prev, upgrade.id));
@@ -82,12 +107,17 @@ export const useFantasy3DUpgradeWorld = ({
       });
       setSelectedUpgrade(null);
       console.log(`Unlocked ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
+      
+      // Reset purchasing flag after a short delay
+      setTimeout(() => {
+        isPurchasingRef.current = false;
+      }, 500);
     } else {
       setShowInsufficientMana(true);
       setTimeout(() => setShowInsufficientMana(false), 2000);
       console.log("Not enough mana!");
     }
-  }, []);
+  }, [purchasedUpgrades]);
 
   const handleTierProgression = useCallback(() => {
     console.log("Tier progression triggered!");
