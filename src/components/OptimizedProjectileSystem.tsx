@@ -40,13 +40,15 @@ export const OptimizedProjectileSystem = forwardRef<
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
 
-  // Load lightning bolt models for projectiles
-  const { scene: lightningScene } = useGLTF(assetPath('assets/3_pack_of_storm_lightning.glb'));
-  const lightningBolts = useMemo<THREE.Object3D[]>(() => {
-    return lightningScene ? lightningScene.children.map(child => child.clone()) : [];
-  }, [lightningScene]);
-  
-  // Scale applied to lightning bolt models
+  // Load orb model for projectiles
+  const { scene: orbScene } = useGLTF(
+    assetPath('assets/orb/uttm_core_accurate.glb')
+  );
+  const orbModel = useMemo<THREE.Object3D | null>(() => {
+    return orbScene ? orbScene.clone() : null;
+  }, [orbScene]);
+
+  // Scale applied to orb model
   const projectileScale = 0.5;
 
   // Initialize projectile pool
@@ -115,16 +117,15 @@ export const OptimizedProjectileSystem = forwardRef<
     const projectile = projectilePoolRef.current[projectileIndex];
     const mesh = meshPoolRef.current[projectileIndex];
 
-    // Attach a random lightning bolt model
-    if (lightningBolts.length > 0) {
+    // Attach orb model
+    if (orbModel) {
       // remove previous model but keep light as first child
       while (mesh.children.length > 1) {
         mesh.remove(mesh.children[1]);
       }
-      const boltIndex = Math.floor(Math.random() * lightningBolts.length);
-      const bolt = lightningBolts[boltIndex].clone();
-      bolt.scale.setScalar(projectileScale);
-      mesh.add(bolt);
+      const orb = orbModel.clone();
+      orb.scale.setScalar(projectileScale);
+      mesh.add(orb);
     }
     
     // Setup projectile
@@ -202,4 +203,4 @@ export const OptimizedProjectileSystem = forwardRef<
   );
 });
 
-useGLTF.preload(assetPath('assets/3_pack_of_storm_lightning.glb'));
+useGLTF.preload(assetPath('assets/orb/uttm_core_accurate.glb'));
