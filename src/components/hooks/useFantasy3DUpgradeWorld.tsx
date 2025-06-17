@@ -22,8 +22,9 @@ export const useFantasy3DUpgradeWorld = ({
   const currentManaRef = useRef(gameState?.mana || 100);
   const totalManaPerSecondRef = useRef(gameState?.manaPerSecond || 0);
   
-  // Ref to prevent double purchases
+  // Enhanced ref to prevent double purchases with stricter locking
   const isPurchasingRef = useRef(false);
+  const lastPurchaseTimeRef = useRef(0);
   
   // Enhanced infinite world parameters
   const CHUNK_SIZE = 80;
@@ -58,9 +59,16 @@ export const useFantasy3DUpgradeWorld = ({
   }, [onPlayerPositionUpdate]);
 
   const handleUpgradeClick = useCallback((upgrade: any) => {
-    // Prevent multiple clicks during purchase process
+    // Prevent multiple clicks during purchase process with enhanced checks
     if (isPurchasingRef.current) {
       console.log('Purchase already in progress, ignoring click');
+      return;
+    }
+    
+    // Prevent rapid clicking with time-based check
+    const now = Date.now();
+    if (now - lastPurchaseTimeRef.current < 1000) {
+      console.log('Too soon after last purchase attempt, ignoring click');
       return;
     }
     
@@ -78,9 +86,17 @@ export const useFantasy3DUpgradeWorld = ({
   }, [cameraPosition]);
 
   const handleUpgradePurchase = useCallback((upgrade: any) => {
-    // Prevent double purchase
+    const now = Date.now();
+    
+    // Enhanced purchase prevention with multiple checks
     if (isPurchasingRef.current) {
       console.log('Purchase already in progress, blocking duplicate purchase');
+      return;
+    }
+    
+    // Time-based check to prevent rapid purchases
+    if (now - lastPurchaseTimeRef.current < 2000) {
+      console.log('Too soon after last purchase, blocking rapid purchase');
       return;
     }
     
@@ -94,8 +110,9 @@ export const useFantasy3DUpgradeWorld = ({
     console.log(`Attempting to purchase ${upgrade.name} for ${upgrade.cost} mana. Current mana: ${currentManaRef.current}`);
 
     if (currentManaRef.current >= upgrade.cost) {
-      // Set purchasing flag to prevent multiple purchases
+      // Set purchasing flag to prevent multiple purchases with immediate effect
       isPurchasingRef.current = true;
+      lastPurchaseTimeRef.current = now;
       
       currentManaRef.current -= upgrade.cost;
       totalManaPerSecondRef.current += upgrade.manaPerSecond;
@@ -108,10 +125,10 @@ export const useFantasy3DUpgradeWorld = ({
       setSelectedUpgrade(null);
       console.log(`Unlocked ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
       
-      // Reset purchasing flag after a short delay
+      // Extended timeout to ensure no rapid purchases
       setTimeout(() => {
         isPurchasingRef.current = false;
-      }, 500);
+      }, 2000);
     } else {
       setShowInsufficientMana(true);
       setTimeout(() => setShowInsufficientMana(false), 2000);

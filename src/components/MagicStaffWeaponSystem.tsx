@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -19,6 +18,9 @@ const STAFF_MODELS = {
 interface MagicStaffWeaponSystemProps {
   upgradeLevel: number;
   visible?: boolean;
+  enemyPositions?: THREE.Vector3[];
+  onHitEnemy?: (index: number, damage: number) => void;
+  damage?: number;
 }
 
 // Persistent staff model cache
@@ -163,13 +165,15 @@ class StaffModelCache {
 
 export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   upgradeLevel,
-  visible = true
+  visible = true,
+  enemyPositions = [],
+  onHitEnemy = () => {},
+  damage = 10
 }) => {
   const { camera } = useThree();
   const weaponGroupRef = useRef<THREE.Group>(null);
   const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
-  const targetRef = useRef<THREE.Vector3[]>([new THREE.Vector3()]);
   const [staffModel, setStaffModel] = React.useState<THREE.Object3D | null>(null);
   const staffCache = StaffModelCache.getInstance();
 
@@ -181,6 +185,11 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   }, [upgradeLevel]);
 
   const staffScale = staffTier === 'tier1' ? 0.6 : staffTier === 'tier2' ? 0.65 : 0.7;
+
+  // Fire rate based on upgrade level
+  const fireRate = useMemo(() => {
+    return Math.max(300, 800 - (upgradeLevel * 100));
+  }, [upgradeLevel]);
 
   // Load staff model based on tier
   useEffect(() => {
@@ -233,8 +242,6 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       const tipOffset = new THREE.Vector3(0, 1.2 * staffScale, 0);
       tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
       staffTipPositionRef.current.copy(weaponGroupRef.current.position).add(tipOffset);
-      const forwardTarget = staffTipPositionRef.current.clone().add(cameraForward.multiplyScalar(30));
-      targetRef.current[0] = forwardTarget;
     }
   });
 
@@ -254,10 +261,10 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       <OptimizedProjectileSystem
         ref={projectileSystemRef}
         staffTipPosition={staffTipPositionRef.current}
-        targetPositions={targetRef.current}
-        damage={1}
-        fireRate={500}
-        onHitEnemy={() => {}}
+        targetPositions={enemyPositions}
+        damage={damage}
+        fireRate={fireRate}
+        onHitEnemy={onHitEnemy}
       />
     </group>
   );

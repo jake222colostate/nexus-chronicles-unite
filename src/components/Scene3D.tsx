@@ -1,5 +1,4 @@
-
-import React, { Suspense, useRef, useMemo, useCallback } from 'react';
+import React, { Suspense, useRef, useMemo, useCallback, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
@@ -49,9 +48,21 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   console.log('Scene3D: Rendering with realm:', realm);
   
   const cameraRef = useRef();
+  const [enemyPositions, setEnemyPositions] = useState<Vector3[]>([]);
 
   // Stable player position for chunk system - centered in the mountain valley
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
+
+  // Callback to handle enemy position updates from environment
+  const handleEnemyPositionUpdate = useCallback((positions: Vector3[]) => {
+    setEnemyPositions(positions);
+  }, []);
+
+  // Callback to handle enemy hits
+  const handleEnemyHit = useCallback((index: number, damage: number) => {
+    console.log(`Enemy ${index} hit for ${damage} damage`);
+    // This would typically trigger enemy damage/death logic
+  }, []);
 
   // Memoize upgrade unlock checking to prevent recalculation
   const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
@@ -115,10 +126,13 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             aspect={375 / 667}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           >
-            {/* Render MagicStaffWeaponSystem instead of deprecated WizardStaff */}
+            {/* Enhanced MagicStaffWeaponSystem with enemy targeting */}
             <MagicStaffWeaponSystem 
               upgradeLevel={gameState.weaponUpgradeLevel || 0}
               visible={realm === 'fantasy'}
+              enemyPositions={enemyPositions}
+              onHitEnemy={handleEnemyHit}
+              damage={10 + (gameState.weaponUpgradeLevel || 0) * 5}
             />
           </PerspectiveCamera>
 
@@ -135,7 +149,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <FloatingIsland realm={realm} />
           {realm === 'scifi' && <ScifiDefenseSystem onMeteorDestroyed={onMeteorDestroyed} />}
 
-          {/* Fantasy environment with polygon mountains removed and fixed tree positioning */}
+          {/* Fantasy environment with enemy position tracking */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
@@ -148,6 +162,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                   chunkSize={50}
                   realm={realm}
                   playerPosition={playerPosition}
+                  onEnemyPositionUpdate={handleEnemyPositionUpdate}
                 />
               )}
             </ChunkSystem>
