@@ -281,11 +281,16 @@ export const useUpgradeManagers = ({
     const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
     if (!upgrade || gameState.nexusShards < upgrade.cost) return;
 
-    setGameState(prev => ({
-      ...prev,
-      nexusShards: prev.nexusShards - upgrade.cost,
-      purchasedUpgrades: [...prev.purchasedUpgrades, upgradeId]
-    }));
+    setGameState(prev => {
+      if (prev.purchasedUpgrades.includes(upgradeId)) {
+        return prev; // already purchased
+      }
+      return {
+        ...prev,
+        nexusShards: prev.nexusShards - upgrade.cost,
+        purchasedUpgrades: [...prev.purchasedUpgrades, upgradeId]
+      };
+    });
   }, [gameState.nexusShards, setGameState]);
 
   const purchaseCombatUpgrade = useCallback((upgradeId: string) => {
