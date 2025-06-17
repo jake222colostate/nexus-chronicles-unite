@@ -43,6 +43,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     maxUnlockedUpgrade,
     currentManaRef,
     upgrades,
+    purchasedUpgrades,
     CHUNK_SIZE,
     RENDER_DISTANCE,
     UPGRADE_SPACING,
@@ -141,6 +142,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               upgrades={upgrades}
               cameraPosition={cameraPosition}
               currentManaRef={currentManaRef}
+              purchasedUpgrades={purchasedUpgrades}
               onUpgradeClick={handleUpgradeClick}
             />
           </Canvas>

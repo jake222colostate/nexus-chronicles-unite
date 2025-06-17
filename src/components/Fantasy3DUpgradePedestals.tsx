@@ -7,6 +7,7 @@ interface Fantasy3DUpgradePedestalsProps {
   upgrades: any[];
   cameraPosition: Vector3;
   currentManaRef: React.MutableRefObject<number>;
+  purchasedUpgrades: Set<number>;
   onUpgradeClick: (upgrade: any) => void;
 }
 
@@ -14,6 +15,7 @@ export const Fantasy3DUpgradePedestals: React.FC<Fantasy3DUpgradePedestalsProps>
   upgrades,
   cameraPosition,
   currentManaRef,
+  purchasedUpgrades,
   onUpgradeClick
 }) => {
   return (
@@ -28,7 +30,7 @@ export const Fantasy3DUpgradePedestals: React.FC<Fantasy3DUpgradePedestalsProps>
             position={upgrade.position}
             upgrade={upgrade}
             isUnlocked={upgrade.unlocked}
-            isPurchased={upgrade.unlocked}
+            isPurchased={purchasedUpgrades.has(upgrade.id)}
             canAfford={currentManaRef.current >= upgrade.cost}
             onInteract={() => onUpgradeClick(upgrade)}
             tier={upgrade.tier + 1}
