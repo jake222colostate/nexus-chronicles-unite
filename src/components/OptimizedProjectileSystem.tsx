@@ -56,7 +56,7 @@ export const OptimizedProjectileSystem = forwardRef<
     }
     // Create fallback sphere if model fails to load
     const fallbackGeometry = new THREE.SphereGeometry(0.3, 16, 16);
-    const fallbackMaterial = new THREE.MeshBasicMaterial({ 
+    const fallbackMaterial = new THREE.MeshStandardMaterial({ 
       color: '#00ffff', 
       emissive: '#00ffff', 
       emissiveIntensity: 0.5 
@@ -150,7 +150,7 @@ export const OptimizedProjectileSystem = forwardRef<
       orb.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           child.visible = true;
-          child.material = new THREE.MeshBasicMaterial({ 
+          child.material = new THREE.MeshStandardMaterial({ 
             color: '#00ffff', 
             emissive: '#00ffff', 
             emissiveIntensity: 0.8 
