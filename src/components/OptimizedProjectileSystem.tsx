@@ -1,9 +1,7 @@
 
 import React, { useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { assetPath } from '../lib/assetPath';
 
 interface OptimizedProjectileSystemProps {
   staffTipPosition: THREE.Vector3;
@@ -70,13 +68,11 @@ export const OptimizedProjectileSystem = forwardRef<
   useMemo(() => {
     if (meshPoolRef.current.length === 0 && groupRef.current) {
       for (let i = 0; i < MAX_PROJECTILES; i++) {
-        // Create a simple, bright, reliable projectile mesh
         const mesh = new THREE.Mesh(projectileGeometry, projectileMaterial.clone());
         mesh.visible = false;
         mesh.scale.setScalar(1);
         meshPoolRef.current.push(mesh);
         groupRef.current.add(mesh);
-        console.log(`Created projectile mesh ${i}`);
       }
     }
   }, [projectileGeometry, projectileMaterial]);
@@ -91,8 +87,16 @@ export const OptimizedProjectileSystem = forwardRef<
   };
 
   const fireProjectile = (staffPos: THREE.Vector3, targets: THREE.Vector3[]) => {
-    if (targets.length === 0) {
-      console.log('No targets available for projectile');
+    // FIXED: Filter out undefined targets and validate positions
+    const validTargets = targets.filter((target): target is THREE.Vector3 => 
+      target && target instanceof THREE.Vector3 && 
+      typeof target.x === 'number' && 
+      typeof target.y === 'number' && 
+      typeof target.z === 'number'
+    );
+
+    if (validTargets.length === 0) {
+      console.log('No valid targets available for projectile');
       return;
     }
 
@@ -102,11 +106,11 @@ export const OptimizedProjectileSystem = forwardRef<
       return;
     }
 
-    // Find closest target
+    // Find closest valid target
     let closestIndex = 0;
     let closestDistance = Infinity;
     
-    targets.forEach((targetPos, index) => {
+    validTargets.forEach((targetPos, index) => {
       const distance = staffPos.distanceTo(targetPos);
       if (distance < closestDistance) {
         closestDistance = distance;
@@ -117,38 +121,47 @@ export const OptimizedProjectileSystem = forwardRef<
     const projectile = projectilePoolRef.current[projectileIndex];
     const mesh = meshPoolRef.current[projectileIndex];
 
+    // FIXED: Use valid target and store original index
+    const targetPosition = validTargets[closestIndex];
+    const originalTargetIndex = targets.indexOf(targetPosition);
+
     // Setup projectile data
     projectile.position.copy(staffPos);
-    projectile.direction.subVectors(targets[closestIndex], staffPos).normalize();
+    projectile.direction.subVectors(targetPosition, staffPos).normalize();
     projectile.damage = damage;
-    projectile.targetIndex = closestIndex;
+    projectile.targetIndex = originalTargetIndex;
     projectile.active = true;
     projectile.life = MAX_LIFE;
     
-    // Setup mesh - make it bright and visible
+    // Setup mesh
     mesh.position.copy(staffPos);
     mesh.visible = true;
     mesh.scale.setScalar(1);
     
-    // Make material even brighter
     const material = mesh.material as THREE.MeshStandardMaterial;
     material.emissiveIntensity = 1.0;
     material.color.setHex(0x00ffff);
     material.emissive.setHex(0x00ffff);
 
-    console.log(`Fired projectile ${projectileIndex} from`, staffPos, 'to target', closestIndex, 'at position', targets[closestIndex]);
-    console.log(`Mesh visible: ${mesh.visible}, position:`, mesh.position);
+    console.log(`Fired projectile ${projectileIndex} from`, staffPos, 'to target', originalTargetIndex, 'at position', targetPosition);
   };
 
   const manualFire = () => {
     console.log('Manual fire triggered');
-    fireProjectile(staffTipPosition, targetPositions);
-    lastFireTimeRef.current = Date.now();
+    if (staffTipPosition && targetPositions) {
+      fireProjectile(staffTipPosition, targetPositions);
+      lastFireTimeRef.current = Date.now();
+    }
   };
 
   useImperativeHandle(ref, () => ({ manualFire }), []);
 
   useFrame((state, delta) => {
+    // FIXED: Add safety checks for all required props
+    if (!staffTipPosition || !targetPositions || !Array.isArray(targetPositions)) {
+      return;
+    }
+
     const now = Date.now();
     
     // Auto fire projectiles
@@ -173,8 +186,11 @@ export const OptimizedProjectileSystem = forwardRef<
       // Update life
       projectile.life -= delta;
       
-      // Check collision with target
-      if (projectile.targetIndex >= 0 && projectile.targetIndex < targetPositions.length) {
+      // FIXED: Check collision with target - add safety checks
+      if (projectile.targetIndex >= 0 && 
+          projectile.targetIndex < targetPositions.length && 
+          targetPositions[projectile.targetIndex]) {
+        
         const targetPos = targetPositions[projectile.targetIndex];
         if (targetPos && projectile.position.distanceTo(targetPos) < 1.5) {
           onHitEnemy(projectile.targetIndex, projectile.damage);
