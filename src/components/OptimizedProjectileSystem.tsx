@@ -27,52 +27,31 @@ interface ProjectileData {
   life: number;
 }
 
-const MAX_PROJECTILES = 20; // Pool size
+const MAX_PROJECTILES = 20;
 const PROJECTILE_SPEED = 25;
-const MAX_LIFE = 5; // Seconds
+const MAX_LIFE = 5;
 
 export const OptimizedProjectileSystem = forwardRef<
   OptimizedProjectileSystemHandle,
   OptimizedProjectileSystemProps
 >(({ staffTipPosition, targetPositions, damage, fireRate, onHitEnemy }, ref) => {
   const projectilePoolRef = useRef<ProjectileData[]>([]);
-  const meshPoolRef = useRef<THREE.Object3D[]>([]);
+  const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
 
-  // Load orb model for projectiles with fallback
-  let orbScene = null;
-  try {
-    const gltfResult = useGLTF(assetPath('assets/orb/uttm_core_accurate.glb'));
-    orbScene = gltfResult.scene;
-  } catch (error) {
-    console.warn('Failed to load orb model, using fallback sphere:', error);
-    orbScene = null;
-  }
-
-  const orbModel = useMemo<THREE.Object3D | null>(() => {
-    if (orbScene) {
-      return orbScene.clone();
-    }
-    // Create fallback sphere if model fails to load
-    const fallbackGeometry = new THREE.SphereGeometry(0.3, 16, 16);
-    const fallbackMaterial = new THREE.MeshStandardMaterial({ 
-      color: '#00ffff', 
-      emissive: '#00ffff', 
-      emissiveIntensity: 0.5 
-    });
-    const fallbackMesh = new THREE.Mesh(fallbackGeometry, fallbackMaterial);
-    console.log('Using fallback sphere for projectile');
-    return fallbackMesh;
-  }, [orbScene]);
-
-  // Scale applied to orb model
-  const projectileScale = 0.8; // Increased size for better visibility
+  // Create simple, reliable projectile geometry and material
+  const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.3, 12, 12), []);
+  const projectileMaterial = useMemo(() => new THREE.MeshStandardMaterial({ 
+    color: '#00ffff', 
+    emissive: '#00ffff', 
+    emissiveIntensity: 0.8,
+    transparent: false
+  }), []);
 
   // Initialize projectile pool
   useMemo(() => {
     if (projectilePoolRef.current.length === 0) {
-      // Initialize data pool
       for (let i = 0; i < MAX_PROJECTILES; i++) {
         projectilePoolRef.current.push({
           position: new THREE.Vector3(),
@@ -87,24 +66,20 @@ export const OptimizedProjectileSystem = forwardRef<
     }
   }, []);
 
-  // Initialize mesh pool
+  // Initialize mesh pool with reliable geometries
   useMemo(() => {
-    if (meshPoolRef.current.length === 0) {
+    if (meshPoolRef.current.length === 0 && groupRef.current) {
       for (let i = 0; i < MAX_PROJECTILES; i++) {
-        const container = new THREE.Group();
-        container.visible = false;
-
-        // Brighter light for better visibility
-        const light = new THREE.PointLight('#00ffff', 2, 5);
-        container.add(light);
-
-        meshPoolRef.current.push(container);
-        if (groupRef.current) {
-          groupRef.current.add(container);
-        }
+        // Create a simple, bright, reliable projectile mesh
+        const mesh = new THREE.Mesh(projectileGeometry, projectileMaterial.clone());
+        mesh.visible = false;
+        mesh.scale.setScalar(1);
+        meshPoolRef.current.push(mesh);
+        groupRef.current.add(mesh);
+        console.log(`Created projectile mesh ${i}`);
       }
     }
-  }, []);
+  }, [projectileGeometry, projectileMaterial]);
 
   const getInactiveProjectile = (): number => {
     for (let i = 0; i < projectilePoolRef.current.length; i++) {
@@ -116,10 +91,16 @@ export const OptimizedProjectileSystem = forwardRef<
   };
 
   const fireProjectile = (staffPos: THREE.Vector3, targets: THREE.Vector3[]) => {
-    if (targets.length === 0) return;
+    if (targets.length === 0) {
+      console.log('No targets available for projectile');
+      return;
+    }
 
     const projectileIndex = getInactiveProjectile();
-    if (projectileIndex === -1) return; // Pool exhausted
+    if (projectileIndex === -1) {
+      console.log('No available projectiles in pool');
+      return;
+    }
 
     // Find closest target
     let closestIndex = 0;
@@ -136,33 +117,7 @@ export const OptimizedProjectileSystem = forwardRef<
     const projectile = projectilePoolRef.current[projectileIndex];
     const mesh = meshPoolRef.current[projectileIndex];
 
-    // Attach orb model - ensure it's visible
-    if (orbModel) {
-      // remove previous model but keep light as first child
-      while (mesh.children.length > 1) {
-        mesh.remove(mesh.children[1]);
-      }
-      const orb = orbModel.clone();
-      orb.scale.setScalar(projectileScale);
-      orb.visible = true; // Explicitly set visible
-      
-      // Make sure all child meshes are visible and have proper materials
-      orb.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.visible = true;
-          child.material = new THREE.MeshStandardMaterial({ 
-            color: '#00ffff', 
-            emissive: '#00ffff', 
-            emissiveIntensity: 0.8 
-          });
-        }
-      });
-      
-      mesh.add(orb);
-      console.log('Added orb to projectile mesh');
-    }
-    
-    // Setup projectile
+    // Setup projectile data
     projectile.position.copy(staffPos);
     projectile.direction.subVectors(targets[closestIndex], staffPos).normalize();
     projectile.damage = damage;
@@ -170,24 +125,33 @@ export const OptimizedProjectileSystem = forwardRef<
     projectile.active = true;
     projectile.life = MAX_LIFE;
     
-    // Setup mesh - ensure visibility
+    // Setup mesh - make it bright and visible
     mesh.position.copy(staffPos);
     mesh.visible = true;
+    mesh.scale.setScalar(1);
+    
+    // Make material even brighter
+    const material = mesh.material as THREE.MeshStandardMaterial;
+    material.emissiveIntensity = 1.0;
+    material.color.setHex(0x00ffff);
+    material.emissive.setHex(0x00ffff);
 
-    console.log('Fired projectile from', staffPos, 'to target', closestIndex, 'at position', targets[closestIndex]);
+    console.log(`Fired projectile ${projectileIndex} from`, staffPos, 'to target', closestIndex, 'at position', targets[closestIndex]);
+    console.log(`Mesh visible: ${mesh.visible}, position:`, mesh.position);
   };
 
   const manualFire = () => {
+    console.log('Manual fire triggered');
     fireProjectile(staffTipPosition, targetPositions);
     lastFireTimeRef.current = Date.now();
   };
 
-  useImperativeHandle(ref, () => ({ manualFire }), [manualFire]);
+  useImperativeHandle(ref, () => ({ manualFire }), []);
 
   useFrame((state, delta) => {
     const now = Date.now();
     
-    // Fire projectiles
+    // Auto fire projectiles
     if (now - lastFireTimeRef.current >= fireRate && targetPositions.length > 0) {
       fireProjectile(staffTipPosition, targetPositions);
       lastFireTimeRef.current = now;
@@ -231,15 +195,7 @@ export const OptimizedProjectileSystem = forwardRef<
 
   return (
     <group ref={groupRef}>
-      {/* Much brighter ambient light for projectiles */}
-      <ambientLight intensity={1.2} color="#00ffff" />
+      <ambientLight intensity={1.5} color="#00ffff" />
     </group>
   );
 });
-
-// Preload with error handling
-try {
-  useGLTF.preload(assetPath('assets/orb/uttm_core_accurate.glb'));
-} catch (error) {
-  console.warn('Failed to preload orb model:', error);
-}
