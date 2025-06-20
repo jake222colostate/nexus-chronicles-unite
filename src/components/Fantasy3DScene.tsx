@@ -46,9 +46,19 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const [leeches, setLeeches] = useState<LeechData[]>([]);
   const [nextLeechId, setNextLeechId] = useState(0);
 
+  // SAFETY CHECK: Ensure cameraPosition is valid before using it
+  const safeCameraPosition = useMemo(() => {
+    if (!cameraPosition || !(cameraPosition instanceof Vector3) || 
+        isNaN(cameraPosition.x) || isNaN(cameraPosition.y) || isNaN(cameraPosition.z)) {
+      console.log('Fantasy3DScene: Invalid camera position, using safe default');
+      return new Vector3(0, 2, 20);
+    }
+    return cameraPosition;
+  }, [cameraPosition]);
+
   // Spawn leeches based on player progress
   useEffect(() => {
-    const playerProgress = Math.abs(cameraPosition.z);
+    const playerProgress = Math.abs(safeCameraPosition.z);
     const desiredLeechCount = Math.min(Math.floor(playerProgress / 30) + 1, 8); // Max 8 leeches
     
     setLeeches(currentLeeches => {
@@ -78,7 +88,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       
       return currentLeeches;
     });
-  }, [Math.floor(Math.abs(cameraPosition.z) / 30), nextLeechId]);
+  }, [Math.floor(Math.abs(safeCameraPosition.z) / 30), nextLeechId]);
 
   // Update enemy count for UI
   useEffect(() => {
@@ -88,6 +98,13 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   // Handle leech position updates
   const handleLeechPositionUpdate = (leechId: string, newPosition: Vector3) => {
+    // SAFETY CHECK: Validate position before updating
+    if (!newPosition || !(newPosition instanceof Vector3) || 
+        isNaN(newPosition.x) || isNaN(newPosition.y) || isNaN(newPosition.z)) {
+      console.log('Fantasy3DScene: Invalid leech position update, ignoring');
+      return;
+    }
+    
     setLeeches(current => 
       current.map(leech => 
         leech.id === leechId 
@@ -126,18 +143,28 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     );
   };
 
-  // Get positions of alive leeches for weapon system
+  // SAFETY CHECK: Filter and validate leech positions for weapon system
   const aliveLeechPositions = useMemo(() => 
-    leeches.filter(leech => leech.alive).map(leech => leech.position),
+    leeches
+      .filter(leech => leech.alive && leech.position && leech.position instanceof Vector3)
+      .map(leech => leech.position)
+      .filter(pos => !isNaN(pos.x) && !isNaN(pos.y) && !isNaN(pos.z)),
     [leeches]
   );
+
+  // SAFETY CHECK: Ensure onPositionChange callback is properly wrapped
+  const handlePositionChange = (position: Vector3) => {
+    if (onPositionChange && position && position instanceof Vector3) {
+      onPositionChange(position);
+    }
+  };
 
   return (
     <Suspense fallback={null}>
       {/* Camera controller with guaranteed safe valley center starting position */}
       <Enhanced360Controller
         position={[0, 2, 20]} // Start far back in the valley center for absolute safety
-        onPositionChange={onPositionChange}
+        onPositionChange={handlePositionChange}
         enemyPositions={aliveLeechPositions}
       />
 
@@ -157,12 +184,12 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       <ambientLight intensity={0.6} />
       <Sun position={[10, 20, 5]} />
 
-      {/* Render all alive leeches */}
+      {/* Render all alive leeches with safety checks */}
       {leeches.map(leech => 
-        leech.alive && (
+        leech.alive && leech.spawnPosition && leech.spawnPosition instanceof Vector3 && (
           <LeechEnemy
             key={leech.id}
-            playerPosition={cameraPosition}
+            playerPosition={safeCameraPosition}
             startPosition={leech.spawnPosition}
             health={leech.health}
             onUpdatePosition={(pos) => handleLeechPositionUpdate(leech.id, pos)}
@@ -185,7 +212,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
       {/* Optimized chunk system with performance limits */}
       <ChunkSystem
-        playerPosition={cameraPosition}
+        playerPosition={safeCameraPosition}
         chunkSize={chunkSize}
         renderDistance={renderDistance}
       >
@@ -194,14 +221,14 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
             chunks={chunks}
             chunkSize={chunkSize}
             realm={realm}
-            playerPosition={cameraPosition}
+            playerPosition={safeCameraPosition}
           />
         )}
       </ChunkSystem>
 
       {/* Simplified contact shadows */}
       <ContactShadows 
-        position={[0, -1.4, cameraPosition.z]} 
+        position={[0, -1.4, safeCameraPosition.z]} 
         opacity={0.05}
         scale={15}
         blur={2} 

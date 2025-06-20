@@ -72,6 +72,9 @@ const findSafePosition = (
   if (!checkMountainCollision(targetX, targetZ)) {
     let blocked = false;
     for (const e of enemies) {
+      // SAFETY CHECK: Ensure enemy position exists
+      if (!e || typeof e.x !== 'number' || typeof e.z !== 'number') continue;
+      
       const dx = targetX - e.x;
       const dz = targetZ - e.z;
       if (Math.sqrt(dx * dx + dz * dz) < enemyRadius) {
@@ -81,9 +84,12 @@ const findSafePosition = (
     }
     if (!blocked) {
       for (const c of colliders) {
+        // SAFETY CHECK: Ensure collider position exists
+        if (!c || !c.position || typeof c.position.x !== 'number' || typeof c.position.z !== 'number') continue;
+        
         const dx = targetX - c.position.x;
         const dz = targetZ - c.position.z;
-        if (Math.sqrt(dx * dx + dz * dz) < enemyRadius + c.radius) {
+        if (Math.sqrt(dx * dx + dz * dz) < enemyRadius + (c.radius || 1)) {
           blocked = true;
           break;
         }
@@ -132,12 +138,19 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   const collision = useCollisionContext();
   const playerColliderId = 'player';
 
+  // SAFETY CHECK: Ensure collision context is working
   useEffect(() => {
-    if (collision) {
-      collision.registerCollider({ id: playerColliderId, position: camera.position.clone(), radius: 1 });
-      return () => collision.removeCollider(playerColliderId);
+    if (collision && collision.registerCollider) {
+      try {
+        collision.registerCollider({ id: playerColliderId, position: camera.position.clone(), radius: 1 });
+        return () => {
+          if (collision.removeCollider) collision.removeCollider(playerColliderId);
+        };
+      } catch (error) {
+        console.log('Enhanced360Controller: Collision system not available, proceeding without it');
+      }
     }
-  }, [collision]);
+  }, [collision, camera.position]);
 
   // Initialize camera at optimal position for iPhone screen and staff visibility
   useEffect(() => {
@@ -153,7 +166,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     }
     
     lastNotifiedPosition.current.copy(safePosition);
-    console.log('Camera initialized for optimal staff visibility:', safePosition);
+    console.log('Enhanced360Controller: Camera initialized for optimal staff visibility:', safePosition);
   }, [camera]);
 
   // Keyboard event handlers
@@ -169,22 +182,22 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         case 'w':
         case 'arrowup':
           keys.current.forward = true;
-          console.log('Forward movement activated');
+          console.log('Enhanced360Controller: Forward movement activated');
           break;
         case 's':
         case 'arrowdown':
           keys.current.backward = true;
-          console.log('Backward movement activated');
+          console.log('Enhanced360Controller: Backward movement activated');
           break;
         case 'a':
         case 'arrowleft':
           keys.current.left = true;
-          console.log('Left movement activated');
+          console.log('Enhanced360Controller: Left movement activated');
           break;
         case 'd':
         case 'arrowright':
           keys.current.right = true;
-          console.log('Right movement activated');
+          console.log('Enhanced360Controller: Right movement activated');
           break;
       }
     };
@@ -253,6 +266,12 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   }, []);
 
   useFrame((state, delta) => {
+    // CRITICAL SAFETY CHECK: Ensure we have valid camera and state
+    if (!camera || !camera.position || !state || delta <= 0) {
+      console.log('Enhanced360Controller: Invalid frame state, skipping update');
+      return;
+    }
+
     frameCount.current++;
     
     const moveSpeed = 20; // Increased speed for better responsiveness
@@ -295,25 +314,43 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     // Calculate new target position
     const newTargetPosition = targetPosition.current.clone().add(velocity.current.clone().multiplyScalar(delta));
     
+    // SAFETY CHECK: Validate enemy positions before collision checking
+    const safeEnemyPositions = enemyPositions.filter(pos => 
+      pos && pos instanceof Vector3 && 
+      typeof pos.x === 'number' && typeof pos.z === 'number'
+    );
+    
     // Check for mountain collision and find safe position
-    const additionalColliders = collision
-      ? Array.from(collision.colliders.current.values()).filter(c => c.id !== playerColliderId)
-      : [];
+    const additionalColliders = [];
+    if (collision && collision.colliders && collision.colliders.current) {
+      try {
+        for (const [id, collider] of collision.colliders.current) {
+          if (id !== playerColliderId && collider && collider.position) {
+            additionalColliders.push(collider);
+          }
+        }
+      } catch (error) {
+        console.log('Enhanced360Controller: Error accessing colliders, continuing without collision checks');
+      }
+    }
+    
     const safePosition = findSafePosition(
       newTargetPosition.x,
       newTargetPosition.z,
       targetPosition.current.x,
       targetPosition.current.z,
-      enemyPositions,
+      safeEnemyPositions,
       enemyRadius,
       additionalColliders
     );
 
     let blocked = false;
     for (const col of additionalColliders) {
+      if (!col || !col.position) continue;
       const dx = safePosition.x - col.position.x;
       const dz = safePosition.z - col.position.z;
-      if (Math.sqrt(dx * dx + dz * dz) < 1 + col.radius) {
+      const collisionRadius = 1 + (col.radius || 1);
+      if (Math.sqrt(dx * dx + dz * dz) < collisionRadius) {
         blocked = true;
         break;
       }
@@ -328,11 +365,23 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     targetPosition.current.x = Math.max(-120, Math.min(120, targetPosition.current.x));
     targetPosition.current.y = Math.max(1.5, Math.min(8, targetPosition.current.y)); // Better height range for staff visibility
     
+    // SAFETY CHECK: Ensure position values are valid numbers
+    if (isNaN(targetPosition.current.x) || isNaN(targetPosition.current.y) || isNaN(targetPosition.current.z)) {
+      console.log('Enhanced360Controller: Invalid position detected, resetting to safe position');
+      targetPosition.current.set(0, 2, 10);
+    }
+    
     // Update camera
     camera.position.copy(targetPosition.current);
     camera.rotation.set(pitchAngle.current, yawAngle.current, 0, 'YXZ');
-    if (collision) {
-      collision.updateCollider(playerColliderId, targetPosition.current);
+    
+    // SAFETY CHECK: Update collision system only if available
+    if (collision && collision.updateCollider) {
+      try {
+        collision.updateCollider(playerColliderId, targetPosition.current);
+      } catch (error) {
+        // Silently continue if collision system fails
+      }
     }
     
     // More responsive position updates
@@ -341,12 +390,14 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     // Notify every 20 frames (more frequent) OR when moved significantly
     if ((frameCount.current % 20 === 0 && distanceMoved > 0.05) || distanceMoved > 5) {
       lastNotifiedPosition.current.copy(targetPosition.current);
-      onPositionChange(targetPosition.current.clone());
-      console.log('Camera position updated for staff visibility:', targetPosition.current);
+      if (onPositionChange) {
+        onPositionChange(targetPosition.current.clone());
+      }
+      console.log('Enhanced360Controller: Camera position updated for staff visibility:', targetPosition.current);
     }
     
     if (isMoving && frameCount.current % 40 === 0) {
-      console.log('Player moving with staff in view at position:', targetPosition.current);
+      console.log('Enhanced360Controller: Player moving with staff in view at position:', targetPosition.current);
     }
   });
 
