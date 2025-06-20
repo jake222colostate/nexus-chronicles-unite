@@ -1,4 +1,3 @@
-
 import React, { Suspense, useMemo, useState, useEffect } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
@@ -9,6 +8,7 @@ import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
 import { StaffWeaponSystem } from './StaffWeaponSystem';
+import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -154,87 +154,93 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   // SAFETY CHECK: Ensure onPositionChange callback is properly wrapped
   const handlePositionChange = (position: Vector3) => {
-    if (onPositionChange && position && position instanceof Vector3) {
-      onPositionChange(position);
+    try {
+      if (onPositionChange && position && position instanceof Vector3) {
+        onPositionChange(position);
+      }
+    } catch (error) {
+      console.log('Fantasy3DScene: Position change callback failed:', error);
     }
   };
 
   return (
-    <Suspense fallback={null}>
-      {/* Camera controller with guaranteed safe valley center starting position */}
-      <Enhanced360Controller
-        position={[0, 2, 20]} // Start far back in the valley center for absolute safety
-        onPositionChange={handlePositionChange}
-        enemyPositions={aliveLeechPositions}
-      />
+    <CollisionProvider>
+      <Suspense fallback={null}>
+        {/* Camera controller with guaranteed safe valley center starting position */}
+        <Enhanced360Controller
+          position={[0, 2, 20]} // Start far back in the valley center for absolute safety
+          onPositionChange={handlePositionChange}
+          enemyPositions={aliveLeechPositions}
+        />
 
-      {/* Background color for fantasy dusk */}
-      <color attach="background" args={['#2d1b4e']} />
+        {/* Background color for fantasy dusk */}
+        <color attach="background" args={['#2d1b4e']} />
 
-      {/* Subtle fog that fades as you progress */}
-      <CasualFog />
+        {/* Subtle fog that fades as you progress */}
+        <CasualFog />
 
-      {/* Ground plane to ensure there's always a visible floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-        <planeGeometry args={[300, 300]} />
-        <meshStandardMaterial color="#2d4a2d" />
-      </mesh>
+        {/* Ground plane to ensure there's always a visible floor */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
+          <planeGeometry args={[300, 300]} />
+          <meshStandardMaterial color="#2d4a2d" />
+        </mesh>
 
-      {/* Basic ambient light plus warm sun */}
-      <ambientLight intensity={0.6} />
-      <Sun position={[10, 20, 5]} />
+        {/* Basic ambient light plus warm sun */}
+        <ambientLight intensity={0.6} />
+        <Sun position={[10, 20, 5]} />
 
-      {/* Render all alive leeches with safety checks */}
-      {leeches.map(leech => 
-        leech.alive && leech.spawnPosition && leech.spawnPosition instanceof Vector3 && (
-          <LeechEnemy
-            key={leech.id}
-            playerPosition={safeCameraPosition}
-            startPosition={leech.spawnPosition}
-            health={leech.health}
-            onUpdatePosition={(pos) => handleLeechPositionUpdate(leech.id, pos)}
-            onReachPlayer={() => handleLeechReachPlayer(leech.id)}
-          />
-        )
-      )}
-
-      <StaffWeaponSystem
-        damage={weaponDamage}
-        enemyPositions={aliveLeechPositions}
-        onHitEnemy={(index, damage) => {
-          const aliveLeech = leeches.filter(leech => leech.alive)[index];
-          if (aliveLeech) {
-            handleLeechHit(aliveLeech.id, damage);
-          }
-        }}
-        upgrades={maxUnlockedUpgrade}
-      />
-
-      {/* Optimized chunk system with performance limits */}
-      <ChunkSystem
-        playerPosition={safeCameraPosition}
-        chunkSize={chunkSize}
-        renderDistance={renderDistance}
-      >
-        {(chunks: ChunkData[]) => (
-          <OptimizedFantasyEnvironment
-            chunks={chunks}
-            chunkSize={chunkSize}
-            realm={realm}
-            playerPosition={safeCameraPosition}
-          />
+        {/* Render all alive leeches with safety checks */}
+        {leeches.map(leech => 
+          leech.alive && leech.spawnPosition && leech.spawnPosition instanceof Vector3 && (
+            <LeechEnemy
+              key={leech.id}
+              playerPosition={safeCameraPosition}
+              startPosition={leech.spawnPosition}
+              health={leech.health}
+              onUpdatePosition={(pos) => handleLeechPositionUpdate(leech.id, pos)}
+              onReachPlayer={() => handleLeechReachPlayer(leech.id)}
+            />
+          )
         )}
-      </ChunkSystem>
 
-      {/* Simplified contact shadows */}
-      <ContactShadows 
-        position={[0, -1.4, safeCameraPosition.z]} 
-        opacity={0.05}
-        scale={15}
-        blur={2} 
-        far={4}
-      />
-    </Suspense>
+        <StaffWeaponSystem
+          damage={weaponDamage}
+          enemyPositions={aliveLeechPositions}
+          onHitEnemy={(index, damage) => {
+            const aliveLeech = leeches.filter(leech => leech.alive)[index];
+            if (aliveLeech) {
+              handleLeechHit(aliveLeech.id, damage);
+            }
+          }}
+          upgrades={maxUnlockedUpgrade}
+        />
+
+        {/* Optimized chunk system with performance limits */}
+        <ChunkSystem
+          playerPosition={safeCameraPosition}
+          chunkSize={chunkSize}
+          renderDistance={renderDistance}
+        >
+          {(chunks: ChunkData[]) => (
+            <OptimizedFantasyEnvironment
+              chunks={chunks}
+              chunkSize={chunkSize}
+              realm={realm}
+              playerPosition={safeCameraPosition}
+            />
+          )}
+        </ChunkSystem>
+
+        {/* Simplified contact shadows */}
+        <ContactShadows 
+          position={[0, -1.4, safeCameraPosition.z]} 
+          opacity={0.05}
+          scale={15}
+          blur={2} 
+          far={4}
+        />
+      </Suspense>
+    </CollisionProvider>
   );
 });
 
