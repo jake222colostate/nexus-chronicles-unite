@@ -4,8 +4,8 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface OptimizedProjectileSystemProps {
-  staffTipPosition: THREE.Vector3;
-  targetPositions: THREE.Vector3[];
+  staffTipPosition?: THREE.Vector3;
+  targetPositions?: THREE.Vector3[];
   damage: number;
   fireRate: number;
   onHitEnemy: (index: number, damage: number) => void;
@@ -32,7 +32,7 @@ const MAX_LIFE = 5;
 export const OptimizedProjectileSystem = forwardRef<
   OptimizedProjectileSystemHandle,
   OptimizedProjectileSystemProps
->(({ staffTipPosition, targetPositions, damage, fireRate, onHitEnemy }, ref) => {
+>(({ staffTipPosition, targetPositions = [], damage, fireRate, onHitEnemy }, ref) => {
   const projectilePoolRef = useRef<ProjectileData[]>([]);
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
@@ -86,8 +86,14 @@ export const OptimizedProjectileSystem = forwardRef<
     return -1;
   };
 
-  const fireProjectile = (staffPos: THREE.Vector3, targets: THREE.Vector3[]) => {
-    // FIXED: Filter out undefined targets and validate positions
+  const fireProjectile = (staffPos?: THREE.Vector3, targets: THREE.Vector3[] = []) => {
+    // SAFETY CHECK: Ensure we have valid inputs
+    if (!staffPos || !targets || targets.length === 0) {
+      console.log('OptimizedProjectileSystem: Cannot fire - invalid staff position or no targets');
+      return;
+    }
+
+    // Filter out undefined targets and validate positions
     const validTargets = targets.filter((target): target is THREE.Vector3 => 
       target && target instanceof THREE.Vector3 && 
       typeof target.x === 'number' && 
@@ -96,13 +102,13 @@ export const OptimizedProjectileSystem = forwardRef<
     );
 
     if (validTargets.length === 0) {
-      console.log('No valid targets available for projectile');
+      console.log('OptimizedProjectileSystem: No valid targets available');
       return;
     }
 
     const projectileIndex = getInactiveProjectile();
     if (projectileIndex === -1) {
-      console.log('No available projectiles in pool');
+      console.log('OptimizedProjectileSystem: No available projectiles in pool');
       return;
     }
 
@@ -121,7 +127,7 @@ export const OptimizedProjectileSystem = forwardRef<
     const projectile = projectilePoolRef.current[projectileIndex];
     const mesh = meshPoolRef.current[projectileIndex];
 
-    // FIXED: Use valid target and store original index
+    // Use valid target and store original index
     const targetPosition = validTargets[closestIndex];
     const originalTargetIndex = targets.indexOf(targetPosition);
 
@@ -143,22 +149,25 @@ export const OptimizedProjectileSystem = forwardRef<
     material.color.setHex(0x00ffff);
     material.emissive.setHex(0x00ffff);
 
-    console.log(`Fired projectile ${projectileIndex} from`, staffPos, 'to target', originalTargetIndex, 'at position', targetPosition);
+    console.log(`OptimizedProjectileSystem: Fired projectile ${projectileIndex} to target ${originalTargetIndex}`);
   };
 
   const manualFire = () => {
-    console.log('Manual fire triggered');
-    if (staffTipPosition && targetPositions) {
+    console.log('OptimizedProjectileSystem: Manual fire triggered');
+    if (staffTipPosition && targetPositions && targetPositions.length > 0) {
       fireProjectile(staffTipPosition, targetPositions);
       lastFireTimeRef.current = Date.now();
+    } else {
+      console.log('OptimizedProjectileSystem: Manual fire failed - missing staff position or targets');
     }
   };
 
   useImperativeHandle(ref, () => ({ manualFire }), []);
 
   useFrame((state, delta) => {
-    // FIXED: Add safety checks for all required props
+    // CRITICAL SAFETY CHECK: Prevent crashes from undefined props
     if (!staffTipPosition || !targetPositions || !Array.isArray(targetPositions)) {
+      // Don't log continuously to avoid spam, but ensure we don't crash
       return;
     }
 
@@ -186,7 +195,7 @@ export const OptimizedProjectileSystem = forwardRef<
       // Update life
       projectile.life -= delta;
       
-      // FIXED: Check collision with target - add safety checks
+      // Check collision with target - add safety checks
       if (projectile.targetIndex >= 0 && 
           projectile.targetIndex < targetPositions.length && 
           targetPositions[projectile.targetIndex]) {
@@ -196,7 +205,7 @@ export const OptimizedProjectileSystem = forwardRef<
           onHitEnemy(projectile.targetIndex, projectile.damage);
           projectile.active = false;
           mesh.visible = false;
-          console.log('Projectile hit target', projectile.targetIndex);
+          console.log('OptimizedProjectileSystem: Projectile hit target', projectile.targetIndex);
           continue;
         }
       }
