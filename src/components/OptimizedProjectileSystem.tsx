@@ -29,6 +29,18 @@ const MAX_PROJECTILES = 20;
 const PROJECTILE_SPEED = 25;
 const MAX_LIFE = 5;
 
+// Helper function to safely validate Vector3
+const isValidVector3 = (vec: any): vec is THREE.Vector3 => {
+  return vec && 
+         vec.isVector3 && 
+         typeof vec.x === 'number' && 
+         typeof vec.y === 'number' && 
+         typeof vec.z === 'number' &&
+         !isNaN(vec.x) && 
+         !isNaN(vec.y) && 
+         !isNaN(vec.z);
+};
+
 export const OptimizedProjectileSystem = forwardRef<
   OptimizedProjectileSystemHandle,
   OptimizedProjectileSystemProps
@@ -87,21 +99,22 @@ export const OptimizedProjectileSystem = forwardRef<
   };
 
   const fireProjectile = (staffPos: THREE.Vector3, targets: THREE.Vector3[] = []) => {
-    // FIXED: Added comprehensive validation to prevent crashes
-    if (!staffPos || !staffPos.isVector3 || !targets || targets.length === 0) {
+    // FIXED: Comprehensive validation to prevent all crashes
+    if (!isValidVector3(staffPos)) {
+      console.log('OptimizedProjectileSystem: Invalid staff position, skipping fire');
       return;
     }
 
-    // Filter out undefined targets and validate positions
-    const validTargets = targets.filter((target): target is THREE.Vector3 => 
-      target && 
-      target.isVector3 && 
-      !isNaN(target.x) && 
-      !isNaN(target.y) && 
-      !isNaN(target.z)
-    );
+    if (!Array.isArray(targets) || targets.length === 0) {
+      console.log('OptimizedProjectileSystem: No valid targets, skipping fire');
+      return;
+    }
+
+    // Filter and validate all targets thoroughly
+    const validTargets = targets.filter(target => isValidVector3(target));
 
     if (validTargets.length === 0) {
+      console.log('OptimizedProjectileSystem: No valid targets after filtering, skipping fire');
       return;
     }
 
@@ -110,46 +123,62 @@ export const OptimizedProjectileSystem = forwardRef<
       return;
     }
 
-    // Find closest valid target
+    // Find closest valid target with safe distance calculation
     let closestIndex = 0;
     let closestDistance = Infinity;
     
-    validTargets.forEach((targetPos, index) => {
-      const distance = staffPos.distanceTo(targetPos);
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestIndex = index;
-      }
-    });
+    try {
+      validTargets.forEach((targetPos, index) => {
+        const distance = staffPos.distanceTo(targetPos);
+        if (distance < closestDistance && !isNaN(distance)) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      });
+    } catch (error) {
+      console.log('OptimizedProjectileSystem: Error calculating target distance, using first target');
+      closestIndex = 0;
+    }
 
     const projectile = projectilePoolRef.current[projectileIndex];
     const mesh = meshPoolRef.current[projectileIndex];
 
-    // Use valid target and store original index
+    // Use valid target and store original index safely
     const targetPosition = validTargets[closestIndex];
-    const originalTargetIndex = targets.indexOf(targetPosition);
+    const originalTargetIndex = targets.findIndex(target => 
+      isValidVector3(target) && 
+      target.x === targetPosition.x && 
+      target.y === targetPosition.y && 
+      target.z === targetPosition.z
+    );
 
-    // Setup projectile data
-    projectile.position.copy(staffPos);
-    projectile.direction.subVectors(targetPosition, staffPos).normalize();
-    projectile.damage = damage;
-    projectile.targetIndex = originalTargetIndex;
-    projectile.active = true;
-    projectile.life = MAX_LIFE;
-    
-    // Setup mesh
-    mesh.position.copy(staffPos);
-    mesh.visible = true;
-    mesh.scale.setScalar(1);
-    
-    const material = mesh.material as THREE.MeshStandardMaterial;
-    material.emissiveIntensity = 1.0;
-    material.color.setHex(0x00ffff);
-    material.emissive.setHex(0x00ffff);
+    // Setup projectile data with safe operations
+    try {
+      projectile.position.copy(staffPos);
+      projectile.direction.subVectors(targetPosition, staffPos).normalize();
+      projectile.damage = damage || 1;
+      projectile.targetIndex = Math.max(0, originalTargetIndex);
+      projectile.active = true;
+      projectile.life = MAX_LIFE;
+      
+      // Setup mesh safely
+      mesh.position.copy(staffPos);
+      mesh.visible = true;
+      mesh.scale.setScalar(1);
+      
+      const material = mesh.material as THREE.MeshStandardMaterial;
+      material.emissiveIntensity = 1.0;
+      material.color.setHex(0x00ffff);
+      material.emissive.setHex(0x00ffff);
+    } catch (error) {
+      console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating');
+      projectile.active = false;
+      mesh.visible = false;
+    }
   };
 
   const manualFire = () => {
-    if (staffTipPosition && staffTipPosition.isVector3 && targetPositions && targetPositions.length > 0) {
+    if (isValidVector3(staffTipPosition) && Array.isArray(targetPositions) && targetPositions.length > 0) {
       fireProjectile(staffTipPosition, targetPositions);
       lastFireTimeRef.current = Date.now();
     }
@@ -158,52 +187,86 @@ export const OptimizedProjectileSystem = forwardRef<
   useImperativeHandle(ref, () => ({ manualFire }), []);
 
   useFrame((state, delta) => {
-    // FIXED: Early return if essential props are missing - don't crash the render loop
-    if (!staffTipPosition || !staffTipPosition.isVector3 || !targetPositions || !Array.isArray(targetPositions)) {
+    // CRITICAL: Early return with comprehensive validation - never crash the render loop
+    if (!isValidVector3(staffTipPosition) || !Array.isArray(targetPositions)) {
+      return;
+    }
+
+    // Validate delta to prevent NaN issues
+    if (!delta || isNaN(delta) || delta <= 0) {
       return;
     }
 
     const now = Date.now();
     
-    // Auto fire projectiles only if we have valid positions
+    // Auto fire projectiles only with valid positions
     if (now - lastFireTimeRef.current >= fireRate && targetPositions.length > 0) {
-      fireProjectile(staffTipPosition, targetPositions);
-      lastFireTimeRef.current = now;
+      try {
+        fireProjectile(staffTipPosition, targetPositions);
+        lastFireTimeRef.current = now;
+      } catch (error) {
+        console.log('OptimizedProjectileSystem: Auto-fire failed, continuing render loop');
+      }
     }
 
-    // Update active projectiles
+    // Update active projectiles with comprehensive error handling
     for (let i = 0; i < projectilePoolRef.current.length; i++) {
       const projectile = projectilePoolRef.current[i];
       if (!projectile.active) continue;
 
       const mesh = meshPoolRef.current[i];
       
-      // Update position
-      projectile.position.add(
-        projectile.direction.clone().multiplyScalar(projectile.speed * delta)
-      );
-      mesh.position.copy(projectile.position);
-      
-      // Update life
-      projectile.life -= delta;
-      
-      // Check collision with target - add safety checks
-      if (projectile.targetIndex >= 0 && 
-          projectile.targetIndex < targetPositions.length && 
-          targetPositions[projectile.targetIndex] &&
-          targetPositions[projectile.targetIndex].isVector3) {
-        
-        const targetPos = targetPositions[projectile.targetIndex];
-        if (projectile.position.distanceTo(targetPos) < 1.5) {
-          onHitEnemy(projectile.targetIndex, projectile.damage);
-          projectile.active = false;
-          mesh.visible = false;
-          continue;
+      try {
+        // Update position with safe vector operations
+        const deltaMovement = projectile.direction.clone().multiplyScalar(projectile.speed * delta);
+        if (isValidVector3(deltaMovement)) {
+          projectile.position.add(deltaMovement);
+          mesh.position.copy(projectile.position);
         }
-      }
-      
-      // Deactivate if too old or too far
-      if (projectile.life <= 0 || projectile.position.distanceTo(staffTipPosition) > 80) {
+        
+        // Update life
+        projectile.life -= delta;
+        
+        // Check collision with target - comprehensive safety checks
+        if (projectile.targetIndex >= 0 && 
+            projectile.targetIndex < targetPositions.length) {
+          
+          const targetPos = targetPositions[projectile.targetIndex];
+          if (isValidVector3(targetPos)) {
+            try {
+              const distance = projectile.position.distanceTo(targetPos);
+              if (!isNaN(distance) && distance < 1.5) {
+                onHitEnemy(projectile.targetIndex, projectile.damage);
+                projectile.active = false;
+                mesh.visible = false;
+                continue;
+              }
+            } catch (error) {
+              console.log('OptimizedProjectileSystem: Collision check failed, deactivating projectile');
+              projectile.active = false;
+              mesh.visible = false;
+              continue;
+            }
+          }
+        }
+        
+        // Deactivate if too old or too far with safe distance check
+        try {
+          const distanceFromStart = projectile.position.distanceTo(staffTipPosition);
+          if (projectile.life <= 0 || (!isNaN(distanceFromStart) && distanceFromStart > 80)) {
+            projectile.active = false;
+            mesh.visible = false;
+          }
+        } catch (error) {
+          // If distance check fails, deactivate based on life only
+          if (projectile.life <= 0) {
+            projectile.active = false;
+            mesh.visible = false;
+          }
+        }
+      } catch (error) {
+        // If any projectile update fails, deactivate it and continue
+        console.log('OptimizedProjectileSystem: Projectile update failed, deactivating');
         projectile.active = false;
         mesh.visible = false;
       }
