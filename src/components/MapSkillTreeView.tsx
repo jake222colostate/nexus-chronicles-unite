@@ -1,5 +1,4 @@
-
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Scene3D } from './Scene3D';
 import { Fantasy3DUpgradeWorld } from './Fantasy3DUpgradeWorld';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
@@ -29,7 +28,7 @@ interface MapSkillTreeViewProps {
   weaponDamage: number;
 }
 
-export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
+export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = React.memo(({
   realm,
   buildings,
   manaPerSecond,
@@ -48,7 +47,8 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   onMeteorDestroyed,
   weaponDamage
 }) => {
-  console.log('MapSkillTreeView: Rendering with realm:', realm);
+  // Memoize the realm to prevent excessive logging
+  const memoizedRealm = useMemo(() => realm, [realm]);
   
   const [selectedBuilding, setSelectedBuilding] = useState<{
     building: any;
@@ -63,10 +63,10 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Log realm changes for debugging
+  // Single log on realm changes instead of continuous logging
   useEffect(() => {
-    console.log('MapSkillTreeView: Realm changed to:', realm);
-  }, [realm]);
+    console.log('MapSkillTreeView: Realm changed to:', memoizedRealm);
+  }, [memoizedRealm]);
 
   const handleUpgradeClick = useCallback((upgradeId: string) => {
     console.log('MapSkillTreeView: handleUpgradeClick called with:', upgradeId);
@@ -108,15 +108,15 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   try {
     return (
       <div className="relative w-full h-full overflow-hidden">
-        {/* 3D Scene - Use Fantasy 3D World for fantasy realm, Scene3D for sci-fi */}
-        {realm === 'fantasy' ? (
+        {/* 3D Scene - Conditionally render based on realm */}
+        {memoizedRealm === 'fantasy' ? (
           <Fantasy3DUpgradeWorld
-            key="fantasy-world" // Force re-mount on realm switch
+            key="fantasy-world"
             onUpgradeClick={handle3DUpgradeClick}
             showTapEffect={showTapEffect}
             onTapEffectComplete={onTapEffectComplete}
             gameState={gameState}
-            realm={realm}
+            realm={memoizedRealm}
             onPlayerPositionUpdate={onPlayerPositionUpdate}
             onEnemyCountChange={onEnemyCountChange}
             onEnemyKilled={onEnemyKilled}
@@ -124,8 +124,8 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
           />
         ) : (
           <Scene3D
-            key="scifi-world" // Force re-mount on realm switch
-            realm={realm}
+            key="scifi-world"
+            realm={memoizedRealm}
             gameState={gameState}
             onUpgradeClick={handleUpgradeClick}
             isTransitioning={isTransitioning}
@@ -224,4 +224,6 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
       </div>
     );
   }
-};
+});
+
+MapSkillTreeView.displayName = 'MapSkillTreeView';

@@ -2,9 +2,8 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Tree model URLs - Updated to prioritize local pine_tree_218poly
+// Tree model URLs - Updated with better fallback handling
 export const TREE_MODELS = {
-  // Use bundled assets to avoid loading errors that caused placeholder trees
   realistic: '/assets/realistic_tree.glb',
   stylized: '/assets/stylized_tree.glb',
   pine218: '/assets/pine_tree_218poly.glb'
@@ -42,9 +41,8 @@ class TreeAssetManagerSingleton {
   private preloadPromises = new Map<string, Promise<void>>();
 
   async preloadAllModels(): Promise<void> {
-    console.log('TreeAssetManager: Starting preload with pine_tree_218poly priority...');
+    console.log('TreeAssetManager: Starting enhanced preload with better error handling...');
     
-    // Prioritize pine_tree_218poly loading first
     const preloadOrder = ['pine218', 'stylized', 'realistic'] as const;
     
     for (const type of preloadOrder) {
@@ -60,30 +58,50 @@ class TreeAssetManagerSingleton {
       }
     }
     
-    // Load remaining models in parallel
     const remainingPromises = Array.from(this.preloadPromises.values());
     await Promise.allSettled(remainingPromises);
-    console.log('TreeAssetManager: Model preload completed with pine_tree_218poly priority');
+    console.log('TreeAssetManager: Enhanced preload completed');
   }
 
   private async preloadModel(type: keyof typeof TREE_MODELS, url: string): Promise<void> {
     try {
-      console.log(`TreeAssetManager: Preloading ${type} from: ${url}`);
+      console.log(`TreeAssetManager: Loading ${type} from: ${url}`);
       
+      // Enhanced loading with better error handling
       const gltf = await new Promise<any>((resolve, reject) => {
         const loader = new GLTFLoader();
-        loader.load(url, resolve, undefined, reject);
+        
+        // Add timeout to prevent hanging
+        const timeout = setTimeout(() => {
+          reject(new Error(`Loading timeout for ${type}`));
+        }, 10000);
+        
+        loader.load(
+          url,
+          (loadedGltf) => {
+            clearTimeout(timeout);
+            resolve(loadedGltf);
+          },
+          (progress) => {
+            console.log(`TreeAssetManager: Loading ${type} progress:`, progress.loaded / progress.total);
+          },
+          (error) => {
+            clearTimeout(timeout);
+            reject(error);
+          }
+        );
       });
 
       if (gltf?.scene) {
-        // Optimize the loaded model and fix clipping issues
+        // Enhanced model optimization with texture fixing
         this.optimizeTreeModel(gltf.scene);
+        this.fixTextureLoading(gltf.scene);
         
         this.cache.set(type, {
           scene: gltf.scene,
           loaded: true
         });
-        console.log(`TreeAssetManager: Successfully cached ${type} model`);
+        console.log(`TreeAssetManager: Successfully cached ${type} model with textures`);
       }
     } catch (error) {
       console.warn(`TreeAssetManager: Failed to preload ${type}:`, error);
@@ -93,6 +111,41 @@ class TreeAssetManagerSingleton {
         error: error as Error
       });
     }
+  }
+
+  private fixTextureLoading(model: THREE.Object3D): void {
+    console.log('TreeAssetManager: Fixing texture loading issues');
+    
+    model.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material) {
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        
+        materials.forEach((material) => {
+          // Fix common texture loading issues
+          if (material instanceof THREE.MeshStandardMaterial || material instanceof THREE.MeshLambertMaterial) {
+            // Ensure textures are properly loaded and configured
+            if (material.map) {
+              material.map.wrapS = THREE.ClampToEdgeWrapping;
+              material.map.wrapT = THREE.ClampToEdgeWrapping;
+              material.map.needsUpdate = true;
+            }
+            
+            // Fix material properties for better visibility
+            material.transparent = false;
+            material.opacity = 1.0;
+            material.side = THREE.DoubleSide;
+            material.needsUpdate = true;
+            
+            // Ensure proper texture filtering
+            if (material.map) {
+              material.map.minFilter = THREE.LinearFilter;
+              material.map.magFilter = THREE.LinearFilter;
+              material.map.generateMipmaps = false;
+            }
+          }
+        });
+      }
+    });
   }
 
   private optimizeTreeModel(model: THREE.Object3D): void {
@@ -265,8 +318,9 @@ class TreeAssetManagerSingleton {
     const cached = this.cache.get(type);
     if (cached?.scene) {
       const cloned = cached.scene.clone();
-      // Apply enhanced anti-clipping settings to cloned model
+      // Apply enhanced anti-clipping settings and texture fixes to cloned model
       this.optimizeTreeModel(cloned);
+      this.fixTextureLoading(cloned);
       return cloned;
     }
     return null;
@@ -296,7 +350,7 @@ class TreeAssetManagerSingleton {
 
 export const TreeAssetManager = new TreeAssetManagerSingleton();
 
-// Initialize preloading with pine_tree_218poly priority
+// Initialize preloading with enhanced error handling
 TreeAssetManager.preloadAllModels().catch(error => {
-  console.warn('TreeAssetManager: Initial preload failed:', error);
+  console.warn('TreeAssetManager: Initial preload failed, using fallbacks:', error);
 });
