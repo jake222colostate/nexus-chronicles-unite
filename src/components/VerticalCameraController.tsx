@@ -1,7 +1,7 @@
+
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3 } from 'three';
-import * as THREE from 'three';
+import { Vector3, MathUtils } from 'three';
 
 interface VerticalCameraControllerProps {
   camera: any;
@@ -92,7 +92,7 @@ export const VerticalCameraController: React.FC<VerticalCameraControllerProps> =
   useFrame(() => {
     if (camera) {
       // Smooth camera Y movement
-      camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY.current, 0.1);
+      camera.position.y = MathUtils.lerp(camera.position.y, targetY.current, 0.1);
       
       // Notify parent of position changes
       if (onPositionChange) {
