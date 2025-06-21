@@ -1,14 +1,14 @@
-
 import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3 } from 'three';
+import * as THREE from 'three';
 
 interface VerticalCameraControllerProps {
   camera: any;
   minY?: number;
   maxY?: number;
   sensitivity?: number;
-  onPositionChange?: (position: Vector3) => void; // ADDED: Position change callback
+  onPositionChange?: (position: Vector3) => void;
 }
 
 export const VerticalCameraController: React.FC<VerticalCameraControllerProps> = ({
@@ -16,7 +16,7 @@ export const VerticalCameraController: React.FC<VerticalCameraControllerProps> =
   minY = -10,
   maxY = 20,
   sensitivity = 1,
-  onPositionChange // ADDED: Destructure callback
+  onPositionChange
 }) => {
   const isDragging = useRef(false);
   const lastMouseY = useRef(0);
@@ -94,7 +94,7 @@ export const VerticalCameraController: React.FC<VerticalCameraControllerProps> =
       // Smooth camera Y movement
       camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY.current, 0.1);
       
-      // ADDED: Notify parent of position changes
+      // Notify parent of position changes
       if (onPositionChange) {
         const currentPosition = camera.position.clone();
         const distanceMoved = currentPosition.distanceTo(lastNotifiedPosition.current);
