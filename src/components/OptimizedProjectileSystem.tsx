@@ -49,6 +49,7 @@ export const OptimizedProjectileSystem = forwardRef<
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
+  const lastTargetIndexRef = useRef(0); // Track which target to hit next
 
   // Create simple, reliable projectile geometry and material
   const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.3, 12, 12), []);
@@ -123,34 +124,22 @@ export const OptimizedProjectileSystem = forwardRef<
       return;
     }
 
-    // Find closest valid target with safe distance calculation
-    let closestIndex = 0;
-    let closestDistance = Infinity;
+    // FIXED: Round-robin targeting to ensure all enemies get targeted
+    const targetIndex = lastTargetIndexRef.current % validTargets.length;
+    lastTargetIndexRef.current = (lastTargetIndexRef.current + 1) % validTargets.length;
     
-    try {
-      validTargets.forEach((targetPos, index) => {
-        const distance = staffPos.distanceTo(targetPos);
-        if (distance < closestDistance && !isNaN(distance)) {
-          closestDistance = distance;
-          closestIndex = index;
-        }
-      });
-    } catch (error) {
-      console.log('OptimizedProjectileSystem: Error calculating target distance, using first target');
-      closestIndex = 0;
-    }
-
-    const projectile = projectilePoolRef.current[projectileIndex];
-    const mesh = meshPoolRef.current[projectileIndex];
-
-    // Use valid target and store original index safely
-    const targetPosition = validTargets[closestIndex];
+    const targetPosition = validTargets[targetIndex];
+    
+    // Find the original index in the targets array
     const originalTargetIndex = targets.findIndex(target => 
       isValidVector3(target) && 
       target.x === targetPosition.x && 
       target.y === targetPosition.y && 
       target.z === targetPosition.z
     );
+
+    const projectile = projectilePoolRef.current[projectileIndex];
+    const mesh = meshPoolRef.current[projectileIndex];
 
     // Setup projectile data with safe operations
     try {
@@ -171,7 +160,7 @@ export const OptimizedProjectileSystem = forwardRef<
       material.color.setHex(0x00ffff);
       material.emissive.setHex(0x00ffff);
       
-      console.log('OptimizedProjectileSystem: Fired projectile automatically');
+      console.log(`OptimizedProjectileSystem: Fired projectile at enemy ${originalTargetIndex} (round-robin)`);
     } catch (error) {
       console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating');
       projectile.active = false;
@@ -180,9 +169,13 @@ export const OptimizedProjectileSystem = forwardRef<
   };
 
   const manualFire = () => {
+    console.log('OptimizedProjectileSystem: Manual fire triggered');
     if (isValidVector3(staffTipPosition) && Array.isArray(targetPositions) && targetPositions.length > 0) {
       fireProjectile(staffTipPosition, targetPositions);
       lastFireTimeRef.current = Date.now();
+      console.log('OptimizedProjectileSystem: Manual fire successful');
+    } else {
+      console.log('OptimizedProjectileSystem: Manual fire failed - invalid conditions');
     }
   };
 
@@ -201,7 +194,7 @@ export const OptimizedProjectileSystem = forwardRef<
 
     const now = Date.now();
     
-    // FIXED: Auto fire projectiles more aggressively when targets are available
+    // FIXED: More aggressive auto-firing with shorter intervals
     if (now - lastFireTimeRef.current >= fireRate && targetPositions.length > 0) {
       try {
         fireProjectile(staffTipPosition, targetPositions);
@@ -242,7 +235,7 @@ export const OptimizedProjectileSystem = forwardRef<
                 onHitEnemy(projectile.targetIndex, projectile.damage);
                 projectile.active = false;
                 mesh.visible = false;
-                console.log('OptimizedProjectileSystem: Hit enemy!');
+                console.log(`OptimizedProjectileSystem: Hit enemy ${projectile.targetIndex}!`);
                 continue;
               }
             } catch (error) {

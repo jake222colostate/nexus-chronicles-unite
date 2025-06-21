@@ -38,12 +38,52 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   // Calculate fire rate based on upgrades (faster with more upgrades)
   const fireRate = Math.max(200, 800 - (upgrades * 80));
 
+  // FIXED: Improved click/tap handling with better event detection
   useEffect(() => {
-    const handleClick = () => {
+    const handleClick = (event: MouseEvent) => {
+      console.log('StaffWeaponSystem: Mouse click detected');
+      event.preventDefault();
       projectileSystemRef.current?.manualFire();
     };
+
+    const handleTouch = (event: TouchEvent) => {
+      console.log('StaffWeaponSystem: Touch detected');
+      event.preventDefault();
+      projectileSystemRef.current?.manualFire();
+    };
+
+    // Add event listeners to multiple elements for better coverage
+    const canvas = document.querySelector('canvas');
+    const gameContainer = document.querySelector('[class*="h-[667px]"]'); // Game container
+    
+    if (canvas) {
+      canvas.addEventListener('click', handleClick);
+      canvas.addEventListener('touchstart', handleTouch, { passive: false });
+      console.log('StaffWeaponSystem: Event listeners added to canvas');
+    }
+    
+    if (gameContainer) {
+      gameContainer.addEventListener('click', handleClick);
+      gameContainer.addEventListener('touchstart', handleTouch, { passive: false });
+      console.log('StaffWeaponSystem: Event listeners added to game container');
+    }
+
+    // Also add to window as fallback
     window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
+    window.addEventListener('touchstart', handleTouch, { passive: false });
+
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('click', handleClick);
+        canvas.removeEventListener('touchstart', handleTouch);
+      }
+      if (gameContainer) {
+        gameContainer.removeEventListener('click', handleClick);
+        gameContainer.removeEventListener('touchstart', handleTouch);
+      }
+      window.removeEventListener('click', handleClick);
+      window.removeEventListener('touchstart', handleTouch);
+    };
   }, []);
 
   useFrame((state, delta) => {
