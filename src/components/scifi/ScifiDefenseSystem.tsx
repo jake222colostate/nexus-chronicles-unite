@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Vector3, Group } from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { ScifiCannon } from './ScifiCannon';
-import { Asteroid } from './Asteroid';
+import { TemporaryMeteor } from './TemporaryMeteor';
 
 const UPGRADE_TARGETS = [
   new Vector3(0, 4, 0),
@@ -177,7 +177,12 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
         <ScifiCannon target={target} />
       </group>
       {asteroids.map(ast => (
-        <Asteroid key={ast.id} position={ast.position} health={ast.health} />
+        <TemporaryMeteor 
+          key={ast.id} 
+          position={ast.position} 
+          health={ast.health}
+          onReachTarget={() => console.log('Meteor reached target!')}
+        />
       ))}
       {projectiles.map(p => (
         <mesh key={p.id} position={p.position}>
