@@ -7,6 +7,7 @@ import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { VerticalCameraController } from './VerticalCameraController';
+import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem } from './ChunkSystem';
 import { FantasyEnvironmentOrchestrator } from './FantasyEnvironmentOrchestrator';
 import { Sun } from './Sun';
@@ -50,26 +51,33 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   
   const cameraRef = useRef();
   const [enemyPositions, setEnemyPositions] = useState<Vector3[]>([]);
-  
-  // FIXED: Track actual player position that updates with camera movement
   const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 2, 10));
 
-  // FIXED: Callback to handle player position updates from camera controller
+  // FIXED: Throttled callback to prevent excessive updates
   const handlePlayerPositionUpdate = useCallback((position: Vector3) => {
-    setPlayerPosition(position.clone());
-    console.log('Scene3D: Player position updated to:', position);
+    setPlayerPosition(prev => {
+      // Only update if position changed significantly
+      if (prev.distanceTo(position) > 0.5) {
+        console.log('Scene3D: Player position updated to:', position);
+        return position.clone();
+      }
+      return prev;
+    });
   }, []);
 
-  // Callback to handle enemy position updates from environment
+  // OPTIMIZED: Throttled enemy position updates
   const handleEnemyPositionUpdate = useCallback((positions: Vector3[]) => {
-    setEnemyPositions(positions);
-    console.log('Scene3D: Enemy positions updated, count:', positions.length);
+    setEnemyPositions(prev => {
+      if (prev.length !== positions.length) {
+        console.log('Scene3D: Enemy positions updated, count:', positions.length);
+        return positions;
+      }
+      return prev;
+    });
   }, []);
 
-  // Callback to handle enemy hits
   const handleEnemyHit = useCallback((index: number, damage: number) => {
     console.log(`Scene3D: Enemy ${index} hit for ${damage} damage`);
-    // This would typically trigger enemy damage/death logic
   }, []);
 
   // Memoize upgrade unlock checking to prevent recalculation
@@ -86,7 +94,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
   // Memoize upgrade nodes to prevent unnecessary re-renders
   const upgradeNodes = useMemo(() => {
-    console.log('Scene3D: Creating upgrade nodes');
     return UPGRADE_POSITIONS.map((position) => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
       if (!upgrade) return null;
@@ -106,14 +113,12 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     }).filter(Boolean);
   }, [gameState.purchasedUpgrades, gameState.nexusShards, checkUpgradeUnlocked, onUpgradeClick, realm]);
 
-  console.log('Scene3D: About to render Canvas');
-
   return (
     <div className="w-full h-full relative overflow-hidden">
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
-        dpr={[1, 1]}
-        performance={{ min: 0.6 }}
+        dpr={[0.5, 1]} // REDUCED: Lower DPR for better performance
+        performance={{ min: 0.8 }} // INCREASED: Higher minimum performance threshold
         style={{ width: '375px', height: '667px' }}
         gl={{ 
           antialias: false, 
@@ -128,44 +133,63 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             ref={cameraRef}
             makeDefault
             position={[0, 2, 10]}
-            fov={65}
-            near={0.01}
-            far={500}
+            fov={60} // REDUCED: Lower FOV for better performance
+            near={0.1} // INCREASED: Larger near plane
+            far={200} // REDUCED: Smaller far plane
             aspect={375 / 667}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           >
-            {/* FIXED: Enhanced MagicStaffWeaponSystem with proper player position tracking */}
-            <MagicStaffWeaponSystem 
-              upgradeLevel={gameState.weaponUpgradeLevel || 0}
-              visible={realm === 'fantasy'}
-              enemyPositions={enemyPositions}
-              onHitEnemy={handleEnemyHit}
-              damage={10 + (gameState.weaponUpgradeLevel || 0) * 5}
-              playerPosition={playerPosition}
-            />
+            {/* OPTIMIZED: Only show weapon system in fantasy realm */}
+            {realm === 'fantasy' && (
+              <MagicStaffWeaponSystem 
+                upgradeLevel={gameState.weaponUpgradeLevel || 0}
+                visible={true}
+                enemyPositions={enemyPositions}
+                onHitEnemy={handleEnemyHit}
+                damage={10 + (gameState.weaponUpgradeLevel || 0) * 5}
+                playerPosition={playerPosition}
+              />
+            )}
           </PerspectiveCamera>
 
-          {/* FIXED: Pass position update callback to camera controller */}
-          <VerticalCameraController 
-            camera={cameraRef.current}
-            minY={-5}
-            maxY={15}
-            sensitivity={0.8}
-            onPositionChange={handlePlayerPositionUpdate}
-          />
+          {/* FIXED: Different controllers for different realms */}
+          {realm === 'fantasy' ? (
+            <VerticalCameraController 
+              camera={cameraRef.current}
+              minY={-5}
+              maxY={15}
+              sensitivity={0.8}
+              onPositionChange={handlePlayerPositionUpdate}
+            />
+          ) : (
+            <Enhanced360Controller
+              position={[0, 2, 10]}
+              onPositionChange={handlePlayerPositionUpdate}
+              enemyPositions={enemyPositions}
+              enemyRadius={1.5}
+            />
+          )}
 
-          {/* ENHANCED: Much brighter and more vibrant lighting system */}
-          <ImprovedFantasyLighting />
+          {/* OPTIMIZED: Simpler lighting for sci-fi */}
+          {realm === 'fantasy' ? (
+            <ImprovedFantasyLighting />
+          ) : (
+            <>
+              <ambientLight intensity={0.6} color="#ffffff" />
+              <directionalLight position={[10, 10, 5]} intensity={0.8} color="#ffffff" />
+            </>
+          )}
 
           <FloatingIsland realm={realm} />
+          
+          {/* OPTIMIZED: Only render complex systems in their respective realms */}
           {realm === 'scifi' && <ScifiDefenseSystem onMeteorDestroyed={onMeteorDestroyed} />}
 
-          {/* FIXED: Fantasy environment with proper player position tracking */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
               chunkSize={50}
-              renderDistance={150}
+              renderDistance={100} // REDUCED: Smaller render distance
             >
               {(chunks) => (
                 <FantasyEnvironmentOrchestrator
@@ -186,14 +210,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           )}
         </Suspense>
       </Canvas>
-
-      <Suspense fallback={
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <div className="text-white text-sm">Loading environment...</div>
-        </div>
-      }>
-        <div />
-      </Suspense>
     </div>
   );
 });
