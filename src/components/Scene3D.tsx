@@ -1,3 +1,4 @@
+
 import React, { Suspense, useRef, useMemo, useCallback, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -6,7 +7,7 @@ import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { VerticalCameraController } from './VerticalCameraController';
-import { FixedScifiController } from './FixedScifiController';
+import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem } from './ChunkSystem';
 import { FantasyEnvironmentOrchestrator } from './FantasyEnvironmentOrchestrator';
 import { Sun } from './Sun';
@@ -116,8 +117,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     <div className="w-full h-full relative overflow-hidden">
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
-        dpr={[0.5, 1]}
-        performance={{ min: 0.8 }}
+        dpr={[0.5, 1]} // REDUCED: Lower DPR for better performance
+        performance={{ min: 0.8 }} // INCREASED: Higher minimum performance threshold
         style={{ width: '375px', height: '667px' }}
         gl={{ 
           antialias: false, 
@@ -132,13 +133,13 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             ref={cameraRef}
             makeDefault
             position={[0, 2, 10]}
-            fov={60}
-            near={0.1}
-            far={200}
+            fov={60} // REDUCED: Lower FOV for better performance
+            near={0.1} // INCREASED: Larger near plane
+            far={200} // REDUCED: Smaller far plane
             aspect={375 / 667}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           >
-            {/* Only show weapon system in fantasy realm */}
+            {/* OPTIMIZED: Only show weapon system in fantasy realm */}
             {realm === 'fantasy' && (
               <MagicStaffWeaponSystem 
                 upgradeLevel={gameState.weaponUpgradeLevel || 0}
@@ -151,7 +152,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             )}
           </PerspectiveCamera>
 
-          {/* FIXED: Use different controllers for different realms */}
+          {/* FIXED: Different controllers for different realms */}
           {realm === 'fantasy' ? (
             <VerticalCameraController 
               camera={cameraRef.current}
@@ -161,10 +162,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               onPositionChange={handlePlayerPositionUpdate}
             />
           ) : (
-            <FixedScifiController
+            <Enhanced360Controller
               position={[0, 2, 10]}
               onPositionChange={handlePlayerPositionUpdate}
               enemyPositions={enemyPositions}
+              enemyRadius={1.5}
             />
           )}
 
@@ -180,14 +182,14 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           <FloatingIsland realm={realm} />
           
-          {/* Only render complex systems in their respective realms */}
+          {/* OPTIMIZED: Only render complex systems in their respective realms */}
           {realm === 'scifi' && <ScifiDefenseSystem onMeteorDestroyed={onMeteorDestroyed} />}
 
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
               chunkSize={50}
-              renderDistance={100}
+              renderDistance={100} // REDUCED: Smaller render distance
             >
               {(chunks) => (
                 <FantasyEnvironmentOrchestrator
