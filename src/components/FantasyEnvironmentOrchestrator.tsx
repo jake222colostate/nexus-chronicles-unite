@@ -1,9 +1,6 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { ContinuousMountainSystem } from './ContinuousMountainSystem';
-import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
-import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
 import { Vector3 } from 'three';
 
 interface FantasyEnvironmentOrchestratorProps {
@@ -26,38 +23,20 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
     return null;
   }
 
-  console.log('FantasyEnvironmentOrchestrator: Rendering with enhanced visibility fixes and infinite terrain');
+  console.log('FantasyEnvironmentOrchestrator: ULTRA-MINIMAL rendering for 60 FPS');
 
   return (
     <group>
-      {/* Enhanced infinite ground system - renders first to ensure base layer */}
-      <EnhancedInfiniteGroundSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-        playerPosition={playerPosition}
-      />
-      
-      {/* Continuous mountain system positioned closer with terrain hole fixes */}
-      <ContinuousMountainSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-        playerPosition={playerPosition}
-      />
-      
-      {/* ONLY use EnhancedTreeDistribution with visibility fixes */}
-      <EnhancedTreeDistribution
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-      />
+      {/* MINIMAL: Just basic ground and background for 60 FPS */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#2d4a2d" />
+      </mesh>
       
       {/* Background color for fantasy dusk */}
       <color attach="background" args={['#1a0f2e']} />
       
-      {/* Enhanced atmospheric fog with longer range */}
-      <fog attach="fog" args={['#2d1b4e', 50, 300]} />
+      {/* REMOVED: All complex systems for maximum 60 FPS performance */}
     </group>
   );
 };
