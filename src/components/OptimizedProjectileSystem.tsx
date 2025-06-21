@@ -1,4 +1,3 @@
-
 import React, { useRef, useMemo, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -117,10 +116,9 @@ export const OptimizedProjectileSystem = forwardRef<
       return;
     }
 
-    // Use the current staff position from the ref
-    const currentStaffPos = currentStaffPositionRef.current;
-    if (!isValidVector3(currentStaffPos)) {
-      console.log('OptimizedProjectileSystem: Invalid current staff position, skipping fire');
+    // CRITICAL FIX: Use the current staff tip position directly from props
+    if (!isValidVector3(staffTipPosition)) {
+      console.log('OptimizedProjectileSystem: Invalid staff tip position, skipping fire');
       return;
     }
 
@@ -166,17 +164,17 @@ export const OptimizedProjectileSystem = forwardRef<
 
     const projectile = projectilePoolRef.current[projectileIndex];
 
-    // Setup projectile data with safe operations - use current staff position
+    // CRITICAL FIX: Always use the current staff tip position from props
     try {
-      projectile.position.copy(currentStaffPos);
-      projectile.direction.subVectors(targetPosition, currentStaffPos).normalize();
+      projectile.position.copy(staffTipPosition);
+      projectile.direction.subVectors(targetPosition, staffTipPosition).normalize();
       projectile.damage = damage || 1;
       projectile.targetIndex = Math.max(0, originalTargetIndex);
       projectile.active = true;
       projectile.life = MAX_LIFE;
       
       // Setup mesh safely
-      mesh.position.copy(currentStaffPos);
+      mesh.position.copy(staffTipPosition);
       mesh.visible = true;
       mesh.scale.setScalar(1);
       
@@ -185,7 +183,7 @@ export const OptimizedProjectileSystem = forwardRef<
       material.color.setHex(0x00ffff);
       material.emissive.setHex(0x00ffff);
       
-      console.log(`OptimizedProjectileSystem: Fired projectile from current staff position at enemy ${originalTargetIndex}`);
+      console.log(`OptimizedProjectileSystem: Fired projectile from staff tip at enemy ${originalTargetIndex}`);
     } catch (error) {
       console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating:', error);
       projectile.active = false;
@@ -280,9 +278,12 @@ export const OptimizedProjectileSystem = forwardRef<
           }
         }
         
-        // Deactivate if too old or too far with safe distance check
+        // FIXED: Deactivate if too old or too far - use staff tip position for distance check
         try {
-          const distanceFromStart = projectile.position.distanceTo(currentStaffPositionRef.current);
+          const distanceFromStart = isValidVector3(staffTipPosition) 
+            ? projectile.position.distanceTo(staffTipPosition)
+            : 100; // Default to max distance if staff position invalid
+          
           if (projectile.life <= 0 || (!isNaN(distanceFromStart) && distanceFromStart > 80)) {
             projectile.active = false;
             mesh.visible = false;

@@ -212,7 +212,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return () => window.removeEventListener('click', handleClick);
   }, []);
 
-  // First-person weapon positioning optimized for iPhone screen visibility
+  // FIXED: Ensure staff tip position is updated every frame and properly passed to projectile system
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && staffModel) {
       // Get camera vectors for positioning
@@ -239,9 +239,13 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Y = -15° (less angle)
       weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20° (less tilt)
 
+      // CRITICAL FIX: Calculate and update staff tip position every frame
       const tipOffset = new THREE.Vector3(0, 1.2 * staffScale, 0);
       tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
       staffTipPositionRef.current.copy(weaponGroupRef.current.position).add(tipOffset);
+      
+      // Debug logging to verify staff tip position updates
+      console.log('Staff tip position updated:', staffTipPositionRef.current);
     }
   });
 
