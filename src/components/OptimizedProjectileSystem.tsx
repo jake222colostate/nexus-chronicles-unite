@@ -51,6 +51,9 @@ export const OptimizedProjectileSystem = forwardRef<
   const lastFireTimeRef = useRef(0);
   const lastTargetIndexRef = useRef(0);
   const meshPoolInitializedRef = useRef(false);
+  
+  // Store the current staff position to use for projectile spawning
+  const currentStaffPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
 
   // Create simple, reliable projectile geometry and material
   const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.3, 12, 12), []);
@@ -79,7 +82,7 @@ export const OptimizedProjectileSystem = forwardRef<
     }
   }, []);
 
-  // FIXED: Initialize mesh pool with useEffect to ensure it happens after groupRef is set
+  // Initialize mesh pool with useEffect to ensure it happens after groupRef is set
   useEffect(() => {
     if (groupRef.current && !meshPoolInitializedRef.current) {
       console.log('OptimizedProjectileSystem: Initializing mesh pool');
@@ -107,16 +110,17 @@ export const OptimizedProjectileSystem = forwardRef<
     return -1;
   };
 
-  const fireProjectile = (staffPos: THREE.Vector3, targets: THREE.Vector3[] = []) => {
-    // FIXED: Check if mesh pool is initialized before firing
+  const fireProjectile = (targets: THREE.Vector3[] = []) => {
+    // Check if mesh pool is initialized before firing
     if (!meshPoolInitializedRef.current) {
       console.log('OptimizedProjectileSystem: Mesh pool not initialized yet, skipping fire');
       return;
     }
 
-    // FIXED: Comprehensive validation to prevent all crashes
-    if (!isValidVector3(staffPos)) {
-      console.log('OptimizedProjectileSystem: Invalid staff position, skipping fire');
+    // Use the current staff position from the ref
+    const currentStaffPos = currentStaffPositionRef.current;
+    if (!isValidVector3(currentStaffPos)) {
+      console.log('OptimizedProjectileSystem: Invalid current staff position, skipping fire');
       return;
     }
 
@@ -139,14 +143,14 @@ export const OptimizedProjectileSystem = forwardRef<
       return;
     }
 
-    // FIXED: Check if mesh exists before using it
+    // Check if mesh exists before using it
     const mesh = meshPoolRef.current[projectileIndex];
     if (!mesh) {
       console.log('OptimizedProjectileSystem: Mesh not found at index', projectileIndex);
       return;
     }
 
-    // FIXED: Round-robin targeting to ensure all enemies get targeted
+    // Round-robin targeting to ensure all enemies get targeted
     const targetIndex = lastTargetIndexRef.current % validTargets.length;
     lastTargetIndexRef.current = (lastTargetIndexRef.current + 1) % validTargets.length;
     
@@ -162,17 +166,17 @@ export const OptimizedProjectileSystem = forwardRef<
 
     const projectile = projectilePoolRef.current[projectileIndex];
 
-    // Setup projectile data with safe operations
+    // Setup projectile data with safe operations - use current staff position
     try {
-      projectile.position.copy(staffPos);
-      projectile.direction.subVectors(targetPosition, staffPos).normalize();
+      projectile.position.copy(currentStaffPos);
+      projectile.direction.subVectors(targetPosition, currentStaffPos).normalize();
       projectile.damage = damage || 1;
       projectile.targetIndex = Math.max(0, originalTargetIndex);
       projectile.active = true;
       projectile.life = MAX_LIFE;
       
       // Setup mesh safely
-      mesh.position.copy(staffPos);
+      mesh.position.copy(currentStaffPos);
       mesh.visible = true;
       mesh.scale.setScalar(1);
       
@@ -181,7 +185,7 @@ export const OptimizedProjectileSystem = forwardRef<
       material.color.setHex(0x00ffff);
       material.emissive.setHex(0x00ffff);
       
-      console.log(`OptimizedProjectileSystem: Fired projectile at enemy ${originalTargetIndex} (round-robin)`);
+      console.log(`OptimizedProjectileSystem: Fired projectile from current staff position at enemy ${originalTargetIndex}`);
     } catch (error) {
       console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating:', error);
       projectile.active = false;
@@ -191,13 +195,12 @@ export const OptimizedProjectileSystem = forwardRef<
 
   const manualFire = () => {
     console.log('OptimizedProjectileSystem: Manual fire triggered');
-    if (isValidVector3(staffTipPosition) && Array.isArray(targetPositions) && targetPositions.length > 0) {
-      fireProjectile(staffTipPosition, targetPositions);
+    if (Array.isArray(targetPositions) && targetPositions.length > 0) {
+      fireProjectile(targetPositions);
       lastFireTimeRef.current = Date.now();
       console.log('OptimizedProjectileSystem: Manual fire successful');
     } else {
-      console.log('OptimizedProjectileSystem: Manual fire failed - invalid conditions', {
-        staffTipValid: isValidVector3(staffTipPosition),
+      console.log('OptimizedProjectileSystem: Manual fire failed - no valid targets', {
         targetCount: targetPositions?.length || 0
       });
     }
@@ -206,8 +209,13 @@ export const OptimizedProjectileSystem = forwardRef<
   useImperativeHandle(ref, () => ({ manualFire }), []);
 
   useFrame((state, delta) => {
-    // CRITICAL: Early return with comprehensive validation - never crash the render loop
-    if (!isValidVector3(staffTipPosition) || !Array.isArray(targetPositions)) {
+    // Update current staff position from props
+    if (isValidVector3(staffTipPosition)) {
+      currentStaffPositionRef.current.copy(staffTipPosition);
+    }
+
+    // Early return with comprehensive validation - never crash the render loop
+    if (!Array.isArray(targetPositions)) {
       return;
     }
 
@@ -218,10 +226,10 @@ export const OptimizedProjectileSystem = forwardRef<
 
     const now = Date.now();
     
-    // FIXED: More aggressive auto-firing with shorter intervals
+    // Auto-firing with shorter intervals
     if (now - lastFireTimeRef.current >= fireRate && targetPositions.length > 0) {
       try {
-        fireProjectile(staffTipPosition, targetPositions);
+        fireProjectile(targetPositions);
         lastFireTimeRef.current = now;
         console.log('OptimizedProjectileSystem: Auto-fired at targets:', targetPositions.length);
       } catch (error) {
@@ -274,7 +282,7 @@ export const OptimizedProjectileSystem = forwardRef<
         
         // Deactivate if too old or too far with safe distance check
         try {
-          const distanceFromStart = projectile.position.distanceTo(staffTipPosition);
+          const distanceFromStart = projectile.position.distanceTo(currentStaffPositionRef.current);
           if (projectile.life <= 0 || (!isNaN(distanceFromStart) && distanceFromStart > 80)) {
             projectile.active = false;
             mesh.visible = false;
