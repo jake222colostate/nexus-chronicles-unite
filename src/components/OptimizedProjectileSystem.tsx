@@ -1,5 +1,5 @@
 
-import React, { useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useMemo, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -49,7 +49,8 @@ export const OptimizedProjectileSystem = forwardRef<
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
-  const lastTargetIndexRef = useRef(0); // Track which target to hit next
+  const lastTargetIndexRef = useRef(0);
+  const meshPoolInitializedRef = useRef(false);
 
   // Create simple, reliable projectile geometry and material
   const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.3, 12, 12), []);
@@ -74,12 +75,16 @@ export const OptimizedProjectileSystem = forwardRef<
           life: 0
         });
       }
+      console.log('OptimizedProjectileSystem: Projectile pool initialized');
     }
   }, []);
 
-  // Initialize mesh pool with reliable geometries
-  useMemo(() => {
-    if (meshPoolRef.current.length === 0 && groupRef.current) {
+  // FIXED: Initialize mesh pool with useEffect to ensure it happens after groupRef is set
+  useEffect(() => {
+    if (groupRef.current && !meshPoolInitializedRef.current) {
+      console.log('OptimizedProjectileSystem: Initializing mesh pool');
+      meshPoolRef.current = [];
+      
       for (let i = 0; i < MAX_PROJECTILES; i++) {
         const mesh = new THREE.Mesh(projectileGeometry, projectileMaterial.clone());
         mesh.visible = false;
@@ -87,8 +92,11 @@ export const OptimizedProjectileSystem = forwardRef<
         meshPoolRef.current.push(mesh);
         groupRef.current.add(mesh);
       }
+      
+      meshPoolInitializedRef.current = true;
+      console.log('OptimizedProjectileSystem: Mesh pool initialized with', MAX_PROJECTILES, 'meshes');
     }
-  }, [projectileGeometry, projectileMaterial]);
+  });
 
   const getInactiveProjectile = (): number => {
     for (let i = 0; i < projectilePoolRef.current.length; i++) {
@@ -100,6 +108,12 @@ export const OptimizedProjectileSystem = forwardRef<
   };
 
   const fireProjectile = (staffPos: THREE.Vector3, targets: THREE.Vector3[] = []) => {
+    // FIXED: Check if mesh pool is initialized before firing
+    if (!meshPoolInitializedRef.current) {
+      console.log('OptimizedProjectileSystem: Mesh pool not initialized yet, skipping fire');
+      return;
+    }
+
     // FIXED: Comprehensive validation to prevent all crashes
     if (!isValidVector3(staffPos)) {
       console.log('OptimizedProjectileSystem: Invalid staff position, skipping fire');
@@ -121,6 +135,14 @@ export const OptimizedProjectileSystem = forwardRef<
 
     const projectileIndex = getInactiveProjectile();
     if (projectileIndex === -1) {
+      console.log('OptimizedProjectileSystem: No inactive projectiles available');
+      return;
+    }
+
+    // FIXED: Check if mesh exists before using it
+    const mesh = meshPoolRef.current[projectileIndex];
+    if (!mesh) {
+      console.log('OptimizedProjectileSystem: Mesh not found at index', projectileIndex);
       return;
     }
 
@@ -139,7 +161,6 @@ export const OptimizedProjectileSystem = forwardRef<
     );
 
     const projectile = projectilePoolRef.current[projectileIndex];
-    const mesh = meshPoolRef.current[projectileIndex];
 
     // Setup projectile data with safe operations
     try {
@@ -162,7 +183,7 @@ export const OptimizedProjectileSystem = forwardRef<
       
       console.log(`OptimizedProjectileSystem: Fired projectile at enemy ${originalTargetIndex} (round-robin)`);
     } catch (error) {
-      console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating');
+      console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating:', error);
       projectile.active = false;
       mesh.visible = false;
     }
@@ -175,7 +196,10 @@ export const OptimizedProjectileSystem = forwardRef<
       lastFireTimeRef.current = Date.now();
       console.log('OptimizedProjectileSystem: Manual fire successful');
     } else {
-      console.log('OptimizedProjectileSystem: Manual fire failed - invalid conditions');
+      console.log('OptimizedProjectileSystem: Manual fire failed - invalid conditions', {
+        staffTipValid: isValidVector3(staffTipPosition),
+        targetCount: targetPositions?.length || 0
+      });
     }
   };
 
@@ -211,6 +235,7 @@ export const OptimizedProjectileSystem = forwardRef<
       if (!projectile.active) continue;
 
       const mesh = meshPoolRef.current[i];
+      if (!mesh) continue; // Skip if mesh doesn't exist
       
       try {
         // Update position with safe vector operations
