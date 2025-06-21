@@ -170,6 +170,8 @@ export const OptimizedProjectileSystem = forwardRef<
       material.emissiveIntensity = 1.0;
       material.color.setHex(0x00ffff);
       material.emissive.setHex(0x00ffff);
+      
+      console.log('OptimizedProjectileSystem: Fired projectile automatically');
     } catch (error) {
       console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating');
       projectile.active = false;
@@ -199,11 +201,12 @@ export const OptimizedProjectileSystem = forwardRef<
 
     const now = Date.now();
     
-    // Auto fire projectiles only with valid positions
+    // FIXED: Auto fire projectiles more aggressively when targets are available
     if (now - lastFireTimeRef.current >= fireRate && targetPositions.length > 0) {
       try {
         fireProjectile(staffTipPosition, targetPositions);
         lastFireTimeRef.current = now;
+        console.log('OptimizedProjectileSystem: Auto-fired at targets:', targetPositions.length);
       } catch (error) {
         console.log('OptimizedProjectileSystem: Auto-fire failed, continuing render loop');
       }
@@ -239,6 +242,7 @@ export const OptimizedProjectileSystem = forwardRef<
                 onHitEnemy(projectile.targetIndex, projectile.damage);
                 projectile.active = false;
                 mesh.visible = false;
+                console.log('OptimizedProjectileSystem: Hit enemy!');
                 continue;
               }
             } catch (error) {

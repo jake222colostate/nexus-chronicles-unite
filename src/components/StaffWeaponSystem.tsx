@@ -23,7 +23,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const staffGroupRef = useRef<THREE.Group>(null);
-  const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
   const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
   
   // Load staff model with proper path and error handling
@@ -76,7 +76,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     staffGroupRef.current.rotateX(-0.2); // More downward angle
     staffGroupRef.current.rotateZ(0.2); // More tilt like being held
 
-    // Update staff tip position for projectile system (at the top of the staff)
+    // FIXED: Update staff tip position for projectile system (at the top of the staff)
     const staffTipOffset = new THREE.Vector3(0, 2.0, 0); // Even higher up the staff
     staffTipOffset.applyQuaternion(staffGroupRef.current.quaternion);
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
@@ -134,7 +134,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
         <pointLight position={[0, 1, 0]} color="#ffffff" intensity={1} distance={5} />
       </group>
 
-      {/* Optimized projectile system */}
+      {/* Optimized projectile system - FIXED: Pass current staff tip position */}
       <OptimizedProjectileSystem
         ref={projectileSystemRef}
         staffTipPosition={staffTipPositionRef.current}
