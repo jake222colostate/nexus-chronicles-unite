@@ -1,4 +1,5 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
@@ -172,9 +173,12 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const weaponGroupRef = useRef<THREE.Group>(null);
-  const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
   const [staffModel, setStaffModel] = React.useState<THREE.Object3D | null>(null);
+  
+  // CRITICAL FIX: Use state instead of ref for staff tip position to ensure proper updates
+  const [staffTipPosition, setStaffTipPosition] = useState<THREE.Vector3>(new THREE.Vector3());
+  
   const staffCache = StaffModelCache.getInstance();
 
   // Determine staff tier based on upgrade level
@@ -212,7 +216,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return () => window.removeEventListener('click', handleClick);
   }, []);
 
-  // FIXED: Ensure staff tip position is updated every frame and properly passed to projectile system
+  // FIXED: Update staff tip position every frame and pass as state to projectile system
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && staffModel) {
       // Get camera vectors for positioning
@@ -239,13 +243,15 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Y = -15° (less angle)
       weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20° (less tilt)
 
-      // CRITICAL FIX: Calculate and update staff tip position every frame
+      // CRITICAL FIX: Calculate staff tip position and update state to trigger projectile system updates
       const tipOffset = new THREE.Vector3(0, 1.2 * staffScale, 0);
       tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
-      staffTipPositionRef.current.copy(weaponGroupRef.current.position).add(tipOffset);
+      const newStaffTipPosition = weaponGroupRef.current.position.clone().add(tipOffset);
       
-      // Debug logging to verify staff tip position updates
-      console.log('Staff tip position updated:', staffTipPositionRef.current);
+      // Update state only if position actually changed to avoid unnecessary re-renders
+      if (!staffTipPosition.equals(newStaffTipPosition)) {
+        setStaffTipPosition(newStaffTipPosition.clone());
+      }
     }
   });
 
@@ -264,7 +270,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.5} distance={3} />
       <OptimizedProjectileSystem
         ref={projectileSystemRef}
-        staffTipPosition={staffTipPositionRef.current}
+        staffTipPosition={staffTipPosition}
         targetPositions={enemyPositions}
         damage={damage}
         fireRate={fireRate}
