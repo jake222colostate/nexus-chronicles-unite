@@ -21,6 +21,7 @@ import { useAutoClickerEffect } from '@/hooks/useAutoClickerEffect';
 import { FantasyAutoClickerUpgradeSystem } from './FantasyAutoClickerUpgradeSystem';
 import { useAutoManaSystem } from '@/hooks/useAutoManaSystem';
 import { useAutoEnergySystem } from '@/hooks/useAutoEnergySystem';
+import { useScifiAutoEnergySystem } from '@/hooks/useScifiAutoEnergySystem';
 import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
@@ -208,7 +209,7 @@ const GameEngine: React.FC = () => {
     setShowConvergence(false);
   }, [performConvergence, setShowConvergence]);
 
-  // Add AutoClicker effect
+  // Auto generation systems for both realms
   const handleAutoManaGeneration = useCallback((amount: number) => {
     setGameState(prev => ({
       ...prev,
@@ -216,16 +217,6 @@ const GameEngine: React.FC = () => {
     }));
   }, [setGameState]);
 
-  useAutoManaSystem({ onAddMana: handleAutoManaGeneration });
-
-  const handleFantasyAutoClickerUpgrade = useCallback((cost: number) => {
-    setGameState(prev => ({
-      ...prev,
-      mana: prev.mana - cost,
-    }));
-  }, [setGameState]);
-
-  // Add AutoEnergy effect for sci-fi realm
   const handleAutoEnergyGeneration = useCallback((amount: number) => {
     setGameState(prev => ({
       ...prev,
@@ -233,7 +224,16 @@ const GameEngine: React.FC = () => {
     }));
   }, [setGameState]);
 
-  useAutoEnergySystem({ onAddEnergy: handleAutoEnergyGeneration });
+  // Use appropriate auto system based on realm
+  useAutoManaSystem({ onAddMana: handleAutoManaGeneration });
+  useScifiAutoEnergySystem({ onAddEnergy: handleAutoEnergyGeneration });
+
+  const handleFantasyAutoClickerUpgrade = useCallback((cost: number) => {
+    setGameState(prev => ({
+      ...prev,
+      mana: prev.mana - cost,
+    }));
+  }, [setGameState]);
 
   const handleScifiAutoClickerUpgrade = useCallback((cost: number) => {
     setGameState(prev => ({
@@ -297,7 +297,7 @@ const GameEngine: React.FC = () => {
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-        {/* Fantasy AutoClicker Upgrade System - positioned top-center, only in fantasy realm */}
+        {/* AutoClicker systems for both realms */}
         {currentRealm === 'fantasy' && (
           <FantasyAutoClickerUpgradeSystem
             currentMana={stableGameState.mana}
@@ -305,7 +305,6 @@ const GameEngine: React.FC = () => {
           />
         )}
 
-        {/* Sci-Fi AutoClicker Upgrade System - positioned top-center, only in sci-fi realm */}
         {currentRealm === 'scifi' && (
           <ScifiAutoClickerUpgradeSystem
             currentEnergy={stableGameState.energyCredits}
