@@ -79,7 +79,8 @@ export const OptimizedProjectileSystem = forwardRef<
           damage: 0,
           targetIndex: -1,
           active: false,
-          life: 0
+          life: 0,
+          isManual: false
         });
       }
       console.log('OptimizedProjectileSystem: Projectile pool initialized');
