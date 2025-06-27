@@ -1,7 +1,7 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Scene3D } from './Scene3D';
 import { Fantasy3DUpgradeWorld } from './Fantasy3DUpgradeWorld';
-import { ScifiTraversableWorld } from './scifi/ScifiTraversableWorld';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { TapResourceEffect } from './TapResourceEffect';
 import { UpgradeFloatingTooltip } from './UpgradeFloatingTooltip';
@@ -86,6 +86,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   }, [selectedUpgrade, onPurchaseUpgrade]);
 
   const handle3DUpgradePurchase = useCallback(() => {
+    // Handle 3D upgrade purchase logic here
     console.log('Purchasing 3D upgrade:', selected3DUpgrade);
     setSelected3DUpgrade(null);
   }, [selected3DUpgrade]);
@@ -107,10 +108,10 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   try {
     return (
       <div className="relative w-full h-full overflow-hidden">
-        {/* 3D Scene - Use different components for each realm */}
+        {/* 3D Scene - Use Fantasy 3D World for fantasy realm, Scene3D for sci-fi */}
         {realm === 'fantasy' ? (
           <Fantasy3DUpgradeWorld
-            key="fantasy-world"
+            key="fantasy-world" // Force re-mount on realm switch
             onUpgradeClick={handle3DUpgradeClick}
             showTapEffect={showTapEffect}
             onTapEffectComplete={onTapEffectComplete}
@@ -122,13 +123,15 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
             weaponDamage={weaponDamage}
           />
         ) : (
-          <ScifiTraversableWorld
-            key="scifi-world"
+          <Scene3D
+            key="scifi-world" // Force re-mount on realm switch
+            realm={realm}
             gameState={gameState}
             onUpgradeClick={handleUpgradeClick}
-            onMeteorDestroyed={onMeteorDestroyed}
+            isTransitioning={isTransitioning}
             showTapEffect={showTapEffect}
             onTapEffectComplete={onTapEffectComplete}
+            onMeteorDestroyed={onMeteorDestroyed}
           />
         )}
 

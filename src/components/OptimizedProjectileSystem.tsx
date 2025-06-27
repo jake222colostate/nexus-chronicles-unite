@@ -1,6 +1,5 @@
-
 import React, { useRef, useMemo, forwardRef, useImperativeHandle, useEffect } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 interface OptimizedProjectileSystemProps {
@@ -14,7 +13,6 @@ interface OptimizedProjectileSystemProps {
 
 export interface OptimizedProjectileSystemHandle {
   manualFire: () => void;
-  manualFireDirection: (direction: THREE.Vector3) => void;
 }
 
 interface ProjectileData {
@@ -25,12 +23,11 @@ interface ProjectileData {
   targetIndex: number;
   active: boolean;
   life: number;
-  isManual: boolean;
 }
 
-const MAX_PROJECTILES = 15; // REDUCED: Fewer projectiles for better performance
-const PROJECTILE_SPEED = 30;
-const MAX_LIFE = 3; // REDUCED: Shorter projectile life
+const MAX_PROJECTILES = 20;
+const PROJECTILE_SPEED = 25;
+const MAX_LIFE = 5;
 
 const isValidVector3 = (vec: any): vec is THREE.Vector3 => {
   return vec && 
@@ -47,26 +44,20 @@ export const OptimizedProjectileSystem = forwardRef<
   OptimizedProjectileSystemHandle,
   OptimizedProjectileSystemProps
 >(({ staffTipPosition, targetPositions = [], damage, fireRate, onHitEnemy, playerPosition }, ref) => {
-  const { camera } = useThree();
   const projectilePoolRef = useRef<ProjectileData[]>([]);
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
   const meshPoolInitializedRef = useRef(false);
-  const frameCountRef = useRef(0); // ADDED: Frame counting for optimization
 
-  const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.2, 8, 8), []); // REDUCED: Simpler geometry
-  const projectileMaterial = useMemo(() => new THREE.MeshBasicMaterial({ // CHANGED: Use MeshBasicMaterial for performance
+  const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.3, 12, 12), []);
+  const projectileMaterial = useMemo(() => new THREE.MeshStandardMaterial({ 
     color: '#00ffff', 
+    emissive: '#00ffff', 
+    emissiveIntensity: 0.8,
     transparent: false
   }), []);
 
-  const manualProjectileMaterial = useMemo(() => new THREE.MeshBasicMaterial({ 
-    color: '#ffff00', 
-    transparent: false
-  }), []);
-
-  // Initialize projectile pool
   useMemo(() => {
     if (projectilePoolRef.current.length === 0) {
       for (let i = 0; i < MAX_PROJECTILES; i++) {
@@ -77,17 +68,16 @@ export const OptimizedProjectileSystem = forwardRef<
           damage: 0,
           targetIndex: -1,
           active: false,
-          life: 0,
-          isManual: false
+          life: 0
         });
       }
       console.log('OptimizedProjectileSystem: Projectile pool initialized');
     }
   }, []);
 
-  // Initialize mesh pool
   useEffect(() => {
     if (groupRef.current && !meshPoolInitializedRef.current) {
+      console.log('OptimizedProjectileSystem: Initializing mesh pool');
       meshPoolRef.current = [];
       
       for (let i = 0; i < MAX_PROJECTILES; i++) {
@@ -99,7 +89,7 @@ export const OptimizedProjectileSystem = forwardRef<
       }
       
       meshPoolInitializedRef.current = true;
-      console.log('OptimizedProjectileSystem: Mesh pool initialized');
+      console.log('OptimizedProjectileSystem: Mesh pool initialized with', MAX_PROJECTILES, 'meshes');
     }
   });
 
@@ -112,9 +102,13 @@ export const OptimizedProjectileSystem = forwardRef<
     return -1;
   };
 
-  // OPTIMIZED: Simpler closest enemy finding
   const findClosestEnemy = (spawnPosition: THREE.Vector3, targets: THREE.Vector3[]): { targetIndex: number; targetPosition: THREE.Vector3 } | null => {
     if (!Array.isArray(targets) || targets.length === 0) {
+      return null;
+    }
+
+    const validTargets = targets.filter(target => isValidVector3(target));
+    if (validTargets.length === 0) {
       return null;
     }
 
@@ -122,101 +116,124 @@ export const OptimizedProjectileSystem = forwardRef<
     let closestIndex = -1;
     let closestTarget: THREE.Vector3 | null = null;
 
-    for (let i = 0; i < Math.min(targets.length, 5); i++) { // LIMIT: Only check first 5 enemies
-      const target = targets[i];
-      if (isValidVector3(target)) {
-        const distance = spawnPosition.distanceToSquared(target); // OPTIMIZED: Use squared distance
-        if (distance < closestDistance) {
-          closestDistance = distance;
-          closestIndex = i;
-          closestTarget = target;
-        }
+    validTargets.forEach((target, index) => {
+      const distance = spawnPosition.distanceTo(target);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = targets.findIndex(t => 
+          isValidVector3(t) && 
+          t.x === target.x && 
+          t.y === target.y && 
+          t.z === target.z
+        );
+        closestTarget = target;
+      }
+    });
+
+    if (closestTarget && closestIndex >= 0) {
+      return { targetIndex: closestIndex, targetPosition: closestTarget };
+    }
+
+    return null;
+  };
+
+  const fireProjectile = (targets: THREE.Vector3[] = []) => {
+    if (!meshPoolInitializedRef.current) {
+      console.log('OptimizedProjectileSystem: Mesh pool not initialized yet, skipping fire');
+      return;
+    }
+
+    if (!isValidVector3(staffTipPosition)) {
+      console.log('OptimizedProjectileSystem: Invalid staff tip position, using player position as fallback');
+      
+      if (!isValidVector3(playerPosition)) {
+        console.log('OptimizedProjectileSystem: No valid position available for projectile spawning');
+        return;
       }
     }
 
-    return closestTarget && closestIndex >= 0 ? { targetIndex: closestIndex, targetPosition: closestTarget } : null;
-  };
-
-  // OPTIMIZED: Simplified projectile firing
-  const fireProjectileAtTarget = (targets: THREE.Vector3[] = []) => {
-    if (!meshPoolInitializedRef.current || targets.length === 0) return;
+    if (!Array.isArray(targets) || targets.length === 0) {
+      console.log('OptimizedProjectileSystem: No valid targets for auto-firing');
+      return;
+    }
 
     const projectileIndex = getInactiveProjectile();
-    if (projectileIndex === -1) return;
+    if (projectileIndex === -1) {
+      console.log('OptimizedProjectileSystem: No inactive projectiles available');
+      return;
+    }
 
-    const spawnPosition = isValidVector3(staffTipPosition) ? staffTipPosition : (playerPosition || new THREE.Vector3(0, 2, 10));
+    const mesh = meshPoolRef.current[projectileIndex];
+    if (!mesh) {
+      console.log('OptimizedProjectileSystem: Mesh not found at index', projectileIndex);
+      return;
+    }
+
+    const spawnPosition = isValidVector3(staffTipPosition) ? staffTipPosition : playerPosition;
     const closestEnemy = findClosestEnemy(spawnPosition, targets);
     
-    if (!closestEnemy) return;
+    if (!closestEnemy) {
+      console.log('OptimizedProjectileSystem: No closest enemy found');
+      return;
+    }
 
     const projectile = projectilePoolRef.current[projectileIndex];
-    const mesh = meshPoolRef.current[projectileIndex];
 
-    projectile.position.copy(spawnPosition);
-    projectile.direction.subVectors(closestEnemy.targetPosition, spawnPosition).normalize();
-    projectile.damage = damage || 1;
-    projectile.targetIndex = closestEnemy.targetIndex;
-    projectile.active = true;
-    projectile.life = MAX_LIFE;
-    projectile.isManual = false;
-    
-    mesh.position.copy(spawnPosition);
-    mesh.visible = true;
-    mesh.material = projectileMaterial;
+    try {
+      projectile.position.copy(spawnPosition);
+      projectile.direction.subVectors(closestEnemy.targetPosition, spawnPosition).normalize();
+      projectile.damage = damage || 1;
+      projectile.targetIndex = closestEnemy.targetIndex;
+      projectile.active = true;
+      projectile.life = MAX_LIFE;
+      
+      mesh.position.copy(spawnPosition);
+      mesh.visible = true;
+      mesh.scale.setScalar(1);
+      
+      const material = mesh.material as THREE.MeshStandardMaterial;
+      material.emissiveIntensity = 1.0;
+      material.color.setHex(0x00ffff);
+      material.emissive.setHex(0x00ffff);
+      
+      console.log(`OptimizedProjectileSystem: Fired projectile at closest enemy ${closestEnemy.targetIndex} at distance ${spawnPosition.distanceTo(closestEnemy.targetPosition).toFixed(2)}`);
+    } catch (error) {
+      console.log('OptimizedProjectileSystem: Error setting up projectile:', error);
+      projectile.active = false;
+      mesh.visible = false;
+    }
   };
 
   const manualFire = () => {
+    console.log('OptimizedProjectileSystem: Manual fire triggered with', targetPositions.length, 'targets');
     if (Array.isArray(targetPositions) && targetPositions.length > 0) {
-      fireProjectileAtTarget(targetPositions);
+      fireProjectile(targetPositions);
+      lastFireTimeRef.current = Date.now();
+      console.log('OptimizedProjectileSystem: Manual fire successful');
+    } else {
+      console.log('OptimizedProjectileSystem: Manual fire failed - no valid targets');
     }
   };
 
-  const manualFireDirection = () => {
-    // Simplified manual fire - just fire forward
-    if (!camera) return;
-    
-    const projectileIndex = getInactiveProjectile();
-    if (projectileIndex === -1) return;
+  useImperativeHandle(ref, () => ({ manualFire }), []);
 
-    const spawnPosition = isValidVector3(staffTipPosition) ? staffTipPosition : (playerPosition || camera.position);
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
-
-    const projectile = projectilePoolRef.current[projectileIndex];
-    const mesh = meshPoolRef.current[projectileIndex];
-
-    projectile.position.copy(spawnPosition);
-    projectile.direction.copy(direction);
-    projectile.damage = damage || 1;
-    projectile.targetIndex = -1;
-    projectile.active = true;
-    projectile.life = MAX_LIFE;
-    projectile.isManual = true;
-    
-    mesh.position.copy(spawnPosition);
-    mesh.visible = true;
-    mesh.material = manualProjectileMaterial;
-  };
-
-  useImperativeHandle(ref, () => ({ 
-    manualFire, 
-    manualFireDirection 
-  }), []);
-
-  // OPTIMIZED: Reduced frame rate processing
   useFrame((state, delta) => {
-    frameCountRef.current++;
+    if (!Array.isArray(targetPositions) || !delta || isNaN(delta) || delta <= 0) {
+      return;
+    }
+
+    const now = Date.now();
     
-    // OPTIMIZATION: Only process every 2nd frame for auto-firing
-    if (frameCountRef.current % 2 === 0 && Array.isArray(targetPositions) && targetPositions.length > 0) {
-      const now = Date.now();
-      if (now - lastFireTimeRef.current >= fireRate) {
-        fireProjectileAtTarget(targetPositions);
+    if (targetPositions.length > 0 && now - lastFireTimeRef.current >= fireRate) {
+      try {
+        fireProjectile(targetPositions);
         lastFireTimeRef.current = now;
+        console.log('OptimizedProjectileSystem: Auto-fired at closest enemy among', targetPositions.length, 'targets');
+      } catch (error) {
+        console.log('OptimizedProjectileSystem: Auto-fire failed:', error);
       }
     }
 
-    // Update projectiles every frame but with optimizations
     for (let i = 0; i < projectilePoolRef.current.length; i++) {
       const projectile = projectilePoolRef.current[i];
       if (!projectile.active) continue;
@@ -224,25 +241,52 @@ export const OptimizedProjectileSystem = forwardRef<
       const mesh = meshPoolRef.current[i];
       if (!mesh) continue;
       
-      // OPTIMIZED: Simpler movement calculation
-      projectile.position.addScaledVector(projectile.direction, projectile.speed * delta);
-      mesh.position.copy(projectile.position);
-      
-      projectile.life -= delta;
-      
-      // OPTIMIZED: Simpler collision detection
-      if (!projectile.isManual && projectile.targetIndex >= 0 && projectile.targetIndex < targetPositions.length) {
-        const targetPos = targetPositions[projectile.targetIndex];
-        if (isValidVector3(targetPos) && projectile.position.distanceToSquared(targetPos) < 2.25) { // 1.5^2
-          onHitEnemy(projectile.targetIndex, projectile.damage);
-          projectile.active = false;
-          mesh.visible = false;
-          continue;
+      try {
+        const deltaMovement = projectile.direction.clone().multiplyScalar(projectile.speed * delta);
+        if (isValidVector3(deltaMovement)) {
+          projectile.position.add(deltaMovement);
+          mesh.position.copy(projectile.position);
         }
-      }
-      
-      // OPTIMIZED: Simpler cleanup
-      if (projectile.life <= 0) {
+        
+        projectile.life -= delta;
+        
+        if (projectile.targetIndex >= 0 && projectile.targetIndex < targetPositions.length) {
+          const targetPos = targetPositions[projectile.targetIndex];
+          if (isValidVector3(targetPos)) {
+            try {
+              const distance = projectile.position.distanceTo(targetPos);
+              if (!isNaN(distance) && distance < 1.5) {
+                onHitEnemy(projectile.targetIndex, projectile.damage);
+                projectile.active = false;
+                mesh.visible = false;
+                console.log(`OptimizedProjectileSystem: Hit enemy ${projectile.targetIndex}!`);
+                continue;
+              }
+            } catch (error) {
+              console.log('OptimizedProjectileSystem: Collision check failed');
+              projectile.active = false;
+              mesh.visible = false;
+              continue;
+            }
+          }
+        }
+        
+        try {
+          const currentPlayerPos = isValidVector3(playerPosition) ? playerPosition : new THREE.Vector3(0, 0, 0);
+          const distanceFromPlayer = projectile.position.distanceTo(currentPlayerPos);
+          
+          if (projectile.life <= 0 || (!isNaN(distanceFromPlayer) && distanceFromPlayer > 80)) {
+            projectile.active = false;
+            mesh.visible = false;
+          }
+        } catch (error) {
+          if (projectile.life <= 0) {
+            projectile.active = false;
+            mesh.visible = false;
+          }
+        }
+      } catch (error) {
+        console.log('OptimizedProjectileSystem: Projectile update failed');
         projectile.active = false;
         mesh.visible = false;
       }
@@ -251,7 +295,7 @@ export const OptimizedProjectileSystem = forwardRef<
 
   return (
     <group ref={groupRef}>
-      <ambientLight intensity={0.5} color="#00ffff" />
+      <ambientLight intensity={1.5} color="#00ffff" />
     </group>
   );
 });

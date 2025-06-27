@@ -1,9 +1,12 @@
 
 import React, { Suspense, useMemo, useState, useEffect } from 'react';
 import { Vector3 } from 'three';
+import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
+import { CasualFog } from './CasualFog';
+import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
@@ -44,7 +47,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const [leeches, setLeeches] = useState<LeechData[]>([]);
   const [nextLeechId, setNextLeechId] = useState(0);
 
-  // SIMPLIFIED: Basic camera position with fallback
+  // FIXED: Simplified camera position validation - don't be too aggressive
   const safeCameraPosition = useMemo(() => {
     if (!cameraPosition || isNaN(cameraPosition.x) || isNaN(cameraPosition.y) || isNaN(cameraPosition.z)) {
       return new Vector3(0, 2, 20);
@@ -52,10 +55,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     return cameraPosition;
   }, [cameraPosition]);
 
-  // REDUCED: Spawn fewer leeches for 60 FPS
+  // Spawn leeches based on player progress
   useEffect(() => {
     const playerProgress = Math.abs(safeCameraPosition.z);
-    const desiredLeechCount = Math.min(Math.floor(playerProgress / 100) + 1, 3); // REDUCED from 8 to 3
+    const desiredLeechCount = Math.min(Math.floor(playerProgress / 30) + 1, 8);
     
     setLeeches(currentLeeches => {
       const aliveLeeches = currentLeeches.filter(leech => leech.alive);
@@ -65,7 +68,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         const newLeeches: LeechData[] = [];
         
         for (let i = 0; i < neededLeeches; i++) {
-          const spawnDistance = playerProgress + 80 + (i * 50); // INCREASED spacing
+          const spawnDistance = playerProgress + 80 + (i * 25);
           const spawnX = (Math.random() - 0.5) * 20;
           const spawnPosition = new Vector3(spawnX, 0, -spawnDistance);
           
@@ -84,7 +87,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       
       return currentLeeches;
     });
-  }, [Math.floor(Math.abs(safeCameraPosition.z) / 100), nextLeechId]); // REDUCED frequency
+  }, [Math.floor(Math.abs(safeCameraPosition.z) / 30), nextLeechId]);
 
   // Update enemy count for UI
   useEffect(() => {
@@ -136,7 +139,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     );
   };
 
-  // Simplified leech position filtering
+  // FIXED: Simplified leech position filtering
   const aliveLeechPositions = useMemo(() => 
     leeches
       .filter(leech => leech.alive && leech.position)
@@ -144,7 +147,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     [leeches]
   );
 
-  // Simplified position change handler
+  // FIXED: Simplified position change handler
   const handlePositionChange = (position: Vector3) => {
     if (onPositionChange && position) {
       onPositionChange(position);
@@ -162,12 +165,17 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         <color attach="background" args={['#2d1b4e']} />
 
-        {/* MINIMAL: Basic lighting for 60 FPS */}
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[10, 10, 5]} intensity={1.0} />
+        <CasualFog />
 
-        {/* REDUCED: Fewer leeches */}
-        {leeches.slice(0, 2).map(leech => 
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
+          <planeGeometry args={[300, 300]} />
+          <meshStandardMaterial color="#2d4a2d" />
+        </mesh>
+
+        <ambientLight intensity={0.6} />
+        <Sun position={[10, 20, 5]} />
+
+        {leeches.map(leech => 
           leech.alive && leech.spawnPosition && (
             <LeechEnemy
               key={leech.id}
@@ -193,21 +201,28 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           damage={weaponDamage}
         />
 
-        {/* ULTRA-REDUCED: Minimal chunk system */}
         <ChunkSystem
           playerPosition={safeCameraPosition}
-          chunkSize={100} // INCREASED for fewer chunks
-          renderDistance={50} // REDUCED for 60 FPS
+          chunkSize={chunkSize}
+          renderDistance={renderDistance}
         >
           {(chunks: ChunkData[]) => (
             <OptimizedFantasyEnvironment
               chunks={chunks}
-              chunkSize={100}
+              chunkSize={chunkSize}
               realm={realm}
               playerPosition={safeCameraPosition}
             />
           )}
         </ChunkSystem>
+
+        <ContactShadows 
+          position={[0, -1.4, safeCameraPosition.z]} 
+          opacity={0.05}
+          scale={15}
+          blur={2} 
+          far={4}
+        />
       </Suspense>
     </CollisionProvider>
   );
