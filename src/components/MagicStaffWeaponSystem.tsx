@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -233,7 +232,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   }, [gl.domElement]);
 
-  // First-person weapon positioning optimized for iPhone screen visibility
+  // First-person weapon positioning - FLIPPED to right side
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && staffModel) {
       // Get camera vectors for positioning
@@ -245,20 +244,20 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Optimized positioning for iPhone screen visibility:
-      // X: -0.3 (flip to left side), Y: -0.2 (slightly down), Z: 0.4 (closer to camera)
+      // FLIPPED positioning - now on the right side:
+      // X: 0.3 (right side), Y: -0.2 (slightly down), Z: 0.4 (closer to camera)
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(-0.3))    // X = -0.3 (left side)
+        .add(cameraRight.clone().multiplyScalar(0.3))     // X = 0.3 (right side)
         .add(cameraUp.clone().multiplyScalar(-0.2))        // Y = -0.2 (slightly down)
         .add(cameraForward.clone().multiplyScalar(0.4));   // Z = 0.4 (closer for visibility)
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Optimized rotation for better visibility on the left side:
-      // Y: 15° (mirrored angle), Z: -20° (mirrored tilt)
+      // FLIPPED rotation for right side:
+      // Y: -15° (mirrored angle for right side), Z: 20° (mirrored tilt)
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(15 * Math.PI / 180);  // Y = 15° (mirrored)
-      weaponGroupRef.current.rotateZ(-20 * Math.PI / 180); // Z = -20° (mirrored)
+      weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Y = -15° (mirrored for right)
+      weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20° (mirrored tilt)
 
       const tipOffset = new THREE.Vector3(0, 1.2 * staffScale, 0);
       tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
