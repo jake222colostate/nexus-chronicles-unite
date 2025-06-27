@@ -54,18 +54,18 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
 
     if (!staffGroupRef.current || !camera) return;
 
-    // Position staff - simplified calculation
-    const staffOffset = new THREE.Vector3(2.0, -1.0, -4.0);
+    // FIXED: Position staff much closer to player for better visibility
+    const staffOffset = new THREE.Vector3(0.8, -0.5, -2.0); // Closer positioning
     const worldPosition = camera.position.clone().add(staffOffset);
     staffGroupRef.current.position.copy(worldPosition);
     
-    // Simplified rotation
+    // Simplified rotation - less dramatic angles
     staffGroupRef.current.rotation.copy(camera.rotation);
-    staffGroupRef.current.rotateY(-0.3);
-    staffGroupRef.current.rotateX(-0.1);
+    staffGroupRef.current.rotateY(-0.2); // Reduced angle
+    staffGroupRef.current.rotateX(-0.05); // Reduced angle
 
-    // Update staff tip position (simplified)
-    const staffTipOffset = new THREE.Vector3(0, 1.5, 0);
+    // Update staff tip position for projectiles
+    const staffTipOffset = new THREE.Vector3(0, 1.2, 0);
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
   });
 
@@ -93,7 +93,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
         {staffScene ? (
           <primitive 
             object={staffScene.clone()} 
-            scale={[1.0, 1.0, 1.0]}
+            scale={[1.2, 1.2, 1.2]}
             rotation={[0, Math.PI, 0]}
           />
         ) : (

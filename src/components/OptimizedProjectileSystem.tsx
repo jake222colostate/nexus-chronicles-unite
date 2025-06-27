@@ -1,5 +1,5 @@
 
-import React, { useRef, useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useMemo, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -49,6 +49,7 @@ export const OptimizedProjectileSystem = forwardRef<
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
+  const meshPoolInitialized = useRef(false);
 
   // Create simple, reliable projectile geometry and material
   const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.3, 12, 12), []);
@@ -76,9 +77,10 @@ export const OptimizedProjectileSystem = forwardRef<
     }
   }, []);
 
-  // Initialize mesh pool with reliable geometries
-  useMemo(() => {
-    if (meshPoolRef.current.length === 0 && groupRef.current) {
+  // FIXED: Initialize mesh pool in useEffect to ensure group is ready
+  useEffect(() => {
+    if (groupRef.current && !meshPoolInitialized.current) {
+      meshPoolRef.current = [];
       for (let i = 0; i < MAX_PROJECTILES; i++) {
         const mesh = new THREE.Mesh(projectileGeometry, projectileMaterial.clone());
         mesh.visible = false;
@@ -86,6 +88,8 @@ export const OptimizedProjectileSystem = forwardRef<
         meshPoolRef.current.push(mesh);
         groupRef.current.add(mesh);
       }
+      meshPoolInitialized.current = true;
+      console.log('OptimizedProjectileSystem: Mesh pool initialized');
     }
   }, [projectileGeometry, projectileMaterial]);
 
@@ -99,6 +103,12 @@ export const OptimizedProjectileSystem = forwardRef<
   };
 
   const fireProjectile = (staffPos: THREE.Vector3, targets: THREE.Vector3[] = []) => {
+    // FIXED: Check if mesh pool is initialized before firing
+    if (!meshPoolInitialized.current || meshPoolRef.current.length === 0) {
+      console.log('OptimizedProjectileSystem: Mesh pool not ready, skipping fire');
+      return;
+    }
+
     // FIXED: Comprehensive validation to prevent all crashes
     if (!isValidVector3(staffPos)) {
       console.log('OptimizedProjectileSystem: Invalid staff position, skipping fire');
@@ -143,6 +153,12 @@ export const OptimizedProjectileSystem = forwardRef<
     const projectile = projectilePoolRef.current[projectileIndex];
     const mesh = meshPoolRef.current[projectileIndex];
 
+    // FIXED: Additional safety check for mesh existence
+    if (!mesh) {
+      console.log('OptimizedProjectileSystem: Mesh not found at index', projectileIndex);
+      return;
+    }
+
     // Use valid target and store original index safely
     const targetPosition = validTargets[closestIndex];
     const originalTargetIndex = targets.findIndex(target => 
@@ -170,6 +186,8 @@ export const OptimizedProjectileSystem = forwardRef<
       material.emissiveIntensity = 1.0;
       material.color.setHex(0x00ffff);
       material.emissive.setHex(0x00ffff);
+      
+      console.log('OptimizedProjectileSystem: Projectile fired successfully');
     } catch (error) {
       console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating');
       projectile.active = false;
@@ -199,8 +217,10 @@ export const OptimizedProjectileSystem = forwardRef<
 
     const now = Date.now();
     
-    // Auto fire projectiles only with valid positions
-    if (now - lastFireTimeRef.current >= fireRate && targetPositions.length > 0) {
+    // Auto fire projectiles only with valid positions and initialized mesh pool
+    if (meshPoolInitialized.current && 
+        now - lastFireTimeRef.current >= fireRate && 
+        targetPositions.length > 0) {
       try {
         fireProjectile(staffTipPosition, targetPositions);
         lastFireTimeRef.current = now;
@@ -215,6 +235,9 @@ export const OptimizedProjectileSystem = forwardRef<
       if (!projectile.active) continue;
 
       const mesh = meshPoolRef.current[i];
+      
+      // FIXED: Additional safety check for mesh
+      if (!mesh) continue;
       
       try {
         // Update position with safe vector operations

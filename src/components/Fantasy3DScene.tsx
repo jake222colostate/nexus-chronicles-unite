@@ -1,4 +1,5 @@
-import React, { Suspense, useMemo, useState, useEffect } from 'react';
+
+import React, { Suspense, useMemo, useState, useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
@@ -8,6 +9,7 @@ import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
 import { StaffWeaponSystem } from './StaffWeaponSystem';
+import { UpgradeActivationIndicator } from './UpgradeActivationIndicator';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -45,6 +47,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 }) => {
   const [leeches, setLeeches] = useState<LeechData[]>([]);
   const [nextLeechId, setNextLeechId] = useState(0);
+  const previousUpgradeCount = useRef(maxUnlockedUpgrade);
 
   // PERFORMANCE FIX: Simplified camera position validation
   const safeCameraPosition = useMemo(() => {
@@ -225,6 +228,12 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           far={2}
         />
       </Suspense>
+      
+      {/* NEW: Upgrade activation indicator */}
+      <UpgradeActivationIndicator 
+        upgrades={maxUnlockedUpgrade}
+        previousUpgrades={previousUpgradeCount.current}
+      />
     </CollisionProvider>
   );
 });
