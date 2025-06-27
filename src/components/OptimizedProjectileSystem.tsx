@@ -9,6 +9,7 @@ interface OptimizedProjectileSystemProps {
   damage: number;
   fireRate: number;
   onHitEnemy: (index: number, damage: number) => void;
+  upgrades?: number; // NEW: Added upgrades prop
 }
 
 export interface OptimizedProjectileSystemHandle {
@@ -26,7 +27,8 @@ interface ProjectileData {
 }
 
 const MAX_PROJECTILES = 20;
-const PROJECTILE_SPEED = 25;
+// FIXED: Reduced base projectile speed significantly
+const BASE_PROJECTILE_SPEED = 8; // Reduced from 25 to 8
 const MAX_LIFE = 5;
 
 // Helper function to safely validate Vector3
@@ -44,12 +46,17 @@ const isValidVector3 = (vec: any): vec is THREE.Vector3 => {
 export const OptimizedProjectileSystem = forwardRef<
   OptimizedProjectileSystemHandle,
   OptimizedProjectileSystemProps
->(({ staffTipPosition, targetPositions = [], damage, fireRate, onHitEnemy }, ref) => {
+>(({ staffTipPosition, targetPositions = [], damage, fireRate, onHitEnemy, upgrades = 0 }, ref) => {
   const projectilePoolRef = useRef<ProjectileData[]>([]);
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
   const lastFireTimeRef = useRef(0);
   const meshPoolInitialized = useRef(false);
+
+  // FIXED: Calculate projectile speed based on upgrades
+  const projectileSpeed = useMemo(() => {
+    return BASE_PROJECTILE_SPEED + (upgrades * 3); // Speed increases by 3 per upgrade
+  }, [upgrades]);
 
   // Create simple, reliable projectile geometry and material
   const projectileGeometry = useMemo(() => new THREE.SphereGeometry(0.3, 12, 12), []);
@@ -67,7 +74,7 @@ export const OptimizedProjectileSystem = forwardRef<
         projectilePoolRef.current.push({
           position: new THREE.Vector3(),
           direction: new THREE.Vector3(),
-          speed: PROJECTILE_SPEED,
+          speed: projectileSpeed, // Use calculated speed
           damage: 0,
           targetIndex: -1,
           active: false,
@@ -75,7 +82,7 @@ export const OptimizedProjectileSystem = forwardRef<
         });
       }
     }
-  }, []);
+  }, [projectileSpeed]);
 
   // FIXED: Initialize mesh pool in useEffect to ensure group is ready
   useEffect(() => {
@@ -172,6 +179,7 @@ export const OptimizedProjectileSystem = forwardRef<
     try {
       projectile.position.copy(staffPos);
       projectile.direction.subVectors(targetPosition, staffPos).normalize();
+      projectile.speed = projectileSpeed; // FIXED: Use upgrade-based speed
       projectile.damage = damage || 1;
       projectile.targetIndex = Math.max(0, originalTargetIndex);
       projectile.active = true;
@@ -187,7 +195,7 @@ export const OptimizedProjectileSystem = forwardRef<
       material.color.setHex(0x00ffff);
       material.emissive.setHex(0x00ffff);
       
-      console.log('OptimizedProjectileSystem: Projectile fired successfully');
+      console.log('OptimizedProjectileSystem: Projectile fired successfully at speed:', projectileSpeed);
     } catch (error) {
       console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating');
       projectile.active = false;

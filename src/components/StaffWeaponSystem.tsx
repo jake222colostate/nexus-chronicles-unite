@@ -27,6 +27,10 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
   const frameCount = useRef(0);
   
+  // Smooth position interpolation for less glitchy movement
+  const targetPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  const currentPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
+  
   // Load staff model with proper path and error handling
   let staffScene = null;
   try {
@@ -48,23 +52,39 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   }, []);
 
   useFrame((state, delta) => {
-    // PERFORMANCE FIX: Only update every 3rd frame
+    // PERFORMANCE FIX: Only update every 2nd frame instead of 3rd for smoother movement
     frameCount.current++;
-    if (frameCount.current % 3 !== 0) return;
+    if (frameCount.current % 2 !== 0) return;
 
     if (!staffGroupRef.current || !camera) return;
 
-    // FIXED: Position staff much closer to player for better visibility
-    const staffOffset = new THREE.Vector3(0.8, -0.5, -2.0); // Closer positioning
-    const worldPosition = camera.position.clone().add(staffOffset);
-    staffGroupRef.current.position.copy(worldPosition);
+    // FIXED: Lowered staff position and smoother positioning
+    const staffOffset = new THREE.Vector3(0.6, -0.8, -1.8); // Y lowered from -0.5 to -0.8
+    targetPositionRef.current.copy(camera.position).add(staffOffset);
     
-    // Simplified rotation - less dramatic angles
-    staffGroupRef.current.rotation.copy(camera.rotation);
-    staffGroupRef.current.rotateY(-0.2); // Reduced angle
-    staffGroupRef.current.rotateX(-0.05); // Reduced angle
+    // FIXED: Smooth interpolation to reduce glitchy movement
+    currentPositionRef.current.lerp(targetPositionRef.current, 0.1);
+    staffGroupRef.current.position.copy(currentPositionRef.current);
+    
+    // FIXED: Smoother rotation with less dramatic changes
+    const targetRotation = camera.rotation.clone();
+    staffGroupRef.current.rotation.x = THREE.MathUtils.lerp(
+      staffGroupRef.current.rotation.x, 
+      targetRotation.x - 0.05, 
+      0.1
+    );
+    staffGroupRef.current.rotation.y = THREE.MathUtils.lerp(
+      staffGroupRef.current.rotation.y, 
+      targetRotation.y - 0.15, 
+      0.1
+    );
+    staffGroupRef.current.rotation.z = THREE.MathUtils.lerp(
+      staffGroupRef.current.rotation.z, 
+      targetRotation.z, 
+      0.1
+    );
 
-    // Update staff tip position for projectiles
+    // Update staff tip position for projectiles with smooth movement
     const staffTipOffset = new THREE.Vector3(0, 1.2, 0);
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
   });
@@ -108,6 +128,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
         damage={damage}
         fireRate={fireRate}
         onHitEnemy={onHitEnemy}
+        upgrades={upgrades}
       />
     </group>
   );
