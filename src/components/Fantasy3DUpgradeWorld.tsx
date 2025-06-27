@@ -104,8 +104,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         )}
         {isCanvasReady && assetsLoaded && (
           <Canvas
-            key="fantasy-canvas" // Force re-mount if needed
-            dpr={[1, 1]}
+            key={`fantasy-canvas-${realm}`}
+            dpr={[0.5, 1]}
             camera={{ 
               position: [0, 5, 12], 
               fov: 50,
@@ -114,15 +114,17 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             }}
             shadows
             gl={{ 
-              antialias: true, 
+              antialias: false, 
               alpha: true,
-              powerPreference: "high-performance"
+              powerPreference: "high-performance",
+              preserveDrawingBuffer: false,
+              failIfMajorPerformanceCaveat: false
             }}
             onCreated={(state) => {
               console.log('Fantasy3DUpgradeWorld: Canvas created successfully');
-              // Ensure camera is properly set up
               state.camera.updateProjectionMatrix();
             }}
+            frameloop="demand"
           >
             <Fantasy3DScene
               cameraPosition={cameraPosition}
