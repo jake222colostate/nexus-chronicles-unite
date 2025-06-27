@@ -21,7 +21,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   onHitEnemy,
   upgrades
 }) => {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const staffGroupRef = useRef<THREE.Group>(null);
   const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
@@ -39,21 +39,30 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   // UPDATED: Much slower auto-fire rate (3-5 seconds between shots)
   const autoFireRate = Math.max(3000, 5000 - (upgrades * 200)); // 3-5 seconds instead of 200-800ms
 
+  // FIXED: Attach click handler to the canvas specifically, not window
   useEffect(() => {
-    const handleClick = () => {
+    const handleClick = (event: MouseEvent) => {
+      // Prevent default to avoid any conflicts
+      event.preventDefault();
+      event.stopPropagation();
+      
+      console.log('Canvas clicked - manual fire triggered');
       projectileSystemRef.current?.manualFire();
     };
     
-    // Add click event to the canvas or window for manual shooting
-    const canvas = document.querySelector('canvas');
+    // Get the canvas element from the WebGL renderer
+    const canvas = gl.domElement;
     if (canvas) {
+      console.log('StaffWeaponSystem: Attaching click listener to canvas');
       canvas.addEventListener('click', handleClick);
-      return () => canvas.removeEventListener('click', handleClick);
+      return () => {
+        console.log('StaffWeaponSystem: Removing click listener from canvas');
+        canvas.removeEventListener('click', handleClick);
+      };
     } else {
-      window.addEventListener('click', handleClick);
-      return () => window.removeEventListener('click', handleClick);
+      console.warn('StaffWeaponSystem: Canvas not found, cannot attach click listener');
     }
-  }, []);
+  }, [gl.domElement]);
 
   useFrame((state, delta) => {
     // PERFORMANCE FIX: Only update every 3rd frame

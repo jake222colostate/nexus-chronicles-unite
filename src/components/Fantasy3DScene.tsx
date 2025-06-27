@@ -9,7 +9,6 @@ import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
 import { StaffWeaponSystem } from './StaffWeaponSystem';
-import { UpgradeActivationIndicator } from './UpgradeActivationIndicator';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -47,7 +46,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 }) => {
   const [leeches, setLeeches] = useState<LeechData[]>([]);
   const [nextLeechId, setNextLeechId] = useState(0);
-  const previousUpgradeCount = useRef(maxUnlockedUpgrade);
 
   // PERFORMANCE FIX: Simplified camera position validation
   const safeCameraPosition = useMemo(() => {
@@ -169,7 +167,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         <CasualFog />
 
-        {/* Simplified ground plane */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
           <planeGeometry args={[100, 100]} />
           <meshStandardMaterial color="#2d4a2d" />
@@ -178,7 +175,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         <ambientLight intensity={0.4} />
         <Sun position={[10, 20, 5]} />
 
-        {/* Render fewer leeches */}
         {leeches.slice(0, 3).map(leech => 
           leech.alive && leech.spawnPosition && (
             <LeechEnemy
@@ -207,7 +203,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         <ChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={Math.min(renderDistance, 100)} // Reduced render distance
+          renderDistance={Math.min(renderDistance, 100)}
         >
           {(chunks: ChunkData[]) => (
             <OptimizedFantasyEnvironment
@@ -219,7 +215,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           )}
         </ChunkSystem>
 
-        {/* Simplified contact shadows */}
         <ContactShadows 
           position={[0, -1.4, safeCameraPosition.z]} 
           opacity={0.02}
@@ -228,12 +223,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           far={2}
         />
       </Suspense>
-      
-      {/* NEW: Upgrade activation indicator */}
-      <UpgradeActivationIndicator 
-        upgrades={maxUnlockedUpgrade}
-        previousUpgrades={previousUpgradeCount.current}
-      />
     </CollisionProvider>
   );
 });

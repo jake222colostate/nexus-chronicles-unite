@@ -6,6 +6,7 @@ import { Fantasy3DScene } from './Fantasy3DScene';
 import { Fantasy3DUpgradePedestals } from './Fantasy3DUpgradePedestals';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { Fantasy3DInsufficientManaMessage } from './Fantasy3DInsufficientManaMessage';
+import { UpgradeActivationOverlay } from './UpgradeActivationOverlay';
 import { TreeAssetManager } from '../environment/TreeAssetManager';
 
 interface Fantasy3DUpgradeWorldProps {
@@ -35,6 +36,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   
   const [isCanvasReady, setIsCanvasReady] = useState(false);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
+  const [previousUpgradeCount, setPreviousUpgradeCount] = useState(0);
 
   const {
     cameraPosition,
@@ -56,6 +58,13 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     gameState,
     onPlayerPositionUpdate
   });
+
+  // Track upgrade count changes for notification
+  useEffect(() => {
+    if (maxUnlockedUpgrade !== previousUpgradeCount) {
+      setPreviousUpgradeCount(maxUnlockedUpgrade);
+    }
+  }, [maxUnlockedUpgrade]);
 
   // Preload environment assets once on mount
   useEffect(() => {
@@ -104,7 +113,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         )}
         {isCanvasReady && assetsLoaded && (
           <Canvas
-            key="fantasy-canvas" // Force re-mount if needed
+            key="fantasy-canvas"
             dpr={[1, 1]}
             camera={{ 
               position: [0, 5, 12], 
@@ -120,7 +129,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             }}
             onCreated={(state) => {
               console.log('Fantasy3DUpgradeWorld: Canvas created successfully');
-              // Ensure camera is properly set up
               state.camera.updateProjectionMatrix();
             }}
           >
@@ -147,6 +155,12 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
             />
           </Canvas>
         )}
+
+        {/* MOVED: Upgrade activation overlay outside Canvas */}
+        <UpgradeActivationOverlay 
+          upgrades={maxUnlockedUpgrade}
+          previousUpgrades={previousUpgradeCount}
+        />
 
         <Fantasy3DInsufficientManaMessage show={showInsufficientMana} />
 
