@@ -25,28 +25,13 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 }) => {
   const meshRef = useRef<Mesh>(null);
   const glowRef = useRef<Mesh>(null);
-  const pedestalRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   useRegisterCollider(
     `upgrade-${upgrade.id}`,
     new Vector3(...position),
     1.5
   );
-
-  // Stable interaction handler to prevent multiple calls
-  const handleInteraction = React.useCallback(() => {
-    if (isProcessing || !isUnlocked || isPurchased) return;
-    
-    setIsProcessing(true);
-    onInteract();
-    
-    // Reset processing state after a delay
-    setTimeout(() => {
-      setIsProcessing(false);
-    }, 1000);
-  }, [isProcessing, isUnlocked, isPurchased, onInteract]);
   
   useFrame((state) => {
     if (meshRef.current) {
@@ -86,24 +71,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 
   return (
     <group position={position}>
-      {/* Clickable pedestal base - larger interaction area */}
-      <mesh 
-        ref={pedestalRef}
-        position={[0, 0, 0]} 
-        receiveShadow
-        onClick={handleInteraction}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        <cylinderGeometry args={[2, 2.5, pedestalConfig.height + 0.5, 8]} />
-        <meshLambertMaterial 
-          color={pedestalConfig.material} 
-          transparent
-          opacity={hovered ? 0.9 : 0.8}
-        />
-      </mesh>
-      
-      {/* Visual pedestal base */}
+      {/* Pedestal base */}
       <mesh position={[0, 0, 0]} receiveShadow>
         <cylinderGeometry args={[1.2, 1.5, pedestalConfig.height, 8]} />
         <meshLambertMaterial color={pedestalConfig.material} />
@@ -129,11 +97,11 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         </mesh>
       )}
       
-      {/* Main crystal - also clickable */}
+      {/* Main crystal */}
       <mesh
         ref={meshRef}
         position={[0, 1, 0]}
-        onClick={handleInteraction}
+        onClick={onInteract}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         scale={hovered ? 1.1 : 1}
@@ -179,18 +147,10 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
       )}
       
       {/* Interaction indicator */}
-      {hovered && isUnlocked && !isPurchased && (
+      {hovered && isUnlocked && (
         <mesh position={[0, 3, 0]}>
           <planeGeometry args={[2, 0.5]} />
           <meshBasicMaterial color="#FFFFFF" transparent opacity={0.8} />
-        </mesh>
-      )}
-
-      {/* Processing indicator */}
-      {isProcessing && (
-        <mesh position={[0, 3.5, 0]}>
-          <planeGeometry args={[1.5, 0.3]} />
-          <meshBasicMaterial color="#FFD700" transparent opacity={0.9} />
         </mesh>
       )}
     </group>

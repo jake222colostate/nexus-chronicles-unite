@@ -48,22 +48,23 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   }, []);
 
   useFrame((state, delta) => {
-    // PERFORMANCE FIX: Only update every 2nd frame instead of 3rd for smoother movement
+    // PERFORMANCE FIX: Only update every 3rd frame
     frameCount.current++;
-    if (frameCount.current % 2 !== 0) return;
+    if (frameCount.current % 3 !== 0) return;
 
     if (!staffGroupRef.current || !camera) return;
 
-    // FIXED: Rigid attachment instead of following - no interpolation
-    const staffOffset = new THREE.Vector3(0.6, -0.8, -1.8);
-    staffGroupRef.current.position.copy(camera.position).add(staffOffset);
+    // FIXED: Position staff much closer to player for better visibility
+    const staffOffset = new THREE.Vector3(0.8, -0.5, -2.0); // Closer positioning
+    const worldPosition = camera.position.clone().add(staffOffset);
+    staffGroupRef.current.position.copy(worldPosition);
     
-    // FIXED: Direct rotation copy for rigid attachment
+    // Simplified rotation - less dramatic angles
     staffGroupRef.current.rotation.copy(camera.rotation);
-    staffGroupRef.current.rotation.x -= 0.05; // Slight downward angle
-    staffGroupRef.current.rotation.y -= 0.15; // Slight right angle
+    staffGroupRef.current.rotateY(-0.2); // Reduced angle
+    staffGroupRef.current.rotateX(-0.05); // Reduced angle
 
-    // Update staff tip position for projectiles with direct positioning
+    // Update staff tip position for projectiles
     const staffTipOffset = new THREE.Vector3(0, 1.2, 0);
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
   });
@@ -107,7 +108,6 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
         damage={damage}
         fireRate={fireRate}
         onHitEnemy={onHitEnemy}
-        upgrades={upgrades}
       />
     </group>
   );

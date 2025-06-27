@@ -1,179 +1,151 @@
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
-import { enhancedHybridUpgrades } from '../../data/EnhancedHybridUpgrades';
+import { useInfiniteUpgrades } from '../InfiniteUpgradeSystem';
 
 interface UseFantasy3DUpgradeWorldProps {
-  gameState: any;
+  gameState?: any;
   onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
 }
 
-export const useFantasy3DUpgradeWorld = ({ 
-  gameState, 
-  onPlayerPositionUpdate 
+export const useFantasy3DUpgradeWorld = ({
+  gameState,
+  onPlayerPositionUpdate
 }: UseFantasy3DUpgradeWorldProps) => {
-  const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 5, 12));
+  const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 1.6, 0));
   const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
-  const [lastPurchaseTime, setLastPurchaseTime] = useState(0);
-  const currentManaRef = useRef(gameState?.mana || 0);
-
-  // Stable purchase processing to prevent multiple calls
-  const [processingPurchases, setProcessingPurchases] = useState(new Set<string>());
-
-  // Update current mana ref when gameState changes
-  useEffect(() => {
-    if (gameState?.mana !== undefined) {
-      currentManaRef.current = gameState.mana;
-    }
-  }, [gameState?.mana]);
-
-  // Configuration constants
-  const CHUNK_SIZE = 100;
+  const [maxUnlockedUpgrade, setMaxUnlockedUpgrade] = useState(-1);
+  const [purchasedUpgrades, setPurchasedUpgrades] = useState<Set<number>>(new Set());
+  
+  // Use refs for values that don't need to trigger re-renders
+  const currentManaRef = useRef(gameState?.mana || 100);
+  const totalManaPerSecondRef = useRef(gameState?.manaPerSecond || 0);
+  
+  // COMPLETELY NEW purchase protection system
+  const activePurchaseRef = useRef<string | null>(null);
+  const purchaseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Enhanced infinite world parameters
+  const CHUNK_SIZE = 80;
   const RENDER_DISTANCE = 200;
-  const UPGRADE_SPACING = 15;
+  const UPGRADE_SPACING = 35;
 
-  // Calculate max unlocked upgrade tier
-  const maxUnlockedUpgrade = useMemo(() => {
-    if (!gameState) return 0;
-    
-    const mana = gameState.mana || 0;
-    const energyCredits = gameState.energyCredits || 0;
-    const nexusShards = gameState.nexusShards || 0;
-    const convergenceCount = gameState.convergenceCount || 0;
-    
-    let maxTier = 0;
-    
-    for (const upgrade of enhancedHybridUpgrades) {
-      const { requirements } = upgrade;
-      
-      let canUnlock = true;
-      if (requirements.mana && mana < requirements.mana) canUnlock = false;
-      if (requirements.energy && energyCredits < requirements.energy) canUnlock = false;
-      if (requirements.nexusShards && nexusShards < requirements.nexusShards) canUnlock = false;
-      if (requirements.convergenceCount && convergenceCount < requirements.convergenceCount) canUnlock = false;
-      
-      if (canUnlock) {
-        maxTier = Math.max(maxTier, upgrade.tier);
-      }
+  // Get dynamic upgrades based on player position
+  const upgrades = useInfiniteUpgrades({
+    maxUnlockedUpgrade,
+    playerPosition: [cameraPosition.x, cameraPosition.y, cameraPosition.z],
+    upgradeSpacing: UPGRADE_SPACING,
+    renderDistance: RENDER_DISTANCE
+  });
+
+  // Update refs when gameState changes
+  useEffect(() => {
+    if (gameState) {
+      currentManaRef.current = gameState.mana;
+      totalManaPerSecondRef.current = gameState.manaPerSecond;
     }
-    
-    return maxTier;
-  }, [gameState]);
+  }, [gameState?.mana, gameState?.manaPerSecond]);
 
-  // Generate upgrade positions in a spiral pattern
-  const upgrades = useMemo(() => {
-    const positions = [];
-    const totalUpgrades = enhancedHybridUpgrades.length;
-    
-    for (let i = 0; i < totalUpgrades; i++) {
-      const angle = (i / totalUpgrades) * Math.PI * 4;
-      const radius = 5 + Math.floor(i / 8) * UPGRADE_SPACING;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      const y = Math.sin(i * 0.5) * 2;
-      
-      const upgrade = enhancedHybridUpgrades[i];
-      const { requirements } = upgrade;
-      
-      let unlocked = true;
-      if (gameState) {
-        if (requirements.mana && gameState.mana < requirements.mana) unlocked = false;
-        if (requirements.energy && gameState.energyCredits < requirements.energy) unlocked = false;
-        if (requirements.nexusShards && gameState.nexusShards < requirements.nexusShards) unlocked = false;
-        if (requirements.convergenceCount && gameState.convergenceCount < requirements.convergenceCount) unlocked = false;
-      }
-      
-      positions.push({
-        ...upgrade,
-        position: [x, y, z],
-        unlocked,
-        tier: upgrade.tier
-      });
-    }
-    
-    return positions;
-  }, [gameState, UPGRADE_SPACING]);
-
-  // Purchased upgrades set for quick lookup
-  const purchasedUpgrades = useMemo(() => {
-    return new Set(gameState?.purchasedUpgrades || []);
-  }, [gameState?.purchasedUpgrades]);
-
-  // Stable position change handler
-  const handlePositionChange = useCallback((newPosition: Vector3) => {
-    setCameraPosition(newPosition);
-    
+  const handlePositionChange = useCallback((position: Vector3) => {
+    setCameraPosition(position);
     if (onPlayerPositionUpdate) {
       onPlayerPositionUpdate({
-        x: newPosition.x,
-        y: newPosition.y,
-        z: newPosition.z
+        x: position.x,
+        y: position.y,
+        z: position.z
       });
     }
   }, [onPlayerPositionUpdate]);
 
-  // Stable upgrade click handler with duplicate prevention
   const handleUpgradeClick = useCallback((upgrade: any) => {
-    const now = Date.now();
+    console.log(`Clicked upgrade: ${upgrade.name}`);
     
-    // Prevent rapid clicks and duplicate processing
-    if (processingPurchases.has(upgrade.id) || now - lastPurchaseTime < 1000) {
-      console.log('Upgrade click blocked - processing or too soon');
+    const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
+    console.log(`Distance to ${upgrade.name}: ${distance.toFixed(2)}`);
+    
+    if (distance > 15) {
+      console.log("Move closer to interact with this upgrade!");
       return;
     }
+    
+    setSelectedUpgrade(upgrade);
+  }, [cameraPosition]);
 
-    if (!upgrade.unlocked) {
-      console.log('Upgrade not unlocked');
+  const handleUpgradePurchase = useCallback((upgrade: any) => {
+    // Create unique purchase identifier
+    const purchaseId = `${upgrade.id}-${Date.now()}`;
+    
+    console.log(`Purchase attempt for ${upgrade.name} with ID: ${purchaseId}`);
+    
+    // STRICT: Only allow one purchase at a time globally
+    if (activePurchaseRef.current !== null) {
+      console.log(`Purchase blocked - another purchase active: ${activePurchaseRef.current}`);
       return;
     }
-
+    
+    // Check if already purchased
     if (purchasedUpgrades.has(upgrade.id)) {
-      console.log('Upgrade already purchased');
+      console.log(`Purchase blocked - upgrade ${upgrade.id} already owned`);
+      setSelectedUpgrade(null);
       return;
     }
-
+    
+    // Check mana
     if (currentManaRef.current < upgrade.cost) {
+      console.log(`Purchase blocked - insufficient mana: ${currentManaRef.current} < ${upgrade.cost}`);
       setShowInsufficientMana(true);
       setTimeout(() => setShowInsufficientMana(false), 2000);
       return;
     }
-
-    // Mark as processing
-    setProcessingPurchases(prev => new Set([...prev, upgrade.id]));
-    setLastPurchaseTime(now);
     
-    console.log('Opening upgrade modal for:', upgrade.name);
-    setSelectedUpgrade(upgrade);
-  }, [processingPurchases, lastPurchaseTime, purchasedUpgrades]);
-
-  // Stable upgrade purchase handler
-  const handleUpgradePurchase = useCallback((upgrade: any) => {
-    console.log('Purchasing upgrade:', upgrade.name);
+    // Lock the purchase system
+    activePurchaseRef.current = purchaseId;
+    console.log(`Purchase locked with ID: ${purchaseId}`);
     
-    // Additional safety check
-    if (purchasedUpgrades.has(upgrade.id) || currentManaRef.current < upgrade.cost) {
-      console.log('Purchase blocked - already owned or insufficient funds');
-      setProcessingPurchases(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(upgrade.id);
-        return newSet;
-      });
-      return;
+    // Clear any existing timeout
+    if (purchaseTimeoutRef.current) {
+      clearTimeout(purchaseTimeoutRef.current);
     }
-
-    // Close modal and clear processing
-    setSelectedUpgrade(null);
-    setProcessingPurchases(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(upgrade.id);
-      return newSet;
-    });
+    
+    try {
+      // Perform the purchase immediately
+      currentManaRef.current -= upgrade.cost;
+      totalManaPerSecondRef.current += upgrade.manaPerSecond;
+      setMaxUnlockedUpgrade(prev => Math.max(prev, upgrade.id));
+      setPurchasedUpgrades(prev => {
+        const next = new Set(prev);
+        next.add(upgrade.id);
+        return next;
+      });
+      setSelectedUpgrade(null);
+      
+      console.log(`SUCCESS: Purchased ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
+      console.log(`New mana: ${currentManaRef.current}, New mana/sec: ${totalManaPerSecondRef.current}`);
+      
+    } catch (error) {
+      console.error(`Purchase failed for ${upgrade.name}:`, error);
+    } finally {
+      // Release the lock after a delay to prevent rapid clicking
+      purchaseTimeoutRef.current = setTimeout(() => {
+        activePurchaseRef.current = null;
+        console.log(`Purchase lock released for ID: ${purchaseId}`);
+      }, 1000); // 1 second cooldown
+    }
   }, [purchasedUpgrades]);
 
-  // Tier progression handler
-  const handleTierProgression = useCallback((tier: number) => {
-    console.log('Tier progression:', tier);
+  const handleTierProgression = useCallback(() => {
+    console.log("Tier progression triggered!");
+    // Add tier progression logic here
+  }, []);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (purchaseTimeoutRef.current) {
+        clearTimeout(purchaseTimeoutRef.current);
+      }
+    };
   }, []);
 
   return {
@@ -183,7 +155,6 @@ export const useFantasy3DUpgradeWorld = ({
     maxUnlockedUpgrade,
     currentManaRef,
     upgrades,
-    purchasedUpgrades,
     CHUNK_SIZE,
     RENDER_DISTANCE,
     UPGRADE_SPACING,
@@ -191,6 +162,7 @@ export const useFantasy3DUpgradeWorld = ({
     handleUpgradeClick,
     handleUpgradePurchase,
     handleTierProgression,
-    setSelectedUpgrade
+    setSelectedUpgrade,
+    purchasedUpgrades
   };
 };
