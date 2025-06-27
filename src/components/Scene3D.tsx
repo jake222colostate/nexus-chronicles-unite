@@ -23,6 +23,10 @@ interface Scene3DProps {
   showTapEffect?: boolean;
   onTapEffectComplete?: () => void;
   onMeteorDestroyed?: () => void;
+  onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
+  onEnemyCountChange?: (count: number) => void;
+  onEnemyKilled?: () => void;
+  weaponDamage: number;
 }
 
 // Memoized upgrade positions - no need to recalculate every render
@@ -44,7 +48,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   isTransitioning = false,
   showTapEffect = false,
   onTapEffectComplete,
-  onMeteorDestroyed
+  onMeteorDestroyed,
+  onPlayerPositionUpdate,
+  onEnemyCountChange,
+  onEnemyKilled,
+  weaponDamage
 }) => {
   console.log('Scene3D: Rendering with realm:', realm);
   
@@ -58,19 +66,30 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   const handlePlayerPositionUpdate = useCallback((position: Vector3) => {
     setPlayerPosition(position.clone());
     console.log('Scene3D: Player position updated to:', position);
-  }, []);
+    // FIXED: Call the prop callback if provided
+    if (onPlayerPositionUpdate) {
+      onPlayerPositionUpdate({ x: position.x, y: position.y, z: position.z });
+    }
+  }, [onPlayerPositionUpdate]);
 
   // Callback to handle enemy position updates from environment
   const handleEnemyPositionUpdate = useCallback((positions: Vector3[]) => {
     setEnemyPositions(positions);
     console.log('Scene3D: Enemy positions updated, count:', positions.length);
-  }, []);
+    // FIXED: Call the enemy count callback
+    if (onEnemyCountChange) {
+      onEnemyCountChange(positions.length);
+    }
+  }, [onEnemyCountChange]);
 
   // Callback to handle enemy hits
   const handleEnemyHit = useCallback((index: number, damage: number) => {
     console.log(`Scene3D: Enemy ${index} hit for ${damage} damage`);
-    // This would typically trigger enemy damage/death logic
-  }, []);
+    // FIXED: Call the enemy killed callback
+    if (onEnemyKilled) {
+      onEnemyKilled();
+    }
+  }, [onEnemyKilled]);
 
   // Memoize upgrade unlock checking to prevent recalculation
   const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
@@ -120,7 +139,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           alpha: false,
           powerPreference: "high-performance",
           stencil: false,
-          depth: true
+          depth: true,
+          preserveDrawingBuffer: false, // FIXED: Prevent WebGL context issues
+          failIfMajorPerformanceCaveat: false // FIXED: Allow fallback rendering
         }}
       >
         <Suspense fallback={null}>
@@ -140,7 +161,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               visible={realm === 'fantasy'}
               enemyPositions={enemyPositions}
               onHitEnemy={handleEnemyHit}
-              damage={10 + (gameState.weaponUpgradeLevel || 0) * 5}
+              damage={weaponDamage}
               playerPosition={playerPosition}
             />
           </PerspectiveCamera>
@@ -160,7 +181,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <FloatingIsland realm={realm} />
           {realm === 'scifi' && <ScifiDefenseSystem onMeteorDestroyed={onMeteorDestroyed} />}
 
-          {/* FIXED: Fantasy environment with proper player position tracking */}
+          {/* FIXED: Fantasy environment with proper player position tracking - only render for fantasy */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
