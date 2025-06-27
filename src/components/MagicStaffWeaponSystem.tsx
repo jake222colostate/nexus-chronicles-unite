@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -186,8 +187,8 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 
   const staffScale = staffTier === 'tier1' ? 0.6 : staffTier === 'tier2' ? 0.65 : 0.7;
 
-  // Fire rate based on upgrade level
-  const fireRate = useMemo(() => {
+  // UPDATED: Auto-fire rate based on upgrade level (renamed from fireRate to autoFireRate)
+  const autoFireRate = useMemo(() => {
     return Math.max(300, 800 - (upgradeLevel * 100));
   }, [upgradeLevel]);
 
@@ -263,7 +264,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
         staffTipPosition={staffTipPositionRef.current}
         targetPositions={enemyPositions}
         damage={damage}
-        fireRate={fireRate}
+        autoFireRate={autoFireRate}
         onHitEnemy={onHitEnemy}
       />
     </group>
