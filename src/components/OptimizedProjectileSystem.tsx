@@ -7,7 +7,7 @@ interface OptimizedProjectileSystemProps {
   staffTipPosition?: THREE.Vector3;
   targetPositions?: THREE.Vector3[];
   damage: number;
-  fireRate: number;
+  autoFireRate: number; // RENAMED: from fireRate to autoFireRate for clarity
   onHitEnemy: (index: number, damage: number) => void;
 }
 
@@ -44,11 +44,11 @@ const isValidVector3 = (vec: any): vec is THREE.Vector3 => {
 export const OptimizedProjectileSystem = forwardRef<
   OptimizedProjectileSystemHandle,
   OptimizedProjectileSystemProps
->(({ staffTipPosition, targetPositions = [], damage, fireRate, onHitEnemy }, ref) => {
+>(({ staffTipPosition, targetPositions = [], damage, autoFireRate, onHitEnemy }, ref) => {
   const projectilePoolRef = useRef<ProjectileData[]>([]);
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
-  const lastFireTimeRef = useRef(0);
+  const lastAutoFireTimeRef = useRef(0); // RENAMED: for clarity
   const meshPoolInitialized = useRef(false);
 
   // Create simple, reliable projectile geometry and material
@@ -195,10 +195,11 @@ export const OptimizedProjectileSystem = forwardRef<
     }
   };
 
+  // UPDATED: Manual fire function (instant, no cooldown)
   const manualFire = () => {
     if (isValidVector3(staffTipPosition) && Array.isArray(targetPositions) && targetPositions.length > 0) {
       fireProjectile(staffTipPosition, targetPositions);
-      lastFireTimeRef.current = Date.now();
+      console.log('OptimizedProjectileSystem: Manual fire triggered');
     }
   };
 
@@ -217,13 +218,14 @@ export const OptimizedProjectileSystem = forwardRef<
 
     const now = Date.now();
     
-    // Auto fire projectiles only with valid positions and initialized mesh pool
+    // UPDATED: Much slower auto fire with the new autoFireRate
     if (meshPoolInitialized.current && 
-        now - lastFireTimeRef.current >= fireRate && 
+        now - lastAutoFireTimeRef.current >= autoFireRate && 
         targetPositions.length > 0) {
       try {
         fireProjectile(staffTipPosition, targetPositions);
-        lastFireTimeRef.current = now;
+        lastAutoFireTimeRef.current = now;
+        console.log('OptimizedProjectileSystem: Auto-fire triggered');
       } catch (error) {
         console.log('OptimizedProjectileSystem: Auto-fire failed, continuing render loop');
       }

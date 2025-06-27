@@ -36,15 +36,23 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     console.warn('Failed to load staff model, using fallback:', error);
   }
   
-  // Calculate fire rate based on upgrades (faster with more upgrades)
-  const fireRate = Math.max(200, 800 - (upgrades * 80));
+  // UPDATED: Much slower auto-fire rate (3-5 seconds between shots)
+  const autoFireRate = Math.max(3000, 5000 - (upgrades * 200)); // 3-5 seconds instead of 200-800ms
 
   useEffect(() => {
     const handleClick = () => {
       projectileSystemRef.current?.manualFire();
     };
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
+    
+    // Add click event to the canvas or window for manual shooting
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.addEventListener('click', handleClick);
+      return () => canvas.removeEventListener('click', handleClick);
+    } else {
+      window.addEventListener('click', handleClick);
+      return () => window.removeEventListener('click', handleClick);
+    }
   }, []);
 
   useFrame((state, delta) => {
@@ -106,7 +114,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
         staffTipPosition={staffTipPositionRef.current}
         targetPositions={enemyPositions}
         damage={damage}
-        fireRate={fireRate}
+        autoFireRate={autoFireRate}
         onHitEnemy={onHitEnemy}
       />
     </group>
