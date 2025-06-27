@@ -171,7 +171,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   onHitEnemy = () => {},
   damage = 10
 }) => {
-  const { camera } = useThree();
+  const { camera, gl } = useThree();
   const weaponGroupRef = useRef<THREE.Group>(null);
   const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
@@ -205,13 +205,29 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   }, [visible, staffTier, staffCache]);
 
+  // FIXED: Use canvas-specific click handler instead of window
   useEffect(() => {
-    const handleClick = () => {
+    const handleClick = (event: MouseEvent) => {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      console.log('MagicStaffWeaponSystem: Canvas clicked - manual fire triggered');
       projectileSystemRef.current?.manualFire();
     };
-    window.addEventListener('click', handleClick);
-    return () => window.removeEventListener('click', handleClick);
-  }, []);
+    
+    // Get the canvas element from the WebGL renderer
+    const canvas = gl.domElement;
+    if (canvas) {
+      console.log('MagicStaffWeaponSystem: Attaching click listener to canvas');
+      canvas.addEventListener('click', handleClick);
+      return () => {
+        console.log('MagicStaffWeaponSystem: Removing click listener from canvas');
+        canvas.removeEventListener('click', handleClick);
+      };
+    } else {
+      console.warn('MagicStaffWeaponSystem: Canvas not found, cannot attach click listener');
+    }
+  }, [gl.domElement]);
 
   // First-person weapon positioning optimized for iPhone screen visibility
   useFrame(() => {
