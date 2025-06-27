@@ -13,7 +13,7 @@ interface OptimizedFantasyEnvironmentProps {
   playerPosition: Vector3;
 }
 
-export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentProps> = React.memo(({
+export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentProps> = ({
   chunks,
   chunkSize,
   realm,
@@ -24,29 +24,27 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
+  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with infinite ground and optimized performance`);
+
   return (
     <Suspense fallback={null}>
-      {/* OPTIMIZED: Simplified ground system only */}
+      {/* Infinite ground system for seamless terrain */}
       <EnhancedInfiniteGroundSystem
-        chunks={chunks.slice(0, 20)} // Limit chunks for performance
+        chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
         playerPosition={playerPosition}
       />
       
-      {/* OPTIMIZED: Conditional mountain system - only render when needed */}
-      {Math.abs(playerPosition.x) > 30 && (
-        <InfiniteEnvironmentSystem playerPosition={playerPosition} />
-      )}
+      {/* Infinite environment system handles mountains and other elements */}
+      <InfiniteEnvironmentSystem playerPosition={playerPosition} />
       
-      {/* OPTIMIZED: Limited tree system */}
+      {/* Tree system positioned within valley bounds */}
       <EnhancedTreeDistribution
-        chunks={chunks.slice(0, 15)} // Further limit chunks for trees
+        chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
       />
     </Suspense>
   );
-});
-
-OptimizedFantasyEnvironment.displayName = 'OptimizedFantasyEnvironment';
+};

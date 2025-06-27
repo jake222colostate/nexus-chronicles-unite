@@ -1,4 +1,3 @@
-
 import React, { Suspense, useRef, useMemo, useCallback, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
@@ -23,10 +22,6 @@ interface Scene3DProps {
   showTapEffect?: boolean;
   onTapEffectComplete?: () => void;
   onMeteorDestroyed?: () => void;
-  onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
-  onEnemyCountChange?: (count: number) => void;
-  onEnemyKilled?: () => void;
-  weaponDamage: number;
 }
 
 // Memoized upgrade positions - no need to recalculate every render
@@ -48,48 +43,26 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   isTransitioning = false,
   showTapEffect = false,
   onTapEffectComplete,
-  onMeteorDestroyed,
-  onPlayerPositionUpdate,
-  onEnemyCountChange,
-  onEnemyKilled,
-  weaponDamage
+  onMeteorDestroyed
 }) => {
   console.log('Scene3D: Rendering with realm:', realm);
   
   const cameraRef = useRef();
   const [enemyPositions, setEnemyPositions] = useState<Vector3[]>([]);
-  
-  // FIXED: Track actual player position that updates with camera movement
-  const [playerPosition, setPlayerPosition] = useState<Vector3>(new Vector3(0, 2, 10));
 
-  // FIXED: Callback to handle player position updates from camera controller
-  const handlePlayerPositionUpdate = useCallback((position: Vector3) => {
-    setPlayerPosition(position.clone());
-    console.log('Scene3D: Player position updated to:', position);
-    // FIXED: Call the prop callback if provided
-    if (onPlayerPositionUpdate) {
-      onPlayerPositionUpdate({ x: position.x, y: position.y, z: position.z });
-    }
-  }, [onPlayerPositionUpdate]);
+  // Stable player position for chunk system - centered in the mountain valley
+  const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
 
   // Callback to handle enemy position updates from environment
   const handleEnemyPositionUpdate = useCallback((positions: Vector3[]) => {
     setEnemyPositions(positions);
-    console.log('Scene3D: Enemy positions updated, count:', positions.length);
-    // FIXED: Call the enemy count callback
-    if (onEnemyCountChange) {
-      onEnemyCountChange(positions.length);
-    }
-  }, [onEnemyCountChange]);
+  }, []);
 
   // Callback to handle enemy hits
   const handleEnemyHit = useCallback((index: number, damage: number) => {
-    console.log(`Scene3D: Enemy ${index} hit for ${damage} damage`);
-    // FIXED: Call the enemy killed callback
-    if (onEnemyKilled) {
-      onEnemyKilled();
-    }
-  }, [onEnemyKilled]);
+    console.log(`Enemy ${index} hit for ${damage} damage`);
+    // This would typically trigger enemy damage/death logic
+  }, []);
 
   // Memoize upgrade unlock checking to prevent recalculation
   const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
@@ -139,9 +112,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           alpha: false,
           powerPreference: "high-performance",
           stencil: false,
-          depth: true,
-          preserveDrawingBuffer: false, // FIXED: Prevent WebGL context issues
-          failIfMajorPerformanceCaveat: false // FIXED: Allow fallback rendering
+          depth: true
         }}
       >
         <Suspense fallback={null}>
@@ -155,24 +126,21 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             aspect={375 / 667}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           >
-            {/* FIXED: Enhanced MagicStaffWeaponSystem with proper player position tracking */}
+            {/* Enhanced MagicStaffWeaponSystem with enemy targeting */}
             <MagicStaffWeaponSystem 
               upgradeLevel={gameState.weaponUpgradeLevel || 0}
               visible={realm === 'fantasy'}
               enemyPositions={enemyPositions}
               onHitEnemy={handleEnemyHit}
-              damage={weaponDamage}
-              playerPosition={playerPosition}
+              damage={10 + (gameState.weaponUpgradeLevel || 0) * 5}
             />
           </PerspectiveCamera>
 
-          {/* FIXED: Pass position update callback to camera controller */}
           <VerticalCameraController 
             camera={cameraRef.current}
             minY={-5}
             maxY={15}
             sensitivity={0.8}
-            onPositionChange={handlePlayerPositionUpdate}
           />
 
           {/* ENHANCED: Much brighter and more vibrant lighting system */}
@@ -181,7 +149,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <FloatingIsland realm={realm} />
           {realm === 'scifi' && <ScifiDefenseSystem onMeteorDestroyed={onMeteorDestroyed} />}
 
-          {/* FIXED: Fantasy environment with proper player position tracking - only render for fantasy */}
+          {/* Fantasy environment with enemy position tracking */}
           {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}

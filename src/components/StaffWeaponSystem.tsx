@@ -23,7 +23,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
 }) => {
   const { camera } = useThree();
   const staffGroupRef = useRef<THREE.Group>(null);
-  const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3(0, 0, 0));
+  const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
   
   // Load staff model with proper path and error handling
@@ -38,52 +38,12 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   // Calculate fire rate based on upgrades (faster with more upgrades)
   const fireRate = Math.max(200, 800 - (upgrades * 80));
 
-  // FIXED: Improved click/tap handling with better event detection
   useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      console.log('StaffWeaponSystem: Mouse click detected');
-      event.preventDefault();
+    const handleClick = () => {
       projectileSystemRef.current?.manualFire();
     };
-
-    const handleTouch = (event: TouchEvent) => {
-      console.log('StaffWeaponSystem: Touch detected');
-      event.preventDefault();
-      projectileSystemRef.current?.manualFire();
-    };
-
-    // Add event listeners to multiple elements for better coverage
-    const canvas = document.querySelector('canvas');
-    const gameContainer = document.querySelector('[class*="h-[667px]"]'); // Game container
-    
-    if (canvas) {
-      canvas.addEventListener('click', handleClick);
-      canvas.addEventListener('touchstart', handleTouch, { passive: false });
-      console.log('StaffWeaponSystem: Event listeners added to canvas');
-    }
-    
-    if (gameContainer) {
-      gameContainer.addEventListener('click', handleClick);
-      gameContainer.addEventListener('touchstart', handleTouch, { passive: false });
-      console.log('StaffWeaponSystem: Event listeners added to game container');
-    }
-
-    // Also add to window as fallback
     window.addEventListener('click', handleClick);
-    window.addEventListener('touchstart', handleTouch, { passive: false });
-
-    return () => {
-      if (canvas) {
-        canvas.removeEventListener('click', handleClick);
-        canvas.removeEventListener('touchstart', handleTouch);
-      }
-      if (gameContainer) {
-        gameContainer.removeEventListener('click', handleClick);
-        gameContainer.removeEventListener('touchstart', handleTouch);
-      }
-      window.removeEventListener('click', handleClick);
-      window.removeEventListener('touchstart', handleTouch);
-    };
+    return () => window.removeEventListener('click', handleClick);
   }, []);
 
   useFrame((state, delta) => {
@@ -116,7 +76,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
     staffGroupRef.current.rotateX(-0.2); // More downward angle
     staffGroupRef.current.rotateZ(0.2); // More tilt like being held
 
-    // FIXED: Update staff tip position for projectile system (at the top of the staff)
+    // Update staff tip position for projectile system (at the top of the staff)
     const staffTipOffset = new THREE.Vector3(0, 2.0, 0); // Even higher up the staff
     staffTipOffset.applyQuaternion(staffGroupRef.current.quaternion);
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
@@ -174,7 +134,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
         <pointLight position={[0, 1, 0]} color="#ffffff" intensity={1} distance={5} />
       </group>
 
-      {/* Optimized projectile system - FIXED: Pass current staff tip position */}
+      {/* Optimized projectile system */}
       <OptimizedProjectileSystem
         ref={projectileSystemRef}
         staffTipPosition={staffTipPositionRef.current}

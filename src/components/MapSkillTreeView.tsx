@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Scene3D } from './Scene3D';
 import { Fantasy3DUpgradeWorld } from './Fantasy3DUpgradeWorld';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
@@ -63,13 +63,10 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // FIXED: Stable realm reference to prevent unnecessary re-renders
-  const stableRealm = useMemo(() => realm, [realm]);
-
   // Log realm changes for debugging
   useEffect(() => {
-    console.log('MapSkillTreeView: Realm changed to:', stableRealm);
-  }, [stableRealm]);
+    console.log('MapSkillTreeView: Realm changed to:', realm);
+  }, [realm]);
 
   const handleUpgradeClick = useCallback((upgradeId: string) => {
     console.log('MapSkillTreeView: handleUpgradeClick called with:', upgradeId);
@@ -89,6 +86,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   }, [selectedUpgrade, onPurchaseUpgrade]);
 
   const handle3DUpgradePurchase = useCallback(() => {
+    // Handle 3D upgrade purchase logic here
     console.log('Purchasing 3D upgrade:', selected3DUpgrade);
     setSelected3DUpgrade(null);
   }, [selected3DUpgrade]);
@@ -105,51 +103,42 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     }
   }, []);
 
-  console.log('MapSkillTreeView: About to render with realm:', stableRealm);
-
-  // FIXED: Use single 3D scene that handles both realms instead of switching components
-  const render3DScene = useMemo(() => {
-    // Always use Scene3D for both realms to prevent WebGL context loss
-    return (
-      <Scene3D
-        realm={stableRealm}
-        gameState={gameState}
-        onUpgradeClick={stableRealm === 'fantasy' ? handle3DUpgradeClick : handleUpgradeClick}
-        isTransitioning={isTransitioning}
-        showTapEffect={showTapEffect}
-        onTapEffectComplete={onTapEffectComplete}
-        onMeteorDestroyed={onMeteorDestroyed}
-        onPlayerPositionUpdate={onPlayerPositionUpdate}
-        onEnemyCountChange={onEnemyCountChange}
-        onEnemyKilled={onEnemyKilled}
-        weaponDamage={weaponDamage}
-      />
-    );
-  }, [
-    stableRealm,
-    gameState,
-    handle3DUpgradeClick,
-    handleUpgradeClick,
-    isTransitioning,
-    showTapEffect,
-    onTapEffectComplete,
-    onMeteorDestroyed,
-    onPlayerPositionUpdate,
-    onEnemyCountChange,
-    onEnemyKilled,
-    weaponDamage
-  ]);
+  console.log('MapSkillTreeView: About to render with realm:', realm);
 
   try {
     return (
       <div className="relative w-full h-full overflow-hidden">
-        {/* FIXED: Single 3D Scene that handles both realms */}
-        {render3DScene}
+        {/* 3D Scene - Use Fantasy 3D World for fantasy realm, Scene3D for sci-fi */}
+        {realm === 'fantasy' ? (
+          <Fantasy3DUpgradeWorld
+            key="fantasy-world" // Force re-mount on realm switch
+            onUpgradeClick={handle3DUpgradeClick}
+            showTapEffect={showTapEffect}
+            onTapEffectComplete={onTapEffectComplete}
+            gameState={gameState}
+            realm={realm}
+            onPlayerPositionUpdate={onPlayerPositionUpdate}
+            onEnemyCountChange={onEnemyCountChange}
+            onEnemyKilled={onEnemyKilled}
+            weaponDamage={weaponDamage}
+          />
+        ) : (
+          <Scene3D
+            key="scifi-world" // Force re-mount on realm switch
+            realm={realm}
+            gameState={gameState}
+            onUpgradeClick={handleUpgradeClick}
+            isTransitioning={isTransitioning}
+            showTapEffect={showTapEffect}
+            onTapEffectComplete={onTapEffectComplete}
+            onMeteorDestroyed={onMeteorDestroyed}
+          />
+        )}
 
         {/* 2D Tap Resource Effect Overlay */}
         {showTapEffect && onTapEffectComplete && (
           <TapResourceEffect
-            realm={stableRealm}
+            realm={realm}
             onComplete={onTapEffectComplete}
           />
         )}
@@ -160,7 +149,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
             key={tooltip.id}
             buildingName={tooltip.buildingName}
             level={tooltip.level}
-            realm={stableRealm}
+            realm={realm}
             position={tooltip.position}
             onComplete={() => removeUpgradeTooltip(tooltip.id)}
           />
@@ -176,7 +165,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
               <BuildingUpgradeModal
                 building={selectedBuilding.building}
                 count={selectedBuilding.count}
-                realm={stableRealm}
+                realm={realm}
                 currency={currency}
                 onBuy={() => {}}
                 onClose={() => setSelectedBuilding(null)}

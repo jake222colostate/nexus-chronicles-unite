@@ -1,5 +1,5 @@
 
-import React, { Suspense, useMemo, useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useMemo, useState, useEffect } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { Enhanced360Controller } from './Enhanced360Controller';
@@ -8,7 +8,7 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
-import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
+import { StaffWeaponSystem } from './StaffWeaponSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -47,27 +47,18 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const [leeches, setLeeches] = useState<LeechData[]>([]);
   const [nextLeechId, setNextLeechId] = useState(0);
 
-  // OPTIMIZED: Stable camera position with less frequent updates
+  // FIXED: Simplified camera position validation - don't be too aggressive
   const safeCameraPosition = useMemo(() => {
     if (!cameraPosition || isNaN(cameraPosition.x) || isNaN(cameraPosition.y) || isNaN(cameraPosition.z)) {
       return new Vector3(0, 2, 20);
     }
     return cameraPosition;
-  }, [
-    Math.floor(cameraPosition.x / 5) * 5,
-    Math.floor(cameraPosition.y / 5) * 5,
-    Math.floor(cameraPosition.z / 5) * 5
-  ]);
+  }, [cameraPosition]);
 
-  // OPTIMIZED: Reduced leech spawning frequency
-  const playerProgressMemo = useMemo(() => 
-    Math.floor(Math.abs(safeCameraPosition.z) / 50) * 50, // Update every 50 units
-    [Math.abs(safeCameraPosition.z)]
-  );
-
-  // Spawn leeches based on player progress - optimized
+  // Spawn leeches based on player progress
   useEffect(() => {
-    const desiredLeechCount = Math.min(Math.floor(playerProgressMemo / 100) + 1, 4); // Reduced max leeches
+    const playerProgress = Math.abs(safeCameraPosition.z);
+    const desiredLeechCount = Math.min(Math.floor(playerProgress / 30) + 1, 8);
     
     setLeeches(currentLeeches => {
       const aliveLeeches = currentLeeches.filter(leech => leech.alive);
@@ -77,8 +68,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         const newLeeches: LeechData[] = [];
         
         for (let i = 0; i < neededLeeches; i++) {
-          const spawnDistance = playerProgressMemo + 80 + (i * 40);
-          const spawnX = (Math.random() - 0.5) * 15; // Reduced spawn width
+          const spawnDistance = playerProgress + 80 + (i * 25);
+          const spawnX = (Math.random() - 0.5) * 20;
           const spawnPosition = new Vector3(spawnX, 0, -spawnDistance);
           
           newLeeches.push({
@@ -96,20 +87,16 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       
       return currentLeeches;
     });
-  }, [playerProgressMemo, nextLeechId]);
+  }, [Math.floor(Math.abs(safeCameraPosition.z) / 30), nextLeechId]);
 
-  // OPTIMIZED: Memoized enemy count update
-  const aliveLeechCount = useMemo(() => 
-    leeches.filter(leech => leech.alive).length,
-    [leeches]
-  );
-
+  // Update enemy count for UI
   useEffect(() => {
-    if (onEnemyCountChange) onEnemyCountChange(aliveLeechCount);
-  }, [aliveLeechCount, onEnemyCountChange]);
+    const aliveCount = leeches.filter(leech => leech.alive).length;
+    if (onEnemyCountChange) onEnemyCountChange(aliveCount);
+  }, [leeches, onEnemyCountChange]);
 
-  // OPTIMIZED: Memoized callbacks to prevent re-renders
-  const handleLeechPositionUpdate = useCallback((leechId: string, newPosition: Vector3) => {
+  // Handle leech position updates
+  const handleLeechPositionUpdate = (leechId: string, newPosition: Vector3) => {
     if (!newPosition || isNaN(newPosition.x) || isNaN(newPosition.y) || isNaN(newPosition.z)) {
       return;
     }
@@ -121,9 +108,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           : leech
       )
     );
-  }, []);
+  };
 
-  const handleLeechReachPlayer = useCallback((leechId: string) => {
+  // Handle leech reaching player
+  const handleLeechReachPlayer = (leechId: string) => {
     setLeeches(current => 
       current.map(leech => 
         leech.id === leechId 
@@ -132,9 +120,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       )
     );
     onEnemyKilled?.();
-  }, [onEnemyKilled]);
+  };
 
-  const handleLeechHit = useCallback((leechId: string, damage: number) => {
+  // Handle leech taking damage
+  const handleLeechHit = (leechId: string, damage: number) => {
     setLeeches(current => 
       current.map(leech => {
         if (leech.id === leechId && leech.alive) {
@@ -148,9 +137,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         return leech;
       })
     );
-  }, [onEnemyKilled]);
+  };
 
-  // OPTIMIZED: Memoized leech positions
+  // FIXED: Simplified leech position filtering
   const aliveLeechPositions = useMemo(() => 
     leeches
       .filter(leech => leech.alive && leech.position)
@@ -158,11 +147,12 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     [leeches]
   );
 
-  const handlePositionChange = useCallback((position: Vector3) => {
+  // FIXED: Simplified position change handler
+  const handlePositionChange = (position: Vector3) => {
     if (onPositionChange && position) {
       onPositionChange(position);
     }
-  }, [onPositionChange]);
+  };
 
   return (
     <CollisionProvider>
@@ -177,17 +167,15 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         <CasualFog />
 
-        {/* OPTIMIZED: Smaller ground plane */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-          <planeGeometry args={[200, 200]} />
+          <planeGeometry args={[300, 300]} />
           <meshStandardMaterial color="#2d4a2d" />
         </mesh>
 
-        <ambientLight intensity={0.4} />
+        <ambientLight intensity={0.6} />
         <Sun position={[10, 20, 5]} />
 
-        {/* OPTIMIZED: Render fewer leeches */}
-        {leeches.slice(0, 3).map(leech => 
+        {leeches.map(leech => 
           leech.alive && leech.spawnPosition && (
             <LeechEnemy
               key={leech.id}
@@ -200,9 +188,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           )
         )}
 
-        <MagicStaffWeaponSystem
-          upgradeLevel={maxUnlockedUpgrade}
-          visible={true}
+        <StaffWeaponSystem
+          damage={weaponDamage}
           enemyPositions={aliveLeechPositions}
           onHitEnemy={(index, damage) => {
             const aliveLeech = leeches.filter(leech => leech.alive)[index];
@@ -210,14 +197,13 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
               handleLeechHit(aliveLeech.id, damage);
             }
           }}
-          damage={weaponDamage}
+          upgrades={maxUnlockedUpgrade}
         />
 
-        {/* OPTIMIZED: Reduced chunk size and render distance */}
         <ChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={Math.min(renderDistance, 80)} // Reduced render distance
+          renderDistance={renderDistance}
         >
           {(chunks: ChunkData[]) => (
             <OptimizedFantasyEnvironment
@@ -229,13 +215,12 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           )}
         </ChunkSystem>
 
-        {/* OPTIMIZED: Reduced shadow complexity */}
         <ContactShadows 
           position={[0, -1.4, safeCameraPosition.z]} 
-          opacity={0.02}
-          scale={10}
-          blur={1} 
-          far={2}
+          opacity={0.05}
+          scale={15}
+          blur={2} 
+          far={4}
         />
       </Suspense>
     </CollisionProvider>
