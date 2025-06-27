@@ -1,3 +1,4 @@
+
 import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from '../components/ChunkSystem';
 import * as THREE from 'three';
@@ -16,90 +17,42 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// ENHANCED terrain height simulation function for proper grounding
+// OPTIMIZED: Simplified terrain height calculation
 const getTerrainHeight = (x: number, z: number): number => {
-  const baseHeight = Math.sin(x * 0.01) * Math.cos(z * 0.01) * 0.5 + 
-                     Math.sin(x * 0.005) * Math.cos(z * 0.005) * 1.0;
-  const jitter = (Math.sin(x * 0.1) * Math.cos(z * 0.1)) * 0.1;
-  return Math.max(0, baseHeight + jitter);
+  return Math.sin(x * 0.01) * Math.cos(z * 0.01) * 0.5;
 };
 
-// ENHANCED: Calculate proper mountain slope height for tree grounding
+// OPTIMIZED: Simplified mountain slope calculation
 const getMountainSlopeHeight = (x: number, z: number): number => {
   const distanceFromCenter = Math.abs(x);
   
-  // Valley floor (close to path)
   if (distanceFromCenter < 15) {
     return getTerrainHeight(x, z);
   }
   
-  // Mountain slope calculation - gradual rise
   const slopeStart = 15;
   const slopeDistance = distanceFromCenter - slopeStart;
-  const slopeAngle = 0.15; // Gentle slope
+  const slopeAngle = 0.15;
   const baseTerrainHeight = getTerrainHeight(x, z);
   const mountainHeight = slopeDistance * slopeAngle;
   
-  // Add some natural variation to the slope
-  const variation = Math.sin(x * 0.02) * Math.cos(z * 0.02) * 0.3;
-  
-  return baseTerrainHeight + mountainHeight + variation;
+  return baseTerrainHeight + mountainHeight;
 };
 
-// Check if position is on a steep slope (>45°)
-const isOnSteepSlope = (x: number, z: number): boolean => {
-  const sampleDistance = 1.5;
-  const centerHeight = getMountainSlopeHeight(x, z);
-  const northHeight = getMountainSlopeHeight(x, z - sampleDistance);
-  const southHeight = getMountainSlopeHeight(x, z + sampleDistance);
-  const eastHeight = getMountainSlopeHeight(x + sampleDistance, z);
-  const westHeight = getMountainSlopeHeight(x - sampleDistance, z);
-  
-  const maxSlope = Math.max(
-    Math.abs(centerHeight - northHeight),
-    Math.abs(centerHeight - southHeight),
-    Math.abs(centerHeight - eastHeight),
-    Math.abs(centerHeight - westHeight)
-  ) / sampleDistance;
-  
-  return maxSlope > 0.8; // Increased threshold for steeper slopes
-};
-
-// Check if position is in the main player path corridor
-const isInPlayerPath = (x: number, z: number): boolean => {
-  const pathWidth = 10;
-  return Math.abs(x) < pathWidth;
-};
-
-// Check if position is too close to player starting position
-const isTooCloseToPlayerStart = (x: number, z: number): boolean => {
-  const distance = Math.sqrt(x * x + (z + 10) * (z + 10));
-  return distance < 6;
-};
-
-// Check if position is within the central valley near the path
-const isInMountainBoundary = (x: number, z: number): boolean => {
-  const mountainBuffer = 5;
-  return Math.abs(x) < mountainBuffer;
-};
-
-// ENHANCED tree positioning with proper grounding
+// OPTIMIZED: Simplified position validation
 const isValidTreePosition = (x: number, z: number): boolean => {
-  const notInPlayerPath = !isInPlayerPath(x, z);
-  const inValidXRange = Math.abs(x) >= 4 && Math.abs(x) <= 150;
-  const notOnSteepSlope = !isOnSteepSlope(x, z);
-  const notTooCloseToPlayer = !isTooCloseToPlayerStart(x, z);
-  const notInMountainBoundary = !isInMountainBoundary(x, z);
+  const notInPlayerPath = Math.abs(x) >= 4;
+  const inValidXRange = Math.abs(x) <= 100; // Reduced range
+  const notTooCloseToPlayer = Math.sqrt(x * x + (z + 10) * (z + 10)) > 6;
   
-  return notInPlayerPath && inValidXRange && notOnSteepSlope && notTooCloseToPlayer && notInMountainBoundary;
+  return notInPlayerPath && inValidXRange && notTooCloseToPlayer;
 };
 
-// Get tree type
+// Get tree type - simplified
 const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine218' => {
   const random = seededRandom(seed);
-  if (random < 0.7) return 'pine218';
-  if (random < 0.9) return 'stylized';
-  return 'realistic';
+  if (random < 0.8) return 'pine218'; // Favor pine trees for better performance
+  return 'stylized';
 };
 
 // Get randomized scale based on tree type
@@ -109,7 +62,7 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
 };
 
-// ENHANCED Tree component with proper ground connection
+// OPTIMIZED Tree component with minimal complexity
 const GLBTree: React.FC<{
   position: [number, number, number];
   scale: number;
@@ -125,60 +78,30 @@ const GLBTree: React.FC<{
 
     const model = treeModel.clone();
     
-    // Apply optimization settings but ALLOW fog
-    const applyOptimizationRecursive = (object: THREE.Object3D) => {
-      object.frustumCulled = false;
-      object.matrixAutoUpdate = true;
-      object.matrixWorldNeedsUpdate = true;
-      object.visible = true;
-      
-      if (object instanceof THREE.Mesh) {
-        // Expand bounding boxes for better visibility
-        if (object.geometry) {
-          object.geometry.computeBoundingBox();
-          object.geometry.computeBoundingSphere();
-          
-          if (object.geometry.boundingBox) {
-            object.geometry.boundingBox.expandByScalar(2.0);
-          }
-          if (object.geometry.boundingSphere) {
-            object.geometry.boundingSphere.radius += 2.0;
-          }
-        }
+    // OPTIMIZED: Minimal optimization settings
+    model.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.frustumCulled = true; // Enable culling for better performance
+        child.castShadow = false; // Disable shadows for performance
+        child.receiveShadow = false;
         
-        // Configure materials to work with fog
-        if (object.material) {
-          const materials = Array.isArray(object.material) ? object.material : [object.material];
+        if (child.material) {
+          const materials = Array.isArray(child.material) ? child.material : [child.material];
           materials.forEach(mat => {
-            mat.side = THREE.DoubleSide;
             mat.transparent = false;
             mat.opacity = 1.0;
-            mat.visible = true;
-            mat.depthTest = true;
-            mat.depthWrite = true;
-            mat.needsUpdate = true;
+            mat.needsUpdate = false; // Prevent unnecessary updates
           });
         }
-        
-        object.castShadow = true;
-        object.receiveShadow = true;
-        object.renderOrder = 0;
       }
-      
-      // Apply to all children recursively
-      object.children.forEach(child => applyOptimizationRecursive(child));
+    });
 
-      object.updateMatrixWorld(true);
-    };
-
-    applyOptimizationRecursive(model);
-    model.updateMatrixWorld(true);
     return model;
   }, [treeModel]);
 
-  // ENHANCED: Proper ground connection with mountain slope calculation
+  // OPTIMIZED: Simplified ground connection
   const groundHeight = getMountainSlopeHeight(position[0], position[2]);
-  const adjustedY = groundHeight + TREE_Y_OFFSETS[treeType] - 1.8; // Offset for proper grounding
+  const adjustedY = groundHeight + TREE_Y_OFFSETS[treeType] - 1.8;
 
   const adjustedPosition: [number, number, number] = [
     position[0],
@@ -186,11 +109,14 @@ const GLBTree: React.FC<{
     position[2]
   ];
 
-  useRegisterCollider(
-    `tree-${position[0]}-${position[2]}`,
-    new THREE.Vector3(...adjustedPosition),
-    scale
-  );
+  // OPTIMIZED: Conditional collider registration
+  if (Math.abs(position[0]) < 50) {
+    useRegisterCollider(
+      `tree-${position[0]}-${position[2]}`,
+      new THREE.Vector3(...adjustedPosition),
+      scale
+    );
+  }
 
   if (!optimizedModel) {
     return (
@@ -198,25 +124,15 @@ const GLBTree: React.FC<{
         position={adjustedPosition} 
         scale={[scale, scale, scale]} 
         rotation={[0, rotation, 0]}
-        frustumCulled={false}
-        matrixAutoUpdate={true}
-        renderOrder={1}
+        frustumCulled={true}
       >
-        <mesh position={[0, 0.5, 0]} castShadow receiveShadow frustumCulled={false}>
+        <mesh position={[0, 0.5, 0]} frustumCulled={true}>
           <cylinderGeometry args={[0.1, 0.15, 1]} />
-          <meshLambertMaterial 
-            color="#8B4513" 
-            side={THREE.DoubleSide} 
-            transparent={false}
-          />
+          <meshLambertMaterial color="#8B4513" />
         </mesh>
-        <mesh position={[0, 1.2, 0]} castShadow receiveShadow frustumCulled={false}>
-          <coneGeometry args={[0.6, 1.5, 8]} />
-          <meshLambertMaterial 
-            color={treeType === 'pine218' ? "#013220" : "#228B22"} 
-            side={THREE.DoubleSide} 
-            transparent={false}
-          />
+        <mesh position={[0, 1.2, 0]} frustumCulled={true}>
+          <coneGeometry args={[0.6, 1.5, 6]} />
+          <meshLambertMaterial color="#013220" />
         </mesh>
       </group>
     );
@@ -227,11 +143,9 @@ const GLBTree: React.FC<{
       position={adjustedPosition} 
       scale={[scale, scale, scale]} 
       rotation={[0, rotation, 0]}
-      frustumCulled={false}
-      matrixAutoUpdate={true}
-      renderOrder={1}
+      frustumCulled={true}
     >
-      <primitive object={optimizedModel} frustumCulled={false} />
+      <primitive object={optimizedModel} frustumCulled={true} />
     </group>
   );
 };
@@ -246,14 +160,13 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating properly grounded trees');
     const trees = [];
-    const minDistance = 3;
-    const maxAttempts = 60;
+    const minDistance = 4; // Increased for better performance
+    const maxAttempts = 20; // Reduced attempts
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      const treeCount = 8 + Math.floor(seededRandom(seed + 99) * 6);
+      const treeCount = 3 + Math.floor(seededRandom(seed + 99) * 2); // Reduced tree count
       const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {
@@ -264,10 +177,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
         while (!validPosition && attempts < maxAttempts) {
           const treeSeed = seed + i * 157 + chunk.x * 1000 + chunk.z * 100;
 
-          x = (seededRandom(treeSeed) - 0.5) * 300;
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
+          x = (seededRandom(treeSeed) - 0.5) * 200; // Reduced spread
+          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
           
-          // ENHANCED: Use proper mountain slope height for validation
           terrainHeight = getMountainSlopeHeight(x, z);
           
           if (!isValidTreePosition(x, z)) {
@@ -275,18 +187,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
             continue;
           }
           
-          // Prefer pine trees on mountain sides
-          const distanceFromCenter = Math.abs(x);
-          if (distanceFromCenter > 80) {
-            treeType = seededRandom(treeSeed + 2) < 0.8 ? 'pine218' : 'stylized';
-          } else {
-            treeType = getTreeType(treeSeed + 2);
-          }
-          
+          treeType = getTreeType(treeSeed + 2);
           scale = getTreeScale(treeType, treeSeed + 3);
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          
-          // ENHANCED: Calculate proper ground-connected Y position
           finalY = terrainHeight + TREE_Y_OFFSETS[treeType] - 1.8;
           
           validPosition = allPositions.every(pos => {
@@ -307,9 +210,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} properly grounded trees`);
     return trees;
-  }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
+  }, [chunks.map(c => c.id).join(','), chunkSize, realm]); // Simplified dependency
 
   if (realm !== 'fantasy' || treePositions.length === 0) {
     return null;
@@ -318,7 +220,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   return (
     <Suspense fallback={null}>
       <group>
-        {treePositions.map((tree, index) => (
+        {treePositions.slice(0, 100).map((tree, index) => ( // Limit to 100 trees max
           <GLBTree
             key={`tree-${index}`}
             position={[tree.x, tree.y, tree.z]}
@@ -335,5 +237,4 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 // Clear cache when component unmounts
 export const clearTreeModelCache = () => {
   TreeAssetManager.clearCache();
-  console.log('Tree model cache cleared');
 };
