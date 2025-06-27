@@ -187,7 +187,9 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return 'tier1';
   }, [upgradeLevel]);
 
-  const staffScale = staffTier === 'tier1' ? 0.6 : staffTier === 'tier2' ? 0.65 : 0.7;
+  // Base scale per staff tier, reduced by 25% for a smaller appearance
+  const staffScale =
+    (staffTier === 'tier1' ? 0.6 : staffTier === 'tier2' ? 0.65 : 0.7) * 0.75;
 
   // Slower base auto-fire rate so manual aiming feels more meaningful
   const autoFireRate = useMemo(() => {
@@ -244,19 +246,19 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
       // Optimized positioning for iPhone screen visibility:
-      // X: 0.3 (closer to center), Y: -0.2 (slightly down), Z: 0.4 (closer to camera)
+      // X: -0.3 (flip to left side), Y: -0.2 (slightly down), Z: 0.4 (closer to camera)
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.3))     // X = 0.3 (more centered)
+        .add(cameraRight.clone().multiplyScalar(-0.3))    // X = -0.3 (left side)
         .add(cameraUp.clone().multiplyScalar(-0.2))        // Y = -0.2 (slightly down)
         .add(cameraForward.clone().multiplyScalar(0.4));   // Z = 0.4 (closer for visibility)
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Optimized rotation for better visibility:
-      // Y: -15° (less angle), Z: 20° (less tilt)
+      // Optimized rotation for better visibility on the left side:
+      // Y: 15° (mirrored angle), Z: -20° (mirrored tilt)
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Y = -15° (less angle)
-      weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20° (less tilt)
+      weaponGroupRef.current.rotateY(15 * Math.PI / 180);  // Y = 15° (mirrored)
+      weaponGroupRef.current.rotateZ(-20 * Math.PI / 180); // Z = -20° (mirrored)
 
       const tipOffset = new THREE.Vector3(0, 1.2 * staffScale, 0);
       tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
