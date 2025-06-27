@@ -8,7 +8,7 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { LeechEnemy } from './LeechEnemy';
-import { StaffWeaponSystem } from './StaffWeaponSystem';
+import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -188,8 +188,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           )
         )}
 
-        <StaffWeaponSystem
-          damage={weaponDamage}
+        <MagicStaffWeaponSystem
+          upgradeLevel={maxUnlockedUpgrade}
+          visible={true}
           enemyPositions={aliveLeechPositions}
           onHitEnemy={(index, damage) => {
             const aliveLeech = leeches.filter(leech => leech.alive)[index];
@@ -197,7 +198,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
               handleLeechHit(aliveLeech.id, damage);
             }
           }}
-          upgrades={maxUnlockedUpgrade}
+          damage={weaponDamage}
         />
 
         <ChunkSystem
