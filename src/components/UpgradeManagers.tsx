@@ -1,5 +1,4 @@
-
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { GameState, fantasyBuildings, scifiBuildings } from './GameStateManager';
 
@@ -157,6 +156,9 @@ export const useUpgradeManagers = ({
   currentRealm,
   crossRealmUpgradesWithLevels
 }: UpgradeManagersProps) => {
+  // Add purchase cooldown to prevent multiple purchases
+  const purchaseCooldown = useRef<{ [key: string]: number }>({});
+
   // Combat upgrades with current levels
   const combatUpgrades = useMemo(() => {
     return defaultCombatUpgrades.map(upgrade => ({
@@ -221,6 +223,17 @@ export const useUpgradeManagers = ({
   }, [gameState.scifiWeaponUpgrades]);
 
   const buyBuilding = useCallback((buildingId: string, isFantasy: boolean) => {
+    // Add cooldown check to prevent multiple purchases
+    const now = Date.now();
+    const cooldownKey = `building_${buildingId}`;
+    
+    if (purchaseCooldown.current[cooldownKey] && now - purchaseCooldown.current[cooldownKey] < 500) {
+      console.log('Purchase blocked - cooldown active');
+      return;
+    }
+    
+    purchaseCooldown.current[cooldownKey] = now;
+
     const buildings = isFantasy ? fantasyBuildings : scifiBuildings;
     const building = buildings.find(b => b.id === buildingId);
     if (!building) return;
@@ -278,6 +291,17 @@ export const useUpgradeManagers = ({
   }, [gameState, setGameState]);
 
   const purchaseUpgrade = useCallback((upgradeId: string) => {
+    // Add cooldown check to prevent multiple purchases
+    const now = Date.now();
+    const cooldownKey = `upgrade_${upgradeId}`;
+    
+    if (purchaseCooldown.current[cooldownKey] && now - purchaseCooldown.current[cooldownKey] < 500) {
+      console.log('Upgrade purchase blocked - cooldown active');
+      return;
+    }
+    
+    purchaseCooldown.current[cooldownKey] = now;
+
     const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
     if (!upgrade || gameState.nexusShards < upgrade.cost) return;
 
@@ -294,6 +318,17 @@ export const useUpgradeManagers = ({
   }, [gameState.nexusShards, setGameState]);
 
   const purchaseCombatUpgrade = useCallback((upgradeId: string) => {
+    // Add cooldown check to prevent multiple purchases
+    const now = Date.now();
+    const cooldownKey = `combat_${upgradeId}`;
+    
+    if (purchaseCooldown.current[cooldownKey] && now - purchaseCooldown.current[cooldownKey] < 500) {
+      console.log('Combat upgrade purchase blocked - cooldown active');
+      return;
+    }
+    
+    purchaseCooldown.current[cooldownKey] = now;
+
     const upgrade = combatUpgrades.find(u => u.id === upgradeId);
     if (!upgrade) return;
 
@@ -311,6 +346,17 @@ export const useUpgradeManagers = ({
   }, [gameState.mana, combatUpgrades, setGameState]);
 
   const purchaseWeaponUpgrade = useCallback((upgradeId: string) => {
+    // Add cooldown check to prevent multiple purchases
+    const now = Date.now();
+    const cooldownKey = `weapon_${upgradeId}`;
+    
+    if (purchaseCooldown.current[cooldownKey] && now - purchaseCooldown.current[cooldownKey] < 500) {
+      console.log('Weapon upgrade purchase blocked - cooldown active');
+      return;
+    }
+    
+    purchaseCooldown.current[cooldownKey] = now;
+
     const upgrade = weaponUpgrades.find(u => u.id === upgradeId);
     if (!upgrade) return;
 
@@ -329,6 +375,17 @@ export const useUpgradeManagers = ({
   }, [gameState.mana, weaponUpgrades, setGameState]);
 
   const purchaseScifiWeaponUpgrade = useCallback((upgradeId: string) => {
+    // Add cooldown check to prevent multiple purchases
+    const now = Date.now();
+    const cooldownKey = `scifi_${upgradeId}`;
+    
+    if (purchaseCooldown.current[cooldownKey] && now - purchaseCooldown.current[cooldownKey] < 500) {
+      console.log('Scifi weapon upgrade purchase blocked - cooldown active');
+      return;
+    }
+    
+    purchaseCooldown.current[cooldownKey] = now;
+
     const upgrade = scifiWeaponUpgrades.find(u => u.id === upgradeId);
     if (!upgrade) return;
 
@@ -347,6 +404,17 @@ export const useUpgradeManagers = ({
   }, [gameState.energyCredits, scifiWeaponUpgrades, setGameState]);
 
   const purchaseCrossRealmUpgrade = useCallback((upgradeId: string) => {
+    // Add cooldown check to prevent multiple purchases
+    const now = Date.now();
+    const cooldownKey = `cross_${upgradeId}`;
+    
+    if (purchaseCooldown.current[cooldownKey] && now - purchaseCooldown.current[cooldownKey] < 500) {
+      console.log('Cross-realm upgrade purchase blocked - cooldown active');
+      return;
+    }
+    
+    purchaseCooldown.current[cooldownKey] = now;
+
     const upgrade = crossRealmUpgradesWithLevels.find(u => u.id === upgradeId);
     if (!upgrade) return;
 

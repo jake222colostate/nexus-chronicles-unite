@@ -27,10 +27,6 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
   const frameCount = useRef(0);
   
-  // Smooth position interpolation for less glitchy movement
-  const targetPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
-  const currentPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
-  
   // Load staff model with proper path and error handling
   let staffScene = null;
   try {
@@ -58,33 +54,16 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
 
     if (!staffGroupRef.current || !camera) return;
 
-    // FIXED: Lowered staff position and smoother positioning
-    const staffOffset = new THREE.Vector3(0.6, -0.8, -1.8); // Y lowered from -0.5 to -0.8
-    targetPositionRef.current.copy(camera.position).add(staffOffset);
+    // FIXED: Rigid attachment instead of following - no interpolation
+    const staffOffset = new THREE.Vector3(0.6, -0.8, -1.8);
+    staffGroupRef.current.position.copy(camera.position).add(staffOffset);
     
-    // FIXED: Smooth interpolation to reduce glitchy movement
-    currentPositionRef.current.lerp(targetPositionRef.current, 0.1);
-    staffGroupRef.current.position.copy(currentPositionRef.current);
-    
-    // FIXED: Smoother rotation with less dramatic changes
-    const targetRotation = camera.rotation.clone();
-    staffGroupRef.current.rotation.x = THREE.MathUtils.lerp(
-      staffGroupRef.current.rotation.x, 
-      targetRotation.x - 0.05, 
-      0.1
-    );
-    staffGroupRef.current.rotation.y = THREE.MathUtils.lerp(
-      staffGroupRef.current.rotation.y, 
-      targetRotation.y - 0.15, 
-      0.1
-    );
-    staffGroupRef.current.rotation.z = THREE.MathUtils.lerp(
-      staffGroupRef.current.rotation.z, 
-      targetRotation.z, 
-      0.1
-    );
+    // FIXED: Direct rotation copy for rigid attachment
+    staffGroupRef.current.rotation.copy(camera.rotation);
+    staffGroupRef.current.rotation.x -= 0.05; // Slight downward angle
+    staffGroupRef.current.rotation.y -= 0.15; // Slight right angle
 
-    // Update staff tip position for projectiles with smooth movement
+    // Update staff tip position for projectiles with direct positioning
     const staffTipOffset = new THREE.Vector3(0, 1.2, 0);
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
   });
