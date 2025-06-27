@@ -55,10 +55,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     return cameraPosition;
   }, [cameraPosition.x, cameraPosition.y, cameraPosition.z]); // Only update on actual position changes
 
-  // PERFORMANCE FIX: Reduced leech spawning frequency and count
+  // Enemies spawn slightly faster to keep the action flowing
   useEffect(() => {
     const playerProgress = Math.abs(safeCameraPosition.z);
-    const desiredLeechCount = Math.min(Math.floor(playerProgress / 50) + 1, 3); // Reduced from 8 to 3
+    const desiredLeechCount = Math.min(Math.floor(playerProgress / 40) + 2, 4);
     
     setLeeches(currentLeeches => {
       const aliveLeeches = currentLeeches.filter(leech => leech.alive);
@@ -68,7 +68,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         const newLeeches: LeechData[] = [];
         
         for (let i = 0; i < neededLeeches; i++) {
-          const spawnDistance = playerProgress + 100 + (i * 40); // Increased spacing
+          const spawnDistance = playerProgress + 80 + (i * 30);
           const spawnX = (Math.random() - 0.5) * 15; // Reduced spawn width
           const spawnPosition = new Vector3(spawnX, 0, -spawnDistance);
           
