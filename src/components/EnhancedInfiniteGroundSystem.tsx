@@ -26,43 +26,26 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
     const tiles = [];
     const tileSize = chunkSize;
     
-    // Much more aggressive ground coverage to prevent any gaps
+    // PERFORMANCE FIX: Much less aggressive ground coverage
     const playerZ = playerPosition.z;
-    const startZ = Math.floor((playerZ - 500) / tileSize) * tileSize;
-    const endZ = Math.floor((playerZ + 800) / tileSize) * tileSize;
+    const startZ = Math.floor((playerZ - 150) / tileSize) * tileSize; // Reduced from 500
+    const endZ = Math.floor((playerZ + 200) / tileSize) * tileSize; // Reduced from 800
     
-    // Generate seamless ground tiles with massive overlap
+    // PERFORMANCE FIX: Single ground layer only
     for (let z = startZ; z <= endZ; z += tileSize) {
-      // MULTIPLE ground layers for guaranteed coverage
-      for (let layer = 0; layer < 3; layer++) {
-        const layerY = -1.8 - (layer * 0.1); // Stacked layers
-        
-        // Main ground plane with massive overlap
-        tiles.push({
-          key: `infinite_ground_main_${z}_layer_${layer}`,
-          position: [0, layerY, z] as [number, number, number],
-          size: tileSize + 20, // Massive overlap
-          type: 'main',
-          layer
-        });
-        
-        // Side ground extensions with overlap
-        [-2, -1, 1, 2].forEach(side => {
-          tiles.push({
-            key: `infinite_ground_side_${side}_${z}_layer_${layer}`,
-            position: [side * (tileSize + 5), layerY, z] as [number, number, number],
-            size: tileSize + 10,
-            type: 'side',
-            layer
-          });
-        });
-      }
+      // Main ground plane - no overlap
+      tiles.push({
+        key: `infinite_ground_main_${z}`,
+        position: [0, -1.8, z] as [number, number, number],
+        size: tileSize,
+        type: 'main'
+      });
     }
     
-    console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} layered ground tiles for seamless coverage`);
+    console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} optimized ground tiles`);
     return tiles;
   }, [
-    Math.floor(playerPosition.z / 10) * 10,
+    Math.floor(playerPosition.z / 25) * 25, // Reduced frequency
     chunkSize
   ]);
 
@@ -74,49 +57,31 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
           position={tile.position}
           rotation={[-Math.PI / 2, 0, 0]}
           receiveShadow
-          frustumCulled={false}
-          matrixAutoUpdate={true}
-          renderOrder={-tile.layer}
+          frustumCulled={true} // Re-enabled frustum culling for performance
         >
-          <planeGeometry args={[tile.size, tile.size, 1, 1]} />
+          <planeGeometry args={[tile.size, tile.size]} />
           <meshStandardMaterial
-            color={tile.type === 'main' ? "#2d4a2d" : "#1a3a1b"}
+            color="#2d4a2d"
             roughness={0.9}
             metalness={0.1}
-            side={THREE.DoubleSide}
-            transparent={false}
-            opacity={1.0}
-            depthTest={true}
-            depthWrite={tile.layer === 0}
-            depthFunc={THREE.LessEqualDepth}
           />
         </mesh>
       ))}
       
-      {/* Multiple massive base layers for absolute ground guarantee */}
-      {Array.from({ length: 5 }, (_, i) => (
-        <mesh 
-          key={`mega_base_${i}`}
-          position={[0, -2.5 - (i * 0.2), playerPosition.z]} 
-          rotation={[-Math.PI / 2, 0, 0]} 
-          receiveShadow
-          frustumCulled={false}
-          matrixAutoUpdate={true}
-          renderOrder={-10 - i}
-        >
-          <planeGeometry args={[2000 + (i * 200), 2000 + (i * 200)]} />
-          <meshStandardMaterial 
-            color={i === 0 ? "#1a2a1b" : "#0f1f0c"}
-            roughness={1.0}
-            metalness={0.0}
-            side={THREE.DoubleSide}
-            transparent={false}
-            opacity={1.0}
-            depthTest={true}
-            depthWrite={i === 0}
-          />
-        </mesh>
-      ))}
+      {/* Single base layer only */}
+      <mesh 
+        position={[0, -2.5, playerPosition.z]} 
+        rotation={[-Math.PI / 2, 0, 0]} 
+        receiveShadow
+        frustumCulled={true}
+      >
+        <planeGeometry args={[500, 500]} />
+        <meshStandardMaterial 
+          color="#1a2a1b"
+          roughness={1.0}
+          metalness={0.0}
+        />
+      </mesh>
     </group>
   );
 };

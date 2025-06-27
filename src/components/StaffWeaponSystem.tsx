@@ -25,6 +25,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   const staffGroupRef = useRef<THREE.Group>(null);
   const staffTipPositionRef = useRef<THREE.Vector3>(new THREE.Vector3());
   const projectileSystemRef = useRef<OptimizedProjectileSystemHandle>(null);
+  const frameCount = useRef(0);
   
   // Load staff model with proper path and error handling
   let staffScene = null;
@@ -47,94 +48,59 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   }, []);
 
   useFrame((state, delta) => {
+    // PERFORMANCE FIX: Only update every 3rd frame
+    frameCount.current++;
+    if (frameCount.current % 3 !== 0) return;
+
     if (!staffGroupRef.current || !camera) return;
 
-    // Position staff MUCH farther away and to the side - very visible
-    const staffOffset = new THREE.Vector3(3.0, -1.5, -6.0); // Much further right, lower, and much farther away
-    
-    // Get camera vectors for positioning
-    const cameraRight = new THREE.Vector3();
-    const cameraUp = new THREE.Vector3();
-    const cameraForward = new THREE.Vector3();
-    
-    camera.getWorldDirection(cameraForward);
-    cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
-    cameraUp.crossVectors(cameraForward, cameraRight).normalize();
-    
-    // Calculate world position relative to camera
-    const worldOffset = new THREE.Vector3()
-      .addScaledVector(cameraRight, staffOffset.x)
-      .addScaledVector(cameraUp, staffOffset.y)
-      .addScaledVector(cameraForward, -staffOffset.z);
-    
-    const worldPosition = camera.position.clone().add(worldOffset);
+    // Position staff - simplified calculation
+    const staffOffset = new THREE.Vector3(2.0, -1.0, -4.0);
+    const worldPosition = camera.position.clone().add(staffOffset);
     staffGroupRef.current.position.copy(worldPosition);
     
-    // Rotate staff to point forward like being held
+    // Simplified rotation
     staffGroupRef.current.rotation.copy(camera.rotation);
-    staffGroupRef.current.rotateY(-0.5); // More angle towards center
-    staffGroupRef.current.rotateX(-0.2); // More downward angle
-    staffGroupRef.current.rotateZ(0.2); // More tilt like being held
+    staffGroupRef.current.rotateY(-0.3);
+    staffGroupRef.current.rotateX(-0.1);
 
-    // Update staff tip position for projectile system (at the top of the staff)
-    const staffTipOffset = new THREE.Vector3(0, 2.0, 0); // Even higher up the staff
-    staffTipOffset.applyQuaternion(staffGroupRef.current.quaternion);
+    // Update staff tip position (simplified)
+    const staffTipOffset = new THREE.Vector3(0, 1.5, 0);
     staffTipPositionRef.current.copy(staffGroupRef.current.position).add(staffTipOffset);
-    
-    // Debug log to see staff position
-    console.log('Staff position:', staffGroupRef.current.position);
-    console.log('Staff tip position:', staffTipPositionRef.current);
   });
 
-  // Create fallback staff if model fails to load - much bigger and brighter
+  // Simplified fallback staff
   const createFallbackStaff = () => (
     <group>
-      {/* Staff handle - much bigger */}
       <mesh position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.12, 0.15, 4, 8]} />
+        <cylinderGeometry args={[0.08, 0.1, 2, 6]} />
         <meshStandardMaterial color="#8B4513" />
       </mesh>
-      {/* Staff crystal - much bigger and brighter */}
-      <mesh position={[0, 2.2, 0]}>
-        <sphereGeometry args={[0.4, 12, 8]} />
+      <mesh position={[0, 1.5, 0]}>
+        <sphereGeometry args={[0.2, 8, 6]} />
         <meshStandardMaterial 
           color="#4B0082" 
           emissive="#4B0082" 
-          emissiveIntensity={1.2} 
+          emissiveIntensity={0.5} 
         />
       </mesh>
-      {/* Glow around crystal - much more visible */}
-      <mesh position={[0, 2.2, 0]}>
-        <sphereGeometry args={[0.5, 12, 8]} />
-        <meshBasicMaterial 
-          color="#4B0082" 
-          transparent
-          opacity={0.6}
-        />
-      </mesh>
-      {/* Additional bright light source */}
-      <pointLight position={[0, 2.2, 0]} color="#4B0082" intensity={2} distance={10} />
     </group>
   );
 
   return (
     <group>
-      {/* Staff model - much bigger and with lighting */}
       <group ref={staffGroupRef}>
         {staffScene ? (
           <primitive 
             object={staffScene.clone()} 
-            scale={[2.0, 2.0, 2.0]} // Much bigger and more visible
+            scale={[1.0, 1.0, 1.0]}
             rotation={[0, Math.PI, 0]}
           />
         ) : (
           createFallbackStaff()
         )}
-        {/* Add a bright light at the staff position to make it more visible */}
-        <pointLight position={[0, 1, 0]} color="#ffffff" intensity={1} distance={5} />
       </group>
 
-      {/* Optimized projectile system */}
       <OptimizedProjectileSystem
         ref={projectileSystemRef}
         staffTipPosition={staffTipPositionRef.current}
@@ -147,7 +113,6 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   );
 };
 
-// Preload with correct path
 try {
   useGLTF.preload('staffs/staff_4.glb');
 } catch (error) {

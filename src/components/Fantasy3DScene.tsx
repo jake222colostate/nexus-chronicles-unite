@@ -1,4 +1,3 @@
-
 import React, { Suspense, useMemo, useState, useEffect } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
@@ -47,18 +46,18 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   const [leeches, setLeeches] = useState<LeechData[]>([]);
   const [nextLeechId, setNextLeechId] = useState(0);
 
-  // FIXED: Simplified camera position validation - don't be too aggressive
+  // PERFORMANCE FIX: Simplified camera position validation
   const safeCameraPosition = useMemo(() => {
     if (!cameraPosition || isNaN(cameraPosition.x) || isNaN(cameraPosition.y) || isNaN(cameraPosition.z)) {
       return new Vector3(0, 2, 20);
     }
     return cameraPosition;
-  }, [cameraPosition]);
+  }, [cameraPosition.x, cameraPosition.y, cameraPosition.z]); // Only update on actual position changes
 
-  // Spawn leeches based on player progress
+  // PERFORMANCE FIX: Reduced leech spawning frequency and count
   useEffect(() => {
     const playerProgress = Math.abs(safeCameraPosition.z);
-    const desiredLeechCount = Math.min(Math.floor(playerProgress / 30) + 1, 8);
+    const desiredLeechCount = Math.min(Math.floor(playerProgress / 50) + 1, 3); // Reduced from 8 to 3
     
     setLeeches(currentLeeches => {
       const aliveLeeches = currentLeeches.filter(leech => leech.alive);
@@ -68,8 +67,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         const newLeeches: LeechData[] = [];
         
         for (let i = 0; i < neededLeeches; i++) {
-          const spawnDistance = playerProgress + 80 + (i * 25);
-          const spawnX = (Math.random() - 0.5) * 20;
+          const spawnDistance = playerProgress + 100 + (i * 40); // Increased spacing
+          const spawnX = (Math.random() - 0.5) * 15; // Reduced spawn width
           const spawnPosition = new Vector3(spawnX, 0, -spawnDistance);
           
           newLeeches.push({
@@ -87,7 +86,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       
       return currentLeeches;
     });
-  }, [Math.floor(Math.abs(safeCameraPosition.z) / 30), nextLeechId]);
+  }, [Math.floor(Math.abs(safeCameraPosition.z) / 50), nextLeechId]); // Reduced frequency
 
   // Update enemy count for UI
   useEffect(() => {
@@ -139,15 +138,15 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     );
   };
 
-  // FIXED: Simplified leech position filtering
+  // PERFORMANCE FIX: Simplified leech position filtering
   const aliveLeechPositions = useMemo(() => 
     leeches
       .filter(leech => leech.alive && leech.position)
       .map(leech => leech.position),
-    [leeches]
+    [leeches.length] // Only update when count changes, not positions
   );
 
-  // FIXED: Simplified position change handler
+  // PERFORMANCE FIX: Simplified position change handler
   const handlePositionChange = (position: Vector3) => {
     if (onPositionChange && position) {
       onPositionChange(position);
@@ -167,15 +166,17 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         <CasualFog />
 
+        {/* Simplified ground plane */}
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-          <planeGeometry args={[300, 300]} />
+          <planeGeometry args={[100, 100]} />
           <meshStandardMaterial color="#2d4a2d" />
         </mesh>
 
-        <ambientLight intensity={0.6} />
+        <ambientLight intensity={0.4} />
         <Sun position={[10, 20, 5]} />
 
-        {leeches.map(leech => 
+        {/* Render fewer leeches */}
+        {leeches.slice(0, 3).map(leech => 
           leech.alive && leech.spawnPosition && (
             <LeechEnemy
               key={leech.id}
@@ -203,7 +204,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         <ChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={renderDistance}
+          renderDistance={Math.min(renderDistance, 100)} // Reduced render distance
         >
           {(chunks: ChunkData[]) => (
             <OptimizedFantasyEnvironment
@@ -215,12 +216,13 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           )}
         </ChunkSystem>
 
+        {/* Simplified contact shadows */}
         <ContactShadows 
           position={[0, -1.4, safeCameraPosition.z]} 
-          opacity={0.05}
-          scale={15}
-          blur={2} 
-          far={4}
+          opacity={0.02}
+          scale={8}
+          blur={1} 
+          far={2}
         />
       </Suspense>
     </CollisionProvider>
