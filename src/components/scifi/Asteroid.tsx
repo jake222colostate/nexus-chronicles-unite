@@ -32,22 +32,22 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     return 'polygon';
   }, []);
   
-  // Create size categories with guaranteed visibility
+  // Create balanced size categories
   const sizeCategory = useMemo(() => {
     const rand = Math.random();
-    if (rand < 0.25) return 'small';
-    if (rand < 0.5) return 'medium';
-    if (rand < 0.8) return 'large';
+    if (rand < 0.4) return 'small';
+    if (rand < 0.7) return 'medium';
+    if (rand < 0.9) return 'large';
     return 'extra-large';
   }, []);
 
-  // Adjusted size multipliers - reduced extra-large and ensured minimum visibility
+  // Much smaller, more reasonable size multipliers
   const randomScale = useMemo(() => {
     const sizeMultipliers = {
-      'small': 0.02 + Math.random() * 0.015,      // 0.02-0.035 (guaranteed visible)
-      'medium': 0.035 + Math.random() * 0.020,    // 0.035-0.055 (more visible)
-      'large': 0.055 + Math.random() * 0.025,     // 0.055-0.080 (clearly visible)
-      'extra-large': 0.055 + Math.random() * 0.025 // 0.055-0.080 (reduced from previous)
+      'small': 0.008 + Math.random() * 0.004,      // 0.008-0.012 (very small but visible)
+      'medium': 0.012 + Math.random() * 0.006,     // 0.012-0.018 (small-medium)
+      'large': 0.018 + Math.random() * 0.008,      // 0.018-0.026 (medium-large)
+      'extra-large': 0.022 + Math.random() * 0.008 // 0.022-0.030 (large but not huge)
     };
     return sizeMultipliers[sizeCategory];
   }, [sizeCategory]);
@@ -78,12 +78,12 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     }
   });
 
-  // Create polygon meteor shape with guaranteed visibility
+  // Create polygon meteor shape with reasonable scaling
   const renderPolygonMeteor = () => {
-    // Consistent polygon scale that ensures visibility
-    const polygonScale = randomScale * (sizeCategory === 'small' ? 80 : 
-                                       sizeCategory === 'medium' ? 100 : 
-                                       sizeCategory === 'large' ? 120 : 120); // Same as large for extra-large
+    // Much more reasonable polygon scale multipliers
+    const polygonScale = randomScale * (sizeCategory === 'small' ? 40 : 
+                                       sizeCategory === 'medium' ? 50 : 
+                                       sizeCategory === 'large' ? 60 : 70);
     return (
       <mesh scale={polygonScale}>
         <dodecahedronGeometry args={[1, 0]} />
