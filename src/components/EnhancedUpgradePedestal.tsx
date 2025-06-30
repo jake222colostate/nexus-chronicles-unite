@@ -23,6 +23,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   onInteract,
   tier
 }) => {
+  const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<Mesh>(null);
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
@@ -70,7 +71,31 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   const pedestalConfig = getPedestalTier();
 
   return (
-    <group position={position}>
+    <group 
+      ref={groupRef}
+      position={position}
+      onClick={(e) => {
+        e.stopPropagation();
+        console.log('Pedestal clicked:', upgrade.name);
+        onInteract();
+      }}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setHovered(true);
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        setHovered(false);
+        document.body.style.cursor = 'auto';
+      }}
+    >
+      {/* Invisible clickable area - covers entire pedestal */}
+      <mesh position={[0, 1, 0]}>
+        <cylinderGeometry args={[2, 2, 4, 8]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
       {/* Pedestal base */}
       <mesh position={[0, 0, 0]} receiveShadow>
         <cylinderGeometry args={[1.2, 1.5, pedestalConfig.height, 8]} />
@@ -101,9 +126,6 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
       <mesh
         ref={meshRef}
         position={[0, 1, 0]}
-        onClick={onInteract}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
         scale={hovered ? 1.1 : 1}
         castShadow
       >
