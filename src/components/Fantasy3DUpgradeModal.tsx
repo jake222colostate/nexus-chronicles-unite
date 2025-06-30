@@ -8,7 +8,7 @@ interface Fantasy3DUpgradeModalProps {
   upgradeData: {
     cost: number;
     manaPerSecond: number;
-    unlocked: boolean;
+    purchased: boolean;
   };
 }
 
@@ -56,10 +56,10 @@ export const Fantasy3DUpgradeModal: React.FC<Fantasy3DUpgradeModalProps> = ({
           
           <button
             onClick={onPurchase}
-            disabled={upgradeData.unlocked}
+            disabled={upgradeData.purchased}
             className="flex-1 px-3 py-2 bg-purple-600/80 hover:bg-purple-500/80 disabled:bg-gray-600/50 disabled:cursor-not-allowed rounded-lg transition-colors min-h-[36px] text-xs"
           >
-            {upgradeData.unlocked ? 'Owned' : 'Purchase'}
+            {upgradeData.purchased ? 'Owned' : 'Purchase'}
           </button>
         </div>
       </div>
