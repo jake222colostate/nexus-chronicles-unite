@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -187,9 +186,9 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return 'tier1';
   }, [upgradeLevel]);
 
-  // Enhanced scale for better visibility on iPhone
+  // Base scale per staff tier, reduced by 25% for a smaller appearance
   const staffScale =
-    (staffTier === 'tier1' ? 0.8 : staffTier === 'tier2' ? 0.85 : 0.9) * 0.9; // Increased by 20%
+    (staffTier === 'tier1' ? 0.6 : staffTier === 'tier2' ? 0.65 : 0.7) * 0.75;
 
   // Slower base auto-fire rate so manual aiming feels more meaningful
   const autoFireRate = useMemo(() => {
@@ -233,7 +232,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   }, [gl.domElement]);
 
-  // Enhanced right-side positioning for better iPhone visibility
+  // First-person weapon positioning - FLIPPED to right side
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && staffModel) {
       // Get camera vectors for positioning
@@ -245,20 +244,20 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Enhanced positioning for iPhone screen - right side with better visibility:
-      // X: 0.4 (further right), Y: -0.15 (slightly less down), Z: 0.3 (closer)
+      // FLIPPED positioning - now on the right side:
+      // X: 0.3 (right side), Y: -0.2 (slightly down), Z: 0.4 (closer to camera)
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.4))     // X = 0.4 (further right)
-        .add(cameraUp.clone().multiplyScalar(-0.15))       // Y = -0.15 (less down)
-        .add(cameraForward.clone().multiplyScalar(0.3));   // Z = 0.3 (closer)
+        .add(cameraRight.clone().multiplyScalar(0.3))     // X = 0.3 (right side)
+        .add(cameraUp.clone().multiplyScalar(-0.2))        // Y = -0.2 (slightly down)
+        .add(cameraForward.clone().multiplyScalar(0.4));   // Z = 0.4 (closer for visibility)
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Enhanced rotation for right side visibility:
-      // Y: -10° (less angle), Z: 15° (less tilt)
+      // FLIPPED rotation for right side:
+      // Y: -15° (mirrored angle for right side), Z: 20° (mirrored tilt)
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-10 * Math.PI / 180); // Y = -10° (less angle)
-      weaponGroupRef.current.rotateZ(15 * Math.PI / 180);  // Z = 15° (less tilt)
+      weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Y = -15° (mirrored for right)
+      weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20° (mirrored tilt)
 
       const tipOffset = new THREE.Vector3(0, 1.2 * staffScale, 0);
       tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
@@ -277,8 +276,8 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
         object={staffModel}
         scale={[staffScale, staffScale, staffScale]}
       />
-      {/* Enhanced light for better visibility */}
-      <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.8} distance={4} />
+      {/* Add a subtle light to make the staff more visible */}
+      <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.5} distance={3} />
       <OptimizedProjectileSystem
         ref={projectileSystemRef}
         staffTipPosition={staffTipPositionRef.current}

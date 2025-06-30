@@ -2,7 +2,6 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3 } from 'three';
-import * as THREE from 'three';
 import { useRegisterCollider } from '@/lib/CollisionContext';
 
 interface EnhancedUpgradePedestalProps {
@@ -24,7 +23,6 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   onInteract,
   tier
 }) => {
-  const groupRef = useRef<THREE.Group>(null);
   const meshRef = useRef<Mesh>(null);
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
@@ -72,31 +70,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   const pedestalConfig = getPedestalTier();
 
   return (
-    <group 
-      ref={groupRef}
-      position={position}
-      onClick={(e) => {
-        e.stopPropagation();
-        console.log('Pedestal clicked:', upgrade.name);
-        onInteract();
-      }}
-      onPointerOver={(e) => {
-        e.stopPropagation();
-        setHovered(true);
-        document.body.style.cursor = 'pointer';
-      }}
-      onPointerOut={(e) => {
-        e.stopPropagation();
-        setHovered(false);
-        document.body.style.cursor = 'auto';
-      }}
-    >
-      {/* Enhanced invisible clickable area - larger and positioned better */}
-      <mesh position={[0, 1.2, 0]}>
-        <cylinderGeometry args={[2.5, 2.5, 4.5, 8]} />
-        <meshBasicMaterial transparent opacity={0} />
-      </mesh>
-
+    <group position={position}>
       {/* Pedestal base */}
       <mesh position={[0, 0, 0]} receiveShadow>
         <cylinderGeometry args={[1.2, 1.5, pedestalConfig.height, 8]} />
@@ -127,6 +101,9 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
       <mesh
         ref={meshRef}
         position={[0, 1, 0]}
+        onClick={onInteract}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
         scale={hovered ? 1.1 : 1}
         castShadow
       >
