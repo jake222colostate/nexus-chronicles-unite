@@ -2,6 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3 } from 'three';
+import * as THREE from 'three';
 import { useRegisterCollider } from '@/lib/CollisionContext';
 
 interface EnhancedUpgradePedestalProps {
