@@ -2,6 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3 } from 'three';
+import * as THREE from 'three';
 import { useRegisterCollider } from '@/lib/CollisionContext';
 
 interface EnhancedUpgradePedestalProps {
@@ -90,9 +91,9 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         document.body.style.cursor = 'auto';
       }}
     >
-      {/* Invisible clickable area - covers entire pedestal */}
-      <mesh position={[0, 1, 0]}>
-        <cylinderGeometry args={[2, 2, 4, 8]} />
+      {/* Enhanced invisible clickable area - larger and positioned better */}
+      <mesh position={[0, 1.2, 0]}>
+        <cylinderGeometry args={[2.5, 2.5, 4.5, 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
