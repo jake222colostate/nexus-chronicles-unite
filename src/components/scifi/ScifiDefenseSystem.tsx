@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Vector3, Group } from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { ScifiCannon } from './ScifiCannon';
 import { Asteroid } from './Asteroid';
+import { useCollisionContext } from '../../lib/CollisionContext';
 
 const UPGRADE_TARGETS = [
   new Vector3(0, 4, 0),
@@ -40,6 +42,7 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
   const fireIntervalRef = useRef<NodeJS.Timeout>();
   const cannonGroup = useRef<Group>(null);
   const { camera } = useThree();
+  const collisionContext = useCollisionContext();
 
   useEffect(() => {
     spawnIntervalRef.current = setInterval(() => {
@@ -155,13 +158,36 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
         .map(p => {
           const newPos = p.position.clone().add(p.direction.clone().multiplyScalar(p.speed));
           let hit = false;
-          for (const ast of asteroids) {
-            if (newPos.distanceTo(ast.position) < 0.7) {
-              handleAsteroidHit(ast.id, 1);
-              hit = true;
-              break;
+          
+          // Use collision context for accurate hit detection
+          if (collisionContext?.colliders.current) {
+            for (const [colliderId, collider] of collisionContext.colliders.current) {
+              if (colliderId.startsWith('asteroid-')) {
+                const distance = newPos.distanceTo(collider.position);
+                if (distance < collider.radius) {
+                  // Find the asteroid by position to get its ID
+                  const asteroid = asteroids.find(ast => 
+                    ast.position.distanceTo(collider.position) < 0.1
+                  );
+                  if (asteroid) {
+                    handleAsteroidHit(asteroid.id, 1);
+                    hit = true;
+                    break;
+                  }
+                }
+              }
+            }
+          } else {
+            // Fallback to simple distance check if collision context not available
+            for (const ast of asteroids) {
+              if (newPos.distanceTo(ast.position) < 0.7) {
+                handleAsteroidHit(ast.id, 1);
+                hit = true;
+                break;
+              }
             }
           }
+          
           if (hit || newPos.distanceTo(camera.position) > 50) return null;
           return { ...p, position: newPos } as Projectile;
         })

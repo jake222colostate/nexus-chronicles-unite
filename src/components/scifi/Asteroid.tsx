@@ -5,6 +5,7 @@ import { Vector3, Group } from 'three';
 import { Html, useFBX, useGLTF } from '@react-three/drei';
 import { Progress } from '../ui/progress';
 import { assetPath } from '../../lib/assetPath';
+import { useRegisterCollider } from '../../lib/CollisionContext';
 
 const MAX_HEALTH = 5;
 
@@ -26,6 +27,20 @@ export const Asteroid: React.FC<AsteroidProps> = ({
 
   const randomModel = useMemo(() => (Math.random() < 0.5 ? 'fbx' : 'glb'), []);
   const randomScale = useMemo(() => Math.random() * 0.004 + 0.002, []);
+  
+  // Calculate hitbox radius based on the scaled asteroid
+  const hitboxRadius = useMemo(() => {
+    // Base asteroid size is approximately 100 units, so scaled radius is:
+    const baseRadius = 50; // Approximate radius of the asteroid models
+    return baseRadius * randomScale;
+  }, [randomScale]);
+
+  // Register collider with proper size
+  useRegisterCollider(
+    `asteroid-${position.x}-${position.y}-${position.z}`,
+    position,
+    hitboxRadius
+  );
 
   useFrame(() => {
     if (group.current) {
