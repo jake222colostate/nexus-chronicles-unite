@@ -25,7 +25,13 @@ export const Asteroid: React.FC<AsteroidProps> = ({
   const fbx = useFBX(assetPath('assets/asteroid_01.fbx'));
   const { scene: glbScene } = useGLTF(assetPath('assets/asteroid_pack_01.glb'));
 
-  const randomModel = useMemo(() => (Math.random() < 0.5 ? 'fbx' : 'glb'), []);
+  const randomModel = useMemo(() => {
+    const rand = Math.random();
+    if (rand < 0.33) return 'fbx';
+    if (rand < 0.66) return 'glb';
+    return 'polygon';
+  }, []);
+  
   const randomScale = useMemo(() => Math.random() * 0.004 + 0.002, []);
   
   // Calculate hitbox radius based on the scaled asteroid
@@ -54,12 +60,28 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     }
   });
 
+  // Create polygon meteor shape
+  const renderPolygonMeteor = () => (
+    <mesh scale={randomScale * 25}>
+      <dodecahedronGeometry args={[1, 0]} />
+      <meshStandardMaterial 
+        color="#666666" 
+        roughness={0.8} 
+        metalness={0.2}
+        emissive="#331100"
+        emissiveIntensity={0.1}
+      />
+    </mesh>
+  );
+
   return (
     <group ref={group} position={position}>
-      <primitive
-        object={randomModel === 'fbx' ? fbx.clone() : glbScene.clone()}
-        scale={randomScale}
-      />
+      {randomModel === 'polygon' ? renderPolygonMeteor() : (
+        <primitive
+          object={randomModel === 'fbx' ? fbx.clone() : glbScene.clone()}
+          scale={randomScale}
+        />
+      )}
       <Html position={[0, 1, 0]} center style={{ pointerEvents: 'none' }} transform distanceFactor={8}>
         <div className="w-12">
           <Progress
