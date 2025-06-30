@@ -73,6 +73,9 @@ export const UpgradeModalManager: React.FC<UpgradeModalManagerProps> = ({
   const selectedScifiUpgradeData = selectedScifiUpgrade ? scifiUpgrades.find(u => u.id === selectedScifiUpgrade) : null;
   const selectedFantasyUpgradeData = selectedFantasyUpgrade ? fantasyUpgrades.find(u => u.id === selectedFantasyUpgrade) : null;
 
+  // Count fantasy upgrades for sci-fi unlock requirements
+  const fantasyUpgradeCount = fantasyUpgrades.filter(u => u.purchased).length;
+
   return (
     <>
       {/* Building Upgrade Modal */}
@@ -137,12 +140,13 @@ export const UpgradeModalManager: React.FC<UpgradeModalManagerProps> = ({
         <ScifiUpgradeMenu
           upgrade={selectedScifiUpgradeData}
           energyCredits={gameState.energyCredits}
+          fantasyUpgradeCount={fantasyUpgradeCount}
           onPurchase={onPurchaseScifiUpgrade}
           onClose={onCloseScifiUpgrade}
         />
       )}
 
-      {/* Fantasy Upgrade Modal */}
+      {/* Fantasy Upgrade Modal - Using same purple style as sci-fi */}
       {selectedFantasyUpgradeData && (
         <ScifiUpgradeMenu
           upgrade={{
@@ -150,6 +154,7 @@ export const UpgradeModalManager: React.FC<UpgradeModalManagerProps> = ({
             cost: selectedFantasyUpgradeData.cost
           }}
           energyCredits={gameState.mana}
+          fantasyUpgradeCount={fantasyUpgradeCount}
           onPurchase={onPurchaseFantasyUpgrade}
           onClose={onCloseFantasyUpgrade}
         />
