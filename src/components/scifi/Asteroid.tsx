@@ -32,22 +32,22 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     return 'polygon';
   }, []);
   
-  // Create size categories with much larger sizes for visibility
+  // Create size categories with guaranteed visibility
   const sizeCategory = useMemo(() => {
     const rand = Math.random();
-    if (rand < 0.3) return 'small';
-    if (rand < 0.6) return 'medium';
-    if (rand < 0.85) return 'large';
+    if (rand < 0.25) return 'small';
+    if (rand < 0.5) return 'medium';
+    if (rand < 0.8) return 'large';
     return 'extra-large';
   }, []);
 
-  // SIGNIFICANTLY increased all size multipliers for better visibility
+  // Adjusted size multipliers - reduced extra-large and ensured minimum visibility
   const randomScale = useMemo(() => {
     const sizeMultipliers = {
-      'small': 0.015 + Math.random() * 0.010,      // 0.015-0.025 (5x larger)
-      'medium': 0.025 + Math.random() * 0.015,     // 0.025-0.040 (4x larger)
-      'large': 0.045 + Math.random() * 0.020,      // 0.045-0.065 (3.5x larger)
-      'extra-large': 0.070 + Math.random() * 0.030 // 0.070-0.100 (3x larger)
+      'small': 0.02 + Math.random() * 0.015,      // 0.02-0.035 (guaranteed visible)
+      'medium': 0.035 + Math.random() * 0.020,    // 0.035-0.055 (more visible)
+      'large': 0.055 + Math.random() * 0.025,     // 0.055-0.080 (clearly visible)
+      'extra-large': 0.055 + Math.random() * 0.025 // 0.055-0.080 (reduced from previous)
     };
     return sizeMultipliers[sizeCategory];
   }, [sizeCategory]);
@@ -78,12 +78,12 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     }
   });
 
-  // Create polygon meteor shape with much larger scaling for visibility
+  // Create polygon meteor shape with guaranteed visibility
   const renderPolygonMeteor = () => {
-    // Increased polygon scale multipliers significantly
-    const polygonScale = randomScale * (sizeCategory === 'small' ? 60 : 
-                                       sizeCategory === 'medium' ? 80 : 
-                                       sizeCategory === 'large' ? 100 : 120);
+    // Consistent polygon scale that ensures visibility
+    const polygonScale = randomScale * (sizeCategory === 'small' ? 80 : 
+                                       sizeCategory === 'medium' ? 100 : 
+                                       sizeCategory === 'large' ? 120 : 120); // Same as large for extra-large
     return (
       <mesh scale={polygonScale}>
         <dodecahedronGeometry args={[1, 0]} />
@@ -92,20 +92,40 @@ export const Asteroid: React.FC<AsteroidProps> = ({
           roughness={0.8} 
           metalness={0.2}
           emissive="#331100"
-          emissiveIntensity={0.2}
+          emissiveIntensity={0.3}
         />
       </mesh>
     );
   };
 
+  // Enhanced fallback rendering to ensure model is always visible
+  const renderMeteorModel = () => {
+    try {
+      if (randomModel === 'polygon') {
+        return renderPolygonMeteor();
+      } else {
+        const model = randomModel === 'fbx' ? fbx : glbScene;
+        if (model) {
+          return (
+            <primitive
+              object={model.clone()}
+              scale={randomScale}
+            />
+          );
+        } else {
+          // Fallback to polygon if model fails to load
+          return renderPolygonMeteor();
+        }
+      }
+    } catch (error) {
+      console.warn('Asteroid model render error, using fallback:', error);
+      return renderPolygonMeteor();
+    }
+  };
+
   return (
     <group ref={group} position={position}>
-      {randomModel === 'polygon' ? renderPolygonMeteor() : (
-        <primitive
-          object={randomModel === 'fbx' ? fbx.clone() : glbScene.clone()}
-          scale={randomScale}
-        />
-      )}
+      {renderMeteorModel()}
       <Html position={[0, 1, 0]} center style={{ pointerEvents: 'none' }} transform distanceFactor={8}>
         <div className="w-12">
           <Progress
