@@ -41,13 +41,13 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     return 'extra-large';
   }, []);
 
-  // Much smaller, more reasonable size multipliers
+  // FIXED: Much larger, clearly visible size multipliers
   const randomScale = useMemo(() => {
     const sizeMultipliers = {
-      'small': 0.008 + Math.random() * 0.004,      // 0.008-0.012 (very small but visible)
-      'medium': 0.012 + Math.random() * 0.006,     // 0.012-0.018 (small-medium)
-      'large': 0.018 + Math.random() * 0.008,      // 0.018-0.026 (medium-large)
-      'extra-large': 0.022 + Math.random() * 0.008 // 0.022-0.030 (large but not huge)
+      'small': 0.15 + Math.random() * 0.1,      // 0.15-0.25 (clearly visible)
+      'medium': 0.25 + Math.random() * 0.15,    // 0.25-0.40 (medium sized)
+      'large': 0.40 + Math.random() * 0.2,      // 0.40-0.60 (large)
+      'extra-large': 0.60 + Math.random() * 0.3 // 0.60-0.90 (extra large)
     };
     return sizeMultipliers[sizeCategory];
   }, [sizeCategory]);
@@ -78,12 +78,10 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     }
   });
 
-  // Create polygon meteor shape with reasonable scaling
+  // Create polygon meteor shape with proper scaling
   const renderPolygonMeteor = () => {
-    // Much more reasonable polygon scale multipliers
-    const polygonScale = randomScale * (sizeCategory === 'small' ? 40 : 
-                                       sizeCategory === 'medium' ? 50 : 
-                                       sizeCategory === 'large' ? 60 : 70);
+    // Direct scaling - no additional multipliers needed
+    const polygonScale = randomScale * 8; // Simple multiplier to make polygon visible
     return (
       <mesh scale={polygonScale}>
         <dodecahedronGeometry args={[1, 0]} />
