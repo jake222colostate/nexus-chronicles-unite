@@ -205,7 +205,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
                 upgradeData={{
                   cost: 100,
                   manaPerSecond: 10,
-                  unlocked: false
+                  purchased: false
                 }}
               />
             </div>

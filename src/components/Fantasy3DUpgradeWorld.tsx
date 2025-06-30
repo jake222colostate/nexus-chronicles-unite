@@ -181,7 +181,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
                 upgradeData={{
                   cost: selectedUpgrade.cost,
                   manaPerSecond: selectedUpgrade.manaPerSecond,
-                  unlocked: selectedUpgrade.unlocked
+                  purchased: purchasedUpgrades.has(selectedUpgrade.id)
                 }}
               />
             </div>
