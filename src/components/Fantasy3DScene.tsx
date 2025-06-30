@@ -23,6 +23,7 @@ interface Fantasy3DSceneProps {
   onEnemyCountChange?: (count: number) => void;
   onEnemyKilled?: () => void;
   weaponDamage: number;
+  upgradesPurchased?: number;
 }
 
 interface LeechData {
@@ -42,7 +43,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   onEnemyCountChange,
   onEnemyKilled,
   maxUnlockedUpgrade,
-  weaponDamage
+  weaponDamage,
+  upgradesPurchased = 0
 }) => {
   const [leeches, setLeeches] = useState<LeechData[]>([]);
   const [nextLeechId, setNextLeechId] = useState(0);
@@ -58,7 +60,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   // Enemies spawn slightly faster to keep the action flowing
   useEffect(() => {
     const playerProgress = Math.abs(safeCameraPosition.z);
-    const desiredLeechCount = Math.min(Math.floor(playerProgress / 40) + 2, 4);
+    const baseCount = Math.floor(playerProgress / 40) + 2;
+    const extra = Math.floor(upgradesPurchased / 2);
+    const desiredLeechCount = Math.min(baseCount + extra, 10);
     
     setLeeches(currentLeeches => {
       const aliveLeeches = currentLeeches.filter(leech => leech.alive);
@@ -87,7 +91,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       
       return currentLeeches;
     });
-  }, [Math.floor(Math.abs(safeCameraPosition.z) / 50), nextLeechId]); // Reduced frequency
+  }, [Math.floor(Math.abs(safeCameraPosition.z) / 50), nextLeechId, upgradesPurchased]);
 
   // Update enemy count for UI
   useEffect(() => {
