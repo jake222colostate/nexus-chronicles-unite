@@ -32,7 +32,24 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     return 'polygon';
   }, []);
   
-  const randomScale = useMemo(() => Math.random() * 0.004 + 0.002, []);
+  // Create size categories with more dramatic differences
+  const sizeCategory = useMemo(() => {
+    const rand = Math.random();
+    if (rand < 0.3) return 'small';
+    if (rand < 0.6) return 'medium';
+    if (rand < 0.85) return 'large';
+    return 'extra-large';
+  }, []);
+
+  const randomScale = useMemo(() => {
+    const sizeMultipliers = {
+      'small': 0.003 + Math.random() * 0.002,      // 0.003-0.005
+      'medium': 0.006 + Math.random() * 0.004,     // 0.006-0.010
+      'large': 0.012 + Math.random() * 0.008,      // 0.012-0.020
+      'extra-large': 0.025 + Math.random() * 0.015 // 0.025-0.040
+    };
+    return sizeMultipliers[sizeCategory];
+  }, [sizeCategory]);
   
   // Calculate hitbox radius based on the scaled asteroid
   const hitboxRadius = useMemo(() => {
@@ -60,19 +77,24 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     }
   });
 
-  // Create polygon meteor shape
-  const renderPolygonMeteor = () => (
-    <mesh scale={randomScale * 25}>
-      <dodecahedronGeometry args={[1, 0]} />
-      <meshStandardMaterial 
-        color="#666666" 
-        roughness={0.8} 
-        metalness={0.2}
-        emissive="#331100"
-        emissiveIntensity={0.1}
-      />
-    </mesh>
-  );
+  // Create polygon meteor shape with size-appropriate scaling
+  const renderPolygonMeteor = () => {
+    const polygonScale = randomScale * (sizeCategory === 'small' ? 20 : 
+                                       sizeCategory === 'medium' ? 25 : 
+                                       sizeCategory === 'large' ? 30 : 35);
+    return (
+      <mesh scale={polygonScale}>
+        <dodecahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial 
+          color="#666666" 
+          roughness={0.8} 
+          metalness={0.2}
+          emissive="#331100"
+          emissiveIntensity={0.1}
+        />
+      </mesh>
+    );
+  };
 
   return (
     <group ref={group} position={position}>
