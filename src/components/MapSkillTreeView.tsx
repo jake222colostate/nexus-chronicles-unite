@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Scene3D } from './Scene3D';
 import { Fantasy3DUpgradeWorld } from './Fantasy3DUpgradeWorld';
@@ -7,7 +6,12 @@ import { TapResourceEffect } from './TapResourceEffect';
 import { UpgradeFloatingTooltip } from './UpgradeFloatingTooltip';
 import { BuildingUpgradeModal } from './BuildingUpgradeModal';
 import { HybridUpgradeModal } from './HybridUpgradeModal';
+import { ScifiUpgradeMenu } from './ScifiUpgradeMenu';
+import { NexusShardShop } from './NexusShardShop';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
+import { scifiUpgrades } from '../data/ScifiUpgrades';
+import { fantasyUpgrades } from '../data/FantasyUpgrades';
+import { nexusShardUpgrades } from '../data/NexusShardUpgrades';
 
 interface MapSkillTreeViewProps {
   realm: 'fantasy' | 'scifi';
@@ -58,6 +62,9 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   } | null>(null);
   const [selectedUpgrade, setSelectedUpgrade] = useState<string | null>(null);
   const [selected3DUpgrade, setSelected3DUpgrade] = useState<string | null>(null);
+  const [selectedScifiUpgrade, setSelectedScifiUpgrade] = useState<string | null>(null);
+  const [selectedFantasyUpgrade, setSelectedFantasyUpgrade] = useState<string | null>(null);
+  const [showNexusShardShop, setShowNexusShardShop] = useState(false);
   const [upgradeTooltips, setUpgradeTooltips] = useState<Array<{
     id: number;
     buildingName: string;
@@ -80,6 +87,14 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     setSelected3DUpgrade(upgradeName);
   }, []);
 
+  const handleScifiUpgradeClick = useCallback((upgradeId: string) => {
+    setSelectedScifiUpgrade(upgradeId);
+  }, []);
+
+  const handleFantasyUpgradeClick = useCallback((upgradeId: string) => {
+    setSelectedFantasyUpgrade(upgradeId);
+  }, []);
+
   const handleUpgradePurchase = useCallback(() => {
     if (selectedUpgrade) {
       onPurchaseUpgrade(selectedUpgrade);
@@ -88,10 +103,26 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   }, [selectedUpgrade, onPurchaseUpgrade]);
 
   const handle3DUpgradePurchase = useCallback(() => {
-    // Handle 3D upgrade purchase logic here
     console.log('Purchasing 3D upgrade:', selected3DUpgrade);
     setSelected3DUpgrade(null);
   }, [selected3DUpgrade]);
+
+  const handleScifiUpgradePurchase = useCallback((upgradeId: string) => {
+    // Handle sci-fi upgrade purchase
+    console.log('Purchasing sci-fi upgrade:', upgradeId);
+    setSelectedScifiUpgrade(null);
+  }, []);
+
+  const handleFantasyUpgradePurchase = useCallback((upgradeId: string) => {
+    // Handle fantasy upgrade purchase
+    console.log('Purchasing fantasy upgrade:', upgradeId);
+    setSelectedFantasyUpgrade(null);
+  }, []);
+
+  const handleNexusShardUpgradePurchase = useCallback((upgradeId: string) => {
+    // Handle nexus shard upgrade purchase
+    console.log('Purchasing nexus shard upgrade:', upgradeId);
+  }, []);
 
   const removeUpgradeTooltip = useCallback((id: number) => {
     setUpgradeTooltips(prev => prev.filter(tooltip => tooltip.id !== id));
@@ -102,18 +133,28 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
       setSelectedBuilding(null);
       setSelectedUpgrade(null);
       setSelected3DUpgrade(null);
+      setSelectedScifiUpgrade(null);
+      setSelectedFantasyUpgrade(null);
+      setShowNexusShardShop(false);
     }
   }, []);
+
+  // Check if special upgrades are purchased
+  const hasFantasySpecial = fantasyUpgrades.some(u => u.isSpecial && u.purchased);
+  const hasScifiSpecial = scifiUpgrades.some(u => u.isSpecial && u.purchased);
+
+  const selectedScifiUpgradeData = selectedScifiUpgrade ? scifiUpgrades.find(u => u.id === selectedScifiUpgrade) : null;
+  const selectedFantasyUpgradeData = selectedFantasyUpgrade ? fantasyUpgrades.find(u => u.id === selectedFantasyUpgrade) : null;
 
   console.log('MapSkillTreeView: About to render with realm:', realm);
 
   try {
     return (
       <div className="relative w-full h-full overflow-hidden">
-        {/* 3D Scene - Use Fantasy 3D World for fantasy realm, Scene3D for sci-fi */}
+        {/* 3D Scene */}
         {realm === 'fantasy' ? (
           <Fantasy3DUpgradeWorld
-            key="fantasy-world" // Force re-mount on realm switch
+            key="fantasy-world"
             onUpgradeClick={handle3DUpgradeClick}
             showTapEffect={showTapEffect}
             onTapEffectComplete={onTapEffectComplete}
@@ -127,7 +168,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
           />
         ) : (
           <Scene3D
-            key="scifi-world" // Force re-mount on realm switch
+            key="scifi-world"
             realm={realm}
             gameState={gameState}
             onUpgradeClick={handleUpgradeClick}
@@ -213,6 +254,41 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
               />
             </div>
           </div>
+        )}
+
+        {/* Sci-Fi Upgrade Modal */}
+        {selectedScifiUpgradeData && (
+          <ScifiUpgradeMenu
+            upgrade={selectedScifiUpgradeData}
+            energyCredits={gameState.energyCredits}
+            onPurchase={handleScifiUpgradePurchase}
+            onClose={() => setSelectedScifiUpgrade(null)}
+          />
+        )}
+
+        {/* Fantasy Upgrade Modal */}
+        {selectedFantasyUpgradeData && (
+          <ScifiUpgradeMenu
+            upgrade={{
+              ...selectedFantasyUpgradeData,
+              cost: selectedFantasyUpgradeData.cost
+            }}
+            energyCredits={gameState.mana}
+            onPurchase={handleFantasyUpgradePurchase}
+            onClose={() => setSelectedFantasyUpgrade(null)}
+          />
+        )}
+
+        {/* Nexus Shard Shop */}
+        {showNexusShardShop && (
+          <NexusShardShop
+            upgrades={nexusShardUpgrades}
+            nexusShards={gameState.nexusShards || 0}
+            hasFantasySpecial={hasFantasySpecial}
+            hasScifiSpecial={hasScifiSpecial}
+            onPurchase={handleNexusShardUpgradePurchase}
+            onClose={() => setShowNexusShardShop(false)}
+          />
         )}
       </div>
     );

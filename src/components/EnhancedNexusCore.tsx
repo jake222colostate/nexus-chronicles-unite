@@ -9,6 +9,7 @@ interface EnhancedNexusCoreProps {
   nexusShards?: number;
   convergenceProgress?: number;
   onNexusClick?: () => void;
+  canEarnShards?: boolean;
 }
 
 export const EnhancedNexusCore: React.FC<EnhancedNexusCoreProps> = ({ 
@@ -17,7 +18,8 @@ export const EnhancedNexusCore: React.FC<EnhancedNexusCoreProps> = ({
   realm,
   nexusShards = 0,
   convergenceProgress = 0,
-  onNexusClick
+  onNexusClick,
+  canEarnShards = false
 }) => {
   const totalFlow = manaFlow + energyFlow;
   const intensity = Math.min(totalFlow / 100, 1);
@@ -32,7 +34,7 @@ export const EnhancedNexusCore: React.FC<EnhancedNexusCoreProps> = ({
             realm === 'fantasy'
               ? 'bg-gradient-to-br from-purple-500/90 to-violet-800/90 border-purple-300'
               : 'bg-gradient-to-br from-cyan-500/90 to-blue-800/90 border-cyan-300'
-          }`}
+          } ${canEarnShards ? 'animate-pulse' : ''}`}
           onClick={onNexusClick}
           style={{
             boxShadow: `0 0 ${30 + intensity * 50 + convergenceIntensity * 30}px ${
@@ -126,6 +128,16 @@ export const EnhancedNexusCore: React.FC<EnhancedNexusCoreProps> = ({
             <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2 py-1 rounded-full border border-yellow-400/50">
               <Crown className="text-yellow-400" size={12} />
               <span className="text-yellow-400 font-bold text-xs">{nexusShards}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Can Earn Shards Indicator */}
+        {canEarnShards && (
+          <div className="absolute -top-12 left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center gap-1 bg-yellow-500/20 backdrop-blur-md px-2 py-1 rounded-full border border-yellow-400/50 animate-pulse">
+              <Sparkles className="text-yellow-400" size={10} />
+              <span className="text-yellow-400 font-bold text-xs">Earning Shards!</span>
             </div>
           </div>
         )}
