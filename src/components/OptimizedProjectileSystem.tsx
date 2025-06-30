@@ -7,7 +7,7 @@ interface OptimizedProjectileSystemProps {
   staffTipPosition?: THREE.Vector3;
   targetPositions?: THREE.Vector3[];
   damage: number;
-  autoFireRate: number;
+  autoFireRate: number; // RENAMED: from fireRate to autoFireRate for clarity
   onHitEnemy: (index: number, damage: number) => void;
 }
 
@@ -23,8 +23,7 @@ interface ProjectileData {
   targetIndex: number;
   active: boolean;
   life: number;
-  worldDirection: THREE.Vector3;
-  startPosition: THREE.Vector3; // FIXED: Store absolute start position
+  worldDirection: THREE.Vector3; // FIXED: Store world direction to prevent following camera
 }
 
 const MAX_PROJECTILES = 20;
@@ -50,7 +49,7 @@ export const OptimizedProjectileSystem = forwardRef<
   const projectilePoolRef = useRef<ProjectileData[]>([]);
   const meshPoolRef = useRef<THREE.Mesh[]>([]);
   const groupRef = useRef<THREE.Group>(null);
-  const lastAutoFireTimeRef = useRef(0);
+  const lastAutoFireTimeRef = useRef(0); // RENAMED: for clarity
   const meshPoolInitialized = useRef(false);
 
   // Create simple, reliable projectile geometry and material
@@ -62,7 +61,7 @@ export const OptimizedProjectileSystem = forwardRef<
     transparent: false
   }), []);
 
-  // Initialize projectile pool
+  // Initialize projectile pool with enhanced world direction tracking
   useMemo(() => {
     if (projectilePoolRef.current.length === 0) {
       for (let i = 0; i < MAX_PROJECTILES; i++) {
@@ -74,14 +73,13 @@ export const OptimizedProjectileSystem = forwardRef<
           targetIndex: -1,
           active: false,
           life: 0,
-          worldDirection: new THREE.Vector3(),
-          startPosition: new THREE.Vector3() // FIXED: Track absolute start position
+          worldDirection: new THREE.Vector3() // FIXED: Track world direction
         });
       }
     }
   }, []);
 
-  // Initialize mesh pool
+  // FIXED: Initialize mesh pool in useEffect to ensure group is ready
   useEffect(() => {
     if (groupRef.current && !meshPoolInitialized.current) {
       meshPoolRef.current = [];
@@ -107,11 +105,13 @@ export const OptimizedProjectileSystem = forwardRef<
   };
 
   const fireProjectile = (staffPos: THREE.Vector3, targets: THREE.Vector3[] = []) => {
+    // FIXED: Check if mesh pool is initialized before firing
     if (!meshPoolInitialized.current || meshPoolRef.current.length === 0) {
       console.log('OptimizedProjectileSystem: Mesh pool not ready, skipping fire');
       return;
     }
 
+    // FIXED: Comprehensive validation to prevent all crashes
     if (!isValidVector3(staffPos)) {
       console.log('OptimizedProjectileSystem: Invalid staff position, skipping fire');
       return;
@@ -122,6 +122,7 @@ export const OptimizedProjectileSystem = forwardRef<
       return;
     }
 
+    // Filter and validate all targets thoroughly
     const validTargets = targets.filter(target => isValidVector3(target));
 
     if (validTargets.length === 0) {
@@ -134,7 +135,7 @@ export const OptimizedProjectileSystem = forwardRef<
       return;
     }
 
-    // Find closest valid target
+    // Find closest valid target with safe distance calculation
     let closestIndex = 0;
     let closestDistance = Infinity;
     
@@ -154,11 +155,13 @@ export const OptimizedProjectileSystem = forwardRef<
     const projectile = projectilePoolRef.current[projectileIndex];
     const mesh = meshPoolRef.current[projectileIndex];
 
+    // FIXED: Additional safety check for mesh existence
     if (!mesh) {
       console.log('OptimizedProjectileSystem: Mesh not found at index', projectileIndex);
       return;
     }
 
+    // Use valid target and store original index safely
     const targetPosition = validTargets[closestIndex];
     const originalTargetIndex = targets.findIndex(target => 
       isValidVector3(target) && 
@@ -167,27 +170,19 @@ export const OptimizedProjectileSystem = forwardRef<
       target.z === targetPosition.z
     );
 
-    // FIXED: Calculate direction in world space using absolute positions
+    // Setup projectile data with safe operations and FIXED world direction
     try {
-      // Store absolute world positions
-      const absoluteStartPos = staffPos.clone();
-      const absoluteTargetPos = targetPosition.clone();
-      
-      projectile.position.copy(absoluteStartPos);
-      projectile.startPosition.copy(absoluteStartPos); // FIXED: Store start position
-      
-      // Calculate direction vector in world space
-      const direction = new THREE.Vector3().subVectors(absoluteTargetPos, absoluteStartPos).normalize();
+      projectile.position.copy(staffPos);
+      const direction = new THREE.Vector3().subVectors(targetPosition, staffPos).normalize();
       projectile.direction.copy(direction);
-      projectile.worldDirection.copy(direction); // This is now truly world-space
-      
+      projectile.worldDirection.copy(direction); // FIXED: Store immutable world direction
       projectile.damage = damage || 1;
       projectile.targetIndex = Math.max(0, originalTargetIndex);
       projectile.active = true;
       projectile.life = MAX_LIFE;
       
-      // Setup mesh
-      mesh.position.copy(absoluteStartPos);
+      // Setup mesh safely
+      mesh.position.copy(staffPos);
       mesh.visible = true;
       mesh.scale.setScalar(1);
       
@@ -196,7 +191,7 @@ export const OptimizedProjectileSystem = forwardRef<
       material.color.setHex(0x00ffff);
       material.emissive.setHex(0x00ffff);
       
-      console.log('OptimizedProjectileSystem: Projectile fired with world direction:', direction);
+      console.log('OptimizedProjectileSystem: Projectile fired successfully from staff tip');
     } catch (error) {
       console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating');
       projectile.active = false;
@@ -204,59 +199,64 @@ export const OptimizedProjectileSystem = forwardRef<
     }
   };
 
+  // UPDATED: Manual fire function (instant, no cooldown)
   const manualFire = () => {
     if (isValidVector3(staffTipPosition) && Array.isArray(targetPositions) && targetPositions.length > 0) {
       fireProjectile(staffTipPosition, targetPositions);
-      console.log('OptimizedProjectileSystem: Manual fire triggered');
+      console.log('OptimizedProjectileSystem: Manual fire triggered from staff tip');
     }
   };
 
   useImperativeHandle(ref, () => ({ manualFire }), []);
 
   useFrame((state, delta) => {
+    // CRITICAL: Early return with comprehensive validation - never crash the render loop
     if (!isValidVector3(staffTipPosition) || !Array.isArray(targetPositions)) {
       return;
     }
 
+    // Validate delta to prevent NaN issues
     if (!delta || isNaN(delta) || delta <= 0) {
       return;
     }
 
     const now = Date.now();
     
-    // Auto fire
+    // UPDATED: Much slower auto fire with the new autoFireRate
     if (meshPoolInitialized.current && 
         now - lastAutoFireTimeRef.current >= autoFireRate && 
         targetPositions.length > 0) {
       try {
         fireProjectile(staffTipPosition, targetPositions);
         lastAutoFireTimeRef.current = now;
-        console.log('OptimizedProjectileSystem: Auto-fire triggered');
+        console.log('OptimizedProjectileSystem: Auto-fire triggered from staff tip');
       } catch (error) {
         console.log('OptimizedProjectileSystem: Auto-fire failed, continuing render loop');
       }
     }
 
-    // FIXED: Update projectiles using absolute world movement
+    // Update active projectiles with FIXED trajectory (using world direction)
     for (let i = 0; i < projectilePoolRef.current.length; i++) {
       const projectile = projectilePoolRef.current[i];
       if (!projectile.active) continue;
 
       const mesh = meshPoolRef.current[i];
+      
+      // FIXED: Additional safety check for mesh
       if (!mesh) continue;
       
       try {
-        // FIXED: Move projectile using absolute world direction
-        // This ensures projectiles don't follow camera movement
+        // FIXED: Use immutable world direction instead of camera-relative direction
         const deltaMovement = projectile.worldDirection.clone().multiplyScalar(projectile.speed * delta);
         if (isValidVector3(deltaMovement)) {
           projectile.position.add(deltaMovement);
           mesh.position.copy(projectile.position);
         }
         
+        // Update life
         projectile.life -= delta;
         
-        // Check collision with target
+        // Check collision with target - comprehensive safety checks
         if (projectile.targetIndex >= 0 && 
             projectile.targetIndex < targetPositions.length) {
           
@@ -279,20 +279,22 @@ export const OptimizedProjectileSystem = forwardRef<
           }
         }
         
-        // FIXED: Use start position for distance calculation
+        // Deactivate if too old or too far with safe distance check
         try {
-          const distanceFromStart = projectile.position.distanceTo(projectile.startPosition);
+          const distanceFromStart = projectile.position.distanceTo(staffTipPosition);
           if (projectile.life <= 0 || (!isNaN(distanceFromStart) && distanceFromStart > 80)) {
             projectile.active = false;
             mesh.visible = false;
           }
         } catch (error) {
+          // If distance check fails, deactivate based on life only
           if (projectile.life <= 0) {
             projectile.active = false;
             mesh.visible = false;
           }
         }
       } catch (error) {
+        // If any projectile update fails, deactivate it and continue
         console.log('OptimizedProjectileSystem: Projectile update failed, deactivating');
         projectile.active = false;
         mesh.visible = false;
