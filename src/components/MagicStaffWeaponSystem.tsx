@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -186,9 +187,9 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return 'tier1';
   }, [upgradeLevel]);
 
-  // Base scale per staff tier, reduced by 25% for a smaller appearance
+  // REDUCED staff scale by 50% to make it smaller and less obtrusive
   const staffScale =
-    (staffTier === 'tier1' ? 0.6 : staffTier === 'tier2' ? 0.65 : 0.7) * 0.75;
+    (staffTier === 'tier1' ? 0.3 : staffTier === 'tier2' ? 0.325 : 0.35);
 
   // Slower base auto-fire rate so manual aiming feels more meaningful
   const autoFireRate = useMemo(() => {
@@ -232,7 +233,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   }, [gl.domElement]);
 
-  // First-person weapon positioning - FLIPPED to right side
+  // Enhanced first-person weapon positioning with better tip calculation
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && staffModel) {
       // Get camera vectors for positioning
@@ -244,22 +245,22 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // FLIPPED positioning - now on the right side:
-      // X: 0.3 (right side), Y: -0.2 (slightly down), Z: 0.4 (closer to camera)
+      // Right side positioning with smaller offset due to reduced scale
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.3))     // X = 0.3 (right side)
-        .add(cameraUp.clone().multiplyScalar(-0.2))        // Y = -0.2 (slightly down)
-        .add(cameraForward.clone().multiplyScalar(0.4));   // Z = 0.4 (closer for visibility)
+        .add(cameraRight.clone().multiplyScalar(0.2))     // Reduced from 0.3 to 0.2
+        .add(cameraUp.clone().multiplyScalar(-0.15))       // Reduced from -0.2 to -0.15
+        .add(cameraForward.clone().multiplyScalar(0.3));   // Reduced from 0.4 to 0.3
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // FLIPPED rotation for right side:
-      // Y: -15° (mirrored angle for right side), Z: 20° (mirrored tilt)
+      // Right side rotation
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-15 * Math.PI / 180); // Y = -15° (mirrored for right)
-      weaponGroupRef.current.rotateZ(20 * Math.PI / 180);  // Z = 20° (mirrored tilt)
+      weaponGroupRef.current.rotateY(-15 * Math.PI / 180);
+      weaponGroupRef.current.rotateZ(20 * Math.PI / 180);
 
-      const tipOffset = new THREE.Vector3(0, 1.2 * staffScale, 0);
+      // ENHANCED: More accurate staff tip calculation
+      // Calculate tip position relative to staff length and scale
+      const tipOffset = new THREE.Vector3(0, 1.8 * staffScale, 0); // Increased multiplier for better tip position
       tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
       staffTipPositionRef.current.copy(weaponGroupRef.current.position).add(tipOffset);
     }
@@ -276,8 +277,13 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
         object={staffModel}
         scale={[staffScale, staffScale, staffScale]}
       />
-      {/* Add a subtle light to make the staff more visible */}
-      <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.5} distance={3} />
+      {/* Enhanced staff tip indicator (visible point where projectiles spawn) */}
+      <mesh position={[0, 1.8 * staffScale, 0]}>
+        <sphereGeometry args={[0.02]} />
+        <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.8} />
+      </mesh>
+      {/* Reduced light intensity to match smaller staff */}
+      <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.3} distance={2} />
       <OptimizedProjectileSystem
         ref={projectileSystemRef}
         staffTipPosition={staffTipPositionRef.current}

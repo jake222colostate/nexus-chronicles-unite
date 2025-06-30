@@ -69,8 +69,39 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 
   const pedestalConfig = getPedestalTier();
 
+  // Enhanced click handler with better event handling
+  const handleClick = (event: any) => {
+    event.stopPropagation();
+    console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id);
+    if (isUnlocked) {
+      onInteract();
+    }
+  };
+
+  const handlePointerOver = (event: any) => {
+    event.stopPropagation();
+    setHovered(true);
+  };
+
+  const handlePointerOut = (event: any) => {
+    event.stopPropagation();
+    setHovered(false);
+  };
+
   return (
     <group position={position}>
+      {/* Enhanced clickable area - larger invisible mesh for easier clicking */}
+      <mesh
+        position={[0, 1.5, 0]}
+        onClick={handleClick}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+        visible={false}
+      >
+        <sphereGeometry args={[2]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
       {/* Pedestal base */}
       <mesh position={[0, 0, 0]} receiveShadow>
         <cylinderGeometry args={[1.2, 1.5, pedestalConfig.height, 8]} />
@@ -97,13 +128,13 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         </mesh>
       )}
       
-      {/* Main crystal */}
+      {/* Main crystal - also clickable */}
       <mesh
         ref={meshRef}
         position={[0, 1, 0]}
-        onClick={onInteract}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
+        onClick={handleClick}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
         scale={hovered ? 1.1 : 1}
         castShadow
       >
