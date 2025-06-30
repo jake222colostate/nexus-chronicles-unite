@@ -281,6 +281,13 @@ export const useUpgradeManagers = ({
     const upgrade = enhancedHybridUpgrades.find(u => u.id === upgradeId);
     if (!upgrade || gameState.nexusShards < upgrade.cost) return;
 
+    const totalUpgrades = gameState.purchasedUpgrades.length;
+    const specialUpgradeLevel = gameState.crossRealmUpgrades?.['scifi_gravity_well'] || 0;
+    if ((totalUpgrades + 1) % 10 === 0 && specialUpgradeLevel === 0) {
+      console.warn('Requires Gravity Well upgrade in Sci-Fi realm to unlock.');
+      return;
+    }
+
     setGameState(prev => {
       if (prev.purchasedUpgrades.includes(upgradeId)) {
         return prev; // already purchased

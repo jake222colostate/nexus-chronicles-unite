@@ -1,8 +1,8 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
-import { Html, useFBX } from '@react-three/drei';
+import { Html, useFBX, useGLTF } from '@react-three/drei';
 import { Progress } from '../ui/progress';
 import { assetPath } from '../../lib/assetPath';
 
@@ -20,7 +20,12 @@ export const Asteroid: React.FC<AsteroidProps> = ({
   onReachTarget
 }) => {
   const group = useRef<Group>(null);
+
   const fbx = useFBX(assetPath('assets/asteroid_01.fbx'));
+  const { scene: glbScene } = useGLTF(assetPath('assets/asteroid_pack_01.glb'));
+
+  const randomModel = useMemo(() => (Math.random() < 0.5 ? 'fbx' : 'glb'), []);
+  const randomScale = useMemo(() => Math.random() * 0.004 + 0.002, []);
 
   useFrame(() => {
     if (group.current) {
@@ -36,7 +41,10 @@ export const Asteroid: React.FC<AsteroidProps> = ({
 
   return (
     <group ref={group} position={position}>
-      <primitive object={fbx.clone()} scale={0.003} />
+      <primitive
+        object={randomModel === 'fbx' ? fbx.clone() : glbScene.clone()}
+        scale={randomScale}
+      />
       <Html position={[0, 1, 0]} center style={{ pointerEvents: 'none' }} transform distanceFactor={8}>
         <div className="w-12">
           <Progress

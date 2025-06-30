@@ -27,6 +27,7 @@ interface MapSkillTreeViewProps {
   onEnemyKilled?: () => void;
   onMeteorDestroyed?: () => void;
   weaponDamage: number;
+  upgradesPurchased?: number;
 }
 
 export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
@@ -46,7 +47,8 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   onEnemyCountChange,
   onEnemyKilled,
   onMeteorDestroyed,
-  weaponDamage
+  weaponDamage,
+  upgradesPurchased = 0
 }) => {
   console.log('MapSkillTreeView: Rendering with realm:', realm);
   
@@ -121,6 +123,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
             onEnemyCountChange={onEnemyCountChange}
             onEnemyKilled={onEnemyKilled}
             weaponDamage={weaponDamage}
+            upgradesPurchased={gameState.purchasedUpgrades?.length || 0}
           />
         ) : (
           <Scene3D

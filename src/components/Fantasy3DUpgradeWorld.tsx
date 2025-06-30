@@ -19,6 +19,7 @@ interface Fantasy3DUpgradeWorldProps {
   onEnemyCountChange?: (count: number) => void;
   onEnemyKilled?: () => void;
   weaponDamage: number;
+  upgradesPurchased?: number;
 }
 
 export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
@@ -30,7 +31,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   onPlayerPositionUpdate,
   onEnemyCountChange,
   onEnemyKilled,
-  weaponDamage
+  weaponDamage,
+  upgradesPurchased = 0
 }) => {
   console.log('Fantasy3DUpgradeWorld: Rendering with realm:', realm);
   
@@ -144,6 +146,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               onEnemyCountChange={onEnemyCountChange}
               onEnemyKilled={onEnemyKilled}
               weaponDamage={weaponDamage}
+              upgradesPurchased={upgradesPurchased}
             />
 
             <Fantasy3DUpgradePedestals

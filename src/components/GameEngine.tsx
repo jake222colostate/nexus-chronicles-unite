@@ -281,18 +281,19 @@ const GameEngine: React.FC = () => {
           energyPerSecond={stableGameState.energyPerSecond}
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
           buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
-          currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
-          gameState={stableGameState}
-          onPurchaseUpgrade={purchaseUpgrade}
-          isTransitioning={isTransitioning}
-          showTapEffect={showTapEffect}
-          onTapEffectComplete={handleTapEffectComplete}
-          onPlayerPositionUpdate={handlePlayerPositionUpdate}
-          onEnemyCountChange={handleEnemyCountChange}
-          onEnemyKilled={handleEnemyKilled}
-          onMeteorDestroyed={handleMeteorDestroyed}
-          weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
-        />
+        currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
+        gameState={stableGameState}
+        onPurchaseUpgrade={purchaseUpgrade}
+        isTransitioning={isTransitioning}
+        showTapEffect={showTapEffect}
+        onTapEffectComplete={handleTapEffectComplete}
+        onPlayerPositionUpdate={handlePlayerPositionUpdate}
+        onEnemyCountChange={handleEnemyCountChange}
+        onEnemyKilled={handleEnemyKilled}
+        onMeteorDestroyed={handleMeteorDestroyed}
+        weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
+        upgradesPurchased={stableGameState.purchasedUpgrades.length}
+      />
 
         {/* Realm Transition Effect */}
         <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
