@@ -280,7 +280,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
         {/* Enhanced staff tip indicator (visible point where projectiles spawn) */}
         <mesh position={[0, 1.8 * staffScale, 0]}>
           <sphereGeometry args={[0.02]} />
-          <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.8} />
+          <meshStandardMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.8} />
         </mesh>
         {/* Reduced light intensity to match smaller staff */}
         <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.3} distance={2} />
