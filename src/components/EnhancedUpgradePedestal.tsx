@@ -69,18 +69,23 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 
   const pedestalConfig = getPedestalTier();
 
-  // Enhanced click handler with better event handling
+  // FIXED: Enhanced click handler with better event handling and debugging
   const handleClick = (event: any) => {
+    console.log('EnhancedUpgradePedestal: Click detected on upgrade', upgrade.id, 'unlocked:', isUnlocked);
     event.stopPropagation();
-    console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id);
+    
     if (isUnlocked) {
+      console.log('EnhancedUpgradePedestal: Triggering onInteract for upgrade', upgrade.id);
       onInteract();
+    } else {
+      console.log('EnhancedUpgradePedestal: Upgrade not unlocked', upgrade.id);
     }
   };
 
   const handlePointerOver = (event: any) => {
     event.stopPropagation();
     setHovered(true);
+    console.log('EnhancedUpgradePedestal: Hovered over upgrade', upgrade.id);
   };
 
   const handlePointerOut = (event: any) => {
@@ -90,7 +95,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 
   return (
     <group position={position}>
-      {/* Enhanced clickable area - larger invisible mesh for easier clicking */}
+      {/* FIXED: Much larger clickable area for better interaction */}
       <mesh
         position={[0, 1.5, 0]}
         onClick={handleClick}
@@ -98,7 +103,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         onPointerOut={handlePointerOut}
         visible={false}
       >
-        <sphereGeometry args={[2]} />
+        <cylinderGeometry args={[3, 3, 4]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
@@ -128,14 +133,14 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         </mesh>
       )}
       
-      {/* Main crystal - also clickable */}
+      {/* Main crystal - ALSO clickable and more responsive */}
       <mesh
         ref={meshRef}
         position={[0, 1, 0]}
         onClick={handleClick}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
-        scale={hovered ? 1.1 : 1}
+        scale={hovered ? 1.2 : 1}
         castShadow
       >
         {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
@@ -148,6 +153,19 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
           opacity={isUnlocked ? 0.9 : 0.5}
         />
       </mesh>
+      
+      {/* FIXED: Additional visual feedback for interactable state */}
+      {isUnlocked && !isPurchased && (
+        <mesh position={[0, 3.5, 0]}>
+          <ringGeometry args={[0.8, 1.2, 16]} />
+          <meshBasicMaterial 
+            color="#FFD700" 
+            transparent 
+            opacity={0.6 + Math.sin(Date.now() * 0.01) * 0.3}
+            side={2}
+          />
+        </mesh>
+      )}
       
       {/* Upgrade tier indicators */}
       {isPurchased && tier > 1 && (
@@ -177,11 +195,15 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         </>
       )}
       
-      {/* Interaction indicator */}
+      {/* FIXED: Better interaction indicator */}
       {hovered && isUnlocked && (
-        <mesh position={[0, 3, 0]}>
-          <planeGeometry args={[2, 0.5]} />
-          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.8} />
+        <mesh position={[0, 3.8, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <planeGeometry args={[3, 0.8]} />
+          <meshBasicMaterial 
+            color="#FFFFFF" 
+            transparent 
+            opacity={0.9}
+          />
         </mesh>
       )}
     </group>

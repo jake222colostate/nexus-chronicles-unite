@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
@@ -187,11 +186,11 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     return 'tier1';
   }, [upgradeLevel]);
 
-  // REDUCED staff scale by 50% to make it smaller and less obtrusive
+  // FIXED: Much smaller staff scale to be less intrusive (reduced by 75%)
   const staffScale =
-    (staffTier === 'tier1' ? 0.3 : staffTier === 'tier2' ? 0.325 : 0.35);
+    (staffTier === 'tier1' ? 0.15 : staffTier === 'tier2' ? 0.16 : 0.18);
 
-  // Slower base auto-fire rate so manual aiming feels more meaningful
+  // Slower auto-fire rate
   const autoFireRate = useMemo(() => {
     return Math.max(500, 1200 - (upgradeLevel * 200));
   }, [upgradeLevel]);
@@ -203,13 +202,12 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
         setStaffModel(model);
       }).catch(error => {
         console.error('MagicStaffWeaponSystem: Failed to load staff model:', error);
-        // Use fallback
         setStaffModel(staffCache.getCachedModel(staffTier));
       });
     }
   }, [visible, staffTier, staffCache]);
 
-  // FIXED: Use canvas-specific click handler instead of window
+  // FIXED: Use canvas-specific click handler
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
       event.preventDefault();
@@ -219,7 +217,6 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       projectileSystemRef.current?.manualFire();
     };
     
-    // Get the canvas element from the WebGL renderer
     const canvas = gl.domElement;
     if (canvas) {
       console.log('MagicStaffWeaponSystem: Attaching click listener to canvas');
@@ -233,10 +230,9 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   }, [gl.domElement]);
 
-  // Enhanced first-person weapon positioning with better tip calculation
+  // FIXED: Enhanced positioning to be less intrusive
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && staffModel) {
-      // Get camera vectors for positioning
       const cameraForward = new THREE.Vector3();
       const cameraRight = new THREE.Vector3();
       const cameraUp = new THREE.Vector3();
@@ -245,28 +241,26 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Right side positioning with smaller offset due to reduced scale
+      // FIXED: Much more subtle positioning (further from center, lower)
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.2))     // Reduced from 0.3 to 0.2
-        .add(cameraUp.clone().multiplyScalar(-0.15))       // Reduced from -0.2 to -0.15
-        .add(cameraForward.clone().multiplyScalar(0.3));   // Reduced from 0.4 to 0.3
+        .add(cameraRight.clone().multiplyScalar(0.4))     // Further right
+        .add(cameraUp.clone().multiplyScalar(-0.3))       // Much lower
+        .add(cameraForward.clone().multiplyScalar(0.5));   // Further forward
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Right side rotation
+      // More subtle rotation
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-15 * Math.PI / 180);
-      weaponGroupRef.current.rotateZ(20 * Math.PI / 180);
+      weaponGroupRef.current.rotateY(-25 * Math.PI / 180); // More angled
+      weaponGroupRef.current.rotateZ(30 * Math.PI / 180);  // More tilted
 
-      // ENHANCED: More accurate staff tip calculation
-      // Calculate tip position relative to staff length and scale
-      const tipOffset = new THREE.Vector3(0, 1.8 * staffScale, 0); // Increased multiplier for better tip position
+      // FIXED: Accurate staff tip calculation with smaller scale
+      const tipOffset = new THREE.Vector3(0, 2.0 * staffScale, 0);
       tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
       staffTipPositionRef.current.copy(weaponGroupRef.current.position).add(tipOffset);
     }
   });
 
-  // Don't render if not visible or model not loaded
   if (!visible || !staffModel) {
     return null;
   }
@@ -277,13 +271,13 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
         object={staffModel}
         scale={[staffScale, staffScale, staffScale]}
       />
-      {/* Enhanced staff tip indicator (visible point where projectiles spawn) */}
-      <mesh position={[0, 1.8 * staffScale, 0]}>
-        <sphereGeometry args={[0.02]} />
-        <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.8} />
+      {/* Much smaller staff tip indicator */}
+      <mesh position={[0, 2.0 * staffScale, 0]}>
+        <sphereGeometry args={[0.015]} />
+        <meshBasicMaterial color="#00ffff" />
       </mesh>
-      {/* Reduced light intensity to match smaller staff */}
-      <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.3} distance={2} />
+      {/* Reduced light intensity */}
+      <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.2} distance={1.5} />
       <OptimizedProjectileSystem
         ref={projectileSystemRef}
         staffTipPosition={staffTipPositionRef.current}
