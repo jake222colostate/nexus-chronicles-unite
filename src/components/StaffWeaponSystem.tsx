@@ -41,11 +41,9 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
 
   // FIXED: Attach click handler to the canvas specifically, not window
   useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      // Prevent default to avoid any conflicts
-      event.preventDefault();
-      event.stopPropagation();
-      
+    const handleClick = () => {
+      // Simply trigger a manual shot without interfering with other click
+      // handlers in the scene.
       console.log('Canvas clicked - manual fire triggered');
       projectileSystemRef.current?.manualFire();
     };
