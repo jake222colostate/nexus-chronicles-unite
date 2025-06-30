@@ -32,7 +32,7 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     return 'polygon';
   }, []);
   
-  // Create size categories with more dramatic differences
+  // Create size categories with much larger sizes for visibility
   const sizeCategory = useMemo(() => {
     const rand = Math.random();
     if (rand < 0.3) return 'small';
@@ -41,12 +41,13 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     return 'extra-large';
   }, []);
 
+  // SIGNIFICANTLY increased all size multipliers for better visibility
   const randomScale = useMemo(() => {
     const sizeMultipliers = {
-      'small': 0.003 + Math.random() * 0.002,      // 0.003-0.005
-      'medium': 0.006 + Math.random() * 0.004,     // 0.006-0.010
-      'large': 0.012 + Math.random() * 0.008,      // 0.012-0.020
-      'extra-large': 0.025 + Math.random() * 0.015 // 0.025-0.040
+      'small': 0.015 + Math.random() * 0.010,      // 0.015-0.025 (5x larger)
+      'medium': 0.025 + Math.random() * 0.015,     // 0.025-0.040 (4x larger)
+      'large': 0.045 + Math.random() * 0.020,      // 0.045-0.065 (3.5x larger)
+      'extra-large': 0.070 + Math.random() * 0.030 // 0.070-0.100 (3x larger)
     };
     return sizeMultipliers[sizeCategory];
   }, [sizeCategory]);
@@ -77,11 +78,12 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     }
   });
 
-  // Create polygon meteor shape with size-appropriate scaling
+  // Create polygon meteor shape with much larger scaling for visibility
   const renderPolygonMeteor = () => {
-    const polygonScale = randomScale * (sizeCategory === 'small' ? 20 : 
-                                       sizeCategory === 'medium' ? 25 : 
-                                       sizeCategory === 'large' ? 30 : 35);
+    // Increased polygon scale multipliers significantly
+    const polygonScale = randomScale * (sizeCategory === 'small' ? 60 : 
+                                       sizeCategory === 'medium' ? 80 : 
+                                       sizeCategory === 'large' ? 100 : 120);
     return (
       <mesh scale={polygonScale}>
         <dodecahedronGeometry args={[1, 0]} />
@@ -90,7 +92,7 @@ export const Asteroid: React.FC<AsteroidProps> = ({
           roughness={0.8} 
           metalness={0.2}
           emissive="#331100"
-          emissiveIntensity={0.1}
+          emissiveIntensity={0.2}
         />
       </mesh>
     );
