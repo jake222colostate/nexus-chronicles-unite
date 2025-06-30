@@ -1,17 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Scene3D } from './Scene3D';
-import { Fantasy3DUpgradeWorld } from './Fantasy3DUpgradeWorld';
-import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
+
+import React, { useState, useCallback } from 'react';
+import { SceneRenderer } from './SceneRenderer';
+import { UpgradeModalManager } from './UpgradeModalManager';
 import { TapResourceEffect } from './TapResourceEffect';
 import { UpgradeFloatingTooltip } from './UpgradeFloatingTooltip';
-import { BuildingUpgradeModal } from './BuildingUpgradeModal';
-import { HybridUpgradeModal } from './HybridUpgradeModal';
-import { ScifiUpgradeMenu } from './ScifiUpgradeMenu';
-import { NexusShardShop } from './NexusShardShop';
-import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
-import { scifiUpgrades } from '../data/ScifiUpgrades';
-import { fantasyUpgrades } from '../data/FantasyUpgrades';
-import { nexusShardUpgrades } from '../data/NexusShardUpgrades';
 
 interface MapSkillTreeViewProps {
   realm: 'fantasy' | 'scifi';
@@ -54,8 +46,6 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   weaponDamage,
   upgradesPurchased = 0
 }) => {
-  console.log('MapSkillTreeView: Rendering with realm:', realm);
-  
   const [selectedBuilding, setSelectedBuilding] = useState<{
     building: any;
     count: number;
@@ -72,55 +62,28 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     position: { x: number; y: number };
   }>>([]);
 
-  // Log realm changes for debugging
-  useEffect(() => {
-    console.log('MapSkillTreeView: Realm changed to:', realm);
-  }, [realm]);
-
+  // Handlers
   const handleUpgradeClick = useCallback((upgradeId: string) => {
-    console.log('MapSkillTreeView: handleUpgradeClick called with:', upgradeId);
     setSelectedUpgrade(upgradeId);
   }, []);
 
   const handle3DUpgradeClick = useCallback((upgradeName: string) => {
-    console.log('MapSkillTreeView: handle3DUpgradeClick called with:', upgradeName);
     setSelected3DUpgrade(upgradeName);
   }, []);
 
-  const handleScifiUpgradeClick = useCallback((upgradeId: string) => {
-    setSelectedScifiUpgrade(upgradeId);
-  }, []);
-
-  const handleFantasyUpgradeClick = useCallback((upgradeId: string) => {
-    setSelectedFantasyUpgrade(upgradeId);
-  }, []);
-
-  const handleUpgradePurchase = useCallback(() => {
-    if (selectedUpgrade) {
-      onPurchaseUpgrade(selectedUpgrade);
-      setSelectedUpgrade(null);
-    }
-  }, [selectedUpgrade, onPurchaseUpgrade]);
-
-  const handle3DUpgradePurchase = useCallback(() => {
-    console.log('Purchasing 3D upgrade:', selected3DUpgrade);
-    setSelected3DUpgrade(null);
-  }, [selected3DUpgrade]);
-
   const handleScifiUpgradePurchase = useCallback((upgradeId: string) => {
-    // Handle sci-fi upgrade purchase
-    console.log('Purchasing sci-fi upgrade:', upgradeId);
+    // Handle sci-fi upgrade purchase and check for nexus shard earning
+    onPurchaseUpgrade(upgradeId);
     setSelectedScifiUpgrade(null);
-  }, []);
+  }, [onPurchaseUpgrade]);
 
   const handleFantasyUpgradePurchase = useCallback((upgradeId: string) => {
-    // Handle fantasy upgrade purchase
-    console.log('Purchasing fantasy upgrade:', upgradeId);
+    // Handle fantasy upgrade purchase and check for nexus shard earning
+    onPurchaseUpgrade(upgradeId);
     setSelectedFantasyUpgrade(null);
-  }, []);
+  }, [onPurchaseUpgrade]);
 
   const handleNexusShardUpgradePurchase = useCallback((upgradeId: string) => {
-    // Handle nexus shard upgrade purchase
     console.log('Purchasing nexus shard upgrade:', upgradeId);
   }, []);
 
@@ -128,179 +91,75 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
     setUpgradeTooltips(prev => prev.filter(tooltip => tooltip.id !== id));
   }, []);
 
-  const handleModalBackdropClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      setSelectedBuilding(null);
-      setSelectedUpgrade(null);
-      setSelected3DUpgrade(null);
-      setSelectedScifiUpgrade(null);
-      setSelectedFantasyUpgrade(null);
-      setShowNexusShardShop(false);
-    }
-  }, []);
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      {/* 3D Scene */}
+      <SceneRenderer
+        realm={realm}
+        gameState={gameState}
+        showTapEffect={showTapEffect}
+        isTransitioning={isTransitioning}
+        onTapEffectComplete={onTapEffectComplete}
+        onUpgradeClick={handleUpgradeClick}
+        on3DUpgradeClick={handle3DUpgradeClick}
+        onPlayerPositionUpdate={onPlayerPositionUpdate}
+        onEnemyCountChange={onEnemyCountChange}
+        onEnemyKilled={onEnemyKilled}
+        onMeteorDestroyed={onMeteorDestroyed}
+        weaponDamage={weaponDamage}
+        upgradesPurchased={upgradesPurchased}
+      />
 
-  // Check if special upgrades are purchased
-  const hasFantasySpecial = fantasyUpgrades.some(u => u.isSpecial && u.purchased);
-  const hasScifiSpecial = scifiUpgrades.some(u => u.isSpecial && u.purchased);
+      {/* 2D Tap Resource Effect Overlay */}
+      {showTapEffect && onTapEffectComplete && (
+        <TapResourceEffect
+          realm={realm}
+          onComplete={onTapEffectComplete}
+        />
+      )}
 
-  const selectedScifiUpgradeData = selectedScifiUpgrade ? scifiUpgrades.find(u => u.id === selectedScifiUpgrade) : null;
-  const selectedFantasyUpgradeData = selectedFantasyUpgrade ? fantasyUpgrades.find(u => u.id === selectedFantasyUpgrade) : null;
+      {/* Upgrade Tooltips */}
+      {upgradeTooltips.map((tooltip) => (
+        <UpgradeFloatingTooltip
+          key={tooltip.id}
+          buildingName={tooltip.buildingName}
+          level={tooltip.level}
+          realm={realm}
+          position={tooltip.position}
+          onComplete={() => removeUpgradeTooltip(tooltip.id)}
+        />
+      ))}
 
-  console.log('MapSkillTreeView: About to render with realm:', realm);
-
-  try {
-    return (
-      <div className="relative w-full h-full overflow-hidden">
-        {/* 3D Scene */}
-        {realm === 'fantasy' ? (
-          <Fantasy3DUpgradeWorld
-            key="fantasy-world"
-            onUpgradeClick={handle3DUpgradeClick}
-            showTapEffect={showTapEffect}
-            onTapEffectComplete={onTapEffectComplete}
-            gameState={gameState}
-            realm={realm}
-            onPlayerPositionUpdate={onPlayerPositionUpdate}
-            onEnemyCountChange={onEnemyCountChange}
-            onEnemyKilled={onEnemyKilled}
-            weaponDamage={weaponDamage}
-            upgradesPurchased={gameState.purchasedUpgrades?.length || 0}
-          />
-        ) : (
-          <Scene3D
-            key="scifi-world"
-            realm={realm}
-            gameState={gameState}
-            onUpgradeClick={handleUpgradeClick}
-            isTransitioning={isTransitioning}
-            showTapEffect={showTapEffect}
-            onTapEffectComplete={onTapEffectComplete}
-            onMeteorDestroyed={onMeteorDestroyed}
-          />
-        )}
-
-        {/* 2D Tap Resource Effect Overlay */}
-        {showTapEffect && onTapEffectComplete && (
-          <TapResourceEffect
-            realm={realm}
-            onComplete={onTapEffectComplete}
-          />
-        )}
-
-        {/* Upgrade Tooltips */}
-        {upgradeTooltips.map((tooltip) => (
-          <UpgradeFloatingTooltip
-            key={tooltip.id}
-            buildingName={tooltip.buildingName}
-            level={tooltip.level}
-            realm={realm}
-            position={tooltip.position}
-            onComplete={() => removeUpgradeTooltip(tooltip.id)}
-          />
-        ))}
-
-        {/* Building Upgrade Modal */}
-        {selectedBuilding && (
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            onClick={handleModalBackdropClick}
-          >
-            <div className="w-full max-w-[90%] max-h-[70vh]">
-              <BuildingUpgradeModal
-                building={selectedBuilding.building}
-                count={selectedBuilding.count}
-                realm={realm}
-                currency={currency}
-                onBuy={() => {}}
-                onClose={() => setSelectedBuilding(null)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Hybrid Upgrade Modal */}
-        {selectedUpgrade && (
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            onClick={handleModalBackdropClick}
-          >
-            <div className="w-full max-w-[90%] max-h-[70vh]">
-              <HybridUpgradeModal
-                upgrade={enhancedHybridUpgrades.find(u => u.id === selectedUpgrade)!}
-                gameState={gameState}
-                onPurchase={handleUpgradePurchase}
-                onClose={() => setSelectedUpgrade(null)}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* 3D Fantasy Upgrade Modal */}
-        {selected3DUpgrade && (
-          <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            onClick={handleModalBackdropClick}
-          >
-            <div className="w-full max-w-sm">
-              <Fantasy3DUpgradeModal
-                upgradeName={selected3DUpgrade}
-                onClose={() => setSelected3DUpgrade(null)}
-                onPurchase={handle3DUpgradePurchase}
-                upgradeData={{
-                  cost: 100,
-                  manaPerSecond: 10,
-                  purchased: false
-                }}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Sci-Fi Upgrade Modal */}
-        {selectedScifiUpgradeData && (
-          <ScifiUpgradeMenu
-            upgrade={selectedScifiUpgradeData}
-            energyCredits={gameState.energyCredits}
-            onPurchase={handleScifiUpgradePurchase}
-            onClose={() => setSelectedScifiUpgrade(null)}
-          />
-        )}
-
-        {/* Fantasy Upgrade Modal */}
-        {selectedFantasyUpgradeData && (
-          <ScifiUpgradeMenu
-            upgrade={{
-              ...selectedFantasyUpgradeData,
-              cost: selectedFantasyUpgradeData.cost
-            }}
-            energyCredits={gameState.mana}
-            onPurchase={handleFantasyUpgradePurchase}
-            onClose={() => setSelectedFantasyUpgrade(null)}
-          />
-        )}
-
-        {/* Nexus Shard Shop */}
-        {showNexusShardShop && (
-          <NexusShardShop
-            upgrades={nexusShardUpgrades}
-            nexusShards={gameState.nexusShards || 0}
-            hasFantasySpecial={hasFantasySpecial}
-            hasScifiSpecial={hasScifiSpecial}
-            onPurchase={handleNexusShardUpgradePurchase}
-            onClose={() => setShowNexusShardShop(false)}
-          />
-        )}
-      </div>
-    );
-  } catch (error) {
-    console.error('MapSkillTreeView: Error during render:', error);
-    return (
-      <div className="relative w-full h-full overflow-hidden flex items-center justify-center bg-red-900/20">
-        <div className="text-white text-center">
-          <h2 className="text-xl font-bold mb-2">Rendering Error</h2>
-          <p className="text-sm opacity-75">Check console for details</p>
-        </div>
-      </div>
-    );
-  }
+      {/* All Modals */}
+      <UpgradeModalManager
+        selectedBuilding={selectedBuilding}
+        selectedUpgrade={selectedUpgrade}
+        selected3DUpgrade={selected3DUpgrade}
+        selectedScifiUpgrade={selectedScifiUpgrade}
+        selectedFantasyUpgrade={selectedFantasyUpgrade}
+        showNexusShardShop={showNexusShardShop}
+        realm={realm}
+        currency={currency}
+        gameState={gameState}
+        onCloseBuilding={() => setSelectedBuilding(null)}
+        onCloseUpgrade={() => setSelectedUpgrade(null)}
+        onClose3DUpgrade={() => setSelected3DUpgrade(null)}
+        onCloseScifiUpgrade={() => setSelectedScifiUpgrade(null)}
+        onCloseFantasyUpgrade={() => setSelectedFantasyUpgrade(null)}
+        onCloseNexusShardShop={() => setShowNexusShardShop(false)}
+        onPurchaseUpgrade={() => {
+          if (selectedUpgrade) {
+            onPurchaseUpgrade(selectedUpgrade);
+            setSelectedUpgrade(null);
+          }
+        }}
+        onPurchase3DUpgrade={() => {
+          setSelected3DUpgrade(null);
+        }}
+        onPurchaseScifiUpgrade={handleScifiUpgradePurchase}
+        onPurchaseFantasyUpgrade={handleFantasyUpgradePurchase}
+        onPurchaseNexusShardUpgrade={handleNexusShardUpgradePurchase}
+      />
+    </div>
+  );
 };

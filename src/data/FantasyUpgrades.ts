@@ -15,14 +15,16 @@ export const fantasyUpgrades: FantasyUpgrade[] = [
     name: 'Mana Crystal',
     cost: 50,
     bonus: '+3 mana/sec',
-    description: 'A crystallized form of pure magical energy'
+    description: 'A crystallized form of pure magical energy',
+    purchased: false
   },
   {
     id: 'arcane_focus',
     name: 'Arcane Focus',
     cost: 250,
     bonus: '+12 mana/sec',
-    description: 'Concentrates magical energies for greater efficiency'
+    description: 'Concentrates magical energies for greater efficiency',
+    purchased: false
   },
   {
     id: 'mystic_fountain',
@@ -30,13 +32,15 @@ export const fantasyUpgrades: FantasyUpgrade[] = [
     cost: 1000,
     bonus: '+30 mana/sec',
     description: 'An eternal wellspring of magical power',
-    isSpecial: true
+    isSpecial: true,
+    purchased: false
   },
   {
     id: 'elder_artifact',
     name: 'Elder Artifact',
     cost: 5000,
     bonus: '+100 mana/sec',
-    description: 'Ancient relic of immense magical power'
+    description: 'Ancient relic of immense magical power',
+    purchased: false
   }
 ];

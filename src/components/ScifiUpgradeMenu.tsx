@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
+import { X, Lock } from 'lucide-react';
 
 export interface ScifiUpgrade {
   id: string;
@@ -11,11 +11,15 @@ export interface ScifiUpgrade {
   description: string;
   isSpecial?: boolean;
   purchased?: boolean;
+  unlockRequirement?: {
+    fantasyUpgrades: number;
+  };
 }
 
 interface ScifiUpgradeMenuProps {
   upgrade: ScifiUpgrade;
   energyCredits: number;
+  fantasyUpgradeCount?: number;
   onPurchase: (upgradeId: string) => void;
   onClose: () => void;
 }
@@ -23,10 +27,12 @@ interface ScifiUpgradeMenuProps {
 export const ScifiUpgradeMenu: React.FC<ScifiUpgradeMenuProps> = ({
   upgrade,
   energyCredits,
+  fantasyUpgradeCount = 0,
   onPurchase,
   onClose
 }) => {
-  const canAfford = energyCredits >= upgrade.cost && !upgrade.purchased;
+  const isUnlocked = !upgrade.unlockRequirement || fantasyUpgradeCount >= upgrade.unlockRequirement.fantasyUpgrades;
+  const canAfford = energyCredits >= upgrade.cost && !upgrade.purchased && isUnlocked;
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
@@ -63,7 +69,20 @@ export const ScifiUpgradeMenu: React.FC<ScifiUpgradeMenuProps> = ({
             <p className="text-white/80 text-sm">{upgrade.description}</p>
           )}
 
-          {upgrade.isSpecial && (
+          {/* Unlock Requirements */}
+          {!isUnlocked && upgrade.unlockRequirement && (
+            <div className="bg-red-900/30 border border-red-400/40 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-red-300 text-sm font-medium">
+                <Lock size={14} />
+                Requires {upgrade.unlockRequirement.fantasyUpgrades} Fantasy upgrades
+              </div>
+              <p className="text-red-200/80 text-xs mt-1">
+                Purchase more upgrades in the Fantasy realm to unlock this.
+              </p>
+            </div>
+          )}
+
+          {upgrade.isSpecial && isUnlocked && (
             <div className="bg-yellow-400/20 border border-yellow-400/40 rounded-lg p-3">
               <p className="text-yellow-300 text-sm font-medium">
                 ⭐ Special Upgrade: Unlocks Nexus Shard earning!
@@ -84,12 +103,16 @@ export const ScifiUpgradeMenu: React.FC<ScifiUpgradeMenuProps> = ({
               onClick={() => onPurchase(upgrade.id)}
               disabled={!canAfford}
               className={`flex-1 ${
-                canAfford
+                upgrade.purchased
+                  ? 'bg-green-600/50 text-green-300 cursor-not-allowed'
+                  : !isUnlocked
+                  ? 'bg-gray-600/50 cursor-not-allowed'
+                  : canAfford
                   ? 'bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700'
                   : 'bg-gray-600/50 cursor-not-allowed'
               }`}
             >
-              {upgrade.purchased ? 'Purchased' : 'Purchase'}
+              {upgrade.purchased ? 'Purchased' : !isUnlocked ? 'Locked' : 'Purchase'}
             </Button>
           </div>
         </div>
