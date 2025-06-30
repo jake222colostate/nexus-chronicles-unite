@@ -211,10 +211,9 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
 
   // FIXED: Use canvas-specific click handler instead of window
   useEffect(() => {
-    const handleClick = (event: MouseEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      
+    const handleClick = () => {
+      // Allow upgrade pedestals to receive their click events by not
+      // stopping propagation or preventing default behaviour.
       console.log('MagicStaffWeaponSystem: Canvas clicked - manual fire triggered');
       projectileSystemRef.current?.manualFire();
     };
@@ -272,18 +271,21 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
   }
 
   return (
-    <group ref={weaponGroupRef}>
-      <primitive
-        object={staffModel}
-        scale={[staffScale, staffScale, staffScale]}
-      />
-      {/* Enhanced staff tip indicator (visible point where projectiles spawn) */}
-      <mesh position={[0, 1.8 * staffScale, 0]}>
-        <sphereGeometry args={[0.02]} />
-        <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.8} />
-      </mesh>
-      {/* Reduced light intensity to match smaller staff */}
-      <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.3} distance={2} />
+    <>
+      <group ref={weaponGroupRef}>
+        <primitive
+          object={staffModel}
+          scale={[staffScale, staffScale, staffScale]}
+        />
+        {/* Enhanced staff tip indicator (visible point where projectiles spawn) */}
+        <mesh position={[0, 1.8 * staffScale, 0]}>
+          <sphereGeometry args={[0.02]} />
+          <meshBasicMaterial color="#00ffff" emissive="#00ffff" emissiveIntensity={0.8} />
+        </mesh>
+        {/* Reduced light intensity to match smaller staff */}
+        <pointLight position={[0, 0.5, 0]} color="#4B0082" intensity={0.3} distance={2} />
+      </group>
+      {/* Render projectiles outside of the weapon group so they aren't tied to the camera */}
       <OptimizedProjectileSystem
         ref={projectileSystemRef}
         staffTipPosition={staffTipPositionRef.current}
@@ -292,7 +294,7 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
         autoFireRate={autoFireRate}
         onHitEnemy={onHitEnemy}
       />
-    </group>
+    </>
   );
 };
 
