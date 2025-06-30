@@ -16,6 +16,8 @@ interface MapSkillTreeViewProps {
   isTransitioning?: boolean;
   gameState: any;
   onPurchaseUpgrade: (upgradeId: string) => void;
+  onPurchaseScifiUpgrade: (upgradeId: string) => void;
+  onPurchaseFantasyUpgrade: (upgradeId: string) => void;
   showTapEffect?: boolean;
   onTapEffectComplete?: () => void;
   onPlayerPositionUpdate?: (position: { x: number; y: number; z: number }) => void;
@@ -37,6 +39,8 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   isTransitioning = false,
   gameState,
   onPurchaseUpgrade,
+  onPurchaseScifiUpgrade,
+  onPurchaseFantasyUpgrade,
   showTapEffect = false,
   onTapEffectComplete,
   onPlayerPositionUpdate,
@@ -64,24 +68,28 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
 
   // Handlers
   const handleUpgradeClick = useCallback((upgradeId: string) => {
-    setSelectedUpgrade(upgradeId);
-  }, []);
+    if (realm === 'scifi') {
+      setSelectedScifiUpgrade(upgradeId);
+    } else if (realm === 'fantasy') {
+      setSelectedFantasyUpgrade(upgradeId);
+    } else {
+      setSelectedUpgrade(upgradeId);
+    }
+  }, [realm]);
 
   const handle3DUpgradeClick = useCallback((upgradeName: string) => {
     setSelected3DUpgrade(upgradeName);
   }, []);
 
   const handleScifiUpgradePurchase = useCallback((upgradeId: string) => {
-    // Handle sci-fi upgrade purchase and check for nexus shard earning
-    onPurchaseUpgrade(upgradeId);
+    onPurchaseScifiUpgrade(upgradeId);
     setSelectedScifiUpgrade(null);
-  }, [onPurchaseUpgrade]);
+  }, [onPurchaseScifiUpgrade]);
 
   const handleFantasyUpgradePurchase = useCallback((upgradeId: string) => {
-    // Handle fantasy upgrade purchase and check for nexus shard earning
-    onPurchaseUpgrade(upgradeId);
+    onPurchaseFantasyUpgrade(upgradeId);
     setSelectedFantasyUpgrade(null);
-  }, [onPurchaseUpgrade]);
+  }, [onPurchaseFantasyUpgrade]);
 
   const handleNexusShardUpgradePurchase = useCallback((upgradeId: string) => {
     console.log('Purchasing nexus shard upgrade:', upgradeId);

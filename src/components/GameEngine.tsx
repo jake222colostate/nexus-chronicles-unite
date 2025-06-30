@@ -12,6 +12,7 @@ import { JourneyTracker } from './JourneyTracker';
 import { WeaponUpgradeSystem } from './WeaponUpgradeSystem';
 import { ScifiWeaponUpgradeSystem } from './ScifiWeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem } from './CrossRealmUpgradeSystem';
+import { useUpgradeSystem } from '../hooks/useUpgradeSystem';
 import { useGameStateManager, fantasyBuildings, scifiBuildings } from './GameStateManager';
 import { useGameLoopManager } from './GameLoopManager';
 import { useUpgradeManagers } from './UpgradeManagers';
@@ -104,6 +105,12 @@ const GameEngine: React.FC = () => {
     currentRealm,
     crossRealmUpgradesWithLevels
   });
+
+  const {
+    purchaseScifiUpgrade,
+    purchaseFantasyUpgrade,
+    getFantasyUpgradeCount
+  } = useUpgradeSystem({ gameState: stableGameState, setGameState });
 
   // Memoize all handlers to prevent re-renders
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
@@ -284,6 +291,8 @@ const GameEngine: React.FC = () => {
         currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
         gameState={stableGameState}
         onPurchaseUpgrade={purchaseUpgrade}
+        onPurchaseScifiUpgrade={purchaseScifiUpgrade}
+        onPurchaseFantasyUpgrade={purchaseFantasyUpgrade}
         isTransitioning={isTransitioning}
         showTapEffect={showTapEffect}
         onTapEffectComplete={handleTapEffectComplete}
