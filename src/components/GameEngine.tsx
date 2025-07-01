@@ -17,8 +17,7 @@ import { useGameStateManager, fantasyBuildings, scifiBuildings } from './GameSta
 import { useGameLoopManager } from './GameLoopManager';
 import { useUpgradeManagers } from './UpgradeManagers';
 import { useUIStateManager } from './UIStateManager';
-import { AutoClickerUpgradeSystem } from './AutoClickerUpgradeSystem';
-import { useAutoClickerEffect } from '@/hooks/useAutoClickerEffect';
+
 import { FantasyAutoClickerUpgradeSystem } from './FantasyAutoClickerUpgradeSystem';
 import { useAutoManaSystem } from '@/hooks/useAutoManaSystem';
 import { useAutoEnergySystem } from '@/hooks/useAutoEnergySystem';
@@ -114,8 +113,7 @@ const GameEngine: React.FC = () => {
 
   // Memoize all handlers to prevent re-renders
   const handlePlayerPositionUpdate = useCallback((position: { x: number; y: number; z: number }) => {
-    // Removed state update to prevent infinite loops - position tracking handled elsewhere
-    console.log('Player position updated:', position);
+    // Position tracking handled elsewhere to prevent infinite loops
   }, []);
 
   const handleEnemyCountChange = useCallback((count: number) => {

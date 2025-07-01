@@ -25,7 +25,8 @@ export const useUpgradeSystem = ({ gameState, setGameState }: UseUpgradeSystemPr
     }
 
     setGameState(prev => {
-      const newScifiUpgrades = scifiUpgrades.map(u => 
+      // Create new arrays instead of mutating originals
+      const updatedScifiUpgrades = (prev.scifiUpgrades || scifiUpgrades).map(u => 
         u.id === upgradeId ? { ...u, purchased: true } : u
       );
       
@@ -44,12 +45,12 @@ export const useUpgradeSystem = ({ gameState, setGameState }: UseUpgradeSystemPr
         energyCredits: prev.energyCredits - upgrade.cost,
         energyPerSecond: prev.energyPerSecond + (upgrade.bonus.match(/\d+/) ? parseInt(upgrade.bonus.match(/\d+/)[0]) : 0),
         nexusShards,
-        scifiUpgrades: newScifiUpgrades
+        scifiUpgrades: updatedScifiUpgrades
       };
     });
 
     return true;
-  }, [gameState, setGameState]);
+  }, [gameState.energyCredits, gameState.nexusShards, setGameState]);
 
   const purchaseFantasyUpgrade = useCallback((upgradeId: string) => {
     const upgrade = fantasyUpgrades.find(u => u.id === upgradeId);
@@ -58,7 +59,8 @@ export const useUpgradeSystem = ({ gameState, setGameState }: UseUpgradeSystemPr
     }
 
     setGameState(prev => {
-      const newFantasyUpgrades = fantasyUpgrades.map(u => 
+      // Create new arrays instead of mutating originals
+      const updatedFantasyUpgrades = (prev.fantasyUpgrades || fantasyUpgrades).map(u => 
         u.id === upgradeId ? { ...u, purchased: true } : u
       );
       
@@ -77,12 +79,12 @@ export const useUpgradeSystem = ({ gameState, setGameState }: UseUpgradeSystemPr
         mana: prev.mana - upgrade.cost,
         manaPerSecond: prev.manaPerSecond + (upgrade.bonus.match(/\d+/) ? parseInt(upgrade.bonus.match(/\d+/)[0]) : 0),
         nexusShards,
-        fantasyUpgrades: newFantasyUpgrades
+        fantasyUpgrades: updatedFantasyUpgrades
       };
     });
 
     return true;
-  }, [gameState, setGameState]);
+  }, [gameState.mana, gameState.nexusShards, setGameState]);
 
   const getFantasyUpgradeCount = useCallback(() => {
     return fantasyUpgrades.filter(u => u.purchased).length;

@@ -67,14 +67,14 @@ export const UpgradeModalManager: React.FC<UpgradeModalManagerProps> = ({
   };
 
   // Check if special upgrades are purchased
-  const hasFantasySpecial = fantasyUpgrades.some(u => u.isSpecial && u.purchased);
-  const hasScifiSpecial = scifiUpgrades.some(u => u.isSpecial && u.purchased);
+  const hasFantasySpecial = (gameState?.fantasyUpgrades || fantasyUpgrades).some(u => u.isSpecial && u.purchased);
+  const hasScifiSpecial = (gameState?.scifiUpgrades || scifiUpgrades).some(u => u.isSpecial && u.purchased);
 
   const selectedScifiUpgradeData = selectedScifiUpgrade ? scifiUpgrades.find(u => u.id === selectedScifiUpgrade) : null;
   const selectedFantasyUpgradeData = selectedFantasyUpgrade ? fantasyUpgrades.find(u => u.id === selectedFantasyUpgrade) : null;
 
   // Count fantasy upgrades for sci-fi unlock requirements
-  const fantasyUpgradeCount = fantasyUpgrades.filter(u => u.purchased).length;
+  const fantasyUpgradeCount = (gameState?.fantasyUpgrades || fantasyUpgrades).filter(u => u.purchased).length;
 
   return (
     <>

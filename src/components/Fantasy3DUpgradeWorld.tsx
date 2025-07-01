@@ -34,8 +34,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
   weaponDamage,
   upgradesPurchased = 0
 }) => {
-  console.log('Fantasy3DUpgradeWorld: Rendering with realm:', realm);
-  
   const [isCanvasReady, setIsCanvasReady] = useState(false);
   const [assetsLoaded, setAssetsLoaded] = useState(false);
   const [previousUpgradeCount, setPreviousUpgradeCount] = useState(0);
@@ -66,14 +64,12 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     if (maxUnlockedUpgrade !== previousUpgradeCount) {
       setPreviousUpgradeCount(maxUnlockedUpgrade);
     }
-  }, [maxUnlockedUpgrade]);
+  }, [maxUnlockedUpgrade, previousUpgradeCount]);
 
   // Preload environment assets once on mount
   useEffect(() => {
-    console.log('Fantasy3DUpgradeWorld: Starting asset preload');
     let cancelled = false;
     TreeAssetManager.preloadAllModels().then(() => {
-      console.log('Fantasy3DUpgradeWorld: Assets loaded successfully');
       if (!cancelled) setAssetsLoaded(true);
     }).catch((error) => {
       console.error('Fantasy3DUpgradeWorld: Error loading assets:', error);
@@ -84,26 +80,22 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     };
   }, []);
 
-  // Force Canvas to initialize properly on mount
+  // Initialize canvas when realm changes to fantasy
   useEffect(() => {
-    console.log('Fantasy3DUpgradeWorld: Initializing for realm:', realm);
-    if (realm === 'fantasy') {
-      // Small delay to ensure proper initialization
+    if (realm === 'fantasy' && !isCanvasReady) {
       const timer = setTimeout(() => {
-        console.log('Fantasy3DUpgradeWorld: Canvas ready');
         setIsCanvasReady(true);
       }, 100);
       return () => clearTimeout(timer);
+    } else if (realm !== 'fantasy') {
+      setIsCanvasReady(false);
     }
-  }, [realm]);
+  }, [realm, isCanvasReady]);
 
   // Only render if realm is fantasy and canvas is ready
   if (realm !== 'fantasy') {
-    console.log('Fantasy3DUpgradeWorld: Not rendering - realm is not fantasy');
     return null;
   }
-
-  console.log('Fantasy3DUpgradeWorld: Canvas ready:', isCanvasReady, 'Assets loaded:', assetsLoaded);
 
   try {
     return (
@@ -130,7 +122,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               powerPreference: "high-performance"
             }}
             onCreated={(state) => {
-              console.log('Fantasy3DUpgradeWorld: Canvas created successfully');
               state.camera.updateProjectionMatrix();
             }}
           >
