@@ -246,16 +246,17 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       
       // Right hand positioning - holding the staff upright
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.3))      // Right side for right hand
-        .add(cameraUp.clone().multiplyScalar(-0.15))       // Hand height
-        .add(cameraForward.clone().multiplyScalar(0.5));   // Forward from body
+        .add(cameraRight.clone().multiplyScalar(0.35))     // Further right for right hand
+        .add(cameraUp.clone().multiplyScalar(-0.1))        // Hand level
+        .add(cameraForward.clone().multiplyScalar(0.6));   // Forward from body
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Keep staff completely upright (Y-axis aligned) regardless of camera rotation
-      weaponGroupRef.current.rotation.set(0, 0, 0);  // Reset rotation
-      weaponGroupRef.current.rotateY(camera.rotation.y - 15 * Math.PI / 180); // Only follow horizontal camera rotation with slight inward angle
-      weaponGroupRef.current.rotateX(10 * Math.PI / 180);  // Slight forward tilt for natural grip
+      // Make staff completely upright - no copying camera rotation
+      weaponGroupRef.current.rotation.set(0, 0, 0);  // Reset to upright
+      // Only follow Y rotation (turning left/right) with slight inward angle
+      weaponGroupRef.current.rotateY(camera.rotation.y + 15 * Math.PI / 180); // Slight angle toward center
+      weaponGroupRef.current.rotateX(15 * Math.PI / 180);  // Forward tilt for natural grip
 
       // ENHANCED: More accurate staff tip calculation
       // Calculate tip position relative to staff length and scale
