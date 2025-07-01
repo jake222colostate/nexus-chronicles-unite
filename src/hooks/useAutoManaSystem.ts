@@ -1,6 +1,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useAutoClickerStore } from '@/stores/useAutoClickerStore';
+import { useMapEditorStore } from '@/stores/useMapEditorStore';
 
 interface UseAutoManaSystemProps {
   onAddMana: (amount: number) => void;
@@ -8,6 +9,7 @@ interface UseAutoManaSystemProps {
 
 export const useAutoManaSystem = ({ onAddMana }: UseAutoManaSystemProps) => {
   const manaPerSecond = useAutoClickerStore((state) => state.manaPerSecond);
+  const isEditorActive = useMapEditorStore((state) => state.isEditorActive);
 
   const createFloatingManaText = useCallback((amount: number) => {
     const manaDisplay = document.querySelector('[data-mana-display]');
@@ -36,7 +38,7 @@ export const useAutoManaSystem = ({ onAddMana }: UseAutoManaSystemProps) => {
   }, []);
 
   useEffect(() => {
-    if (manaPerSecond <= 0) return;
+    if (isEditorActive || manaPerSecond <= 0) return;
 
     const interval = setInterval(() => {
       onAddMana(manaPerSecond);
@@ -44,5 +46,5 @@ export const useAutoManaSystem = ({ onAddMana }: UseAutoManaSystemProps) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [manaPerSecond, onAddMana, createFloatingManaText]);
+  }, [manaPerSecond, onAddMana, createFloatingManaText, isEditorActive]);
 };
