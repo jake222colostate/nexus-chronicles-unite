@@ -23,10 +23,10 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
     const positions: Array<{id: string, position: Vector3, tier: number}> = [];
     
     for (let i = 0; i < 50; i++) {
-      // Create a spiral pattern going upward
-      const height = i * 4 + 5; // Each upgrade is 4 units higher
-      const angle = (i * 0.8) * Math.PI; // Spiral angle
-      const radius = 8 + Math.sin(i * 0.3) * 3; // Varying distance from center
+      // Create a vertical spiral pattern going upward
+      const height = i * 6 + 10; // Each upgrade is 6 units higher, starting at y=10
+      const angle = (i * 0.6) * Math.PI; // Spiral angle
+      const radius = 12 + Math.sin(i * 0.4) * 4; // Varying distance from center
       
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
@@ -44,22 +44,16 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
     return positions;
   }, []);
 
-  // Check if upgrade is unlocked based on camera height
-  const isUpgradeUnlocked = useCallback((upgrade: any): boolean => {
-    const minHeightToUnlock = upgrade.position.y - 10; // Unlock when 10 units below
-    return cameraY >= minHeightToUnlock;
-  }, [cameraY]);
-
-  // Filter upgrades based on camera visibility and unlock status
+  // Show all upgrades within view distance (no unlock requirement)
   const visibleUpgrades = useMemo(() => {
     const cameraPos = camera.position;
-    const viewDistance = 30; // How far we can see upgrades
+    const viewDistance = 50; // Increased view distance to see more upgrades
     
     return upgradePositions.filter(upgrade => {
       const distance = upgrade.position.distanceTo(cameraPos);
-      return distance <= viewDistance && isUpgradeUnlocked(upgrade);
+      return distance <= viewDistance;
     });
-  }, [upgradePositions, camera.position, isUpgradeUnlocked]);
+  }, [upgradePositions, camera.position]);
 
   return (
     <>
