@@ -15,6 +15,7 @@ import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
 import { ScifiDefenseSystem } from './scifi/ScifiDefenseSystem';
 import { FloatingUpgradeSystem } from './scifi/FloatingUpgradeSystem';
 import { ScifiUpgradeAsteroidSystem } from './scifi/ScifiUpgradeAsteroidSystem';
+import { ScifiScrollUpgradeSystem } from './scifi/ScifiScrollUpgradeSystem';
 import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
 
 interface Scene3DProps {
@@ -172,6 +173,12 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 energyCredits={gameState.energyCredits || 0}
                 onUpgradeClick={setSelectedUpgrade}
                 purchasedUpgrades={gameState.purchasedUpgrades || []}
+              />
+              <ScifiScrollUpgradeSystem
+                energyCredits={gameState.energyCredits || 0}
+                onUpgradeClick={setSelectedUpgrade}
+                purchasedUpgrades={gameState.purchasedUpgrades || []}
+                cameraY={(cameraRef.current as any)?.position?.y || 0}
               />
             </>
           )}
