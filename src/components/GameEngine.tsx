@@ -282,17 +282,16 @@ const GameEngine: React.FC = () => {
         />
       )}
 
-      {/* Main Game Area - disabled in map editor */}
-      {!isEditorActive && (
-        <div className="absolute inset-0 pt-12 pb-32">
-          {/* Main game view without overlays */}
-          <MapSkillTreeView
-            realm={currentRealm}
-            buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : stableGameState.scifiBuildings}
-            manaPerSecond={stableGameState.manaPerSecond}
-            energyPerSecond={stableGameState.energyPerSecond}
-            onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
-            buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
+      {/* Main Game Area - also used for map editor */}
+      <div className="absolute inset-0 pt-12 pb-32">
+        {/* Main game view without overlays */}
+        <MapSkillTreeView
+          realm={currentRealm}
+          buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : stableGameState.scifiBuildings}
+          manaPerSecond={stableGameState.manaPerSecond}
+          energyPerSecond={stableGameState.energyPerSecond}
+          onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
+          buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
           currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
           gameState={stableGameState}
           onPurchaseUpgrade={purchaseUpgrade}
@@ -308,8 +307,7 @@ const GameEngine: React.FC = () => {
           weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
           upgradesPurchased={stableGameState.purchasedUpgrades.length}
         />
-        </div>
-      )}
+      </div>
 
         {/* UI Elements disabled in map editor */}
         {!isEditorActive && (

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Scene3D } from './Scene3D';
 import { Fantasy3DUpgradeWorld } from './Fantasy3DUpgradeWorld';
+import { useMapEditorStore } from '../stores/useMapEditorStore';
 
 interface SceneRendererProps {
   realm: 'fantasy' | 'scifi';
@@ -34,9 +35,22 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
   weaponDamage,
   upgradesPurchased
 }) => {
+  const { isEditorActive } = useMapEditorStore();
+
   return (
     <>
-      {realm === 'fantasy' ? (
+      {isEditorActive ? (
+        <Scene3D
+          key="editor-scene"
+          realm={realm}
+          gameState={gameState}
+          onUpgradeClick={onUpgradeClick}
+          isTransitioning={isTransitioning}
+          showTapEffect={showTapEffect}
+          onTapEffectComplete={onTapEffectComplete}
+          onMeteorDestroyed={onMeteorDestroyed}
+        />
+      ) : realm === 'fantasy' ? (
         <Fantasy3DUpgradeWorld
           key="fantasy-world"
           onUpgradeClick={on3DUpgradeClick}
