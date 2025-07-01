@@ -16,6 +16,7 @@ interface AsteroidProps {
   isUpgrade?: boolean;
   upgradeId?: string;
   onUpgradeClick?: (upgradeId: string) => void;
+  upgradeIndex?: number;
 }
 
 export const Asteroid: React.FC<AsteroidProps> = ({
@@ -24,7 +25,8 @@ export const Asteroid: React.FC<AsteroidProps> = ({
   onReachTarget,
   isUpgrade = false,
   upgradeId,
-  onUpgradeClick
+  onUpgradeClick,
+  upgradeIndex = 0
 }) => {
   const group = useRef<Group>(null);
 
@@ -126,59 +128,57 @@ export const Asteroid: React.FC<AsteroidProps> = ({
   const renderMeteorModel = () => {
     const clickProps = isUpgrade ? { onClick: handleClick } : {};
     
-    // Render completely different visuals for upgrades
+    // For upgrades, render enhanced polygon with special effects
     if (isUpgrade) {
+      // Color variation based on upgrade index
+      const upgradeColors = [
+        '#00ffff', '#ff00ff', '#ffff00', '#00ff00', 
+        '#ff6600', '#ff0066', '#6600ff', '#66ff00'
+      ];
+      const upgradeColor = upgradeColors[upgradeIndex % upgradeColors.length];
+      
       return (
         <group {...clickProps}>
-          {/* Main upgrade crystal - icosahedron for uniqueness */}
-          <mesh scale={randomScale * 12}>
-            <icosahedronGeometry args={[1, 1]} />
+          {/* Main upgrade polygon - same shape as meteors but enhanced */}
+          <mesh scale={randomScale * 10}>
+            <dodecahedronGeometry args={[1, 0]} />
             <meshStandardMaterial 
-              color="#ff00ff" 
-              roughness={0.1} 
-              metalness={0.9}
-              emissive="#ff00ff"
-              emissiveIntensity={0.8}
+              color={upgradeColor} 
+              roughness={0.2} 
+              metalness={0.8}
+              emissive={upgradeColor}
+              emissiveIntensity={0.5}
               transparent
               opacity={0.9}
             />
           </mesh>
           
-          {/* Outer glow ring */}
-          <mesh scale={randomScale * 16} rotation={[Math.PI / 2, 0, 0]}>
-            <ringGeometry args={[0.8, 1.2, 16]} />
+          {/* Upgrade glow outline */}
+          <mesh scale={randomScale * 11}>
+            <dodecahedronGeometry args={[1, 0]} />
             <meshBasicMaterial 
-              color="#00ffff"
+              color={upgradeColor}
               transparent
-              opacity={0.6}
+              opacity={0.3}
+              wireframe={true}
             />
           </mesh>
           
-          {/* Pulsing inner core */}
-          <mesh scale={randomScale * 6}>
-            <sphereGeometry args={[1, 16, 16]} />
-            <meshBasicMaterial 
-              color="#ffffff"
-              transparent
-              opacity={0.8}
-            />
-          </mesh>
-          
-          {/* Energy particles around the upgrade */}
-          {[...Array(6)].map((_, i) => (
+          {/* Floating particles around upgrade */}
+          {[...Array(4)].map((_, i) => (
             <mesh key={i} 
               position={[
-                Math.cos(i * Math.PI / 3) * 2,
-                Math.sin(i * 0.8) * 1,
-                Math.sin(i * Math.PI / 3) * 2
+                Math.cos(i * Math.PI / 2) * 1.5,
+                Math.sin(i * 0.5) * 0.8,
+                Math.sin(i * Math.PI / 2) * 1.5
               ]} 
-              scale={randomScale * 3}
+              scale={randomScale * 2}
             >
-              <octahedronGeometry args={[0.5, 0]} />
+              <octahedronGeometry args={[0.3, 0]} />
               <meshBasicMaterial 
-                color="#ffff00"
+                color={upgradeColor}
                 transparent
-                opacity={0.7}
+                opacity={0.8}
               />
             </mesh>
           ))}

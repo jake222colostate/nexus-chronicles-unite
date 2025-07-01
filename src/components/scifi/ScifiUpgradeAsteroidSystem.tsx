@@ -37,7 +37,7 @@ export const ScifiUpgradeAsteroidSystem: React.FC<ScifiUpgradeAsteroidSystemProp
 
   return (
     <>
-      {upgradePositions.map(({ id, position }) => (
+      {upgradePositions.map(({ id, position }, index) => (
         !purchasedUpgrades.includes(id) && (
           <Asteroid
             key={id}
@@ -46,6 +46,7 @@ export const ScifiUpgradeAsteroidSystem: React.FC<ScifiUpgradeAsteroidSystemProp
             isUpgrade={true}
             upgradeId={id}
             onUpgradeClick={onUpgradeClick}
+            upgradeIndex={index} // Add index for visual variety
           />
         )
       ))}
