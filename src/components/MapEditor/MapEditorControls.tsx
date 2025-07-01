@@ -5,7 +5,7 @@ import { Vector3 } from 'three';
 import * as THREE from 'three';
 
 export const MapEditorControls: React.FC = () => {
-  const { camera, gl, size } = useThree();
+  const { camera, gl } = useThree();
   const {
     isEditorActive,
     selectedTool,
@@ -16,7 +16,8 @@ export const MapEditorControls: React.FC = () => {
     removeElement,
     placedElements,
     selectedElement,
-    setSelectedElement
+    setSelectedElement,
+    updateElement
   } = useMapEditorStore();
 
   const raycaster = useRef(new THREE.Raycaster());
@@ -111,20 +112,59 @@ export const MapEditorControls: React.FC = () => {
     }
   };
 
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (!isEditorActive) return;
+
+    if ((event.key === 'Delete' || event.key === 'Backspace') && selectedElement) {
+      removeElement(selectedElement);
+      return;
+    }
+
+    if (selectedTool === 'move' && selectedElement) {
+      const element = placedElements.find(el => el.id === selectedElement);
+      if (!element) return;
+      const step = snapToGrid ? gridSize : 0.5;
+      const newPos = element.position.clone();
+      switch (event.key) {
+        case 'ArrowUp':
+        case 'w':
+          newPos.z -= step;
+          break;
+        case 'ArrowDown':
+        case 's':
+          newPos.z += step;
+          break;
+        case 'ArrowLeft':
+        case 'a':
+          newPos.x -= step;
+          break;
+        case 'ArrowRight':
+        case 'd':
+          newPos.x += step;
+          break;
+        default:
+          return;
+      }
+      updateElement(selectedElement, { position: newPos });
+    }
+  };
+
   // Add event listeners
   useEffect(() => {
     if (!isEditorActive) return;
 
     const canvas = gl.domElement;
-    
+
     canvas.addEventListener('click', handleClick);
     canvas.addEventListener('contextmenu', handleRightClick);
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       canvas.removeEventListener('click', handleClick);
       canvas.removeEventListener('contextmenu', handleRightClick);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isEditorActive, selectedTool, selectedElementType, snapToGrid, gridSize, placedElements]);
+  }, [isEditorActive, selectedTool, selectedElementType, snapToGrid, gridSize, placedElements, selectedElement]);
 
   return null;
 };
