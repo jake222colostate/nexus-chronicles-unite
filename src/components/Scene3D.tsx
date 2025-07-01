@@ -5,7 +5,7 @@ import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
-import { VerticalCameraController } from './VerticalCameraController';
+import { Enhanced360Controller } from './Enhanced360Controller';
 import { ChunkSystem } from './ChunkSystem';
 import { FantasyEnvironmentOrchestrator } from './FantasyEnvironmentOrchestrator';
 import { Sun } from './Sun';
@@ -170,13 +170,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             />
           )}
 
-          {/* Camera controller - disabled in map editor for flying controls */}
+          {/* Enhanced camera controller with 360 rotation support for scifi realm */}
           {!isEditorActive && (
-            <VerticalCameraController 
+            <Enhanced360Controller 
               camera={cameraRef.current}
               minY={-5}
               maxY={350}
               sensitivity={0.8}
+              realm={realm}
+              maxRotation={Math.PI / 6} // 30 degrees
             />
           )}
 

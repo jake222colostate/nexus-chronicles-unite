@@ -2,7 +2,7 @@
 import React, { Suspense, useMemo, useState, useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
-import { Enhanced360Controller } from './Enhanced360Controller';
+import { FirstPersonController } from './FirstPersonController';
 import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
@@ -161,10 +161,10 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   return (
     <CollisionProvider>
       <Suspense fallback={null}>
-        <Enhanced360Controller
+        <FirstPersonController
           position={[0, 2, 20]}
           onPositionChange={handlePositionChange}
-          enemyPositions={aliveLeechPositions}
+          canMoveForward={true}
         />
 
         <color attach="background" args={['#2d1b4e']} />
