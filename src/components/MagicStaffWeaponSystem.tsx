@@ -232,35 +232,29 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     }
   }, [gl.domElement]);
 
-  // Enhanced first-person weapon positioning with proper right hand attachment
+  // Enhanced first-person weapon positioning - truly attached to player
   useFrame(() => {
     if (weaponGroupRef.current && camera && visible && staffModel) {
-      // Get camera vectors for positioning
-      const cameraForward = new THREE.Vector3();
-      const cameraRight = new THREE.Vector3();
-      const cameraUp = new THREE.Vector3(0, 1, 0); // World up vector
+      // Position staff relative to camera position - follows all camera movement
+      const staffPosition = new THREE.Vector3(
+        0.4,   // Right hand position (positive X from camera)
+        -0.2,  // Hand height (negative Y from camera center)
+        0.3    // Forward from camera (positive Z)
+      );
       
-      camera.getWorldDirection(cameraForward);
-      cameraRight.crossVectors(cameraUp, cameraForward).normalize();
-      
-      // Right hand positioning - proper attachment point
-      const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.4))     // Right side for right hand
-        .add(cameraUp.clone().multiplyScalar(-0.3))       // Lower to hand level
-        .add(cameraForward.clone().multiplyScalar(0.7));   // Forward from body
-      
+      // Transform the local position to world space based on camera orientation
+      staffPosition.applyMatrix4(camera.matrixWorld);
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // FIXED: Truly upright staff - no camera rotation copying
-      // Staff should always point up regardless of camera movement
-      weaponGroupRef.current.rotation.set(0, 0, 0);  // Reset to world coordinates
+      // Copy camera rotation but keep staff upright
+      weaponGroupRef.current.rotation.copy(camera.rotation);
+      // Apply additional rotation to make staff upright in hand
+      weaponGroupRef.current.rotateX(-Math.PI / 2); // Point staff up instead of forward
+      weaponGroupRef.current.rotateZ(10 * Math.PI / 180); // Slight right-hand grip angle
       
-      // Only apply minimal Y rotation to face slightly inward (natural grip)
-      weaponGroupRef.current.rotateY(10 * Math.PI / 180);  // Slight inward angle
-      
-      // ENHANCED: Accurate staff tip calculation for upright staff
-      // Since staff is now truly upright, tip is simply at the top
-      const tipOffset = new THREE.Vector3(0, 1.8 * staffScale, 0); // Straight up from base
+      // Calculate staff tip position for projectiles
+      const tipOffset = new THREE.Vector3(0, 0, 1.8 * staffScale); // Tip is forward from staff base after rotation
+      tipOffset.applyQuaternion(weaponGroupRef.current.quaternion);
       staffTipPositionRef.current.copy(weaponGroupRef.current.position).add(tipOffset);
     }
   });
