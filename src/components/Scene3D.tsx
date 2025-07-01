@@ -14,6 +14,8 @@ import { Vector3 } from 'three';
 import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
 import { ScifiDefenseSystem } from './scifi/ScifiDefenseSystem';
 import { FloatingUpgradeSystem } from './scifi/FloatingUpgradeSystem';
+import { ScifiUpgradeAsteroidSystem } from './scifi/ScifiUpgradeAsteroidSystem';
+import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -54,6 +56,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   
   const cameraRef = useRef();
   const [enemyPositions, setEnemyPositions] = useState<Vector3[]>([]);
+  const [selectedUpgrade, setSelectedUpgrade] = useState<string | null>(null);
 
   // Stable player position for chunk system - centered in the mountain valley
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
@@ -163,6 +166,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
                 purchasedUpgrades={gameState.purchasedUpgrades || []}
               />
+              <ScifiUpgradeAsteroidSystem
+                energyCredits={gameState.energyCredits || 0}
+                onUpgradeClick={setSelectedUpgrade}
+                purchasedUpgrades={gameState.purchasedUpgrades || []}
+              />
             </>
           )}
 
@@ -200,6 +208,19 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
       }>
         <div />
       </Suspense>
+
+      {/* Sci-fi upgrade modal outside Canvas */}
+      {realm === 'scifi' && selectedUpgrade && (
+        <ScifiUpgradeModal
+          upgradeId={selectedUpgrade}
+          energyCredits={gameState.energyCredits || 0}
+          onPurchase={(upgradeId) => {
+            onPurchaseUpgrade?.(upgradeId);
+            setSelectedUpgrade(null);
+          }}
+          onClose={() => setSelectedUpgrade(null)}
+        />
+      )}
     </div>
   );
 });

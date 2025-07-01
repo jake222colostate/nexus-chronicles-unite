@@ -53,24 +53,13 @@ export const FloatingUpgradeSystem: React.FC<FloatingUpgradeSystemProps> = ({
   return (
     <>
       {upgradePositions.map(({ id, position }) => (
-        !purchasedUpgrades.includes(id) && (
-          <ScifiUpgradeOrb
-            key={id}
-            id={id}
-            position={position}
-            onClick={handleUpgradeClick}
-          />
-        )
-      ))}
-      
-      {selectedUpgrade && (
-        <ScifiUpgradeModal
-          upgradeId={selectedUpgrade}
-          energyCredits={energyCredits}
-          onPurchase={handlePurchase}
-          onClose={() => setSelectedUpgrade(null)}
+        <ScifiUpgradeOrb
+          key={id}
+          id={id}
+          position={position}
+          onClick={() => {}} // No click functionality - just decoration
         />
-      )}
+      ))}
     </>
   );
 };

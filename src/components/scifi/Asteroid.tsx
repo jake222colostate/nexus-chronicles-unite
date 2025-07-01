@@ -13,12 +13,18 @@ interface AsteroidProps {
   position: Vector3;
   health: number;
   onReachTarget?: () => void;
+  isUpgrade?: boolean;
+  upgradeId?: string;
+  onUpgradeClick?: (upgradeId: string) => void;
 }
 
 export const Asteroid: React.FC<AsteroidProps> = ({
   position,
   health,
-  onReachTarget
+  onReachTarget,
+  isUpgrade = false,
+  upgradeId,
+  onUpgradeClick
 }) => {
   const group = useRef<Group>(null);
 
@@ -96,11 +102,31 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     );
   };
 
+  const handleClick = (e: any) => {
+    if (isUpgrade && upgradeId && onUpgradeClick) {
+      e.stopPropagation();
+      onUpgradeClick(upgradeId);
+    }
+  };
+
   // Enhanced fallback rendering to ensure model is always visible
   const renderMeteorModel = () => {
+    const clickProps = isUpgrade ? { onClick: handleClick } : {};
+    
     try {
       if (randomModel === 'polygon') {
-        return renderPolygonMeteor();
+        return (
+          <mesh scale={randomScale * 8} {...clickProps}>
+            <dodecahedronGeometry args={[1, 0]} />
+            <meshStandardMaterial 
+              color={isUpgrade ? "#00ffff" : "#666666"} 
+              roughness={0.8} 
+              metalness={0.2}
+              emissive={isUpgrade ? "#0088ff" : "#331100"}
+              emissiveIntensity={isUpgrade ? 0.6 : 0.3}
+            />
+          </mesh>
+        );
       } else {
         const model = randomModel === 'fbx' ? fbx : glbScene;
         if (model) {
@@ -108,16 +134,39 @@ export const Asteroid: React.FC<AsteroidProps> = ({
             <primitive
               object={model.clone()}
               scale={randomScale}
+              {...clickProps}
             />
           );
         } else {
           // Fallback to polygon if model fails to load
-          return renderPolygonMeteor();
+          return (
+            <mesh scale={randomScale * 8} {...clickProps}>
+              <dodecahedronGeometry args={[1, 0]} />
+              <meshStandardMaterial 
+                color={isUpgrade ? "#00ffff" : "#666666"} 
+                roughness={0.8} 
+                metalness={0.2}
+                emissive={isUpgrade ? "#0088ff" : "#331100"}
+                emissiveIntensity={isUpgrade ? 0.6 : 0.3}
+              />
+            </mesh>
+          );
         }
       }
     } catch (error) {
       console.warn('Asteroid model render error, using fallback:', error);
-      return renderPolygonMeteor();
+      return (
+        <mesh scale={randomScale * 8} {...clickProps}>
+          <dodecahedronGeometry args={[1, 0]} />
+          <meshStandardMaterial 
+            color={isUpgrade ? "#00ffff" : "#666666"} 
+            roughness={0.8} 
+            metalness={0.2}
+            emissive={isUpgrade ? "#0088ff" : "#331100"}
+            emissiveIntensity={isUpgrade ? 0.6 : 0.3}
+          />
+        </mesh>
+      );
     }
   };
 
