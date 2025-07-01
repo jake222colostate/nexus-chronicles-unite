@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
-import { useMapEditorStore } from '../../stores/useMapEditorStore';
+import { useMapEditorStore, MapElement } from '../../stores/useMapEditorStore';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
 
@@ -29,7 +29,7 @@ export const MapEditorControls: React.FC = () => {
   };
 
   const handleClick = (event: MouseEvent) => {
-    if (!isEditorActive || selectedTool !== 'place') return;
+    if (!isEditorActive) return;
     
     const rect = gl.domElement.getBoundingClientRect();
     
@@ -59,7 +59,7 @@ export const MapEditorControls: React.FC = () => {
     if (selectedTool === 'place' && selectedElementType) {
       const newElement = {
         id: `element_${Date.now()}_${Math.random()}`,
-        type: selectedElementType.includes('upgrade') ? 'upgrade' : 
+        type: selectedElementType.includes('upgrade') ? 'upgrade' :
               selectedElementType.includes('enemy') ? 'enemy' : 'decoration' as any,
         position: intersectPoint,
         rotation: new Vector3(0, 0, 0),
@@ -69,6 +69,23 @@ export const MapEditorControls: React.FC = () => {
       };
       addElement(newElement);
       console.log('Placed element:', newElement);
+    } else if (selectedTool === 'delete') {
+      // Delete closest element with left click
+      let closestElement: MapElement | null = null;
+      let closestDistance = Infinity;
+
+      placedElements.forEach(el => {
+        const distance = el.position.distanceTo(intersectPoint);
+        if (distance < 2 && distance < closestDistance) {
+          closestDistance = distance;
+          closestElement = el;
+        }
+      });
+
+      if (closestElement) {
+        removeElement(closestElement.id);
+        console.log('Deleted element:', closestElement.id);
+      }
     }
   };
 

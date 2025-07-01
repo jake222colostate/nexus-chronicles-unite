@@ -112,15 +112,13 @@ const ElementPreview: React.FC<{ element: MapElement; isSelected: boolean }> = (
 export const MapEditorElementRenderer: React.FC = () => {
   const { placedElements, selectedElement, isEditorActive } = useMapEditorStore();
 
-  if (!isEditorActive) return null;
-
   return (
     <group>
       {placedElements.map((element) => (
         <ElementPreview
           key={element.id}
           element={element}
-          isSelected={selectedElement === element.id}
+          isSelected={isEditorActive && selectedElement === element.id}
         />
       ))}
     </group>
