@@ -185,13 +185,18 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           {/* Use existing environment even in map editor mode */}
           <FloatingIsland realm={realm} />
-          {/* Sci-fi systems - now using GLB models like fantasy */}
+          {/* Sci-fi systems - with background diamonds and upgrade modules */}
           {realm === 'scifi' && (
             <>
               <ScifiUpgradeGLBSystem
                 gameState={gameState}
                 onUpgradeClick={onUpgradeClick}
                 checkUpgradeUnlocked={checkUpgradeUnlocked}
+              />
+              <FloatingUpgradeSystem
+                energyCredits={gameState.energyCredits || 0}
+                onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
+                purchasedUpgrades={gameState.purchasedUpgrades || []}
               />
               {!isEditorActive && (
                 <ScifiDefenseSystem 
