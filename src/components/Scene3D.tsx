@@ -148,7 +148,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <VerticalCameraController 
             camera={cameraRef.current}
             minY={-5}
-            maxY={15}
+            maxY={350}
             sensitivity={0.8}
           />
 

@@ -23,10 +23,10 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
     const positions: Array<{id: string, position: Vector3, tier: number}> = [];
     
     for (let i = 0; i < 50; i++) {
-      // Create a vertical spiral pattern going upward
-      const height = i * 6 + 10; // Each upgrade is 6 units higher, starting at y=10
-      const angle = (i * 0.6) * Math.PI; // Spiral angle
-      const radius = 12 + Math.sin(i * 0.4) * 4; // Varying distance from center
+      // Create a vertical spiral pattern going upward with closer spacing
+      const height = i * 3 + 10; // Each upgrade is 3 units higher (closer together)
+      const angle = (i * 0.5) * Math.PI; // Spiral angle
+      const radius = 8 + Math.sin(i * 0.3) * 3; // Varying distance from center
       
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
@@ -47,13 +47,16 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
   // Show all upgrades within view distance (no unlock requirement)
   const visibleUpgrades = useMemo(() => {
     const cameraPos = camera.position;
-    const viewDistance = 50; // Increased view distance to see more upgrades
+    const viewDistance = 80; // Larger view distance to see more upgrades
     
     return upgradePositions.filter(upgrade => {
       const distance = upgrade.position.distanceTo(cameraPos);
       return distance <= viewDistance;
     });
   }, [upgradePositions, camera.position]);
+
+  // Add console log to debug
+  console.log(`ScifiScrollUpgradeSystem: Camera at y=${camera.position.y}, showing ${visibleUpgrades.length} upgrades`);
 
   return (
     <>
