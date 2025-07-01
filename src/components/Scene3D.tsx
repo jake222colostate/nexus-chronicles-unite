@@ -168,8 +168,12 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* ENHANCED: Much brighter and more vibrant lighting system - disabled in map editor */}
           {!isEditorActive && <ImprovedFantasyLighting />}
 
-          {/* Basic environment for map editor or game */}
-          <FloatingIsland realm={realm} />
+          {/* Environment - map editor or game */}
+          {isEditorActive ? (
+            <MapEditorEnvironment />
+          ) : (
+            <FloatingIsland realm={realm} />
+          )}
           {/* Sci-fi systems disabled in map editor */}
           {realm === 'scifi' && !isEditorActive && (
             <>
