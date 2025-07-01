@@ -17,6 +17,9 @@ import { FloatingUpgradeSystem } from './scifi/FloatingUpgradeSystem';
 import { ScifiUpgradeAsteroidSystem } from './scifi/ScifiUpgradeAsteroidSystem';
 import { ScifiScrollUpgradeSystem } from './scifi/ScifiScrollUpgradeSystem';
 import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
+import { MapEditorGrid } from './MapEditor/MapEditorGrid';
+import { MapEditorControls } from './MapEditor/MapEditorControls';
+import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -208,6 +211,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
           )}
+
+          {/* Map Editor Components */}
+          <MapEditorGrid />
+          <MapEditorControls />
+          <MapEditorElementRenderer />
         </Suspense>
       </Canvas>
 

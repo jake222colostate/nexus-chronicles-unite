@@ -23,6 +23,8 @@ import { useAutoManaSystem } from '@/hooks/useAutoManaSystem';
 import { useAutoEnergySystem } from '@/hooks/useAutoEnergySystem';
 import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
+import { MapEditorToolbar } from './MapEditor/MapEditorToolbar';
+import { MapEditorElementPalette } from './MapEditor/MapEditorElementPalette';
 
 const GameEngine: React.FC = () => {
   const {
@@ -428,6 +430,10 @@ const GameEngine: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Map Editor UI Components */}
+      <MapEditorToolbar />
+      <MapEditorElementPalette realm={currentRealm} />
     </div>
     </CollisionProvider>
   );
