@@ -19,7 +19,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   chunkSize,
   realm = 'fantasy'
 }) => {
-  const gltf = useGLTF('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain_draco.glb');
+  const gltf = useGLTF('/newassets/Mountain.glb');
   const scene = gltf.scene;
 
   const shouldRender = realm === 'fantasy';
@@ -138,8 +138,8 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   return <group>{mountainElements}</group>;
 };
 
-// Only preload the Draco-compressed model for fantasy realm
+// Preload the local mountain model for fantasy realm
 if (typeof window !== 'undefined') {
-  useGLTF.preload('https://github.com/jake222colostate/enviornment/raw/main/low_poly_fantasy_mountain_draco.glb');
-  console.log('GLBMountainSystem: Preloading Draco-compressed mountain model');
+  useGLTF.preload('/newassets/Mountain.glb');
+  console.log('GLBMountainSystem: Preloading local mountain model');
 }
