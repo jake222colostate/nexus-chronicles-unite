@@ -160,5 +160,90 @@ export const enhancedHybridUpgrades: HybridUpgrade[] = [
     unlocked: false,
     purchased: false,
     tier: 4
+  },
+
+  // Tier 5 - Transcendent upgrades
+  {
+    id: 'cosmic_nexus',
+    name: 'Cosmic Nexus',
+    description: 'Connect to the universal energy grid',
+    cost: 100,
+    costType: 'nexusShards',
+    requirements: {
+      mana: 100000,
+      energy: 100000,
+      convergenceCount: 8
+    },
+    effects: {
+      globalProductionBonus: 2.0,
+      manaProductionBonus: 100
+    },
+    icon: '🌟',
+    unlocked: false,
+    purchased: false,
+    tier: 5
+  },
+  {
+    id: 'dimensional_forge',
+    name: 'Dimensional Forge',
+    description: 'Craft reality itself with pure will',
+    cost: 150,
+    costType: 'nexusShards',
+    requirements: {
+      mana: 200000,
+      energy: 200000,
+      convergenceCount: 10
+    },
+    effects: {
+      globalProductionBonus: 3.0,
+      energyProductionBonus: 150
+    },
+    icon: '🔨',
+    unlocked: false,
+    purchased: false,
+    tier: 5
+  },
+
+  // Tier 6 - Godlike powers
+  {
+    id: 'omnipotent_core',
+    name: 'Omnipotent Core',
+    description: 'Ascend beyond mortal limitations',
+    cost: 250,
+    costType: 'nexusShards',
+    requirements: {
+      mana: 500000,
+      energy: 500000,
+      convergenceCount: 15
+    },
+    effects: {
+      globalProductionBonus: 5.0,
+      specialEffect: 'omnipotence'
+    },
+    icon: '👁️',
+    unlocked: false,
+    purchased: false,
+    tier: 6
+  },
+  {
+    id: 'universe_creator',
+    name: 'Universe Creator',
+    description: 'Birth new realities with a thought',
+    cost: 500,
+    costType: 'nexusShards',
+    requirements: {
+      mana: 1000000,
+      energy: 1000000,
+      convergenceCount: 20
+    },
+    effects: {
+      globalProductionBonus: 10.0,
+      manaProductionBonus: 500,
+      energyProductionBonus: 500
+    },
+    icon: '🌍',
+    unlocked: false,
+    purchased: false,
+    tier: 6
   }
 ];

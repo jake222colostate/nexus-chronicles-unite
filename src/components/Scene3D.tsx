@@ -35,16 +35,31 @@ interface Scene3DProps {
   onPurchaseUpgrade?: (upgradeId: string) => void;
 }
 
-// Memoized upgrade positions - no need to recalculate every render
+// Enhanced upgrade positions - extending vertically upward
 const UPGRADE_POSITIONS = [
+  // Tier 1 - Foundation
   { id: 'arcane_ai', x: 0, y: 4, z: 0, tier: 1 },
+  
+  // Tier 2 - Base level
   { id: 'mana_fountain', x: -2, y: 2.5, z: -1, tier: 2 },
   { id: 'quantum_drive', x: 2, y: 2.5, z: -1, tier: 2 },
+  
+  // Tier 3 - Mid level
   { id: 'arcane_beacon', x: -3, y: 1, z: -2, tier: 3 },
   { id: 'cyber_dragon', x: 0, y: 1, z: -2, tier: 3 },
   { id: 'nano_reactor', x: 3, y: 1, z: -2, tier: 3 },
   { id: 'rift_core', x: -1, y: -0.5, z: -3, tier: 3 },
-  { id: 'reality_engine', x: 0, y: -2, z: -4, tier: 4 }
+  
+  // Tier 4 - High level
+  { id: 'reality_engine', x: 0, y: -2, z: -4, tier: 4 },
+  
+  // Tier 5 - Transcendent level (above tier 1)
+  { id: 'cosmic_nexus', x: -1.5, y: 8, z: 1, tier: 5 },
+  { id: 'dimensional_forge', x: 1.5, y: 8, z: 1, tier: 5 },
+  
+  // Tier 6 - Godlike level (highest)
+  { id: 'omnipotent_core', x: -0.8, y: 12, z: 2, tier: 6 },
+  { id: 'universe_creator', x: 0.8, y: 16, z: 3, tier: 6 }
 ];
 
 export const Scene3D: React.FC<Scene3DProps> = React.memo(({
