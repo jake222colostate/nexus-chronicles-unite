@@ -30,9 +30,9 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
       const angleOffset = (i % 8) * (Math.PI / 4); // 8 positions around a circle
       const layer = Math.floor(i / 8); // Which "layer" of depth
       
-      // Move upgrades farther from camera - start much farther away
-      const minZ = 15; // Start much farther from camera
-      const z = minZ + (layer * 3) + Math.random() * 2; // Better depth spacing
+      // Move upgrades behind camera at -8 z distance
+      const minZ = -8; // Start at -8 z distance as requested
+      const z = minZ - (layer * 3) + Math.random() * 2; // Progress further behind camera
       
       // Tighter horizontal spread
       const radius = 4 + layer * 1.5 + Math.random() * 2; // Much smaller radius progression
