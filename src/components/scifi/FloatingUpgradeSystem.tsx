@@ -1,8 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Vector3 } from 'three';
-import { Asteroid } from './Asteroid';
+import { ScifiUpgradeOrb } from './ScifiUpgradeOrb';
 import { ScifiUpgradeModal } from './ScifiUpgradeModal';
-import { scifiUpgrades } from '../../data/ScifiUpgrades';
 
 interface FloatingUpgradeSystemProps {
   energyCredits: number;
@@ -17,33 +16,28 @@ export const FloatingUpgradeSystem: React.FC<FloatingUpgradeSystemProps> = ({
 }) => {
   const [selectedUpgrade, setSelectedUpgrade] = useState<string | null>(null);
 
-  // Generate fewer upgrade positions with actual sci-fi upgrades
+  // Generate 100 upgrade positions in a large area around the player
   const upgradePositions = useMemo(() => {
-    const positions: Array<{id: string, position: Vector3, upgradeData: any}> = [];
+    const positions: Array<{id: string, position: Vector3}> = [];
     
-    // Create positions for each sci-fi upgrade
-    scifiUpgrades.forEach((upgrade, index) => {
-      // Don't show purchased upgrades
-      if (purchasedUpgrades.includes(upgrade.id)) return;
+    for (let i = 0; i < 100; i++) {
+      // Distribute upgrades in a large area around the scene
+      const angle = (i / 100) * Math.PI * 2;
+      const radius = 20 + (i % 3) * 15; // Varying distances
+      const height = 2 + Math.sin(i * 0.5) * 3; // Varying heights
       
-      // Position upgrades in a circle around the player at different heights
-      const angle = (index / scifiUpgrades.length) * Math.PI * 2;
-      const radius = 25 + (index % 2) * 10; // Varying distances
-      const height = 3 + Math.sin(index * 0.8) * 2; // Varying heights
-      
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      const y = height;
+      const x = Math.cos(angle) * radius + (Math.random() - 0.5) * 10;
+      const z = Math.sin(angle) * radius + (Math.random() - 0.5) * 10;
+      const y = height + Math.random() * 2;
       
       positions.push({
-        id: upgrade.id,
-        position: new Vector3(x, y, z),
-        upgradeData: upgrade
+        id: `upgrade-${i}`,
+        position: new Vector3(x, y, z)
       });
-    });
+    }
     
     return positions;
-  }, [purchasedUpgrades]);
+  }, []);
 
   const handleUpgradeClick = (upgradeId: string) => {
     if (!purchasedUpgrades.includes(upgradeId)) {
@@ -58,26 +52,14 @@ export const FloatingUpgradeSystem: React.FC<FloatingUpgradeSystemProps> = ({
 
   return (
     <>
-      {upgradePositions.map(({ id, position, upgradeData }, index) => (
-        <Asteroid
+      {upgradePositions.map(({ id, position }) => (
+        <ScifiUpgradeOrb
           key={id}
+          id={id}
           position={position}
-          health={5}
-          isUpgrade={true}
-          upgradeId={id}
-          onUpgradeClick={handleUpgradeClick}
-          upgradeIndex={index}
+          onClick={() => {}} // No click functionality - just decoration
         />
       ))}
-      
-      {selectedUpgrade && (
-        <ScifiUpgradeModal
-          upgradeId={selectedUpgrade}
-          energyCredits={energyCredits}
-          onPurchase={handlePurchase}
-          onClose={() => setSelectedUpgrade(null)}
-        />
-      )}
     </>
   );
 };
