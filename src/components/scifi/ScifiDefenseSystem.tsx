@@ -48,30 +48,24 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
   useEffect(() => {
     spawnIntervalRef.current = setInterval(() => {
       setAsteroids(prev => {
-        if (prev.length >= 5) return prev; // Spawn more upgrades
-        const spawnDist = 15;
-        const x = (Math.random() - 0.5) * 8;
-        const y = Math.random() * 6 + 1;
+        if (prev.length >= 3) return prev;
+        const spawnDist = 20;
+        const x = (Math.random() - 0.5) * 6;
+        const y = Math.random() * 5 + 2;
         const spawnPos = new Vector3(x, y, camera.position.z - spawnDist);
-        
-        // Slow floating movement for upgrades
-        const floatDir = new Vector3(
-          (Math.random() - 0.5) * 0.02,
-          Math.sin(Date.now() * 0.001) * 0.01,
-          0.01
-        );
-        
+        const target = UPGRADE_TARGETS[Math.floor(Math.random() * UPGRADE_TARGETS.length)];
+        const dir = target.clone().sub(spawnPos).normalize();
         return [
           ...prev,
           {
             id: Date.now(),
             position: spawnPos,
-            velocity: floatDir,
-            health: 1 // Upgrades don't need health
+            velocity: dir.multiplyScalar(0.05),
+            health: 5
           }
         ];
       });
-    }, 3000); // Spawn upgrades more frequently
+    }, 4000);
     return () => {
       if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
     };
@@ -210,20 +204,8 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
       <group ref={cannonGroup}>
         <ScifiCannon target={target} />
       </group>
-      {asteroids.map((ast, index) => (
-        <Asteroid 
-          key={ast.id} 
-          position={ast.position} 
-          health={ast.health} 
-          isUpgrade={true}
-          upgradeId={`floating-upgrade-${ast.id}`}
-          upgradeIndex={index}
-          onUpgradeClick={(upgradeId) => {
-            onEnergyGained?.(25); // Grant energy for clicking upgrade
-            onMeteorDestroyed?.(); // Remove upgrade after click
-            setAsteroids(prev => prev.filter(a => a.id !== ast.id));
-          }}
-        />
+      {asteroids.map(ast => (
+        <Asteroid key={ast.id} position={ast.position} health={ast.health} />
       ))}
       {projectiles.map(p => (
         <mesh key={p.id} position={p.position}>
