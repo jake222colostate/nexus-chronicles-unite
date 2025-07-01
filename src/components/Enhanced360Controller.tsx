@@ -111,23 +111,24 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
 
   useFrame(() => {
     if (activeCamera) {
-      // Smooth interpolation to target position
+      // Smooth interpolation to target vertical position
       currentY.current += (targetY.current - currentY.current) * 0.1;
-      activeCamera.position.y = currentY.current;
       
-      // Circular movement around center point (for scifi realm)
+      // Apply circular movement for scifi realm
       if (realm === 'scifi') {
         currentAngle.current += (targetAngle.current - currentAngle.current) * 0.1;
         
-        // Calculate new camera position on the circle
+        // Calculate new camera position on the circle, preserving Y position
         const x = centerPoint[0] + Math.sin(currentAngle.current) * radius;
         const z = centerPoint[2] + Math.cos(currentAngle.current) * radius;
         
-        activeCamera.position.x = x;
-        activeCamera.position.z = z;
+        activeCamera.position.set(x, currentY.current, z);
         
-        // Make camera look at the center point
-        activeCamera.lookAt(centerPoint[0], centerPoint[1], centerPoint[2]);
+        // Make camera look at the center point at the same height as camera
+        activeCamera.lookAt(centerPoint[0], currentY.current, centerPoint[2]);
+      } else {
+        // For fantasy realm, just apply vertical movement
+        activeCamera.position.y = currentY.current;
       }
     }
   });
