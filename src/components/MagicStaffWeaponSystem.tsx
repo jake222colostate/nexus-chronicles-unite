@@ -244,18 +244,18 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       cameraRight.crossVectors(cameraUp.set(0, 1, 0), cameraForward).normalize();
       cameraUp.crossVectors(cameraForward, cameraRight).normalize();
       
-      // Right side positioning with smaller offset due to reduced scale
+      // Right hand positioning - holding the staff upright
       const staffPosition = camera.position.clone()
-        .add(cameraRight.clone().multiplyScalar(0.2))     // Positive for right side
-        .add(cameraUp.clone().multiplyScalar(-0.15))       // Vertical offset
-        .add(cameraForward.clone().multiplyScalar(0.3));   // Forward offset
+        .add(cameraRight.clone().multiplyScalar(0.25))     // Right side for right hand
+        .add(cameraUp.clone().multiplyScalar(-0.2))        // Lower for hand position
+        .add(cameraForward.clone().multiplyScalar(0.4));   // Forward from body
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // Minimal rotation to keep staff vertical
+      // Keep staff upright with minimal rotation
       weaponGroupRef.current.rotation.copy(camera.rotation);
-      weaponGroupRef.current.rotateY(-5 * Math.PI / 180);   // Slight angle toward center
-      weaponGroupRef.current.rotateZ(0);                     // No roll rotation for vertical stance
+      weaponGroupRef.current.rotateY(-10 * Math.PI / 180);  // Slight angle toward center
+      weaponGroupRef.current.rotateZ(0);                     // No roll - keep vertical
 
       // ENHANCED: More accurate staff tip calculation
       // Calculate tip position relative to staff length and scale
