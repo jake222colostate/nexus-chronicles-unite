@@ -107,7 +107,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         canvas.removeEventListener('contextmenu', (e) => e.preventDefault());
       }
     };
-  }, [minY, maxY, sensitivity, realm, maxRotation, radius, centerPoint, currentAngle]);
+  }, [minY, maxY, sensitivity, realm, maxRotation, radius]);
 
   useFrame(() => {
     if (activeCamera) {

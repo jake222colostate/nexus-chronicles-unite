@@ -55,23 +55,33 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
     spawnIntervalRef.current = setInterval(() => {
       setMeteors(prev => {
         if (prev.length >= 6) return prev; // Limit active meteors
-        const spawnDist = 20;
-        const x = (Math.random() - 0.5) * 8;
-        const y = Math.random() * 6 + 2;
-        const spawnPos = new Vector3(x, y, camera.position.z - spawnDist);
+        
+        // Spawn meteors from all angles around the camera
+        const spawnDist = 25; // Increased distance for better effect
+        const angle = Math.random() * Math.PI * 2; // Full 360 degree angle
+        const height = Math.random() * 8 + 2; // Random height between 2-10
+        
+        // Calculate spawn position in a circle around the camera
+        const x = camera.position.x + Math.cos(angle) * spawnDist;
+        const z = camera.position.z + Math.sin(angle) * spawnDist;
+        const spawnPos = new Vector3(x, height, z);
+        
+        // Target a random upgrade position
         const target = UPGRADE_TARGETS[Math.floor(Math.random() * UPGRADE_TARGETS.length)];
         const dir = target.clone().sub(spawnPos).normalize();
+        
         return [
           ...prev,
           {
             id: Date.now(),
             position: spawnPos,
-            velocity: dir.multiplyScalar(0.03),
+            velocity: dir.multiplyScalar(0.025), // Slightly slower for better tracking
             health: 5
           }
         ];
       });
-    }, 3000);
+    }, 2500); // Slightly faster spawn rate for more dynamic action
+    
     return () => {
       if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
     };
