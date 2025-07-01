@@ -41,13 +41,15 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
         const x = -35 - seededRandom(mountainSeed + 1) * 20;
         const y = seededRandom(mountainSeed + 2) * 2;
         
-        const rotationY = seededRandom(mountainSeed + 3) * Math.PI * 2;
-        const scale = 1.2 + seededRandom(mountainSeed + 4) * 0.8;
+        const rotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4; // X-axis rotation for natural look
+        const rotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
+        const rotationZ = (seededRandom(mountainSeed + 5) - 0.5) * 0.2; // Slight Z rotation
+        const scale = 1.2 + seededRandom(mountainSeed + 6) * 0.8;
         
         instances.push({
           key: `left_${chunk.id}_${i}`,
           position: [x, y, z] as [number, number, number],
-          rotation: [0, rotationY, 0] as [number, number, number],
+          rotation: [rotationX, rotationY, rotationZ] as [number, number, number],
           scale: [scale, scale, scale] as [number, number, number]
         });
       }
@@ -60,13 +62,15 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
         const x = 35 + seededRandom(mountainSeed + 1) * 20;
         const y = seededRandom(mountainSeed + 2) * 2;
         
-        const rotationY = seededRandom(mountainSeed + 3) * Math.PI * 2;
-        const scale = 1.2 + seededRandom(mountainSeed + 4) * 0.8;
+        const rotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4; // X-axis rotation for natural look
+        const rotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
+        const rotationZ = (seededRandom(mountainSeed + 5) - 0.5) * 0.2; // Slight Z rotation
+        const scale = 1.2 + seededRandom(mountainSeed + 6) * 0.8;
         
         instances.push({
           key: `right_${chunk.id}_${i}`,
           position: [x, y, z] as [number, number, number],
-          rotation: [0, rotationY, 0] as [number, number, number],
+          rotation: [rotationX, rotationY, rotationZ] as [number, number, number],
           scale: [scale, scale, scale] as [number, number, number]
         });
       }
