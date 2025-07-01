@@ -121,14 +121,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
         dpr={[1, 1]}
-        performance={{ min: 0.6 }}
+        performance={{ min: 0.8 }}
         style={{ width: '375px', height: '667px' }}
         gl={{ 
           antialias: false, 
           alpha: false,
-          powerPreference: "high-performance",
+          powerPreference: "default",
           stencil: false,
-          depth: true
+          depth: true,
+          preserveDrawingBuffer: false
         }}
       >
         <Suspense fallback={null}>
@@ -167,16 +168,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* ENHANCED: Much brighter and more vibrant lighting system - disabled in map editor */}
           {!isEditorActive && <ImprovedFantasyLighting />}
 
-          {/* Environment - show both game environment and map editor environment */}
-          {isEditorActive ? (
-            <group>
-              <MapEditorEnvironment />
-              {/* Show existing environment in map editor for reference */}
-              {realm === 'fantasy' && <FloatingIsland realm={realm} />}
-            </group>
-          ) : (
-            <FloatingIsland realm={realm} />
-          )}
+          {/* Basic environment for map editor or game */}
+          <FloatingIsland realm={realm} />
           {/* Sci-fi systems disabled in map editor */}
           {realm === 'scifi' && !isEditorActive && (
             <>
