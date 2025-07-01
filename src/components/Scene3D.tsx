@@ -125,16 +125,16 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             far={500}
             aspect={375 / 667}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
-          >
-            {/* Enhanced MagicStaffWeaponSystem with enemy targeting */}
-            <MagicStaffWeaponSystem 
-              upgradeLevel={gameState.weaponUpgradeLevel || 0}
-              visible={realm === 'fantasy'}
-              enemyPositions={enemyPositions}
-              onHitEnemy={handleEnemyHit}
-              damage={10 + (gameState.weaponUpgradeLevel || 0) * 5}
-            />
-          </PerspectiveCamera>
+          />
+
+          {/* Enhanced MagicStaffWeaponSystem with enemy targeting - positioned as child of camera */}
+          <MagicStaffWeaponSystem 
+            upgradeLevel={gameState.weaponUpgradeLevel || 0}
+            visible={realm === 'fantasy'}
+            enemyPositions={enemyPositions}
+            onHitEnemy={handleEnemyHit}
+            damage={10 + (gameState.weaponUpgradeLevel || 0) * 5}
+          />
 
           <VerticalCameraController 
             camera={cameraRef.current}
