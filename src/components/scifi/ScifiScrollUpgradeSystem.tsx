@@ -18,25 +18,32 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
 }) => {
   const { camera } = useThree();
 
-  // Generate 50 upgrade positions in a vertical spiral pattern
+  // Generate 50 upgrade positions scattered in front of the player
   const upgradePositions = useMemo(() => {
     const positions: Array<{id: string, position: Vector3, tier: number}> = [];
     
     for (let i = 0; i < 50; i++) {
-      // Create a vertical spiral pattern going upward with closer spacing
-      const height = i * 3 + 10; // Each upgrade is 3 units higher (closer together)
-      const angle = (i * 0.5) * Math.PI; // Spiral angle
-      const radius = 8 + Math.sin(i * 0.3) * 3; // Varying distance from center
+      // Create a scattered pattern in front of the player
+      const height = i * 4 + 15; // Each upgrade is 4 units higher, starting at y=15
       
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      const y = height;
+      // Use a wider horizontal spread and ensure all upgrades are in front of player
+      const angleOffset = (i % 8) * (Math.PI / 4); // 8 positions around a circle
+      const layer = Math.floor(i / 8); // Which "layer" of depth
+      
+      // Ensure all upgrades are in front of player (positive z)
+      const minZ = 5; // Minimum distance in front of player
+      const maxZ = 25; // Maximum distance in front of player
+      const z = minZ + (layer * 3) + Math.random() * 2; // Progressive depth with randomness
+      
+      // Wider horizontal spread
+      const radius = 6 + layer * 2 + Math.random() * 3; // Increase radius with layer
+      const x = Math.cos(angleOffset) * radius + (Math.random() - 0.5) * 4; // Add randomness
       
       const tier = Math.floor(i / 10) + 1; // Tiers 1-5, 10 upgrades per tier
       
       positions.push({
         id: `scifi-scroll-upgrade-${i}`,
-        position: new Vector3(x, y, z),
+        position: new Vector3(x, height, z),
         tier
       });
     }
