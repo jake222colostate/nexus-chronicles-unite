@@ -1,21 +1,18 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Vector3 } from 'three';
 import { ScifiUpgradeOrb } from './ScifiUpgradeOrb';
-import { ScifiUpgradeModal } from './ScifiUpgradeModal';
 
 interface FloatingUpgradeSystemProps {
   energyCredits: number;
-  onPurchaseUpgrade: (upgradeId: string) => void;
+  onUpgradeClick: (upgradeId: string) => void;
   purchasedUpgrades: string[];
 }
 
 export const FloatingUpgradeSystem: React.FC<FloatingUpgradeSystemProps> = ({
   energyCredits,
-  onPurchaseUpgrade,
+  onUpgradeClick,
   purchasedUpgrades
 }) => {
-  const [selectedUpgrade, setSelectedUpgrade] = useState<string | null>(null);
-
   // Generate 20 upgrade positions in a large area around the player
   const upgradePositions = useMemo(() => {
     const positions: Array<{id: string, position: Vector3}> = [];
@@ -40,14 +37,8 @@ export const FloatingUpgradeSystem: React.FC<FloatingUpgradeSystemProps> = ({
   }, []);
 
   const handleUpgradeClick = (upgradeId: string) => {
-    if (!purchasedUpgrades.includes(upgradeId)) {
-      setSelectedUpgrade(upgradeId);
-    }
-  };
-
-  const handlePurchase = (upgradeId: string) => {
-    onPurchaseUpgrade(upgradeId);
-    setSelectedUpgrade(null);
+    console.log('Floating upgrade clicked:', upgradeId);
+    onUpgradeClick(upgradeId);
   };
 
   return (
@@ -60,15 +51,6 @@ export const FloatingUpgradeSystem: React.FC<FloatingUpgradeSystemProps> = ({
           onClick={handleUpgradeClick}
         />
       ))}
-      
-      {selectedUpgrade && (
-        <ScifiUpgradeModal
-          upgradeId={selectedUpgrade}
-          energyCredits={energyCredits}
-          onPurchase={handlePurchase}
-          onClose={() => setSelectedUpgrade(null)}
-        />
-      )}
     </>
   );
 };
