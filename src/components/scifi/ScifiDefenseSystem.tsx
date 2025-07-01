@@ -45,9 +45,30 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
   const { camera } = useThree();
   const collisionContext = useCollisionContext();
 
-  // Disabled asteroid spawning - no more grey polygons
   useEffect(() => {
-    // No asteroid spawning
+    spawnIntervalRef.current = setInterval(() => {
+      setAsteroids(prev => {
+        if (prev.length >= 3) return prev;
+        const spawnDist = 20;
+        const x = (Math.random() - 0.5) * 6;
+        const y = Math.random() * 5 + 2;
+        const spawnPos = new Vector3(x, y, camera.position.z - spawnDist);
+        const target = UPGRADE_TARGETS[Math.floor(Math.random() * UPGRADE_TARGETS.length)];
+        const dir = target.clone().sub(spawnPos).normalize();
+        return [
+          ...prev,
+          {
+            id: Date.now(),
+            position: spawnPos,
+            velocity: dir.multiplyScalar(0.05),
+            health: 5
+          }
+        ];
+      });
+    }, 4000);
+    return () => {
+      if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
+    };
   }, [camera]);
 
   const isAsteroidVisible = useCallback(
@@ -183,6 +204,9 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
       <group ref={cannonGroup}>
         <ScifiCannon target={target} />
       </group>
+      {asteroids.map(ast => (
+        <Asteroid key={ast.id} position={ast.position} health={ast.health} />
+      ))}
       {projectiles.map(p => (
         <mesh key={p.id} position={p.position}>
           <sphereGeometry args={[0.1, 8, 8]} />

@@ -161,10 +161,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 onMeteorDestroyed={onMeteorDestroyed}
                 onEnergyGained={onEnergyGained}
               />
+              <FloatingUpgradeSystem
+                energyCredits={gameState.energyCredits || 0}
+                onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
+                purchasedUpgrades={gameState.purchasedUpgrades || []}
+              />
               <ScifiUpgradeAsteroidSystem
+                energyCredits={gameState.energyCredits || 0}
                 onUpgradeClick={setSelectedUpgrade}
                 purchasedUpgrades={gameState.purchasedUpgrades || []}
-                energyCredits={gameState.energyCredits || 0}
               />
             </>
           )}
@@ -188,7 +193,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             </ChunkSystem>
           )}
 
-          {realm === 'fantasy' && upgradeNodes}
+          {upgradeNodes}
 
           {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
