@@ -251,12 +251,12 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
       
       weaponGroupRef.current.position.copy(staffPosition);
       
-      // FIXED: Truly upright staff - no camera rotation copying
-      // Staff should always point up regardless of camera movement
-      weaponGroupRef.current.rotation.set(0, 0, 0);  // Reset to world coordinates
-      
-      // Only apply minimal Y rotation to face slightly inward (natural grip)
-      weaponGroupRef.current.rotateY(10 * Math.PI / 180);  // Slight inward angle
+      // Align staff yaw with the camera so it faces forward while remaining upright
+      weaponGroupRef.current.rotation.set(0, camera.rotation.y, 0);
+
+      // Add a small inward angle and forward tilt for a natural grip
+      weaponGroupRef.current.rotateY(10 * Math.PI / 180);
+      weaponGroupRef.current.rotateX(10 * Math.PI / 180);
       
       // ENHANCED: Accurate staff tip calculation for upright staff
       // Since staff is now truly upright, tip is simply at the top
