@@ -5,7 +5,11 @@ import { useMapEditorStore } from '../../stores/useMapEditorStore';
 export const MapEditorEnvironment: React.FC = () => {
   const { isEditorActive } = useMapEditorStore();
 
+  console.log('MapEditorEnvironment: isEditorActive =', isEditorActive);
+
   if (!isEditorActive) return null;
+
+  console.log('MapEditorEnvironment: Rendering map editor environment');
 
   return (
     <group>

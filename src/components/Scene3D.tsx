@@ -135,7 +135,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <PerspectiveCamera
             ref={cameraRef}
             makeDefault
-            position={[0, 2, 10]}
+            position={isEditorActive ? [0, 5, 15] : [0, 2, 10]}
             fov={65}
             near={0.01}
             far={500}
