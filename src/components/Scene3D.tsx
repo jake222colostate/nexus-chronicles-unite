@@ -35,31 +35,31 @@ interface Scene3DProps {
   onPurchaseUpgrade?: (upgradeId: string) => void;
 }
 
-// Enhanced upgrade positions - clustered around the initial upgrade
+// Enhanced upgrade positions - neatly spaced around the center
 const UPGRADE_POSITIONS = [
   // Tier 1 - Foundation (center)
   { id: 'arcane_ai', x: 0, y: 4, z: 0, tier: 1 },
   
-  // Tier 2 - Base level
-  { id: 'mana_fountain', x: -2, y: 2.5, z: -1, tier: 2 },
-  { id: 'quantum_drive', x: 2, y: 2.5, z: -1, tier: 2 },
+  // Tier 2 - Close ring around center
+  { id: 'mana_fountain', x: -3, y: 4, z: 0, tier: 2 },
+  { id: 'quantum_drive', x: 3, y: 4, z: 0, tier: 2 },
   
-  // Tier 3 - Mid level
-  { id: 'arcane_beacon', x: -3, y: 1, z: -2, tier: 3 },
-  { id: 'cyber_dragon', x: 0, y: 1, z: -2, tier: 3 },
-  { id: 'nano_reactor', x: 3, y: 1, z: -2, tier: 3 },
-  { id: 'rift_core', x: -1, y: -0.5, z: -3, tier: 3 },
+  // Tier 3 - Second ring
+  { id: 'arcane_beacon', x: -4, y: 4, z: -3, tier: 3 },
+  { id: 'cyber_dragon', x: 0, y: 4, z: -4, tier: 3 },
+  { id: 'nano_reactor', x: 4, y: 4, z: -3, tier: 3 },
+  { id: 'rift_core', x: 0, y: 4, z: 4, tier: 3 },
   
-  // Tier 4 - High level
-  { id: 'reality_engine', x: 0, y: -2, z: -4, tier: 4 },
+  // Tier 4 - Behind center
+  { id: 'reality_engine', x: 0, y: 4, z: -6, tier: 4 },
   
-  // Tier 5 - Transcendent level (near initial upgrade)
-  { id: 'cosmic_nexus', x: -2, y: 5.5, z: 1, tier: 5 },
-  { id: 'dimensional_forge', x: 2, y: 5.5, z: 1, tier: 5 },
+  // Tier 5 - Above center level
+  { id: 'cosmic_nexus', x: -2, y: 6, z: 1, tier: 5 },
+  { id: 'dimensional_forge', x: 2, y: 6, z: 1, tier: 5 },
   
-  // Tier 6 - Godlike level (slightly above)
-  { id: 'omnipotent_core', x: -1, y: 6.5, z: 2, tier: 6 },
-  { id: 'universe_creator', x: 1, y: 7, z: 2.5, tier: 6 }
+  // Tier 6 - Highest level
+  { id: 'omnipotent_core', x: -1, y: 8, z: 2, tier: 6 },
+  { id: 'universe_creator', x: 1, y: 8, z: 2, tier: 6 }
 ];
 
 export const Scene3D: React.FC<Scene3DProps> = React.memo(({
@@ -231,8 +231,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             </ChunkSystem>
           )}
 
-          {/* Show upgrade nodes in fantasy realm (including map editor for visibility) */}
-          {realm === 'fantasy' && upgradeNodes}
+          {/* Show upgrade nodes in both realms (including map editor for visibility) */}
+          {upgradeNodes}
 
           {/* Tap effect disabled in map editor */}
           {showTapEffect && onTapEffectComplete && !isEditorActive && (
