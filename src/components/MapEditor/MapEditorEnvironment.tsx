@@ -13,8 +13,8 @@ export const MapEditorEnvironment: React.FC = () => {
 
   return (
     <group>
-      {/* Background color */}
-      <color attach="background" args={['#1a1a2e']} />
+      {/* Background color - lighter to avoid dark screen */}
+      <color attach="background" args={['#4c566a']} />
       
       {/* Ground plane - much brighter and more visible */}
       <Plane 
@@ -23,7 +23,7 @@ export const MapEditorEnvironment: React.FC = () => {
         position={[0, 0, 0]}
         receiveShadow
       >
-        <meshStandardMaterial color="#2d4a2d" />
+        <meshStandardMaterial color="#888888" />
       </Plane>
       
       {/* Central reference point - bright and visible */}

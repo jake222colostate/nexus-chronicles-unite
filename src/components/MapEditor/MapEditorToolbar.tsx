@@ -7,6 +7,7 @@ import {
   Move, 
   RotateCw, 
   Scale,
+  Undo2,
   Grid3x3,
   Save,
   FolderOpen,
@@ -27,6 +28,7 @@ export const MapEditorToolbar: React.FC = () => {
     setShowGrid,
     clearMap,
     exportMap,
+    undo,
     isEditorActive,
     setEditorActive,
     selectedElementType
@@ -147,6 +149,15 @@ export const MapEditorToolbar: React.FC = () => {
         <div className="space-y-2">
           <h4 className="text-xs text-muted-foreground">File</h4>
           <div className="flex flex-col gap-1">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={undo}
+              className="justify-start"
+            >
+              <Undo2 className="h-4 w-4 mr-2" />
+              Undo
+            </Button>
             <Button
               size="sm"
               variant="ghost"

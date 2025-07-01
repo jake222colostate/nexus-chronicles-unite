@@ -29,6 +29,9 @@ const elementTypes: ElementType[] = [
   { id: 'rock', name: 'Rock', category: 'decoration', realm: 'both' },
   { id: 'crystal', name: 'Crystal', category: 'decoration', realm: 'fantasy' },
   { id: 'asteroid', name: 'Asteroid', category: 'decoration', realm: 'scifi' },
+
+  // Structures
+  { id: 'mountain', name: 'Mountain', category: 'structure', realm: 'both' },
   
   // Enemies
   { id: 'leech', name: 'Leech', category: 'enemy', realm: 'fantasy' },

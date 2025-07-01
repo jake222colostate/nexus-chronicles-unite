@@ -20,6 +20,7 @@ interface MapEditorState {
   gridSize: number;
   snapToGrid: boolean;
   showGrid: boolean;
+  history: MapElement[][];
   camera: {
     position: Vector3;
     target: Vector3;
@@ -40,6 +41,7 @@ interface MapEditorActions {
   clearMap: () => void;
   loadMap: (elements: MapElement[]) => void;
   exportMap: () => MapElement[];
+  undo: () => void;
 }
 
 export const useMapEditorStore = create<MapEditorState & MapEditorActions>((set, get) => ({
@@ -52,6 +54,7 @@ export const useMapEditorStore = create<MapEditorState & MapEditorActions>((set,
   gridSize: 1,
   snapToGrid: true,
   showGrid: true,
+  history: [],
   camera: {
     position: new Vector3(0, 10, 10),
     target: new Vector3(0, 0, 0),
@@ -65,15 +68,18 @@ export const useMapEditorStore = create<MapEditorState & MapEditorActions>((set,
   setSelectedElementType: (type) => set({ selectedElementType: type }),
   
   addElement: (element) => set((state) => ({
+    history: [...state.history, state.placedElements],
     placedElements: [...state.placedElements, element]
   })),
   
   removeElement: (id) => set((state) => ({
+    history: [...state.history, state.placedElements],
     placedElements: state.placedElements.filter(el => el.id !== id),
     selectedElement: state.selectedElement === id ? null : state.selectedElement
   })),
   
   updateElement: (id, updates) => set((state) => ({
+    history: [...state.history, state.placedElements],
     placedElements: state.placedElements.map(el =>
       el.id === id ? { ...el, ...updates } : el
     )
@@ -87,9 +93,30 @@ export const useMapEditorStore = create<MapEditorState & MapEditorActions>((set,
   
   setShowGrid: (show) => set({ showGrid: show }),
   
-  clearMap: () => set({ placedElements: [], selectedElement: null }),
+  clearMap: () =>
+    set((state) => ({
+      history: [...state.history, state.placedElements],
+      placedElements: [],
+      selectedElement: null
+    })),
   
-  loadMap: (elements) => set({ placedElements: elements, selectedElement: null }),
+  loadMap: (elements) =>
+    set((state) => ({
+      history: [...state.history, state.placedElements],
+      placedElements: elements,
+      selectedElement: null
+    })),
   
   exportMap: () => get().placedElements,
+
+  undo: () =>
+    set((state) => {
+      if (state.history.length === 0) return state;
+      const previous = state.history[state.history.length - 1];
+      return {
+        placedElements: previous,
+        history: state.history.slice(0, -1),
+        selectedElement: null
+      } as Partial<MapEditorState>;
+    }),
 }));

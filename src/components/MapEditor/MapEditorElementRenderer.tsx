@@ -1,13 +1,14 @@
 import React from 'react';
 import { useMapEditorStore, MapElement } from '../../stores/useMapEditorStore';
-import { Box, Sphere, Cone } from '@react-three/drei';
+import { Box, Sphere, Cone, useGLTF } from '@react-three/drei';
 
-const ElementPreview: React.FC<{ element: MapElement; isSelected: boolean }> = ({ 
-  element, 
-  isSelected 
+const ElementPreview: React.FC<{ element: MapElement; isSelected: boolean }> = ({
+  element,
+  isSelected
 }) => {
   const { properties } = element;
   const { setSelectedElement } = useMapEditorStore();
+  const mountainModel = useGLTF('/newassets/Mountain.glb');
 
   const handleClick = (e: any) => {
     e.stopPropagation();
@@ -67,6 +68,11 @@ const ElementPreview: React.FC<{ element: MapElement; isSelected: boolean }> = (
             <meshStandardMaterial color="#8B4513" />
           </Sphere>
         );
+
+      case 'mountain':
+        return (
+          <primitive object={mountainModel.scene.clone()} onClick={handleClick} />
+        );
       
       case 'leech':
       case 'meteor':
@@ -120,3 +126,5 @@ export const MapEditorElementRenderer: React.FC = () => {
     </group>
   );
 };
+
+useGLTF.preload('/newassets/Mountain.glb');
