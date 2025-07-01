@@ -16,12 +16,11 @@ const UPGRADE_TARGETS = [
   new Vector3(0, -2, -4)
 ];
 
-interface SpawnedUpgrade {
+interface SpawnedMeteor {
   id: number;
   position: Vector3;
   velocity: Vector3;
   health: number;
-  upgradeId: string;
 }
 
 interface Projectile {
@@ -44,7 +43,7 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
   onUpgradeClick,
   purchasedUpgrades = []
 }) => {
-  const [upgrades, setUpgrades] = useState<SpawnedUpgrade[]>([]);
+  const [meteors, setMeteors] = useState<SpawnedMeteor[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const spawnIntervalRef = useRef<NodeJS.Timeout>();
   const fireIntervalRef = useRef<NodeJS.Timeout>();
@@ -54,8 +53,8 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
 
   useEffect(() => {
     spawnIntervalRef.current = setInterval(() => {
-      setUpgrades(prev => {
-        if (prev.length >= 6) return prev; // Spawn more upgrades
+      setMeteors(prev => {
+        if (prev.length >= 6) return prev; // Limit active meteors
         const spawnDist = 20;
         const x = (Math.random() - 0.5) * 8;
         const y = Math.random() * 6 + 2;
@@ -67,13 +66,12 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
           {
             id: Date.now(),
             position: spawnPos,
-            velocity: dir.multiplyScalar(0.03), // Slower movement
-            health: 5,
-            upgradeId: `floating-upgrade-${Date.now()}`
+            velocity: dir.multiplyScalar(0.03),
+            health: 5
           }
         ];
       });
-    }, 3000); // Spawn more frequently
+    }, 3000);
     return () => {
       if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
     };
@@ -92,29 +90,23 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
     [camera]
   );
 
-  const handleUpgradeClick = useCallback((upgradeId: string) => {
-    onUpgradeClick?.(upgradeId);
-    // Remove the clicked upgrade
-    setUpgrades(prev => prev.filter(u => u.upgradeId !== upgradeId));
-  }, [onUpgradeClick]);
-
-  const handleUpgradeHit = useCallback((id: number, damage: number) => {
+  const handleMeteorHit = useCallback((id: number, damage: number) => {
     let destroyed = false;
-    setUpgrades(prev =>
+    setMeteors(prev =>
       prev
-        .map(u => {
-          if (u.id === id) {
-            const newHealth = u.health - damage;
+        .map(m => {
+          if (m.id === id) {
+            const newHealth = m.health - damage;
             destroyed = newHealth <= 0;
-            return { ...u, health: newHealth };
+            return { ...m, health: newHealth };
           }
-          return u;
+          return m;
         })
-        .filter(u => u.health > 0)
+        .filter(m => m.health > 0)
     );
     if (destroyed) {
       onMeteorDestroyed?.();
-      onEnergyGained?.(10); // Grant 10 energy for destroying an upgrade
+      onEnergyGained?.(10); // Grant 10 energy for destroying a meteor
     }
   }, [onMeteorDestroyed, onEnergyGained]);
 
@@ -126,11 +118,11 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
     }
   });
 
-  // Remove auto-firing - let players click upgrades instead
+  // Auto-fire at meteors
   useEffect(() => {
     const handleClick = () => {
       if (!cannonGroup.current) return;
-      const visible = upgrades.filter(u => isUpgradeVisible(u.position));
+      const visible = meteors.filter(m => isUpgradeVisible(m.position));
       if (visible.length === 0) return;
       const start = new Vector3();
       cannonGroup.current.getWorldPosition(start);
@@ -143,12 +135,12 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
     };
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
-  }, [upgrades, isUpgradeVisible]);
+  }, [meteors, isUpgradeVisible]);
 
   useFrame(() => {
-    setUpgrades(prev => {
-      const updated = prev.map(u => ({ ...u, position: u.position.clone().add(u.velocity) }));
-      return updated.filter(u => u.position.z < camera.position.z);
+    setMeteors(prev => {
+      const updated = prev.map(m => ({ ...m, position: m.position.clone().add(m.velocity) }));
+      return updated.filter(m => m.position.z < camera.position.z);
     });
 
     setProjectiles(prev => {
@@ -163,12 +155,12 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
               if (colliderId.startsWith('asteroid-')) {
                 const distance = newPos.distanceTo(collider.position);
                 if (distance < collider.radius) {
-                  // Find the upgrade by position to get its ID
-                  const upgrade = upgrades.find(upg => 
-                    upg.position.distanceTo(collider.position) < 0.1
+                  // Find the meteor by position to get its ID
+                  const meteor = meteors.find(m => 
+                    m.position.distanceTo(collider.position) < 0.1
                   );
-                  if (upgrade) {
-                    handleUpgradeHit(upgrade.id, 1);
+                  if (meteor) {
+                    handleMeteorHit(meteor.id, 1);
                     hit = true;
                     break;
                   }
@@ -177,9 +169,9 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
             }
           } else {
             // Fallback to simple distance check if collision context not available
-            for (const upg of upgrades) {
-              if (newPos.distanceTo(upg.position) < 0.7) {
-                handleUpgradeHit(upg.id, 1);
+            for (const meteor of meteors) {
+              if (newPos.distanceTo(meteor.position) < 0.7) {
+                handleMeteorHit(meteor.id, 1);
                 hit = true;
                 break;
               }
@@ -193,21 +185,19 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
     });
   });
 
-  const target = upgrades[0] ? upgrades[0].position.clone() : undefined;
+  const target = meteors[0] ? meteors[0].position.clone() : undefined;
 
   return (
     <group>
       <group ref={cannonGroup}>
         <ScifiCannon target={target} />
       </group>
-      {upgrades.map((upg, index) => (
+      {meteors.map((meteor, index) => (
         <Asteroid 
-          key={upg.id} 
-          position={upg.position} 
-          health={upg.health} 
-          isUpgrade={true}
-          upgradeId={upg.upgradeId}
-          onUpgradeClick={handleUpgradeClick}
+          key={meteor.id} 
+          position={meteor.position} 
+          health={meteor.health} 
+          isUpgrade={false}
           upgradeIndex={index}
         />
       ))}
