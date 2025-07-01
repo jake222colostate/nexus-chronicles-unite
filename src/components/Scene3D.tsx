@@ -21,6 +21,7 @@ import { MapEditorGrid } from './MapEditor/MapEditorGrid';
 import { MapEditorControls } from './MapEditor/MapEditorControls';
 import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
 import { MapEditorFlyingCamera } from './MapEditor/MapEditorFlyingCamera';
+import { MapEditorEnvironment } from './MapEditor/MapEditorEnvironment';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
 
 interface Scene3DProps {
@@ -163,10 +164,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             />
           )}
 
-          {/* ENHANCED: Much brighter and more vibrant lighting system */}
-          <ImprovedFantasyLighting />
+          {/* ENHANCED: Much brighter and more vibrant lighting system - disabled in map editor */}
+          {!isEditorActive && <ImprovedFantasyLighting />}
 
-          <FloatingIsland realm={realm} />
+          {/* Basic environment for map editor or game */}
+          {isEditorActive ? <MapEditorEnvironment /> : <FloatingIsland realm={realm} />}
           {/* Sci-fi systems disabled in map editor */}
           {realm === 'scifi' && !isEditorActive && (
             <>
