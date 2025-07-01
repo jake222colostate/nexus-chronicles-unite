@@ -1,6 +1,36 @@
 import { create } from 'zustand';
 import { Vector3 } from 'three';
 
+// Helper to load saved map elements from localStorage
+const loadSavedElements = (): MapElement[] => {
+  if (typeof localStorage === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem('nexusMapElements');
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return parsed.map((el: any) => ({
+      ...el,
+      position: new Vector3(el.position.x, el.position.y, el.position.z),
+      rotation: new Vector3(el.rotation.x, el.rotation.y, el.rotation.z),
+      scale: new Vector3(el.scale.x, el.scale.y, el.scale.z)
+    })) as MapElement[];
+  } catch {
+    return [];
+  }
+};
+
+// Persist placed elements to localStorage
+const saveElements = (elements: MapElement[]) => {
+  if (typeof localStorage === 'undefined') return;
+  const serialisable = elements.map(el => ({
+    ...el,
+    position: { x: el.position.x, y: el.position.y, z: el.position.z },
+    rotation: { x: el.rotation.x, y: el.rotation.y, z: el.rotation.z },
+    scale: { x: el.scale.x, y: el.scale.y, z: el.scale.z }
+  }));
+  localStorage.setItem('nexusMapElements', JSON.stringify(serialisable));
+};
+
 export interface MapElement {
   id: string;
   type: 'upgrade' | 'decoration' | 'structure' | 'enemy';
@@ -49,7 +79,7 @@ export const useMapEditorStore = create<MapEditorState & MapEditorActions>((set,
   isEditorActive: false,
   selectedTool: 'select',
   selectedElementType: '',
-  placedElements: [],
+  placedElements: loadSavedElements(),
   selectedElement: null,
   gridSize: 1,
   snapToGrid: true,
@@ -67,23 +97,35 @@ export const useMapEditorStore = create<MapEditorState & MapEditorActions>((set,
   
   setSelectedElementType: (type) => set({ selectedElementType: type }),
   
-  addElement: (element) => set((state) => ({
-    history: [...state.history, state.placedElements],
-    placedElements: [...state.placedElements, element]
-  })),
+  addElement: (element) => set((state) => {
+    const updated = [...state.placedElements, element];
+    saveElements(updated);
+    return {
+      history: [...state.history, state.placedElements],
+      placedElements: updated
+    };
+  }),
   
-  removeElement: (id) => set((state) => ({
-    history: [...state.history, state.placedElements],
-    placedElements: state.placedElements.filter(el => el.id !== id),
-    selectedElement: state.selectedElement === id ? null : state.selectedElement
-  })),
+  removeElement: (id) => set((state) => {
+    const updated = state.placedElements.filter(el => el.id !== id);
+    saveElements(updated);
+    return {
+      history: [...state.history, state.placedElements],
+      placedElements: updated,
+      selectedElement: state.selectedElement === id ? null : state.selectedElement
+    };
+  }),
   
-  updateElement: (id, updates) => set((state) => ({
-    history: [...state.history, state.placedElements],
-    placedElements: state.placedElements.map(el =>
+  updateElement: (id, updates) => set((state) => {
+    const updated = state.placedElements.map(el =>
       el.id === id ? { ...el, ...updates } : el
-    )
-  })),
+    );
+    saveElements(updated);
+    return {
+      history: [...state.history, state.placedElements],
+      placedElements: updated
+    };
+  }),
   
   setSelectedElement: (id) => set({ selectedElement: id }),
   
@@ -94,18 +136,24 @@ export const useMapEditorStore = create<MapEditorState & MapEditorActions>((set,
   setShowGrid: (show) => set({ showGrid: show }),
   
   clearMap: () =>
-    set((state) => ({
-      history: [...state.history, state.placedElements],
-      placedElements: [],
-      selectedElement: null
-    })),
+    set((state) => {
+      saveElements([]);
+      return {
+        history: [...state.history, state.placedElements],
+        placedElements: [],
+        selectedElement: null
+      };
+    }),
   
   loadMap: (elements) =>
-    set((state) => ({
-      history: [...state.history, state.placedElements],
-      placedElements: elements,
-      selectedElement: null
-    })),
+    set((state) => {
+      saveElements(elements);
+      return {
+        history: [...state.history, state.placedElements],
+        placedElements: elements,
+        selectedElement: null
+      };
+    }),
   
   exportMap: () => get().placedElements,
 
@@ -113,6 +161,7 @@ export const useMapEditorStore = create<MapEditorState & MapEditorActions>((set,
     set((state) => {
       if (state.history.length === 0) return state;
       const previous = state.history[state.history.length - 1];
+      saveElements(previous);
       return {
         ...state,
         placedElements: previous,
