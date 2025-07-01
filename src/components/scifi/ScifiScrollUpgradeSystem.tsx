@@ -23,22 +23,12 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
     const positions: Array<{id: string, position: Vector3, tier: number}> = [];
     
     for (let i = 0; i < 50; i++) {
-      // Position all upgrades on the same Y plane as the initial upgrade
-      const height = 4; // Fixed Y position to match initial upgrade plane
+      // Simple grid pattern for debugging - should definitely be visible
+      const height = 5 + (i % 5) * 3; // Y between 5-17
+      const x = -10 + (i % 10) * 2; // X between -10 and 8  
+      const z = -2; // Fixed Z at -2 (should be visible)
       
-      // Use a tighter horizontal spread
-      const angleOffset = (i % 8) * (Math.PI / 4); // 8 positions around a circle
-      const layer = Math.floor(i / 8); // Which "layer" of depth
-      
-      // Position upgrades at a visible distance
-      const minZ = -3; // Start at a visible distance
-      const z = minZ - (layer * 1.5) + Math.random() * 1; // Small depth variation
-      
-      // Tighter horizontal spread
-      const radius = 4 + layer * 1.5 + Math.random() * 2; // Much smaller radius progression
-      const x = Math.cos(angleOffset) * radius + (Math.random() - 0.5) * 2; // Less horizontal spread
-      
-      const tier = Math.floor(i / 10) + 1; // Tiers 1-5, 10 upgrades per tier
+      const tier = Math.floor(i / 10) + 1;
       
       positions.push({
         id: `scifi-scroll-upgrade-${i}`,
