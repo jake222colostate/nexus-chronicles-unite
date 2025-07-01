@@ -17,6 +17,7 @@ import { FloatingUpgradeSystem } from './scifi/FloatingUpgradeSystem';
 import { ScifiUpgradeAsteroidSystem } from './scifi/ScifiUpgradeAsteroidSystem';
 import { ScifiScrollUpgradeSystem } from './scifi/ScifiScrollUpgradeSystem';
 import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
+import { ScifiUpgradeGLBSystem } from './scifi/ScifiUpgradeGLBSystem';
 import { MapEditorGrid } from './MapEditor/MapEditorGrid';
 import { MapEditorControls } from './MapEditor/MapEditorControls';
 import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
@@ -184,31 +185,22 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           {/* Use existing environment even in map editor mode */}
           <FloatingIsland realm={realm} />
-          {/* Sci-fi systems disabled in map editor */}
-          {realm === 'scifi' && !isEditorActive && (
+          {/* Sci-fi systems - now using GLB models like fantasy */}
+          {realm === 'scifi' && (
             <>
-              <ScifiDefenseSystem 
-                onMeteorDestroyed={onMeteorDestroyed}
-                onEnergyGained={onEnergyGained}
-                onUpgradeClick={setSelectedUpgrade}
-                purchasedUpgrades={gameState.purchasedUpgrades || []}
+              <ScifiUpgradeGLBSystem
+                gameState={gameState}
+                onUpgradeClick={onUpgradeClick}
+                checkUpgradeUnlocked={checkUpgradeUnlocked}
               />
-              <FloatingUpgradeSystem
-                energyCredits={gameState.energyCredits || 0}
-                onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
-                purchasedUpgrades={gameState.purchasedUpgrades || []}
-              />
-              <ScifiUpgradeAsteroidSystem
-                energyCredits={gameState.energyCredits || 0}
-                onUpgradeClick={setSelectedUpgrade}
-                purchasedUpgrades={gameState.purchasedUpgrades || []}
-              />
-              <ScifiScrollUpgradeSystem
-                energyCredits={gameState.energyCredits || 0}
-                onUpgradeClick={setSelectedUpgrade}
-                purchasedUpgrades={gameState.purchasedUpgrades || []}
-                cameraY={(cameraRef.current as any)?.position?.y || 0}
-              />
+              {!isEditorActive && (
+                <ScifiDefenseSystem 
+                  onMeteorDestroyed={onMeteorDestroyed}
+                  onEnergyGained={onEnergyGained}
+                  onUpgradeClick={setSelectedUpgrade}
+                  purchasedUpgrades={gameState.purchasedUpgrades || []}
+                />
+              )}
             </>
           )}
 
