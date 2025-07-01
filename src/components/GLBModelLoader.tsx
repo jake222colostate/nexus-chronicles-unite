@@ -40,8 +40,9 @@ const SafeGLBModel: React.FC<GLBModelProps> = ({
   try {
     const gltf = useGLTF(modelUrl);
     gltfScene = gltf.scene;
+    console.log(`Successfully loaded GLB model for ${name}`);
   } catch (error) {
-    console.log(`Failed to load model for ${name}:`, error);
+    console.error(`Failed to load model for ${name}:`, error);
     setLoadError(true);
   }
   
@@ -247,12 +248,4 @@ const workingModelUrls = [
   'https://raw.githubusercontent.com/jake222colostate/fantasy-3d-models/main/fantasy_3d_upgrades_package/fantasy_3d_upgrades_package-2/upgrade_05.glb'
 ];
 
-// Preload only confirmed working models
-workingModelUrls.forEach(url => {
-  try {
-    useGLTF.preload(url);
-    console.log(`Preloading model: ${url}`);
-  } catch (error) {
-    console.warn(`Failed to preload model: ${url}`, error);
-  }
-});
+// Note: Models are loaded on-demand to prevent WebGL context issues

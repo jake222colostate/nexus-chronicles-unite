@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, Suspense } from 'react';
 import { GLBModel } from '../GLBModelLoader';
 import { scifiUpgrades } from '../../data/ScifiUpgrades';
 
@@ -34,19 +34,20 @@ export const ScifiUpgradeGLBSystem: React.FC<ScifiUpgradeGLBSystemProps> = ({
       const isWithinRange = distance <= 10; // 10 unit interaction range
 
       return (
-        <GLBModel
-          key={upgrade.id}
-          modelUrl={modelUrl}
-          position={[position.x, position.y, position.z]}
-          scale={1.5}
-          onClick={() => onUpgradeClick(upgrade.id)}
-          name={upgrade.name}
-          isUnlocked={true} // All upgrades are now unlocked
-          isWithinRange={isWithinRange}
-          isPurchased={gameState.purchasedUpgrades?.includes(upgrade.id) || false}
-          cost={upgrade.cost}
-          canAfford={gameState.energyCredits >= upgrade.cost}
-        />
+        <Suspense key={upgrade.id} fallback={null}>
+          <GLBModel
+            modelUrl={modelUrl}
+            position={[position.x, position.y, position.z]}
+            scale={1.5}
+            onClick={() => onUpgradeClick(upgrade.id)}
+            name={upgrade.name}
+            isUnlocked={true} // All upgrades are now unlocked
+            isWithinRange={isWithinRange}
+            isPurchased={gameState.purchasedUpgrades?.includes(upgrade.id) || false}
+            cost={upgrade.cost}
+            canAfford={gameState.energyCredits >= upgrade.cost}
+          />
+        </Suspense>
       );
     }).filter(Boolean);
   }, [gameState.purchasedUpgrades, gameState.energyCredits, onUpgradeClick, modelUrl]);
