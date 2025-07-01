@@ -9,8 +9,8 @@ export const MapEditorEnvironment: React.FC = () => {
 
   return (
     <group>
-      {/* Background color */}
-      <color attach="background" args={['#1a1a2e']} />
+      {/* Background color - lighter to avoid dark screen */}
+      <color attach="background" args={['#4c566a']} />
       
       {/* Ground plane */}
       <Plane 
@@ -18,7 +18,7 @@ export const MapEditorEnvironment: React.FC = () => {
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, 0, 0]}
       >
-        <meshStandardMaterial color="#2d4a2d" />
+        <meshStandardMaterial color="#888888" />
       </Plane>
       
       {/* Central reference point */}
