@@ -36,7 +36,12 @@ const elementTypes: ElementType[] = [
 ];
 
 export const MapEditorElementPalette: React.FC<{ realm: 'fantasy' | 'scifi' }> = ({ realm }) => {
-  const { selectedElementType, setSelectedElementType, isEditorActive } = useMapEditorStore();
+  const {
+    selectedElementType,
+    setSelectedElementType,
+    isEditorActive,
+    setSelectedTool
+  } = useMapEditorStore();
 
   if (!isEditorActive) return null;
 
@@ -74,7 +79,10 @@ export const MapEditorElementPalette: React.FC<{ realm: 'fantasy' | 'scifi' }> =
                     key={element.id}
                     size="sm"
                     variant={selectedElementType === element.id ? 'default' : 'ghost'}
-                    onClick={() => setSelectedElementType(element.id)}
+                    onClick={() => {
+                      setSelectedElementType(element.id);
+                      setSelectedTool('place');
+                    }}
                     className="h-12 flex flex-col justify-center p-1 text-xs"
                   >
                     <div className="w-6 h-6 bg-muted rounded mb-1" />
