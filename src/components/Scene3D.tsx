@@ -167,8 +167,16 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* ENHANCED: Much brighter and more vibrant lighting system - disabled in map editor */}
           {!isEditorActive && <ImprovedFantasyLighting />}
 
-          {/* Basic environment for map editor or game */}
-          {isEditorActive ? <MapEditorEnvironment /> : <FloatingIsland realm={realm} />}
+          {/* Environment - show both game environment and map editor environment */}
+          {isEditorActive ? (
+            <group>
+              <MapEditorEnvironment />
+              {/* Show existing environment in map editor for reference */}
+              {realm === 'fantasy' && <FloatingIsland realm={realm} />}
+            </group>
+          ) : (
+            <FloatingIsland realm={realm} />
+          )}
           {/* Sci-fi systems disabled in map editor */}
           {realm === 'scifi' && !isEditorActive && (
             <>
@@ -197,8 +205,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             </>
           )}
 
-          {/* Fantasy environment disabled in map editor */}
-          {realm === 'fantasy' && !isEditorActive && (
+          {/* Fantasy environment - now enabled in map editor too */}
+          {realm === 'fantasy' && (
             <ChunkSystem
               playerPosition={playerPosition}
               chunkSize={50}
