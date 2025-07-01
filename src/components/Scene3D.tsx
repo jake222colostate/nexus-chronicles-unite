@@ -167,7 +167,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 purchasedUpgrades={gameState.purchasedUpgrades || []}
               />
               <ScifiUpgradeAsteroidSystem
-                energyCredits={gameState.energyCredits || 0}
                 onUpgradeClick={setSelectedUpgrade}
                 purchasedUpgrades={gameState.purchasedUpgrades || []}
               />

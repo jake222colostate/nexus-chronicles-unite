@@ -1,15 +1,14 @@
-import React, { useMemo, useState } from 'react';
-import { Vector3 } from 'three';
-import { Asteroid } from './Asteroid';
+import React, { useMemo, useRef } from 'react';
+import { Vector3, Group } from 'three';
+import { useThree, useFrame } from '@react-three/fiber';
+import { ScifiUpgradeOrb } from './ScifiUpgradeOrb';
 
 interface ScifiUpgradeAsteroidSystemProps {
-  energyCredits: number;
   onUpgradeClick: (upgradeId: string) => void;
   purchasedUpgrades: string[];
 }
 
 export const ScifiUpgradeAsteroidSystem: React.FC<ScifiUpgradeAsteroidSystemProps> = ({
-  energyCredits,
   onUpgradeClick,
   purchasedUpgrades
 }) => {
@@ -35,21 +34,27 @@ export const ScifiUpgradeAsteroidSystem: React.FC<ScifiUpgradeAsteroidSystemProp
     return positions;
   }, []);
 
+  const groupRef = useRef<Group>(null);
+  const { camera } = useThree();
+
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.position.y = camera.position.y * 2;
+    }
+  });
+
   return (
-    <>
-      {upgradePositions.map(({ id, position }, index) => (
+    <group ref={groupRef}>
+      {upgradePositions.map(({ id, position }) => (
         !purchasedUpgrades.includes(id) && (
-          <Asteroid
+          <ScifiUpgradeOrb
             key={id}
+            id={id}
             position={position}
-            health={5}
-            isUpgrade={true}
-            upgradeId={id}
-            onUpgradeClick={onUpgradeClick}
-            upgradeIndex={index} // Add index for visual variety
+            onClick={() => onUpgradeClick(id)}
           />
         )
       ))}
-    </>
+    </group>
   );
 };
