@@ -53,11 +53,13 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
   // Show all upgrades within view distance (no unlock requirement)
   const visibleUpgrades = useMemo(() => {
     const cameraPos = camera.position;
-    const viewDistance = 80; // Larger view distance to see more upgrades
+    const viewDistance = 120; // Much larger view distance to see all upgrades
     
     return upgradePositions.filter(upgrade => {
       const distance = upgrade.position.distanceTo(cameraPos);
-      return distance <= viewDistance;
+      // Also check if upgrade is roughly in front of camera (positive z relative to camera)
+      const relativePos = upgrade.position.clone().sub(cameraPos);
+      return distance <= viewDistance && relativePos.z > -10; // Allow some behind camera
     });
   }, [upgradePositions, camera.position]);
 
