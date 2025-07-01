@@ -216,8 +216,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             </ChunkSystem>
           )}
 
-          {/* Only show upgrade nodes in fantasy realm and not in map editor */}
-          {realm === 'fantasy' && !isEditorActive && upgradeNodes}
+          {/* Show upgrade nodes in fantasy realm (including map editor for visibility) */}
+          {realm === 'fantasy' && upgradeNodes}
 
           {/* Tap effect disabled in map editor */}
           {showTapEffect && onTapEffectComplete && !isEditorActive && (

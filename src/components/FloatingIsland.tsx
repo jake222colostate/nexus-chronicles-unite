@@ -2,6 +2,7 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
+import { EnhancedCrystalSystem } from './EnhancedCrystalSystem';
 
 interface FloatingIslandProps {
   realm: 'fantasy' | 'scifi';
@@ -51,24 +52,27 @@ export const FloatingIsland: React.FC<FloatingIslandProps> = ({ realm }) => {
       </mesh>
 
       {realm === 'fantasy' && (
-        <points>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={50}
-              array={new Float32Array(
-                Array.from({ length: 50 * 3 }, () => (Math.random() - 0.5) * 10)
-              )}
-              itemSize={3}
+        <>
+          <points>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={50}
+                array={new Float32Array(
+                  Array.from({ length: 50 * 3 }, () => (Math.random() - 0.5) * 10)
+                )}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <pointsMaterial
+              size={0.02}
+              color="#c084fc"
+              transparent
+              opacity={0.6}
             />
-          </bufferGeometry>
-          <pointsMaterial
-            size={0.02}
-            color="#c084fc"
-            transparent
-            opacity={0.6}
-          />
-        </points>
+          </points>
+          <EnhancedCrystalSystem maxUpgradeHeight={60} realm={realm} />
+        </>
       )}
     </group>
   );
