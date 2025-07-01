@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Vector3, Group } from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -17,11 +16,12 @@ const UPGRADE_TARGETS = [
   new Vector3(0, -2, -4)
 ];
 
-interface SpawnedAsteroid {
+interface SpawnedUpgrade {
   id: number;
   position: Vector3;
   velocity: Vector3;
   health: number;
+  upgradeId: string;
 }
 
 interface Projectile {
@@ -34,10 +34,17 @@ interface Projectile {
 interface ScifiDefenseSystemProps {
   onMeteorDestroyed?: () => void;
   onEnergyGained?: (amount: number) => void;
+  onUpgradeClick?: (upgradeId: string) => void;
+  purchasedUpgrades?: string[];
 }
 
-export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteorDestroyed, onEnergyGained }) => {
-  const [asteroids, setAsteroids] = useState<SpawnedAsteroid[]>([]);
+export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ 
+  onMeteorDestroyed, 
+  onEnergyGained, 
+  onUpgradeClick,
+  purchasedUpgrades = []
+}) => {
+  const [upgrades, setUpgrades] = useState<SpawnedUpgrade[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const spawnIntervalRef = useRef<NodeJS.Timeout>();
   const fireIntervalRef = useRef<NodeJS.Timeout>();
@@ -47,11 +54,11 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
 
   useEffect(() => {
     spawnIntervalRef.current = setInterval(() => {
-      setAsteroids(prev => {
-        if (prev.length >= 3) return prev;
+      setUpgrades(prev => {
+        if (prev.length >= 6) return prev; // Spawn more upgrades
         const spawnDist = 20;
-        const x = (Math.random() - 0.5) * 6;
-        const y = Math.random() * 5 + 2;
+        const x = (Math.random() - 0.5) * 8;
+        const y = Math.random() * 6 + 2;
         const spawnPos = new Vector3(x, y, camera.position.z - spawnDist);
         const target = UPGRADE_TARGETS[Math.floor(Math.random() * UPGRADE_TARGETS.length)];
         const dir = target.clone().sub(spawnPos).normalize();
@@ -60,18 +67,19 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
           {
             id: Date.now(),
             position: spawnPos,
-            velocity: dir.multiplyScalar(0.05),
-            health: 5
+            velocity: dir.multiplyScalar(0.03), // Slower movement
+            health: 5,
+            upgradeId: `floating-upgrade-${Date.now()}`
           }
         ];
       });
-    }, 4000);
+    }, 3000); // Spawn more frequently
     return () => {
       if (spawnIntervalRef.current) clearInterval(spawnIntervalRef.current);
     };
   }, [camera]);
 
-  const isAsteroidVisible = useCallback(
+  const isUpgradeVisible = useCallback(
     (pos: Vector3) => {
       const ndc = pos.clone().project(camera);
       return (
@@ -84,10 +92,45 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     [camera]
   );
 
+  const handleUpgradeClick = useCallback((upgradeId: string) => {
+    onUpgradeClick?.(upgradeId);
+    // Remove the clicked upgrade
+    setUpgrades(prev => prev.filter(u => u.upgradeId !== upgradeId));
+  }, [onUpgradeClick]);
+
+  const handleUpgradeHit = useCallback((id: number, damage: number) => {
+    let destroyed = false;
+    setUpgrades(prev =>
+      prev
+        .map(u => {
+          if (u.id === id) {
+            const newHealth = u.health - damage;
+            destroyed = newHealth <= 0;
+            return { ...u, health: newHealth };
+          }
+          return u;
+        })
+        .filter(u => u.health > 0)
+    );
+    if (destroyed) {
+      onMeteorDestroyed?.();
+      onEnergyGained?.(10); // Grant 10 energy for destroying an upgrade
+    }
+  }, [onMeteorDestroyed, onEnergyGained]);
+
+  const offset = useRef(new Vector3(0, -1.5, -3));
+  useFrame(() => {
+    if (cannonGroup.current) {
+      cannonGroup.current.position.copy(camera.position).add(offset.current);
+      cannonGroup.current.quaternion.copy(camera.quaternion);
+    }
+  });
+
+  // Remove auto-firing - let players click upgrades instead
   useEffect(() => {
     const handleClick = () => {
       if (!cannonGroup.current) return;
-      const visible = asteroids.filter(a => isAsteroidVisible(a.position));
+      const visible = upgrades.filter(u => isUpgradeVisible(u.position));
       if (visible.length === 0) return;
       const start = new Vector3();
       cannonGroup.current.getWorldPosition(start);
@@ -100,59 +143,12 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     };
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
-  }, [asteroids, isAsteroidVisible]);
-
-  const handleAsteroidHit = useCallback((id: number, damage: number) => {
-    let destroyed = false;
-    setAsteroids(prev =>
-      prev
-        .map(a => {
-          if (a.id === id) {
-            const newHealth = a.health - damage;
-            destroyed = newHealth <= 0;
-            return { ...a, health: newHealth };
-          }
-          return a;
-        })
-        .filter(a => a.health > 0)
-    );
-    if (destroyed) {
-      onMeteorDestroyed?.();
-      onEnergyGained?.(10); // Grant 10 energy for destroying a meteor
-    }
-  }, [onMeteorDestroyed]);
-
-  const offset = useRef(new Vector3(0, -1.5, -3));
-  useFrame(() => {
-    if (cannonGroup.current) {
-      cannonGroup.current.position.copy(camera.position).add(offset.current);
-      cannonGroup.current.quaternion.copy(camera.quaternion);
-    }
-  });
-
-  useEffect(() => {
-    fireIntervalRef.current = setInterval(() => {
-      if (!cannonGroup.current) return;
-      const visible = asteroids.filter(a => isAsteroidVisible(a.position));
-      if (visible.length === 0) return;
-      const start = new Vector3();
-      cannonGroup.current.getWorldPosition(start);
-      const targetPos = visible[0].position.clone();
-      const dir = targetPos.clone().sub(start).normalize();
-      setProjectiles(prev => [
-        ...prev,
-        { id: Date.now(), position: start, direction: dir, speed: 0.5 }
-      ]);
-    }, 1000);
-    return () => {
-      if (fireIntervalRef.current) clearInterval(fireIntervalRef.current);
-    };
-  }, [asteroids, isAsteroidVisible]);
+  }, [upgrades, isUpgradeVisible]);
 
   useFrame(() => {
-    setAsteroids(prev => {
-      const updated = prev.map(a => ({ ...a, position: a.position.clone().add(a.velocity) }));
-      return updated.filter(a => a.position.z < camera.position.z);
+    setUpgrades(prev => {
+      const updated = prev.map(u => ({ ...u, position: u.position.clone().add(u.velocity) }));
+      return updated.filter(u => u.position.z < camera.position.z);
     });
 
     setProjectiles(prev => {
@@ -167,12 +163,12 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
               if (colliderId.startsWith('asteroid-')) {
                 const distance = newPos.distanceTo(collider.position);
                 if (distance < collider.radius) {
-                  // Find the asteroid by position to get its ID
-                  const asteroid = asteroids.find(ast => 
-                    ast.position.distanceTo(collider.position) < 0.1
+                  // Find the upgrade by position to get its ID
+                  const upgrade = upgrades.find(upg => 
+                    upg.position.distanceTo(collider.position) < 0.1
                   );
-                  if (asteroid) {
-                    handleAsteroidHit(asteroid.id, 1);
+                  if (upgrade) {
+                    handleUpgradeHit(upgrade.id, 1);
                     hit = true;
                     break;
                   }
@@ -181,9 +177,9 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
             }
           } else {
             // Fallback to simple distance check if collision context not available
-            for (const ast of asteroids) {
-              if (newPos.distanceTo(ast.position) < 0.7) {
-                handleAsteroidHit(ast.id, 1);
+            for (const upg of upgrades) {
+              if (newPos.distanceTo(upg.position) < 0.7) {
+                handleUpgradeHit(upg.id, 1);
                 hit = true;
                 break;
               }
@@ -197,15 +193,23 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     });
   });
 
-  const target = asteroids[0] ? asteroids[0].position.clone() : undefined;
+  const target = upgrades[0] ? upgrades[0].position.clone() : undefined;
 
   return (
     <group>
       <group ref={cannonGroup}>
         <ScifiCannon target={target} />
       </group>
-      {asteroids.map(ast => (
-        <Asteroid key={ast.id} position={ast.position} health={ast.health} />
+      {upgrades.map((upg, index) => (
+        <Asteroid 
+          key={upg.id} 
+          position={upg.position} 
+          health={upg.health} 
+          isUpgrade={true}
+          upgradeId={upg.upgradeId}
+          onUpgradeClick={handleUpgradeClick}
+          upgradeIndex={index}
+        />
       ))}
       {projectiles.map(p => (
         <mesh key={p.id} position={p.position}>
