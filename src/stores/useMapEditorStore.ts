@@ -114,9 +114,10 @@ export const useMapEditorStore = create<MapEditorState & MapEditorActions>((set,
       if (state.history.length === 0) return state;
       const previous = state.history[state.history.length - 1];
       return {
+        ...state,
         placedElements: previous,
         history: state.history.slice(0, -1),
         selectedElement: null
-      } as Partial<MapEditorState>;
+      } as MapEditorState;
     }),
 }));
