@@ -20,6 +20,7 @@ import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
 import { MapEditorGrid } from './MapEditor/MapEditorGrid';
 import { MapEditorControls } from './MapEditor/MapEditorControls';
 import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
+import { MapEditorFlyingCamera } from './MapEditor/MapEditorFlyingCamera';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -216,6 +217,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <MapEditorGrid />
           <MapEditorControls />
           <MapEditorElementRenderer />
+          <MapEditorFlyingCamera />
         </Suspense>
       </Canvas>
 

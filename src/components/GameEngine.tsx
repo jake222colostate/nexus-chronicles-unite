@@ -433,7 +433,6 @@ const GameEngine: React.FC = () => {
 
       {/* Map Editor UI Components */}
       <MapEditorToolbar />
-      <MapEditorElementPalette realm={currentRealm} />
     </div>
     </CollisionProvider>
   );

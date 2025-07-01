@@ -1,11 +1,11 @@
-import React, { useRef } from 'react';
-import { useThree, useFrame } from '@react-three/fiber';
+import React, { useRef, useEffect } from 'react';
+import { useThree } from '@react-three/fiber';
 import { useMapEditorStore } from '../../stores/useMapEditorStore';
 import { Vector3 } from 'three';
 import * as THREE from 'three';
 
 export const MapEditorControls: React.FC = () => {
-  const { camera, gl, mouse, raycaster, scene } = useThree();
+  const { camera, gl, size } = useThree();
   const {
     isEditorActive,
     selectedTool,
@@ -19,115 +19,112 @@ export const MapEditorControls: React.FC = () => {
     setSelectedElement
   } = useMapEditorStore();
 
-  const isMouseDown = useRef(false);
-  const lastMousePosition = useRef(new Vector3());
+  const raycaster = useRef(new THREE.Raycaster());
+  const mouse = useRef(new THREE.Vector2());
 
   const snapToGridValue = (value: number) => {
     if (!snapToGrid) return value;
     return Math.round(value / gridSize) * gridSize;
   };
 
-  const handlePointerDown = (event: PointerEvent) => {
-    if (!isEditorActive) return;
+  const handleClick = (event: MouseEvent) => {
+    if (!isEditorActive || selectedTool !== 'place') return;
     
-    isMouseDown.current = true;
+    const rect = gl.domElement.getBoundingClientRect();
+    
+    // Calculate mouse position in normalized device coordinates (-1 to +1)
+    mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     
     // Update raycaster
-    raycaster.setFromCamera(mouse, camera);
+    raycaster.current.setFromCamera(mouse.current, camera);
     
-    // Raycast against the ground plane
+    // Create a ground plane at y=0
     const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
     const intersectPoint = new Vector3();
-    raycaster.ray.intersectPlane(groundPlane, intersectPoint);
     
-    if (!intersectPoint) return;
+    // Find intersection with ground plane
+    const intersects = raycaster.current.ray.intersectPlane(groundPlane, intersectPoint);
+    
+    if (!intersects) return;
 
-    // Snap to grid
-    intersectPoint.x = snapToGridValue(intersectPoint.x);
-    intersectPoint.z = snapToGridValue(intersectPoint.z);
+    // Snap to grid if enabled
+    if (snapToGrid) {
+      intersectPoint.x = snapToGridValue(intersectPoint.x);
+      intersectPoint.z = snapToGridValue(intersectPoint.z);
+    }
 
-    switch (selectedTool) {
-      case 'place':
-        if (selectedElementType) {
-          const newElement = {
-            id: `element_${Date.now()}_${Math.random()}`,
-            type: selectedElementType.includes('upgrade') ? 'upgrade' : 
-                  selectedElementType.includes('enemy') ? 'enemy' : 'decoration' as any,
-            position: intersectPoint,
-            rotation: new Vector3(0, 0, 0),
-            scale: new Vector3(1, 1, 1),
-            properties: { elementType: selectedElementType },
-            realm: 'fantasy' as 'fantasy' | 'scifi' // This should be dynamic based on current realm
-          };
-          addElement(newElement);
-        }
-        break;
-
-      case 'select':
-        // Find closest element to click point
-        let closestElement = null;
-        let closestDistance = Infinity;
-        
-        placedElements.forEach(element => {
-          const distance = element.position.distanceTo(intersectPoint);
-          if (distance < 2 && distance < closestDistance) { // 2 unit selection radius
-            closestDistance = distance;
-            closestElement = element;
-          }
-        });
-        
-        setSelectedElement(closestElement?.id || null);
-        break;
-
-      case 'delete':
-        // Find and delete closest element
-        let elementToDelete = null;
-        let deleteDistance = Infinity;
-        
-        placedElements.forEach(element => {
-          const distance = element.position.distanceTo(intersectPoint);
-          if (distance < 2 && distance < deleteDistance) {
-            deleteDistance = distance;
-            elementToDelete = element;
-          }
-        });
-        
-        if (elementToDelete) {
-          removeElement(elementToDelete.id);
-        }
-        break;
+    // Place element if in place mode and element type is selected
+    if (selectedTool === 'place' && selectedElementType) {
+      const newElement = {
+        id: `element_${Date.now()}_${Math.random()}`,
+        type: selectedElementType.includes('upgrade') ? 'upgrade' : 
+              selectedElementType.includes('enemy') ? 'enemy' : 'decoration' as any,
+        position: intersectPoint,
+        rotation: new Vector3(0, 0, 0),
+        scale: new Vector3(1, 1, 1),
+        properties: { elementType: selectedElementType },
+        realm: 'fantasy' as 'fantasy' | 'scifi'
+      };
+      addElement(newElement);
+      console.log('Placed element:', newElement);
     }
   };
 
-  const handlePointerUp = () => {
-    isMouseDown.current = false;
-  };
-
-  const handlePointerMove = (event: PointerEvent) => {
-    if (!isEditorActive || !isMouseDown.current) return;
+  const handleRightClick = (event: MouseEvent) => {
+    if (!isEditorActive) return;
+    event.preventDefault();
     
-    // Handle dragging logic here for move tool
-    if (selectedTool === 'move' && selectedElement) {
-      // Update position of selected element
-      // This would need more sophisticated implementation
+    const rect = gl.domElement.getBoundingClientRect();
+    
+    // Calculate mouse position
+    mouse.current.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.current.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    raycaster.current.setFromCamera(mouse.current, camera);
+    
+    const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const intersectPoint = new Vector3();
+    
+    if (!raycaster.current.ray.intersectPlane(groundPlane, intersectPoint)) return;
+
+    // Find and select/delete closest element
+    let closestElement = null;
+    let closestDistance = Infinity;
+    
+    placedElements.forEach(element => {
+      const distance = element.position.distanceTo(intersectPoint);
+      if (distance < 2 && distance < closestDistance) {
+        closestDistance = distance;
+        closestElement = element;
+      }
+    });
+    
+    if (closestElement) {
+      if (selectedTool === 'delete') {
+        removeElement(closestElement.id);
+        console.log('Deleted element:', closestElement.id);
+      } else {
+        setSelectedElement(closestElement.id);
+        console.log('Selected element:', closestElement.id);
+      }
     }
   };
 
   // Add event listeners
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isEditorActive) return;
 
     const canvas = gl.domElement;
-    canvas.addEventListener('pointerdown', handlePointerDown);
-    canvas.addEventListener('pointerup', handlePointerUp);
-    canvas.addEventListener('pointermove', handlePointerMove);
+    
+    canvas.addEventListener('click', handleClick);
+    canvas.addEventListener('contextmenu', handleRightClick);
 
     return () => {
-      canvas.removeEventListener('pointerdown', handlePointerDown);
-      canvas.removeEventListener('pointerup', handlePointerUp);
-      canvas.removeEventListener('pointermove', handlePointerMove);
+      canvas.removeEventListener('click', handleClick);
+      canvas.removeEventListener('contextmenu', handleRightClick);
     };
-  }, [isEditorActive, selectedTool, selectedElementType, snapToGrid, gridSize]);
+  }, [isEditorActive, selectedTool, selectedElementType, snapToGrid, gridSize, placedElements]);
 
-  return null; // This component handles events but doesn't render anything
+  return null;
 };
