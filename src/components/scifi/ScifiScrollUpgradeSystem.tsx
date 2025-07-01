@@ -23,20 +23,20 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
     const positions: Array<{id: string, position: Vector3, tier: number}> = [];
     
     for (let i = 0; i < 50; i++) {
-      // Create a scattered pattern in front of the player
-      const height = i * 6 + 5; // Each upgrade is 6 units higher, starting at y=5 (closer to player)
+      // Create a scattered pattern in front of the player - much closer together
+      const height = i * 2 + 5; // Much closer vertical spacing - only 2 units apart
       
-      // Use a wider horizontal spread and ensure all upgrades are in front of player
+      // Use a tighter horizontal spread
       const angleOffset = (i % 8) * (Math.PI / 4); // 8 positions around a circle
       const layer = Math.floor(i / 8); // Which "layer" of depth
       
-      // Better spacing - start closer and spread out more
-      const minZ = 8; // Closer minimum distance in front of player
-      const z = minZ + (layer * 5) + Math.random() * 3; // More progressive depth with spacing
+      // Much tighter spacing - start closer and less spread
+      const minZ = 8; // Start distance
+      const z = minZ + (layer * 2) + Math.random() * 1; // Much closer depth spacing - only 2 units per layer
       
-      // Better horizontal spread
-      const radius = 8 + layer * 3 + Math.random() * 4; // Better radius progression
-      const x = Math.cos(angleOffset) * radius + (Math.random() - 0.5) * 5; // More spread
+      // Tighter horizontal spread
+      const radius = 4 + layer * 1.5 + Math.random() * 2; // Much smaller radius progression
+      const x = Math.cos(angleOffset) * radius + (Math.random() - 0.5) * 2; // Less horizontal spread
       
       const tier = Math.floor(i / 10) + 1; // Tiers 1-5, 10 upgrades per tier
       
