@@ -9,6 +9,8 @@ interface Enhanced360ControllerProps {
   sensitivity?: number;
   realm?: 'fantasy' | 'scifi';
   maxRotation?: number; // Maximum rotation in radians
+  radius?: number; // Radius of circular movement
+  centerPoint?: [number, number, number]; // Center point to orbit around
 }
 
 export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
@@ -17,7 +19,9 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   maxY = 20,
   sensitivity = 1.0,
   realm = 'fantasy',
-  maxRotation = Math.PI / 6 // 30 degrees in radians
+  maxRotation = Math.PI / 6, // 30 degrees in radians
+  radius = 10, // Default radius for circular movement
+  centerPoint = [0, 4, 0] // Default center point at upgrade level
 }) => {
   const { camera: threeCamera } = useThree();
   const activeCamera = camera || threeCamera;
@@ -26,20 +30,22 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   const lastX = useRef(0);
   const lastY = useRef(0);
   const targetY = useRef(0);
-  const targetRotationY = useRef(0);
+  const targetAngle = useRef(0); // Angle around the center point
   const currentY = useRef(8);
-  const currentRotationY = useRef(0);
+  const currentAngle = useRef(0);
 
   useEffect(() => {
     if (activeCamera) {
       currentY.current = activeCamera.position.y;
       targetY.current = activeCamera.position.y;
       
-      // Initialize rotation based on current camera rotation
-      currentRotationY.current = activeCamera.rotation.y;
-      targetRotationY.current = activeCamera.rotation.y;
+      // Calculate initial angle based on current camera position
+      const dx = activeCamera.position.x - centerPoint[0];
+      const dz = activeCamera.position.z - centerPoint[2];
+      currentAngle.current = Math.atan2(dx, dz);
+      targetAngle.current = currentAngle.current;
     }
-  }, [activeCamera]);
+  }, [activeCamera, centerPoint]);
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -59,12 +65,13 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       const moveAmountY = deltaY * sensitivity * 0.01;
       targetY.current = Math.max(minY, Math.min(maxY, targetY.current - moveAmountY));
       
-      // Horizontal rotation (new functionality for scifi realm)
+      // Circular movement around center point (for scifi realm)
       if (realm === 'scifi') {
         const rotateAmount = deltaX * sensitivity * 0.005; // More subtle rotation
-        targetRotationY.current = Math.max(
-          -maxRotation, 
-          Math.min(maxRotation, targetRotationY.current - rotateAmount)
+        const maxAngleChange = maxRotation / radius; // Convert max rotation to angular change
+        targetAngle.current = Math.max(
+          currentAngle.current - maxAngleChange,
+          Math.min(currentAngle.current + maxAngleChange, targetAngle.current - rotateAmount)
         );
       }
       
@@ -100,7 +107,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         canvas.removeEventListener('contextmenu', (e) => e.preventDefault());
       }
     };
-  }, [minY, maxY, sensitivity, realm, maxRotation]);
+  }, [minY, maxY, sensitivity, realm, maxRotation, radius, centerPoint, currentAngle]);
 
   useFrame(() => {
     if (activeCamera) {
@@ -108,10 +115,19 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       currentY.current += (targetY.current - currentY.current) * 0.1;
       activeCamera.position.y = currentY.current;
       
-      // Smooth interpolation to target rotation (for scifi realm)
+      // Circular movement around center point (for scifi realm)
       if (realm === 'scifi') {
-        currentRotationY.current += (targetRotationY.current - currentRotationY.current) * 0.1;
-        activeCamera.rotation.y = currentRotationY.current;
+        currentAngle.current += (targetAngle.current - currentAngle.current) * 0.1;
+        
+        // Calculate new camera position on the circle
+        const x = centerPoint[0] + Math.sin(currentAngle.current) * radius;
+        const z = centerPoint[2] + Math.cos(currentAngle.current) * radius;
+        
+        activeCamera.position.x = x;
+        activeCamera.position.z = z;
+        
+        // Make camera look at the center point
+        activeCamera.lookAt(centerPoint[0], centerPoint[1], centerPoint[2]);
       }
     }
   });

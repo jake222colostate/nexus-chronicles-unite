@@ -170,7 +170,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             />
           )}
 
-          {/* Enhanced camera controller with 360 rotation support for scifi realm */}
+          {/* Enhanced camera controller with circular movement around center upgrades */}
           {!isEditorActive && (
             <Enhanced360Controller 
               camera={cameraRef.current}
@@ -178,7 +178,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               maxY={350}
               sensitivity={0.8}
               realm={realm}
-              maxRotation={Math.PI / 6} // 30 degrees
+              maxRotation={Math.PI / 3} // 60 degrees total range
+              radius={10} // Distance from center upgrades
+              centerPoint={[0, 4, 0]} // Center of upgrade area
             />
           )}
 
