@@ -72,11 +72,24 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     hitboxRadius
   );
 
-  useFrame(() => {
+  useFrame((state) => {
     if (group.current) {
       group.current.position.copy(position);
-      group.current.rotation.x += 0.01;
-      group.current.rotation.y += 0.005;
+      
+      if (isUpgrade) {
+        // Special animations for upgrades
+        group.current.rotation.x += 0.02;
+        group.current.rotation.y += 0.03;
+        group.current.rotation.z += 0.01;
+        
+        // Pulsing effect for upgrades
+        const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.1 + 1;
+        group.current.scale.setScalar(pulse);
+      } else {
+        // Regular asteroid rotation
+        group.current.rotation.x += 0.01;
+        group.current.rotation.y += 0.005;
+      }
 
       if (group.current.position.z >= 0) {
         onReachTarget?.();
@@ -109,21 +122,82 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     }
   };
 
-  // Enhanced fallback rendering to ensure model is always visible
+  // Enhanced rendering with distinct upgrade visuals
   const renderMeteorModel = () => {
     const clickProps = isUpgrade ? { onClick: handleClick } : {};
     
+    // Render completely different visuals for upgrades
+    if (isUpgrade) {
+      return (
+        <group {...clickProps}>
+          {/* Main upgrade crystal - icosahedron for uniqueness */}
+          <mesh scale={randomScale * 12}>
+            <icosahedronGeometry args={[1, 1]} />
+            <meshStandardMaterial 
+              color="#ff00ff" 
+              roughness={0.1} 
+              metalness={0.9}
+              emissive="#ff00ff"
+              emissiveIntensity={0.8}
+              transparent
+              opacity={0.9}
+            />
+          </mesh>
+          
+          {/* Outer glow ring */}
+          <mesh scale={randomScale * 16} rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[0.8, 1.2, 16]} />
+            <meshBasicMaterial 
+              color="#00ffff"
+              transparent
+              opacity={0.6}
+            />
+          </mesh>
+          
+          {/* Pulsing inner core */}
+          <mesh scale={randomScale * 6}>
+            <sphereGeometry args={[1, 16, 16]} />
+            <meshBasicMaterial 
+              color="#ffffff"
+              transparent
+              opacity={0.8}
+            />
+          </mesh>
+          
+          {/* Energy particles around the upgrade */}
+          {[...Array(6)].map((_, i) => (
+            <mesh key={i} 
+              position={[
+                Math.cos(i * Math.PI / 3) * 2,
+                Math.sin(i * 0.8) * 1,
+                Math.sin(i * Math.PI / 3) * 2
+              ]} 
+              scale={randomScale * 3}
+            >
+              <octahedronGeometry args={[0.5, 0]} />
+              <meshBasicMaterial 
+                color="#ffff00"
+                transparent
+                opacity={0.7}
+              />
+            </mesh>
+          ))}
+        </group>
+      );
+    }
+    
+    // Regular meteor rendering (unchanged)
     try {
       if (randomModel === 'polygon') {
         return (
           <mesh scale={randomScale * 8} {...clickProps}>
             <dodecahedronGeometry args={[1, 0]} />
             <meshStandardMaterial 
-              color={isUpgrade ? "#00ffff" : "#666666"} 
+              color="#666666" 
               roughness={0.8} 
               metalness={0.2}
-              emissive={isUpgrade ? "#0088ff" : "#331100"}
-              emissiveIntensity={isUpgrade ? 0.6 : 0.3}
+              emissive="#331100"
+              emissiveIntensity={0.3}
             />
           </mesh>
         );
@@ -143,11 +217,11 @@ export const Asteroid: React.FC<AsteroidProps> = ({
             <mesh scale={randomScale * 8} {...clickProps}>
               <dodecahedronGeometry args={[1, 0]} />
               <meshStandardMaterial 
-                color={isUpgrade ? "#00ffff" : "#666666"} 
+                color="#666666" 
                 roughness={0.8} 
                 metalness={0.2}
-                emissive={isUpgrade ? "#0088ff" : "#331100"}
-                emissiveIntensity={isUpgrade ? 0.6 : 0.3}
+                emissive="#331100"
+                emissiveIntensity={0.3}
               />
             </mesh>
           );
@@ -159,11 +233,11 @@ export const Asteroid: React.FC<AsteroidProps> = ({
         <mesh scale={randomScale * 8} {...clickProps}>
           <dodecahedronGeometry args={[1, 0]} />
           <meshStandardMaterial 
-            color={isUpgrade ? "#00ffff" : "#666666"} 
+            color="#666666" 
             roughness={0.8} 
             metalness={0.2}
-            emissive={isUpgrade ? "#0088ff" : "#331100"}
-            emissiveIntensity={isUpgrade ? 0.6 : 0.3}
+            emissive="#331100"
+            emissiveIntensity={0.3}
           />
         </mesh>
       );
