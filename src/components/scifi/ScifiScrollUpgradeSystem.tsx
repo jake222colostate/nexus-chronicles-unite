@@ -23,16 +23,16 @@ export const ScifiScrollUpgradeSystem: React.FC<ScifiScrollUpgradeSystemProps> =
     const positions: Array<{id: string, position: Vector3, tier: number}> = [];
     
     for (let i = 0; i < 50; i++) {
-      // Create a scattered pattern in front of the player - much closer together
-      const height = i * 2 + 5; // Much closer vertical spacing - only 2 units apart
+      // Position all upgrades on the same Y plane as the initial upgrade
+      const height = 4; // Fixed Y position to match initial upgrade plane
       
       // Use a tighter horizontal spread
       const angleOffset = (i % 8) * (Math.PI / 4); // 8 positions around a circle
       const layer = Math.floor(i / 8); // Which "layer" of depth
       
-      // Position upgrades farther from screen to appear smaller
-      const minZ = -10; // Start farther behind camera
-      const z = minZ - (layer * 2) + Math.random() * 1; // Progress farther back with more spacing
+      // Position upgrades at a visible distance
+      const minZ = -3; // Start at a visible distance
+      const z = minZ - (layer * 1.5) + Math.random() * 1; // Small depth variation
       
       // Tighter horizontal spread
       const radius = 4 + layer * 1.5 + Math.random() * 2; // Much smaller radius progression
