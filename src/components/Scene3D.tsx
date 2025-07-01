@@ -195,7 +195,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             </ChunkSystem>
           )}
 
-          {upgradeNodes}
+          {/* Only show upgrade nodes in fantasy realm */}
+          {realm === 'fantasy' && upgradeNodes}
 
           {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
