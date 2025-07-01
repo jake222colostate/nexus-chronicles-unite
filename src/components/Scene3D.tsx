@@ -13,6 +13,7 @@ import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
 import { ScifiDefenseSystem } from './scifi/ScifiDefenseSystem';
+import { FloatingUpgradeSystem } from './scifi/FloatingUpgradeSystem';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -22,6 +23,8 @@ interface Scene3DProps {
   showTapEffect?: boolean;
   onTapEffectComplete?: () => void;
   onMeteorDestroyed?: () => void;
+  onEnergyGained?: (amount: number) => void;
+  onPurchaseUpgrade?: (upgradeId: string) => void;
 }
 
 // Memoized upgrade positions - no need to recalculate every render
@@ -43,7 +46,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   isTransitioning = false,
   showTapEffect = false,
   onTapEffectComplete,
-  onMeteorDestroyed
+  onMeteorDestroyed,
+  onEnergyGained,
+  onPurchaseUpgrade
 }) => {
   console.log('Scene3D: Rendering with realm:', realm);
   
@@ -147,7 +152,19 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <ImprovedFantasyLighting />
 
           <FloatingIsland realm={realm} />
-          {realm === 'scifi' && <ScifiDefenseSystem onMeteorDestroyed={onMeteorDestroyed} />}
+          {realm === 'scifi' && (
+            <>
+              <ScifiDefenseSystem 
+                onMeteorDestroyed={onMeteorDestroyed}
+                onEnergyGained={onEnergyGained}
+              />
+              <FloatingUpgradeSystem
+                energyCredits={gameState.energyCredits || 0}
+                onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
+                purchasedUpgrades={gameState.purchasedUpgrades || []}
+              />
+            </>
+          )}
 
           {/* Fantasy environment with enemy position tracking */}
           {realm === 'fantasy' && (

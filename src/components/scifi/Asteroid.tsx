@@ -41,13 +41,13 @@ export const Asteroid: React.FC<AsteroidProps> = ({
     return 'extra-large';
   }, []);
 
-  // FIXED: Much larger, clearly visible size multipliers
+  // FIXED: Reduced all sizes by half as requested
   const randomScale = useMemo(() => {
     const sizeMultipliers = {
-      'small': 0.15 + Math.random() * 0.1,      // 0.15-0.25 (clearly visible)
-      'medium': 0.25 + Math.random() * 0.15,    // 0.25-0.40 (medium sized)
-      'large': 0.40 + Math.random() * 0.2,      // 0.40-0.60 (large)
-      'extra-large': 0.60 + Math.random() * 0.3 // 0.60-0.90 (extra large)
+      'small': 0.075 + Math.random() * 0.05,     // 0.075-0.125 (half previous size)
+      'medium': 0.125 + Math.random() * 0.075,   // 0.125-0.20 (half previous size)
+      'large': 0.20 + Math.random() * 0.1,       // 0.20-0.30 (half previous size)
+      'extra-large': 0.30 + Math.random() * 0.15 // 0.30-0.45 (half previous size)
     };
     return sizeMultipliers[sizeCategory];
   }, [sizeCategory]);

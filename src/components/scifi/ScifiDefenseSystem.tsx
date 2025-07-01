@@ -33,9 +33,10 @@ interface Projectile {
 
 interface ScifiDefenseSystemProps {
   onMeteorDestroyed?: () => void;
+  onEnergyGained?: (amount: number) => void;
 }
 
-export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteorDestroyed }) => {
+export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteorDestroyed, onEnergyGained }) => {
   const [asteroids, setAsteroids] = useState<SpawnedAsteroid[]>([]);
   const [projectiles, setProjectiles] = useState<Projectile[]>([]);
   const spawnIntervalRef = useRef<NodeJS.Timeout>();
@@ -117,6 +118,7 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({ onMeteor
     );
     if (destroyed) {
       onMeteorDestroyed?.();
+      onEnergyGained?.(10); // Grant 10 energy for destroying a meteor
     }
   }, [onMeteorDestroyed]);
 
