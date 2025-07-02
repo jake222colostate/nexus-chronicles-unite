@@ -299,7 +299,7 @@ const GameEngine: React.FC = () => {
       )}
 
       {/* Main Game Area - also used for map editor */}
-      <div className="absolute inset-0 pt-12 pb-32">
+      <div className="absolute inset-0 pt-16 pb-32 pl-24">
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
@@ -358,7 +358,7 @@ const GameEngine: React.FC = () => {
             </div>
 
             {/* Cross-Realm Upgrades Button */}
-            <div className="absolute top-16 left-4 z-30">
+            <div className="absolute top-16 left-28 z-30">
               <Button 
                 onClick={handleShowCrossRealmUpgrades}
                 className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"

@@ -4,8 +4,8 @@ import { useInventoryStore } from '../stores/useInventoryStore';
 const InventorySidebar: React.FC = () => {
   const items = useInventoryStore((s) => s.items);
   return (
-    <div className="fixed left-0 top-0 bottom-0 w-28 bg-black/70 backdrop-blur-md p-2 flex flex-col z-40 overflow-y-auto">
-      <h3 className="text-white text-sm font-bold mb-2">Inventory</h3>
+    <div className="fixed left-0 top-16 bottom-32 w-24 bg-black/80 backdrop-blur-md p-2 flex flex-col z-30 overflow-y-auto border-r border-white/20">
+      <h3 className="text-white text-xs font-bold mb-2">Items</h3>
       {items.length === 0 && (
         <span className="text-gray-400 text-xs">Empty</span>
       )}
