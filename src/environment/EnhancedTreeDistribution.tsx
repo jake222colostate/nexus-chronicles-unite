@@ -24,9 +24,14 @@ const getTerrainHeight = (x: number, z: number): number => {
   return Math.max(0, baseHeight + jitter);
 };
 
-// ENHANCED: Calculate proper mountain slope height for tree grounding
+// ENHANCED: Calculate proper mountain slope height for tree grounding with culling
 const getMountainSlopeHeight = (x: number, z: number): number => {
   const distanceFromCenter = Math.abs(x);
+  
+  // 60fps optimization: Early culling outside mountain range
+  if (distanceFromCenter > 150) {
+    return -1000; // Force culling for far objects
+  }
   
   // Valley floor (close to path)
   if (distanceFromCenter < 15) {
