@@ -4,7 +4,7 @@ import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
-import { BoundaryMountainSystem } from './BoundaryMountainSystem';
+import { GLBMountainSystem } from './GLBMountainSystem';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: ChunkData[];
@@ -37,7 +37,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
       />
       
       {/* Mountain system for fantasy world boundaries */}
-      <BoundaryMountainSystem
+      <GLBMountainSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
