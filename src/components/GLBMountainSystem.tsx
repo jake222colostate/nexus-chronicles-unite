@@ -44,7 +44,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
         const rotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4; // X-axis rotation for natural look
         const rotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
         const rotationZ = (seededRandom(mountainSeed + 5) - 0.5) * 0.2; // Slight Z rotation
-        const scale = 1.2 + seededRandom(mountainSeed + 6) * 0.8;
+        const scale = (1.2 + seededRandom(mountainSeed + 6) * 0.8) * 3; // Scale up by 3x
         
         instances.push({
           key: `left_${chunk.id}_${i}`,
@@ -65,7 +65,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
         const rotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4; // X-axis rotation for natural look
         const rotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
         const rotationZ = (seededRandom(mountainSeed + 5) - 0.5) * 0.2; // Slight Z rotation
-        const scale = 1.2 + seededRandom(mountainSeed + 6) * 0.8;
+        const scale = (1.2 + seededRandom(mountainSeed + 6) * 0.8) * 3; // Scale up by 3x
         
         instances.push({
           key: `right_${chunk.id}_${i}`,
