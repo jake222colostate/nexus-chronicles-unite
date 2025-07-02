@@ -133,7 +133,6 @@ const GameEngine: React.FC = () => {
       mana: prev.mana + prev.manaPerKill,
       enemiesKilled: prev.enemiesKilled + 1,
     }));
-
     // Drop a trophy occasionally
     if (Math.random() < 0.5) {
       addItem('Monster Trophy');
@@ -145,7 +144,6 @@ const GameEngine: React.FC = () => {
       ...prev,
       energyCredits: prev.energyCredits + 5,
     }));
-
     // Occasional meteor fragment drop
     if (Math.random() < 0.3) {
       addItem('Meteor Fragment');
