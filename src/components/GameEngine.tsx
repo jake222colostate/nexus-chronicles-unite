@@ -140,11 +140,10 @@ const GameEngine: React.FC = () => {
   }, [setGameState]);
 
   const handleJourneyUpdate = useCallback((distance: number) => {
-    const currentDistance = currentRealm === 'fantasy' ? stableGameState.fantasyJourneyDistance : 
-                           currentRealm === 'scifi' ? stableGameState.scifiJourneyDistance : 0;
+    const currentDistance = currentRealm === 'fantasy' ? stableGameState.fantasyJourneyDistance : stableGameState.scifiJourneyDistance;
     
     // Only update if distance changed significantly
-    if (Math.abs(distance - currentDistance) > 0.5 && currentRealm !== 'nexus') {
+    if (Math.abs(distance - currentDistance) > 0.5) {
       setGameState(prev => ({
         ...prev,
         [currentRealm === 'fantasy' ? 'fantasyJourneyDistance' : 'scifiJourneyDistance']: distance
@@ -288,15 +287,12 @@ const GameEngine: React.FC = () => {
         {/* Main game view without overlays */}
         <MapSkillTreeView
           realm={currentRealm}
-          buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : 
-                    currentRealm === 'scifi' ? stableGameState.scifiBuildings : {}}
+          buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : stableGameState.scifiBuildings}
           manaPerSecond={stableGameState.manaPerSecond}
           energyPerSecond={stableGameState.energyPerSecond}
           onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
-          buildingData={currentRealm === 'fantasy' ? fantasyBuildings : 
-                       currentRealm === 'scifi' ? scifiBuildings : []}
-          currency={currentRealm === 'fantasy' ? stableGameState.mana : 
-                   currentRealm === 'scifi' ? stableGameState.energyCredits : stableGameState.nexusShards}
+          buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
+          currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
           gameState={stableGameState}
           onPurchaseUpgrade={purchaseUpgrade}
           onPurchaseScifiUpgrade={purchaseScifiUpgrade}
@@ -308,8 +304,7 @@ const GameEngine: React.FC = () => {
           onEnemyCountChange={handleEnemyCountChange}
           onEnemyKilled={handleEnemyKilled}
           onMeteorDestroyed={handleMeteorDestroyed}
-          weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : 
-                       currentRealm === 'scifi' ? scifiWeaponStats.damage : 1}
+          weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
           upgradesPurchased={stableGameState.purchasedUpgrades.length}
         />
       </div>
@@ -334,20 +329,6 @@ const GameEngine: React.FC = () => {
                 currentEnergy={stableGameState.energyCredits}
                 onUpgrade={handleScifiAutoClickerUpgrade}
               />
-            )}
-
-            {/* Nexus AutoUpgrade System - positioned top-center, only in nexus realm */}
-            {currentRealm === 'nexus' && (
-              <div className="absolute top-28 left-1/2 transform -translate-x-1/2 z-30">
-                <div className="flex flex-col items-center gap-1">
-                  <div className="h-10 px-4 rounded-xl backdrop-blur-xl border bg-gradient-to-r from-indigo-500/95 to-purple-500/95 border-indigo-400/70 text-white flex items-center">
-                    🌌 Nexus Core - Coming Soon
-                  </div>
-                  <p className="text-center text-xs text-indigo-300 font-medium">
-                    Convergence Technology
-                  </p>
-                </div>
-              </div>
             )}
 
             {/* Weapon Upgrade Button */}

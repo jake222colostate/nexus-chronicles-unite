@@ -5,7 +5,7 @@ import { Fantasy3DUpgradeWorld } from './Fantasy3DUpgradeWorld';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
 
 interface SceneRendererProps {
-  realm: 'fantasy' | 'scifi' | 'nexus';
+  realm: 'fantasy' | 'scifi';
   gameState: any;
   showTapEffect: boolean;
   isTransitioning: boolean;
@@ -42,7 +42,7 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
       {isEditorActive ? (
         <Scene3D
           key="editor-scene"
-          realm={realm === 'nexus' ? 'fantasy' : realm}
+          realm={realm}
           gameState={gameState}
           onUpgradeClick={onUpgradeClick}
           isTransitioning={isTransitioning}
@@ -64,7 +64,7 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
           weaponDamage={weaponDamage}
           upgradesPurchased={upgradesPurchased}
         />
-      ) : realm === 'scifi' ? (
+      ) : (
         <Scene3D
           key="scifi-world"
           realm={realm}
@@ -75,19 +75,6 @@ export const SceneRenderer: React.FC<SceneRendererProps> = ({
           onTapEffectComplete={onTapEffectComplete}
           onMeteorDestroyed={onMeteorDestroyed}
         />
-      ) : (
-        <div key="nexus-world" className="w-full h-full">
-          {/* Import and use NexusWorld component */}
-          <div className="w-full h-full bg-gradient-to-b from-indigo-950 via-purple-950 to-black">
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center text-white">
-                <div className="text-6xl mb-4">🌌</div>
-                <h2 className="text-2xl font-bold text-indigo-300 mb-2">Nexus Realm</h2>
-                <p className="text-indigo-400">A space between worlds</p>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
     </>
   );

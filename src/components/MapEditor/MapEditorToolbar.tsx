@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { useMapEditorStore } from '../../stores/useMapEditorStore';
 import { MapEditorElementPalette } from './MapEditorElementPalette';
-import { useIsMobile } from '../../hooks/use-mobile';
 
 export const MapEditorToolbar: React.FC = () => {
   const {
@@ -34,8 +33,6 @@ export const MapEditorToolbar: React.FC = () => {
     setEditorActive,
     selectedElementType
   } = useMapEditorStore();
-  
-  const isMobile = useIsMobile();
 
   const tools = [
     { id: 'select', icon: MousePointer, label: 'Select' },
@@ -60,13 +57,12 @@ export const MapEditorToolbar: React.FC = () => {
 
   if (!isEditorActive) {
     return (
-      <div className={`fixed top-2 z-50 ${isMobile ? 'left-2' : 'top-4 left-4'}`}>
+      <div className="fixed top-4 left-4 z-50">
         <Button
           onClick={() => setEditorActive(true)}
           className="bg-primary text-primary-foreground hover:bg-primary/90"
-          size={isMobile ? "sm" : "default"}
         >
-          {isMobile ? "Map Editor" : "Open Map Editor"}
+          Open Map Editor
         </Button>
       </div>
     );
@@ -74,13 +70,9 @@ export const MapEditorToolbar: React.FC = () => {
 
   return (
     <>
-      <div className={`fixed z-50 bg-background/95 backdrop-blur border rounded-lg space-y-2 ${
-        isMobile 
-          ? 'top-2 left-2 right-2 p-2 max-h-[40vh] overflow-y-auto' 
-          : 'top-4 left-4 p-4 w-64 space-y-4'
-      }`}>
+      <div className="fixed top-4 left-4 z-50 bg-background/95 backdrop-blur border rounded-lg p-4 space-y-4">
         <div className="flex items-center gap-2">
-          <h3 className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>Map Editor</h3>
+          <h3 className="text-sm font-medium">Map Editor</h3>
           <Button
             size="sm"
             variant="ghost"
@@ -91,30 +83,28 @@ export const MapEditorToolbar: React.FC = () => {
           </Button>
         </div>
 
-        {!isMobile && (
-          <div className="text-xs text-muted-foreground">
-            <p>WASD: Move camera</p>
-            <p>Q/E: Up/Down</p>
-            <p>Shift: Speed boost</p>
-            <p>Click: Place selected item</p>
-            <p>Right-click: Select/Delete</p>
-          </div>
-        )}
+        <div className="text-xs text-muted-foreground">
+          <p>WASD: Move camera</p>
+          <p>Q/E: Up/Down</p>
+          <p>Shift: Speed boost</p>
+          <p>Click: Place selected item</p>
+          <p>Right-click: Select/Delete</p>
+        </div>
 
         {/* Tools */}
-        <div className="space-y-1">
+        <div className="space-y-2">
           <h4 className="text-xs text-muted-foreground">Tools</h4>
-          <div className={`grid gap-1 ${isMobile ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <div className="grid grid-cols-2 gap-1">
             {tools.map((tool) => (
               <Button
                 key={tool.id}
                 size="sm"
                 variant={selectedTool === tool.id ? 'default' : 'ghost'}
                 onClick={() => setSelectedTool(tool.id as any)}
-                className={`${isMobile ? 'p-1 text-xs' : 'justify-start'}`}
+                className="justify-start"
               >
-                <tool.icon className={`h-4 w-4 ${!isMobile ? 'mr-2' : ''}`} />
-                {!isMobile && tool.label}
+                <tool.icon className="h-4 w-4 mr-2" />
+                {tool.label}
               </Button>
             ))}
           </div>

@@ -3,7 +3,6 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { useMapEditorStore } from '../../stores/useMapEditorStore';
-import { useIsMobile } from '../../hooks/use-mobile';
 
 interface ElementType {
   id: string;
@@ -46,8 +45,6 @@ export const MapEditorElementPalette: React.FC<{ realm: 'fantasy' | 'scifi' }> =
     isEditorActive,
     setSelectedTool
   } = useMapEditorStore();
-  
-  const isMobile = useIsMobile();
 
   if (!isEditorActive) return null;
 
@@ -64,34 +61,22 @@ export const MapEditorElementPalette: React.FC<{ realm: 'fantasy' | 'scifi' }> =
   }, {} as Record<string, ElementType[]>);
 
   return (
-    <Card className={`fixed z-50 bg-background/95 backdrop-blur ${
-      isMobile 
-        ? 'bottom-2 left-2 right-2 max-h-[40vh]'
-        : 'top-4 right-4 w-64'
-    }`}>
-      <CardHeader className={isMobile ? "pb-1 p-2" : "pb-2"}>
-        <CardTitle className={isMobile ? "text-xs" : "text-sm"}>Element Palette</CardTitle>
+    <Card className="fixed top-4 right-4 z-50 w-64 bg-background/95 backdrop-blur">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm">Element Palette</CardTitle>
       </CardHeader>
-      <CardContent className={isMobile ? "pt-0 p-2 overflow-y-auto" : "pt-0"}>
+      <CardContent className="pt-0">
         <Tabs defaultValue="upgrade" className="w-full">
-          <TabsList className={`grid w-full grid-cols-4 ${isMobile ? 'text-[10px] h-8' : 'text-xs'}`}>
-            <TabsTrigger value="upgrade" className={isMobile ? "px-1" : ""}>
-              {isMobile ? "Up" : "Upgrades"}
-            </TabsTrigger>
-            <TabsTrigger value="decoration" className={isMobile ? "px-1" : ""}>
-              {isMobile ? "Dec" : "Decor"}
-            </TabsTrigger>
-            <TabsTrigger value="structure" className={isMobile ? "px-1" : ""}>
-              {isMobile ? "Str" : "Struct"}
-            </TabsTrigger>
-            <TabsTrigger value="enemy" className={isMobile ? "px-1" : ""}>
-              {isMobile ? "En" : "Enemy"}
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4 text-xs">
+            <TabsTrigger value="upgrade">Upgrades</TabsTrigger>
+            <TabsTrigger value="decoration">Decor</TabsTrigger>
+            <TabsTrigger value="structure">Struct</TabsTrigger>
+            <TabsTrigger value="enemy">Enemy</TabsTrigger>
           </TabsList>
           
           {Object.entries(groupedElements).map(([category, elements]) => (
-            <TabsContent key={category} value={category} className={isMobile ? "mt-1" : "mt-2"}>
-              <div className={`grid gap-1 ${isMobile ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <TabsContent key={category} value={category} className="mt-2">
+              <div className="grid grid-cols-2 gap-1">
                 {elements.map((element) => (
                   <Button
                     key={element.id}
@@ -101,14 +86,10 @@ export const MapEditorElementPalette: React.FC<{ realm: 'fantasy' | 'scifi' }> =
                       setSelectedElementType(element.id);
                       setSelectedTool('place');
                     }}
-                    className={`flex flex-col justify-center p-1 ${
-                      isMobile ? 'h-8 text-[10px]' : 'h-12 text-xs'
-                    }`}
+                    className="h-12 flex flex-col justify-center p-1 text-xs"
                   >
-                    <div className={`bg-muted rounded ${isMobile ? 'w-4 h-4 mb-0.5' : 'w-6 h-6 mb-1'}`} />
-                    <span className="truncate">
-                      {isMobile ? element.name.slice(0, 4) : element.name}
-                    </span>
+                    <div className="w-6 h-6 bg-muted rounded mb-1" />
+                    <span className="truncate">{element.name}</span>
                   </Button>
                 ))}
               </div>

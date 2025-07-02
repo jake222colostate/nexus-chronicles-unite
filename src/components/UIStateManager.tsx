@@ -20,7 +20,7 @@ interface UseUIStateManagerProps {
 }
 
 export const useUIStateManager = (gameState: GameState) => {
-  const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi' | 'nexus'>('fantasy');
+  const [currentRealm, setCurrentRealm] = useState<'fantasy' | 'scifi'>('fantasy');
   const [showConvergence, setShowConvergence] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showTapEffect, setShowTapEffect] = useState(false);
@@ -32,13 +32,11 @@ export const useUIStateManager = (gameState: GameState) => {
   const playerPosition = useMemo(() => ({
     x: 0,
     y: 1.7,
-    z: currentRealm === 'fantasy' ? -gameState.fantasyJourneyDistance : 
-        currentRealm === 'scifi' ? -gameState.scifiJourneyDistance : 0
+    z: currentRealm === 'fantasy' ? -gameState.fantasyJourneyDistance : -gameState.scifiJourneyDistance
   }), [currentRealm, gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance]);
 
   const currentJourneyDistance = useMemo(() => {
-    return currentRealm === 'fantasy' ? gameState.fantasyJourneyDistance : 
-           currentRealm === 'scifi' ? gameState.scifiJourneyDistance : 0;
+    return currentRealm === 'fantasy' ? gameState.fantasyJourneyDistance : gameState.scifiJourneyDistance;
   }, [currentRealm, gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance]);
 
   // Significantly delay convergence availability - require much more progression
@@ -63,15 +61,13 @@ export const useUIStateManager = (gameState: GameState) => {
     return Math.min(100, (fantasyProgress + scifiProgress + manaProgress + energyProgress) / 4);
   }, [gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance, gameState.mana, gameState.energyCredits]);
 
-  const switchRealm = useCallback((newRealm: 'fantasy' | 'scifi' | 'nexus') => {
-    if (newRealm === currentRealm) return;
-    
+  const switchRealm = useCallback(() => {
     setIsTransitioning(true);
     setTimeout(() => {
-      setCurrentRealm(newRealm);
+      setCurrentRealm(prev => prev === 'fantasy' ? 'scifi' : 'fantasy');
       setIsTransitioning(false);
     }, 500);
-  }, [currentRealm]);
+  }, []);
 
   return {
     currentRealm,
