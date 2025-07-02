@@ -26,7 +26,7 @@ import { CollisionProvider } from '@/lib/CollisionContext';
 import { MapEditorToolbar } from './MapEditor/MapEditorToolbar';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
 import InventorySidebar from './InventorySidebar';
-import { useInventoryStore } from '../stores/useInventoryStore';
+import { useInventoryStore } from '@/stores/useInventoryStore';
 
 const GameEngine: React.FC = () => {
   const { isEditorActive } = useMapEditorStore();
