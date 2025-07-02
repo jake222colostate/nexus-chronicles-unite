@@ -14,18 +14,6 @@ const seededRandom = (seed: number) => {
   return x - Math.floor(x);
 };
 
-// Mountain range boundaries for culling (performance optimization)
-const MOUNTAIN_RANGE = {
-  leftBoundary: -60,   // Left mountain wall
-  rightBoundary: 60,   // Right mountain wall
-  pathWidth: 120       // Total safe path width
-};
-
-// Function to check if position is within mountain range (for culling)
-const isWithinMountainRange = (x: number): boolean => {
-  return x >= MOUNTAIN_RANGE.leftBoundary && x <= MOUNTAIN_RANGE.rightBoundary;
-};
-
 export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   chunks,
   chunkSize,
@@ -36,7 +24,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
 
   const shouldRender = realm === 'fantasy';
   
-  // 60fps optimization: Reduced mountain generation with culling
+  // Memoize mountain instances to prevent re-creation on every render
   const mountainInstances = useMemo(() => {
     if (!shouldRender) return [];
     
@@ -45,54 +33,46 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
       
-      // 60fps optimization: Reduced mountain density
-      const mountainSpacing = 20; // Increased spacing from 15 to 20
-      const mountainCount = Math.ceil(chunkSize / mountainSpacing) + 1; // Reduced overlap
+      // Generate mountains continuously along Z-axis for infinite appearance
+      const mountainSpacing = 15; // Spacing between mountains
+      const mountainCount = Math.ceil(chunkSize / mountainSpacing) + 2; // Extra mountains for overlap
       
       for (let i = 0; i < mountainCount; i++) {
         const mountainSeed = seed + i * 67;
         const z = worldZ - (i * mountainSpacing) + seededRandom(mountainSeed) * 10;
         
-        // Left side mountains - with culling check
+        // Left side mountains - further from path
         const leftX = -80 - seededRandom(mountainSeed + 1) * 30;
+        const leftY = seededRandom(mountainSeed + 2) * 2;
         
-        // 60fps optimization: Only generate if within mountain range
-        if (isWithinMountainRange(leftX)) {
-          const leftY = seededRandom(mountainSeed + 2) * 2;
-          
-          const leftRotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4;
-          const leftRotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
-          const leftRotationZ = (seededRandom(mountainSeed + 5) - 0.5) * 0.2;
-          const leftScale = (1.2 + seededRandom(mountainSeed + 6) * 0.8) * 3;
-          
-          instances.push({
-            key: `left_${chunk.id}_${i}`,
-            position: [leftX, leftY, z] as [number, number, number],
-            rotation: [leftRotationX, leftRotationY, leftRotationZ] as [number, number, number],
-            scale: [leftScale, leftScale, leftScale] as [number, number, number]
-          });
-        }
+        const leftRotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4;
+        const leftRotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
+        const leftRotationZ = (seededRandom(mountainSeed + 5) - 0.5) * 0.2;
+        const leftScale = (1.2 + seededRandom(mountainSeed + 6) * 0.8) * 3;
         
-        // Right side mountains - with culling check  
+        instances.push({
+          key: `left_${chunk.id}_${i}`,
+          position: [leftX, leftY, z] as [number, number, number],
+          rotation: [leftRotationX, leftRotationY, leftRotationZ] as [number, number, number],
+          scale: [leftScale, leftScale, leftScale] as [number, number, number]
+        });
+        
+        // Right side mountains - further from path  
         const rightSeed = mountainSeed + 1000;
         const rightX = 80 + seededRandom(rightSeed + 1) * 30;
+        const rightY = seededRandom(rightSeed + 2) * 2;
         
-        // 60fps optimization: Only generate if within mountain range
-        if (isWithinMountainRange(rightX)) {
-          const rightY = seededRandom(rightSeed + 2) * 2;
-          
-          const rightRotationX = (seededRandom(rightSeed + 3) - 0.5) * 0.4;
-          const rightRotationY = seededRandom(rightSeed + 4) * Math.PI * 2;
-          const rightRotationZ = (seededRandom(rightSeed + 5) - 0.5) * 0.2;
-          const rightScale = (1.2 + seededRandom(rightSeed + 6) * 0.8) * 3;
-          
-          instances.push({
-            key: `right_${chunk.id}_${i}`,
-            position: [rightX, rightY, z] as [number, number, number],
-            rotation: [rightRotationX, rightRotationY, rightRotationZ] as [number, number, number],
-            scale: [rightScale, rightScale, rightScale] as [number, number, number]
-          });
-        }
+        const rightRotationX = (seededRandom(rightSeed + 3) - 0.5) * 0.4;
+        const rightRotationY = seededRandom(rightSeed + 4) * Math.PI * 2;
+        const rightRotationZ = (seededRandom(rightSeed + 5) - 0.5) * 0.2;
+        const rightScale = (1.2 + seededRandom(rightSeed + 6) * 0.8) * 3;
+        
+        instances.push({
+          key: `right_${chunk.id}_${i}`,
+          position: [rightX, rightY, z] as [number, number, number],
+          rotation: [rightRotationX, rightRotationY, rightRotationZ] as [number, number, number],
+          scale: [rightScale, rightScale, rightScale] as [number, number, number]
+        });
       }
     });
     

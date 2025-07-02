@@ -4,12 +4,12 @@ import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
 /**
- * Optimized fog system for 60fps performance with intelligent culling
+ * Simple fog effect that slowly fades out to reveal the environment.
  */
 export const CasualFog = () => {
   const { scene } = useThree();
-  // Performance-optimized fog with realistic distance culling
-  const fogRef = useRef(new THREE.Fog('#2d1b4e', 30, 120)); // Closer near fog for better culling
+  // Much lighter starting fog for better visibility
+  const fogRef = useRef(new THREE.Fog('#2d1b4e', 20, 200)); // Enhanced fog for mountain rendering
 
   useEffect(() => {
     scene.fog = fogRef.current;
@@ -18,19 +18,10 @@ export const CasualFog = () => {
     };
   }, [scene]);
 
-  useFrame((state) => {
+  useFrame(() => {
     const fog = fogRef.current;
-    
-    // Dynamic fog adjustment for performance
-    // Allow seeing far ahead (200 units) but cull behind more aggressively
-    if (fog.far < 200) { 
-      fog.far += 1.5; // Gradual increase to 200 units visibility
-    }
-    
-    // Adjust near fog based on movement for better culling
-    const targetNear = 25; // Closer culling for better performance
-    if (fog.near > targetNear) {
-      fog.near = Math.max(targetNear, fog.near - 0.5);
+    if (fog.far < 800) { // Much greater visibility for infinite mountains
+      fog.far += 2; // Faster fog clearing for better infinite rendering
     }
   });
 
