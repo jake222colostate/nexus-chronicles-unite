@@ -6,7 +6,7 @@ import { TapResourceEffect } from './TapResourceEffect';
 import { UpgradeFloatingTooltip } from './UpgradeFloatingTooltip';
 
 interface MapSkillTreeViewProps {
-  realm: 'fantasy' | 'scifi';
+  realm: 'fantasy' | 'scifi' | 'nexus';
   buildings: { [key: string]: number };
   manaPerSecond: number;
   energyPerSecond: number;
@@ -146,7 +146,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
         selectedScifiUpgrade={selectedScifiUpgrade}
         selectedFantasyUpgrade={selectedFantasyUpgrade}
         showNexusShardShop={showNexusShardShop}
-        realm={realm}
+          realm={realm === 'nexus' ? 'fantasy' : realm}
         currency={currency}
         gameState={gameState}
         onCloseBuilding={() => setSelectedBuilding(null)}

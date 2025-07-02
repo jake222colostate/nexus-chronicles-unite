@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 interface UpgradeFloatingTooltipProps {
   buildingName: string;
   level: number;
-  realm: 'fantasy' | 'scifi';
+  realm: 'fantasy' | 'scifi' | 'nexus';
   position: { x: number; y: number };
   onComplete: () => void;
 }
@@ -37,7 +37,9 @@ export const UpgradeFloatingTooltip: React.FC<UpgradeFloatingTooltipProps> = ({
       <div className={`px-3 py-2 rounded-full backdrop-blur-md text-xs font-bold border ${
         realm === 'fantasy'
           ? 'bg-purple-600/90 text-purple-100 border-purple-400/60'
-          : 'bg-cyan-600/90 text-cyan-100 border-cyan-400/60'
+          : realm === 'scifi'
+          ? 'bg-cyan-600/90 text-cyan-100 border-cyan-400/60'
+          : 'bg-indigo-600/90 text-indigo-100 border-indigo-400/60'
       }`}>
         ✨ {buildingName} upgraded to Level {level}
       </div>

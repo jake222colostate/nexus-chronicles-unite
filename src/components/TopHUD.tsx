@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { HelpCircle, Sword } from 'lucide-react';
 
 interface TopHUDProps {
-  realm: 'fantasy' | 'scifi';
+  realm: 'fantasy' | 'scifi' | 'nexus';
   mana: number;
   energyCredits: number;
   nexusShards: number;

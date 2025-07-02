@@ -28,7 +28,7 @@ export interface CrossRealmUpgrade {
 
 interface CrossRealmUpgradeSystemProps {
   upgrades: CrossRealmUpgrade[];
-  currentRealm: 'fantasy' | 'scifi';
+  currentRealm: 'fantasy' | 'scifi' | 'nexus';
   mana: number;
   energyCredits: number;
   fantasyJourneyDistance: number;

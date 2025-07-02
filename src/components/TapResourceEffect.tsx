@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 
 interface TapResourceEffectProps {
-  realm: 'fantasy' | 'scifi';
+  realm: 'fantasy' | 'scifi' | 'nexus';
   onComplete: () => void;
 }
 
@@ -28,11 +28,13 @@ export const TapResourceEffect: React.FC<TapResourceEffectProps> = ({
       <div className={`flex items-center gap-2 px-3 py-2 rounded-full backdrop-blur-md ${
         realm === 'fantasy'
           ? 'bg-purple-600/80 text-purple-100 border border-purple-400/60'
-          : 'bg-cyan-600/80 text-cyan-100 border border-cyan-400/60'
+          : realm === 'scifi'
+          ? 'bg-cyan-600/80 text-cyan-100 border border-cyan-400/60'
+          : 'bg-indigo-600/80 text-indigo-100 border border-indigo-400/60'
       }`}>
         <span className="text-lg font-bold">+1</span>
         <span className="text-sm">
-          {realm === 'fantasy' ? '✨' : '⚡'}
+          {realm === 'fantasy' ? '✨' : realm === 'scifi' ? '⚡' : '🌌'}
         </span>
       </div>
     </div>

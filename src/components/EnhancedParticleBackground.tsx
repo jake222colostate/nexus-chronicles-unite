@@ -2,7 +2,7 @@
 import React from 'react';
 
 interface EnhancedParticleBackgroundProps {
-  realm: 'fantasy' | 'scifi';
+  realm: 'fantasy' | 'scifi' | 'nexus';
 }
 
 // Completely removed - no rendering at all
