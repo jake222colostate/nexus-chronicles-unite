@@ -25,9 +25,12 @@ import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
 import { MapEditorToolbar } from './MapEditor/MapEditorToolbar';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
+import InventorySidebar from './InventorySidebar';
+import { useInventoryStore } from '../stores/useInventoryStore';
 
 const GameEngine: React.FC = () => {
   const { isEditorActive } = useMapEditorStore();
+  const addItem = useInventoryStore(state => state.addItem);
   
   const {
     gameState,
@@ -130,14 +133,24 @@ const GameEngine: React.FC = () => {
       mana: prev.mana + prev.manaPerKill,
       enemiesKilled: prev.enemiesKilled + 1,
     }));
-  }, [setGameState]);
+
+    // Drop a trophy occasionally
+    if (Math.random() < 0.5) {
+      addItem('Monster Trophy');
+    }
+  }, [setGameState, addItem]);
 
   const handleMeteorDestroyed = useCallback(() => {
     setGameState(prev => ({
       ...prev,
       energyCredits: prev.energyCredits + 5,
     }));
-  }, [setGameState]);
+
+    // Occasional meteor fragment drop
+    if (Math.random() < 0.3) {
+      addItem('Meteor Fragment');
+    }
+  }, [setGameState, addItem]);
 
   const handleJourneyUpdate = useCallback((distance: number) => {
     const currentDistance = currentRealm === 'fantasy' ? stableGameState.fantasyJourneyDistance : stableGameState.scifiJourneyDistance;
@@ -259,6 +272,9 @@ const GameEngine: React.FC = () => {
       
       {/* Enhanced particle background for visual depth */}
       <EnhancedParticleBackground realm={currentRealm} />
+
+      {/* Inventory Sidebar */}
+      <InventorySidebar />
 
       {/* Journey Tracker - invisible component that tracks real movement */}
       <JourneyTracker 
