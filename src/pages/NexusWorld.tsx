@@ -1,8 +1,8 @@
-import React from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Box } from "@react-three/drei";
-import { Link } from "react-router-dom";
-import { useInventoryStore } from "@/stores/useInventoryStore";
+import React from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Box } from '@react-three/drei';
+import { Link } from 'react-router-dom';
+import { useInventoryStore } from '@/stores/useInventoryStore';
 
 const NexusWorld: React.FC = () => {
   const items = useInventoryStore((s) => s.items);

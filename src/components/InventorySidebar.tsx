@@ -1,5 +1,5 @@
-import React from "react";
-import { useInventoryStore } from "@/stores/useInventoryStore";
+import React from 'react';
+import { useInventoryStore } from '@/stores/useInventoryStore';
 
 const InventorySidebar: React.FC = () => {
   const items = useInventoryStore((s) => s.items);
