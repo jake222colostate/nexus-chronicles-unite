@@ -33,45 +33,45 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
       
-      // Generate mountains for left side
-      const leftMountainCount = 2 + Math.floor(seededRandom(seed + 100) * 2);
-      for (let i = 0; i < leftMountainCount; i++) {
-        const mountainSeed = seed + i * 67 + 1000;
-        const z = worldZ - (i * (chunkSize / leftMountainCount)) - seededRandom(mountainSeed) * 12;
-        const x = -80 - seededRandom(mountainSeed + 1) * 30; // Moved further left
-        const y = seededRandom(mountainSeed + 2) * 2;
+      // Generate mountains continuously along Z-axis for infinite appearance
+      const mountainSpacing = 15; // Spacing between mountains
+      const mountainCount = Math.ceil(chunkSize / mountainSpacing) + 2; // Extra mountains for overlap
+      
+      for (let i = 0; i < mountainCount; i++) {
+        const mountainSeed = seed + i * 67;
+        const z = worldZ - (i * mountainSpacing) + seededRandom(mountainSeed) * 10;
         
-        const rotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4; // X-axis rotation for natural look
-        const rotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
-        const rotationZ = (seededRandom(mountainSeed + 5) - 0.5) * 0.2; // Slight Z rotation
-        const scale = (1.2 + seededRandom(mountainSeed + 6) * 0.8) * 3; // Scale up by 3x
+        // Left side mountains - further from path
+        const leftX = -80 - seededRandom(mountainSeed + 1) * 30;
+        const leftY = seededRandom(mountainSeed + 2) * 2;
+        
+        const leftRotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4;
+        const leftRotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
+        const leftRotationZ = (seededRandom(mountainSeed + 5) - 0.5) * 0.2;
+        const leftScale = (1.2 + seededRandom(mountainSeed + 6) * 0.8) * 3;
         
         instances.push({
           key: `left_${chunk.id}_${i}`,
-          position: [x, y, z] as [number, number, number],
-          rotation: [rotationX, rotationY, rotationZ] as [number, number, number],
-          scale: [scale, scale, scale] as [number, number, number]
+          position: [leftX, leftY, z] as [number, number, number],
+          rotation: [leftRotationX, leftRotationY, leftRotationZ] as [number, number, number],
+          scale: [leftScale, leftScale, leftScale] as [number, number, number]
         });
-      }
-      
-      // Generate mountains for right side
-      const rightMountainCount = 2 + Math.floor(seededRandom(seed + 200) * 2);
-      for (let i = 0; i < rightMountainCount; i++) {
-        const mountainSeed = seed + i * 67 + 2000;
-        const z = worldZ - (i * (chunkSize / rightMountainCount)) - seededRandom(mountainSeed) * 12;
-        const x = 80 + seededRandom(mountainSeed + 1) * 30; // Moved further right
-        const y = seededRandom(mountainSeed + 2) * 2;
         
-        const rotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4; // X-axis rotation for natural look
-        const rotationY = seededRandom(mountainSeed + 4) * Math.PI * 2;
-        const rotationZ = (seededRandom(mountainSeed + 5) - 0.5) * 0.2; // Slight Z rotation
-        const scale = (1.2 + seededRandom(mountainSeed + 6) * 0.8) * 3; // Scale up by 3x
+        // Right side mountains - further from path  
+        const rightSeed = mountainSeed + 1000;
+        const rightX = 80 + seededRandom(rightSeed + 1) * 30;
+        const rightY = seededRandom(rightSeed + 2) * 2;
+        
+        const rightRotationX = (seededRandom(rightSeed + 3) - 0.5) * 0.4;
+        const rightRotationY = seededRandom(rightSeed + 4) * Math.PI * 2;
+        const rightRotationZ = (seededRandom(rightSeed + 5) - 0.5) * 0.2;
+        const rightScale = (1.2 + seededRandom(rightSeed + 6) * 0.8) * 3;
         
         instances.push({
           key: `right_${chunk.id}_${i}`,
-          position: [x, y, z] as [number, number, number],
-          rotation: [rotationX, rotationY, rotationZ] as [number, number, number],
-          scale: [scale, scale, scale] as [number, number, number]
+          position: [rightX, rightY, z] as [number, number, number],
+          rotation: [rightRotationX, rightRotationY, rightRotationZ] as [number, number, number],
+          scale: [rightScale, rightScale, rightScale] as [number, number, number]
         });
       }
     });

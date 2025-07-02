@@ -35,13 +35,13 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     const playerChunkZ = Math.floor(roundedPlayerZ / chunkSize);
     
     // PERFORMANCE FIX: Drastically reduced render distance and chunk coverage
-    const maxRenderDistance = Math.min(renderDistance, 100); // Reduced from 250 to 100
-    const chunkRadius = Math.ceil(maxRenderDistance / chunkSize); // Removed buffer
-    const farAheadChunks = Math.ceil(maxRenderDistance / chunkSize); // Removed buffer
+    const maxRenderDistance = Math.min(renderDistance, 200); // Increased for mountain rendering
+    const chunkRadius = Math.ceil(maxRenderDistance / chunkSize);
+    const farAheadChunks = Math.ceil(maxRenderDistance / chunkSize) + 5; // More chunks ahead
     
-    // PERFORMANCE FIX: Much lower chunk limit
+    // Increased chunk limit for mountain rendering
     let chunkCount = 0;
-    const maxChunks = 50; // Reduced from 500 to 50
+    const maxChunks = 100; // Increased from 50 to 100 for mountains
     
     // Generate minimal chunks without overlap
     for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius && chunkCount < maxChunks; x++) {
@@ -82,7 +82,7 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     Math.floor(playerPosition.x / 50) * 50, // Increased from 5 to 50
     Math.floor(Math.abs(playerPosition.z) / 50) * 50, // Increased from 5 to 50
     chunkSize, 
-    Math.min(renderDistance, 100)
+    Math.min(renderDistance, 200) // Updated to match new render distance
   ]);
 
   return <>{children(activeChunks)}</>;

@@ -9,7 +9,7 @@ import * as THREE from 'three';
 export const CasualFog = () => {
   const { scene } = useThree();
   // Much lighter starting fog for better visibility
-  const fogRef = useRef(new THREE.Fog('#2d1b4e', 15, 120)); // Increased near from 5 to 15, far from 50 to 120
+  const fogRef = useRef(new THREE.Fog('#2d1b4e', 20, 200)); // Enhanced fog for mountain rendering
 
   useEffect(() => {
     scene.fog = fogRef.current;
@@ -20,8 +20,8 @@ export const CasualFog = () => {
 
   useFrame(() => {
     const fog = fogRef.current;
-    if (fog.far < 400) { // Increased maximum visibility from 250 to 400
-      fog.far += 1.2; // Faster fog clearing (increased from 0.7 to 1.2)
+    if (fog.far < 800) { // Much greater visibility for infinite mountains
+      fog.far += 2; // Faster fog clearing for better infinite rendering
     }
   });
 
