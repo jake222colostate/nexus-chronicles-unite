@@ -1,5 +1,5 @@
-import React from 'react';
-import { useInventoryStore } from '@/stores/useInventoryStore';
+import React from "react";
+import { useInventoryStore } from "@/stores/useInventoryStore";
 
 const InventorySidebar: React.FC = () => {
   const items = useInventoryStore((s) => s.items);
@@ -10,7 +10,10 @@ const InventorySidebar: React.FC = () => {
         <span className="text-gray-400 text-xs">Empty</span>
       )}
       {items.map((item) => (
-        <div key={item.id} className="flex items-center justify-between mb-1 text-white text-xs">
+        <div
+          key={item.id}
+          className="flex items-center justify-between mb-1 text-white text-xs"
+        >
           <span>{item.name}</span>
           <span className="ml-2 font-bold">{item.quantity}</span>
         </div>

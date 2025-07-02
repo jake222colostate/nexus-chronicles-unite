@@ -1,7 +1,8 @@
-import React from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Box } from '@react-three/drei';
-import { useInventoryStore } from '@/stores/useInventoryStore';
+import React from "react";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Box } from "@react-three/drei";
+import { Link } from "react-router-dom";
+import { useInventoryStore } from "@/stores/useInventoryStore";
 
 const NexusWorld: React.FC = () => {
   const items = useInventoryStore((s) => s.items);
@@ -18,7 +19,9 @@ const NexusWorld: React.FC = () => {
         ))}
       </Canvas>
       <div className="absolute top-4 left-4">
-        <a href="/" className="text-white bg-purple-600 px-3 py-2 rounded">Back</a>
+        <Link to="/" className="text-white bg-purple-600 px-3 py-2 rounded">
+          Back
+        </Link>
       </div>
     </div>
   );
