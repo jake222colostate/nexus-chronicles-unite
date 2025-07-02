@@ -147,7 +147,7 @@ const defaultScifiWeaponUpgrades: WeaponUpgrade[] = [
 interface UpgradeManagersProps {
   gameState: GameState;
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
-  currentRealm: 'fantasy' | 'scifi';
+  currentRealm: 'fantasy' | 'scifi' | 'nexus';
   crossRealmUpgradesWithLevels: any[];
 }
 
