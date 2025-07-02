@@ -38,7 +38,13 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
         moveSpeed.current = 5;
         moveDirection.current = -1;
       }
-      // Look controls are disabled - use mouse only
+      // Look controls
+      if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft') {
+        yawAngle.current = Math.max(-Math.PI, yawAngle.current - 0.05);
+      }
+      if (event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight') {
+        yawAngle.current = Math.min(Math.PI, yawAngle.current + 0.05);
+      }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {

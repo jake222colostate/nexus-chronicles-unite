@@ -25,8 +25,6 @@ import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
 import { MapEditorToolbar } from './MapEditor/MapEditorToolbar';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
-import { NexusWorldModal } from './NexusWorldModal';
-import { nexusShardUpgrades } from '../data/NexusShardUpgrades';
 
 const GameEngine: React.FC = () => {
   const { isEditorActive } = useMapEditorStore();
@@ -63,7 +61,6 @@ const GameEngine: React.FC = () => {
   } = useUIStateManager(gameState);
 
   const [enemyCount, setEnemyCount] = useState(0);
-  const [showNexusWorld, setShowNexusWorld] = useState(false);
 
   // Create stable references to prevent infinite re-renders
   const stablePlayerPosition = useMemo(() => ({
@@ -132,10 +129,6 @@ const GameEngine: React.FC = () => {
       ...prev,
       mana: prev.mana + prev.manaPerKill,
       enemiesKilled: prev.enemiesKilled + 1,
-      nexusShards:
-        (prev.enemiesKilled + 1) % 50 === 0
-          ? prev.nexusShards + 1
-          : prev.nexusShards,
     }));
   }, [setGameState]);
 
@@ -258,30 +251,6 @@ const GameEngine: React.FC = () => {
     }));
   }, [setGameState]);
 
-  const handlePurchaseNexusShardUpgrade = useCallback((upgradeId: string) => {
-    const upgrade = nexusShardUpgrades.find(u => u.id === upgradeId);
-    if (!upgrade) return;
-    if (gameState.nexusShards < upgrade.cost) return;
-    if (gameState.purchasedUpgrades.includes(upgradeId)) return;
-
-    setGameState(prev => ({
-      ...prev,
-      nexusShards: prev.nexusShards - upgrade.cost,
-      purchasedUpgrades: [...prev.purchasedUpgrades, upgradeId]
-    }));
-  }, [gameState.nexusShards, gameState.purchasedUpgrades, setGameState]);
-
-  const handleBuyNexusShards = useCallback((amount: number) => {
-    const cost = amount * 100;
-    if (gameState.mana >= cost) {
-      setGameState(prev => ({
-        ...prev,
-        mana: prev.mana - cost,
-        nexusShards: prev.nexusShards + amount
-      }));
-    }
-  }, [gameState.mana, setGameState]);
-
   return (
     <CollisionProvider>
     <div className={`h-[667px] w-[375px] relative overflow-hidden bg-black ${false ? 'animate-pulse bg-red-900/20' : ''}`}>
@@ -374,21 +343,11 @@ const GameEngine: React.FC = () => {
 
             {/* Cross-Realm Upgrades Button */}
             <div className="absolute top-16 left-4 z-30">
-              <Button
+              <Button 
                 onClick={handleShowCrossRealmUpgrades}
                 className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
               >
                 🏰
-              </Button>
-            </div>
-
-            {/* Nexus World Button */}
-            <div className="absolute top-16 left-20 z-30">
-              <Button
-                onClick={() => setShowNexusWorld(true)}
-                className="h-10 w-10 rounded-xl bg-gradient-to-r from-yellow-600/95 to-pink-600/95 hover:from-yellow-700/95 hover:to-pink-700/95 backdrop-blur-xl border border-yellow-400/70 transition-all duration-300 font-bold shadow-lg shadow-yellow-500/30 p-0"
-              >
-                💠
               </Button>
             </div>
           </>
@@ -484,18 +443,6 @@ const GameEngine: React.FC = () => {
                 </div>
               </div>
             </div>
-          )}
-
-          {/* Nexus World Modal */}
-          {showNexusWorld && (
-            <NexusWorldModal
-              isOpen={showNexusWorld}
-              nexusShards={stableGameState.nexusShards}
-              purchasedUpgrades={stableGameState.purchasedUpgrades}
-              onPurchaseUpgrade={handlePurchaseNexusShardUpgrade}
-              onBuyShards={handleBuyNexusShards}
-              onClose={() => setShowNexusWorld(false)}
-            />
           )}
         </>
       )}

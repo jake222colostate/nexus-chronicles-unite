@@ -154,7 +154,6 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         <UpgradeActivationOverlay 
           upgrades={maxUnlockedUpgrade}
           previousUpgrades={previousUpgradeCount}
-          currentMana={gameState?.mana || 0}
         />
 
         <Fantasy3DInsufficientManaMessage show={showInsufficientMana} />
