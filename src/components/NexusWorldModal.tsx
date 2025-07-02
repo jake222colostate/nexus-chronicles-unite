@@ -1,8 +1,8 @@
 import React from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Button } from '@/components/ui/button';
-import { NexusShardShop } from './NexusShardShop';
-import { nexusShardUpgrades, NexusShardUpgrade } from '../data/NexusShardUpgrades';
+import { NexusShardShop, NexusShardUpgrade } from './NexusShardShop';
+import { nexusShardUpgrades } from '../data/NexusShardUpgrades';
 
 interface NexusWorldModalProps {
   isOpen: boolean;
