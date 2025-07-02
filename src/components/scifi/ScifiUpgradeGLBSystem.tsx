@@ -11,14 +11,14 @@ interface ScifiUpgradeGLBSystemProps {
 
 // Enhanced sci-fi upgrade positions with collision avoidance
 const SCIFI_UPGRADE_POSITIONS = [
-  { id: 'quantum_boost', x: -8, y: 3, z: -5 },
-  { id: 'plasma_conduit', x: 8, y: 3, z: -5 },
-  { id: 'fusion_core', x: 0, y: 6, z: -12 },
-  { id: 'antimatter_engine', x: 0, y: 9, z: -20 }
+  { id: 'quantum_boost', x: -5, y: 3, z: -5 },
+  { id: 'plasma_conduit', x: 5, y: 3, z: -5 },
+  { id: 'fusion_core', x: 0, y: 5, z: -8 },
+  { id: 'antimatter_engine', x: 0, y: 7, z: -12 }
 ];
 
 // Calculate radius of influence for revolving elements
-const UPGRADE_INFLUENCE_RADIUS = 4; // Max radius of rings + particles + safety buffer
+const UPGRADE_INFLUENCE_RADIUS = 2.5; // Reduced for smaller revolving elements
 
 // Function to check if two upgrades are too close
 const checkUpgradeCollision = (pos1: any, pos2: any): boolean => {
@@ -92,7 +92,7 @@ const CyberUpgrade: React.FC<{
       // Orbiting particles
       particlesRef.current.children.forEach((particle, i) => {
         const angle = time * 3 + (i * Math.PI * 2) / 8;
-        const radius = 1.5 + Math.sin(time * 2 + i) * 0.3; // Reduced from 2 to 1.5
+        const radius = 1.0 + Math.sin(time * 2 + i) * 0.2; // Further reduced to 1.0
         particle.position.x = Math.cos(angle) * radius;
         particle.position.z = Math.sin(angle) * radius;
         particle.position.y = Math.sin(time * 4 + i) * 1;
@@ -138,8 +138,8 @@ const CyberUpgrade: React.FC<{
       {/* Rotating ring system */}
       <group ref={ringsRef}>
         {[...Array(3)].map((_, i) => (
-          <mesh key={i} scale={1.2 + i * 0.2} rotation={[Math.PI / 2 * i, Math.PI / 3 * i, 0]}>
-            <torusGeometry args={[1.5, 0.04, 8, 32]} />
+          <mesh key={i} scale={0.8 + i * 0.15} rotation={[Math.PI / 2 * i, Math.PI / 3 * i, 0]}>
+            <torusGeometry args={[1.0, 0.03, 8, 32]} />
             <meshStandardMaterial 
               color={colors.secondary}
               emissive={colors.secondary}
@@ -167,7 +167,7 @@ const CyberUpgrade: React.FC<{
       
       {/* Holographic base */}
       <mesh position={[0, -1.5, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[1.5, 2.5, 32]} />
+        <ringGeometry args={[1.0, 1.8, 32]} />
         <meshBasicMaterial 
           color={colors.primary}
           transparent
