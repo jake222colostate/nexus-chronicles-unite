@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
+import { MinecraftHotbar } from './MinecraftHotbar';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
 import { RealmTransition } from './RealmTransition';
@@ -352,6 +353,11 @@ const GameEngine: React.FC = () => {
             </div>
           </>
         )}
+
+      {/* Minecraft Hotbar - disabled in map editor */}
+      {!isEditorActive && (
+        <MinecraftHotbar />
+      )}
 
       {/* Enhanced Bottom Action Bar with realm-specific journey progress - disabled in map editor */}
       {!isEditorActive && (
