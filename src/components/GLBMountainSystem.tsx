@@ -33,9 +33,9 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
     chunks.forEach(chunk => {
       const { worldZ, seed } = chunk;
       
-      // Generate mountains continuously along Z-axis for infinite appearance
-      const mountainSpacing = 15; // Spacing between mountains
-      const mountainCount = Math.ceil(chunkSize / mountainSpacing) + 2; // Extra mountains for overlap
+      // EXTREME PERFORMANCE: Much wider spacing for 60fps
+      const mountainSpacing = 40; // Increased from 15 to 40
+      const mountainCount = Math.min(Math.ceil(chunkSize / mountainSpacing), 3); // Max 3 mountains per chunk
       
       for (let i = 0; i < mountainCount; i++) {
         const mountainSeed = seed + i * 67;

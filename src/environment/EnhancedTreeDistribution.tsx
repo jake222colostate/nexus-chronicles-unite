@@ -248,12 +248,12 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
     console.log('EnhancedTreeDistribution: Generating properly grounded trees');
     const trees = [];
-    const minDistance = 3;
-    const maxAttempts = 60;
+    const minDistance = 8; // Increased spacing for performance
+    const maxAttempts = 20; // Reduced attempts for performance
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      const treeCount = 8 + Math.floor(seededRandom(seed + 99) * 6);
+      const treeCount = 3 + Math.floor(seededRandom(seed + 99) * 2); // Reduced from 8-14 to 3-5
       const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {

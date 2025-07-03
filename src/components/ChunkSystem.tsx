@@ -34,14 +34,14 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     const playerChunkX = Math.floor(roundedPlayerX / chunkSize);
     const playerChunkZ = Math.floor(roundedPlayerZ / chunkSize);
     
-    // PERFORMANCE FIX: Drastically reduced render distance and chunk coverage
-    const maxRenderDistance = Math.min(renderDistance, 200); // Increased for mountain rendering
-    const chunkRadius = Math.ceil(maxRenderDistance / chunkSize);
-    const farAheadChunks = Math.ceil(maxRenderDistance / chunkSize) + 5; // More chunks ahead
+    // EXTREME PERFORMANCE FIX: Minimal render distance for 60fps
+    const maxRenderDistance = Math.min(renderDistance, 80); // Drastically reduced from 200
+    const chunkRadius = Math.min(Math.ceil(maxRenderDistance / chunkSize), 2); // Max 2 chunks radius
+    const farAheadChunks = Math.min(Math.ceil(maxRenderDistance / chunkSize) + 2, 3); // Max 3 ahead
     
-    // Increased chunk limit for mountain rendering
+    // Extreme chunk limit reduction for 60fps
     let chunkCount = 0;
-    const maxChunks = 100; // Increased from 50 to 100 for mountains
+    const maxChunks = 25; // Reduced from 100 to 25
     
     // Generate minimal chunks without overlap
     for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius && chunkCount < maxChunks; x++) {
@@ -78,11 +78,11 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     console.log(`ChunkSystem: Generated ${chunks.length} chunks (performance optimized)`);
     return chunks;
   }, [
-    // PERFORMANCE FIX: Much less frequent recalculation
-    Math.floor(playerPosition.x / 50) * 50, // Increased from 5 to 50
-    Math.floor(Math.abs(playerPosition.z) / 50) * 50, // Increased from 5 to 50
+    // EXTREME PERFORMANCE FIX: Ultra low frequency recalculation
+    Math.floor(playerPosition.x / 100) * 100, // Increased from 50 to 100
+    Math.floor(Math.abs(playerPosition.z) / 100) * 100, // Increased from 50 to 100
     chunkSize, 
-    Math.min(renderDistance, 200) // Updated to match new render distance
+    Math.min(renderDistance, 80) // Updated to match new render distance
   ]);
 
   return <>{children(activeChunks)}</>;

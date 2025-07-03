@@ -91,7 +91,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
       
       return currentLeeches;
     });
-  }, [Math.floor(Math.abs(safeCameraPosition.z) / 50), nextLeechId, upgradesPurchased]);
+  }, [Math.floor(Math.abs(safeCameraPosition.z) / 100), nextLeechId, upgradesPurchased]); // Reduced spawn frequency
 
   // Update enemy count for UI
   useEffect(() => {
@@ -179,7 +179,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         <ambientLight intensity={0.4} />
         <Sun position={[10, 20, 5]} />
 
-        {leeches.slice(0, 3).map(leech => 
+        {leeches.slice(0, 2).map(leech => 
           leech.alive && leech.spawnPosition && (
             <LeechEnemy
               key={leech.id}
@@ -208,7 +208,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         <ChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={Math.min(renderDistance, 100)}
+          renderDistance={50}
         >
           {(chunks: ChunkData[]) => (
             <OptimizedFantasyEnvironment
