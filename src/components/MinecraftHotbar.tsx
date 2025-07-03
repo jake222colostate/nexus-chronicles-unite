@@ -41,7 +41,7 @@ export const MinecraftHotbar: React.FC<MinecraftHotbarProps> = ({
   };
 
   return (
-    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-[350px] px-2">
+    <div className="fixed bottom-44 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-[320px] px-2">
       <div className="flex gap-0.5 p-1.5 bg-black/80 backdrop-blur-md border-2 border-stone-600 rounded-lg justify-center">
         {hotbarItems.map((item, index) => (
           <div

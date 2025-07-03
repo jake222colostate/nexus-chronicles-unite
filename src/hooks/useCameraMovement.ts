@@ -34,9 +34,9 @@ export const useCameraMovement = ({
     targetPosition.current.set(0, 2, 12);
     camera.position.copy(targetPosition.current);
     
-    // Set proper aspect ratio for iPhone screen (375/667) only for PerspectiveCamera
+    // Set proper aspect ratio for iPhone screen only for PerspectiveCamera
     if (camera instanceof PerspectiveCamera) {
-      camera.aspect = 375 / 667;
+      camera.aspect = viewport.width / viewport.height;
       camera.updateProjectionMatrix();
     }
     
@@ -95,7 +95,7 @@ export const useCameraMovement = ({
     
     // Ensure aspect ratio stays correct for iPhone only for PerspectiveCamera
     if (camera instanceof PerspectiveCamera) {
-      camera.aspect = 375 / 667;
+      camera.aspect = viewport.width / viewport.height;
       camera.updateProjectionMatrix();
     }
     

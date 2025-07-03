@@ -254,7 +254,7 @@ const GameEngine: React.FC = () => {
 
   return (
     <CollisionProvider>
-    <div className={`h-[667px] w-[375px] relative overflow-hidden bg-black ${false ? 'animate-pulse bg-red-900/20' : ''}`}>
+    <div className="h-full w-full relative overflow-hidden bg-black">
       {/* Enhanced background with better layering */}
       <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
       
@@ -333,20 +333,20 @@ const GameEngine: React.FC = () => {
             )}
 
             {/* Weapon Upgrade Button */}
-            <div className="absolute top-16 right-4 z-30">
+            <div className="absolute top-14 right-2 z-30">
               <Button 
                 onClick={handleShowWeaponUpgrades}
-                className="h-10 w-10 rounded-xl bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0"
+                className="h-8 w-8 rounded-lg bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0 text-sm"
               >
                 🏹
               </Button>
             </div>
 
             {/* Cross-Realm Upgrades Button */}
-            <div className="absolute top-16 left-4 z-30">
+            <div className="absolute top-14 left-2 z-30">
               <Button 
                 onClick={handleShowCrossRealmUpgrades}
-                className="h-10 w-10 rounded-xl bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0"
+                className="h-8 w-8 rounded-lg bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0 text-sm"
               >
                 🏰
               </Button>
