@@ -8,8 +8,8 @@ import * as THREE from 'three';
  */
 export const CasualFog = () => {
   const { scene } = useThree();
-  // 60fps optimization - aggressive fog for culling
-  const fogRef = useRef(new THREE.Fog('#2d1b4e', 15, 120)); // Reduced for 60fps performance
+  // Much lighter starting fog for better visibility
+  const fogRef = useRef(new THREE.Fog('#2d1b4e', 20, 200)); // Enhanced fog for mountain rendering
 
   useEffect(() => {
     scene.fog = fogRef.current;
@@ -20,8 +20,8 @@ export const CasualFog = () => {
 
   useFrame(() => {
     const fog = fogRef.current;
-    if (fog.far < 150) { // 60fps limit - keep fog close for culling
-      fog.far += 1; // Slower expansion for performance
+    if (fog.far < 800) { // Much greater visibility for infinite mountains
+      fog.far += 2; // Faster fog clearing for better infinite rendering
     }
   });
 

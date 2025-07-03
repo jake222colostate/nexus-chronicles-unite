@@ -13,7 +13,7 @@ interface OptimizedFantasyEnvironmentProps {
   playerPosition: Vector3;
 }
 
-export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentProps> = React.memo(({
+export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentProps> = ({
   chunks,
   chunkSize,
   realm,
@@ -24,10 +24,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  // 60fps optimization - reduced logging
-  if (chunks.length > 0) {
-    console.log(`OptimizedFantasyEnvironment: ${chunks.length} chunks`);
-  }
+  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with mountains enabled`);
 
   return (
     <Suspense fallback={null}>
@@ -46,14 +43,12 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         realm={realm}
       />
       
-      {/* Tree system positioned within valley bounds - reduced for 60fps */}
-      {chunks.length <= 15 && (
-        <EnhancedTreeDistribution
-          chunks={chunks.slice(0, 10)} // Limit trees for 60fps
-          chunkSize={chunkSize}
-          realm={realm}
-        />
-      )}
+      {/* Tree system positioned within valley bounds */}
+      <EnhancedTreeDistribution
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
     </Suspense>
   );
-});
+};

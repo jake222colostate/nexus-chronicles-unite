@@ -71,10 +71,3 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
-
-## Inventory & Nexus World
-
-- Items dropped from enemies and meteors are stored in a global inventory.
-- The inventory is visible in a sidebar on the left of the game view.
-- A "Nexus World" button below the tap button opens a 3D scene to view items.
-- Use the "Back" button in the Nexus World to return to the main game.
