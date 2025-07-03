@@ -41,22 +41,22 @@ export const MinecraftHotbar: React.FC<MinecraftHotbarProps> = ({
   };
 
   return (
-    <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-20">
-      <div className="flex gap-1 p-2 bg-black/80 backdrop-blur-md border-2 border-stone-600 rounded-lg">
+    <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-20 w-full max-w-[350px] px-2">
+      <div className="flex gap-0.5 p-1.5 bg-black/80 backdrop-blur-md border-2 border-stone-600 rounded-lg justify-center">
         {hotbarItems.map((item, index) => (
           <div
             key={index}
             onClick={() => onSlotSelect?.(index)}
             className={`
-              w-14 h-14 border-2 rounded flex flex-col items-center justify-center
-              cursor-pointer hover:bg-stone-600/50 transition-all duration-200
-              relative group
-              ${selectedSlot === index ? 'ring-2 ring-white ring-offset-2 ring-offset-black/50' : ''}
+              w-9 h-9 border-2 rounded flex flex-col items-center justify-center
+              cursor-pointer active:bg-stone-600/50 transition-all duration-200
+              relative group flex-shrink-0
+              ${selectedSlot === index ? 'ring-1 ring-white ring-offset-1 ring-offset-black/50' : ''}
               ${item ? getRarityColor(item.rarity) : 'border-stone-600 bg-stone-800/30'}
             `}
           >
-            {/* Slot number */}
-            <div className="absolute -top-2 -left-2 w-5 h-5 bg-black/80 text-white text-xs rounded-full flex items-center justify-center border border-stone-500">
+            {/* Slot number - smaller for mobile */}
+            <div className="absolute -top-1 -left-1 w-3 h-3 bg-black/80 text-white text-[8px] rounded-full flex items-center justify-center border border-stone-500">
               {index + 1}
             </div>
             
