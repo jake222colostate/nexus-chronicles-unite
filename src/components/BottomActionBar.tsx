@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Package } from 'lucide-react';
 
 interface BottomActionBarProps {
   currentRealm: 'fantasy' | 'scifi';
@@ -37,6 +38,19 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
 
   return (
     <div className="absolute bottom-0 left-0 right-0 z-30">
+      {/* Inventory Button */}
+      <div className="flex justify-center pb-2">
+        <Button
+          className="h-12 px-6 rounded-xl bg-amber-600/90 hover:bg-amber-700/90 border-2 border-amber-400/60 text-amber-100 hover:text-amber-50 transition-all duration-300 hover:scale-105 active:scale-95 backdrop-blur-md font-medium"
+          style={{
+            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4), 0 2px 8px rgba(0,0,0,0.3)'
+          }}
+        >
+          <Package className="w-4 h-4 mr-2" />
+          <span className="text-sm font-bold">Inventory</span>
+        </Button>
+      </div>
+      
       {/* Simple Journey Progress Bar */}
       <div className="px-4 pb-2">
         <div className="text-center mb-1">
