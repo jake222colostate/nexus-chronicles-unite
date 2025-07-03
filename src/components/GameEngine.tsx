@@ -364,7 +364,6 @@ const GameEngine: React.FC = () => {
         <BottomActionBar
           currentRealm={currentRealm}
           onRealmChange={switchRealm}
-          onTap={handleTapResource}
           isTransitioning={isTransitioning}
           playerDistance={currentJourneyDistance}
         />

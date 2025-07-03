@@ -1,13 +1,13 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Package } from 'lucide-react';
+import { Package, Crown } from 'lucide-react';
 import { MinecraftInventory } from './MinecraftInventory';
+import { useNavigate } from 'react-router-dom';
 
 interface BottomActionBarProps {
   currentRealm: 'fantasy' | 'scifi';
   onRealmChange: (realm: 'fantasy' | 'scifi') => void;
-  onTap: () => void;
   isTransitioning?: boolean;
   playerDistance?: number;
 }
@@ -15,27 +15,20 @@ interface BottomActionBarProps {
 export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   currentRealm,
   onRealmChange,
-  onTap,
   isTransitioning = false,
   playerDistance = 0
 }) => {
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
+  const navigate = useNavigate();
+  
   const handleRealmSwitch = (realm: 'fantasy' | 'scifi') => {
     if (realm !== currentRealm && !isTransitioning) {
       onRealmChange(realm);
     }
   };
 
-  const handleTap = () => {
-    onTap();
-    // Enhanced visual feedback
-    const button = document.getElementById('tap-button');
-    if (button) {
-      button.style.transform = 'scale(0.92)';
-      setTimeout(() => {
-        button.style.transform = 'scale(1)';
-      }, 120);
-    }
+  const handleNexusWorld = () => {
+    navigate('/nexus-world');
   };
 
   return (
@@ -100,37 +93,25 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
               )}
             </Button>
 
-            {/* Enhanced Wider Oval Tap Button */}
+            {/* Nexus World Button - Replaces Tap Button */}
             <Button 
-              id="tap-button"
-              onClick={handleTap}
-              className={`h-16 w-48 rounded-full transition-all duration-200 hover:scale-110 active:scale-92 font-bold text-3xl backdrop-blur-xl border-3 relative overflow-hidden shadow-2xl ${
-                currentRealm === 'fantasy'
-                  ? 'bg-gradient-to-br from-purple-600/95 to-violet-700/95 hover:from-purple-500/95 hover:to-violet-600/95 border-purple-400/80 text-purple-100'
-                  : 'bg-gradient-to-br from-cyan-600/95 to-blue-700/95 hover:from-cyan-500/95 hover:to-blue-600/95 border-cyan-400/80 text-cyan-100'
-              }`}
+              onClick={handleNexusWorld}
+              className={`h-16 w-48 rounded-full transition-all duration-200 hover:scale-110 active:scale-92 font-bold text-2xl backdrop-blur-xl border-3 relative overflow-hidden shadow-2xl bg-gradient-to-br from-yellow-600/95 to-orange-700/95 hover:from-yellow-500/95 hover:to-orange-600/95 border-yellow-400/80 text-yellow-100`}
               style={{
-                boxShadow: `0 0 60px ${currentRealm === 'fantasy' ? 'rgba(168, 85, 247, 0.9)' : 'rgba(34, 211, 238, 0.9)'}, 0 10px 40px rgba(0,0,0,0.6)`,
+                boxShadow: `0 0 60px rgba(251, 191, 36, 0.9), 0 10px 40px rgba(0,0,0,0.6)`,
               }}
             >
               {/* Enhanced glassmorphism inner glow */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/15 pointer-events-none rounded-full" />
               
-              <span className="relative z-10 drop-shadow-lg">✨</span>
+              <Crown className="w-8 h-8 mr-2 relative z-10 drop-shadow-lg" />
+              <span className="relative z-10 drop-shadow-lg">Nexus</span>
               
               {/* Enhanced pulse animation */}
-              <div className={`absolute inset-0 rounded-full animate-pulse opacity-50 ${
-                currentRealm === 'fantasy' 
-                  ? 'bg-purple-400/60' 
-                  : 'bg-cyan-400/60'
-              }`} />
+              <div className="absolute inset-0 rounded-full animate-pulse opacity-50 bg-yellow-400/60" />
               
               {/* Glow ring effect */}
-              <div className={`absolute inset-[-2px] rounded-full opacity-75 ${
-                currentRealm === 'fantasy' 
-                  ? 'bg-purple-500/30' 
-                  : 'bg-cyan-500/30'
-              } blur-sm`} />
+              <div className="absolute inset-[-2px] rounded-full opacity-75 bg-yellow-500/30 blur-sm" />
             </Button>
 
             {/* Sci-Fi Realm Button */}
