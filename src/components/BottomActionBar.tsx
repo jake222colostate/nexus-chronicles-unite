@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Package } from 'lucide-react';
+import { MinecraftInventory } from './MinecraftInventory';
 
 interface BottomActionBarProps {
   currentRealm: 'fantasy' | 'scifi';
@@ -18,6 +19,7 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   isTransitioning = false,
   playerDistance = 0
 }) => {
+  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const handleRealmSwitch = (realm: 'fantasy' | 'scifi') => {
     if (realm !== currentRealm && !isTransitioning) {
       onRealmChange(realm);
@@ -37,10 +39,17 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-30">
+    <>
+      <MinecraftInventory 
+        isOpen={isInventoryOpen} 
+        onClose={() => setIsInventoryOpen(false)} 
+      />
+      
+      <div className="absolute bottom-0 left-0 right-0 z-30">
       {/* Inventory Button */}
       <div className="flex justify-center pb-2">
         <Button
+          onClick={() => setIsInventoryOpen(true)}
           className="h-12 px-6 rounded-xl bg-amber-600/90 hover:bg-amber-700/90 border-2 border-amber-400/60 text-amber-100 hover:text-amber-50 transition-all duration-300 hover:scale-105 active:scale-95 backdrop-blur-md font-medium"
           style={{
             boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4), 0 2px 8px rgba(0,0,0,0.3)'
@@ -147,6 +156,7 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
