@@ -188,6 +188,16 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
   gameState,
   onUpgrade 
 }) => {
+  // Ensure gameState has all required properties with defaults
+  const safeGameState = {
+    mana: 0,
+    energyCredits: 0,
+    nexusShards: 0,
+    manaPerSecond: 0,
+    energyPerSecond: 0,
+    ...gameState
+  };
+
   const stands = [
     {
       position: [-5, 0, -5] as [number, number, number],
@@ -197,7 +207,7 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
       color: "#8B5CF6",
       glowColor: "#A855F7",
       type: "mana-amplifier",
-      available: gameState.mana >= 500
+      available: safeGameState.mana >= 500
     },
     {
       position: [5, 0, -5] as [number, number, number],
@@ -207,7 +217,7 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
       color: "#06B6D4",
       glowColor: "#22D3EE",
       type: "energy-booster",
-      available: gameState.energyCredits >= 400
+      available: safeGameState.energyCredits >= 400
     },
     {
       position: [-5, 0, 5] as [number, number, number],
@@ -217,7 +227,7 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
       color: "#F59E0B",
       glowColor: "#FCD34D",
       type: "convergence-catalyst",
-      available: gameState.nexusShards >= 10
+      available: safeGameState.nexusShards >= 10
     },
     {
       position: [5, 0, 5] as [number, number, number],
@@ -227,7 +237,7 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
       color: "#EF4444",
       glowColor: "#F87171",
       type: "realm-bridge",
-      available: gameState.nexusShards >= 15
+      available: safeGameState.nexusShards >= 15
     },
     {
       position: [0, 0, -8] as [number, number, number],
@@ -237,7 +247,7 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
       color: "#10B981",
       glowColor: "#34D399",
       type: "nexus-multiplier",
-      available: gameState.nexusShards >= 25
+      available: safeGameState.nexusShards >= 25
     },
     {
       position: [0, 0, 8] as [number, number, number],
@@ -247,7 +257,7 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
       color: "#F97316",
       glowColor: "#FB923C",
       type: "infinity-core",
-      available: gameState.nexusShards >= 50
+      available: safeGameState.nexusShards >= 50
     }
   ];
 
@@ -255,6 +265,15 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
     <Canvas
       camera={{ position: [0, 8, 12], fov: 60 }}
       style={{ height: '100%', width: '100%' }}
+      gl={{ 
+        antialias: true, 
+        alpha: false,
+        preserveDrawingBuffer: false,
+        powerPreference: "high-performance"
+      }}
+      onCreated={({ gl }) => {
+        gl.setClearColor('#000000');
+      }}
     >
       {/* Ambient lighting */}
       <ambientLight intensity={0.3} />

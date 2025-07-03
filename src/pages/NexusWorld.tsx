@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Nexus3DWorld } from '@/components/Nexus3DWorld';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface NexusWorldProps {
   gameState?: any;
@@ -60,9 +61,9 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
       {/* Resource Display */}
       <div className="absolute top-14 left-2 z-50">
         <div className="bg-black/60 backdrop-blur-md rounded-lg border border-white/20 p-2 text-xs">
-          <div className="text-purple-300">Mana: {gameState.mana?.toLocaleString() || 0}</div>
-          <div className="text-cyan-300">Energy: {gameState.energyCredits?.toLocaleString() || 0}</div>
-          <div className="text-yellow-300">Shards: {gameState.nexusShards || 0}</div>
+          <div className="text-purple-300">Mana: {(gameState?.mana || 0).toLocaleString()}</div>
+          <div className="text-cyan-300">Energy: {(gameState?.energyCredits || 0).toLocaleString()}</div>
+          <div className="text-yellow-300">Shards: {gameState?.nexusShards || 0}</div>
         </div>
       </div>
 
@@ -77,10 +78,12 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
 
       {/* 3D Nexus World */}
       <div className="absolute inset-0 pt-12">
-        <Nexus3DWorld 
-          gameState={gameState}
-          onUpgrade={handleUpgrade}
-        />
+        <ErrorBoundary>
+          <Nexus3DWorld 
+            gameState={gameState}
+            onUpgrade={handleUpgrade}
+          />
+        </ErrorBoundary>
       </div>
     </div>
   );
