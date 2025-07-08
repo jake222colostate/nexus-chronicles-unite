@@ -1,7 +1,10 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Nexus3DWorld } from '@/components/Nexus3DWorld';
+// Lazy load the heavy 3D world to avoid blocking the initial render
+const Nexus3DWorld = lazy(
+  () => import('@/components/Nexus3DWorld').then((m) => ({ default: m.Nexus3DWorld }))
+);
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomActionBar } from '@/components/BottomActionBar';
 
