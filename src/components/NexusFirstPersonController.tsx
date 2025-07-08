@@ -165,8 +165,8 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
     
     if (keys.current.forward) direction.current.z += 1;
     if (keys.current.backward) direction.current.z -= 1;
-    if (keys.current.left) direction.current.x -= 1;
-    if (keys.current.right) direction.current.x += 1;
+    if (keys.current.left) direction.current.x += 1;
+    if (keys.current.right) direction.current.x -= 1;
     
     // Normalize direction
     if (direction.current.length() > 0) {
