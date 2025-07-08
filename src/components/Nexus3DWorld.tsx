@@ -187,6 +187,9 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
     ...gameState
   };
 
+  // Add error handling for Canvas initialization
+  console.log('Nexus3DWorld: Initializing with gameState:', safeGameState);
+
   const stands = [
     {
       position: [-5, 0, -5] as [number, number, number],
@@ -250,52 +253,61 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
     }
   ];
 
-  return (
-    <Canvas
-      camera={{ position: [0, 8, 12], fov: 60 }}
-      style={{ height: '100%', width: '100%' }}
-      gl={{ 
-        antialias: true, 
-        alpha: false,
-        preserveDrawingBuffer: false,
-        powerPreference: "high-performance"
-      }}
-      onCreated={({ gl }) => {
-        gl.setClearColor('#000000');
-      }}
-    >
-      {/* Ambient lighting */}
-      <ambientLight intensity={0.3} />
-      
-      {/* Main directional light */}
-      <directionalLight position={[10, 10, 5]} intensity={0.5} />
+  try {
+    return (
+      <Canvas
+        camera={{ position: [0, 8, 12], fov: 60 }}
+        style={{ height: '100%', width: '100%' }}
+        gl={{ 
+          antialias: false, 
+          alpha: false,
+          preserveDrawingBuffer: false,
+          powerPreference: "default"
+        }}
+        onCreated={({ gl }) => {
+          console.log('Canvas created successfully');
+          gl.setClearColor('#000000');
+        }}
+        onError={(error) => {
+          console.error('Canvas error:', error);
+        }}
+      >
+        <Suspense fallback={null}>
+          {/* Ambient lighting */}
+          <ambientLight intensity={0.3} />
+          
+          {/* Main directional light */}
+          <directionalLight position={[10, 10, 5]} intensity={0.5} />
 
-      {/* Nexus Core */}
-      <NexusCore3D />
+          {/* Simple test mesh to verify Canvas works */}
+          <mesh position={[0, 2, 0]}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="#00ff00" />
+          </mesh>
 
-      {/* Ground */}
-      <NexusGround />
+          {/* Ground - simplified */}
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
+            <planeGeometry args={[100, 100]} />
+            <meshStandardMaterial color="#1a1a2e" />
+          </mesh>
 
-      {/* Upgrade Stands */}
-      {stands.map((stand) => (
-        <NexusStand
-          key={stand.type}
-          position={stand.position}
-          title={stand.title}
-          price={stand.price}
-          currency={stand.currency}
-          color={stand.color}
-          glowColor={stand.glowColor}
-          onPurchase={() => onUpgrade(stand.type)}
-          available={stand.available}
-        />
-      ))}
+          {/* First Person Camera Controller */}
+          <NexusFirstPersonController speed={8} sensitivity={0.003} />
 
-      {/* First Person Camera Controller */}
-      <NexusFirstPersonController speed={8} sensitivity={0.003} />
-
-      {/* Fog for atmosphere */}
-      <fog attach="fog" args={['#0a0a1a', 10, 30]} />
-    </Canvas>
-  );
+          {/* Fog for atmosphere */}
+          <fog attach="fog" args={['#0a0a1a', 10, 30]} />
+        </Suspense>
+      </Canvas>
+    );
+  } catch (error) {
+    console.error('Nexus3DWorld render error:', error);
+    return (
+      <div className="flex items-center justify-center h-full w-full bg-black text-white">
+        <div className="text-center">
+          <h2 className="text-xl mb-2">3D World Error</h2>
+          <p className="text-gray-400">Failed to initialize 3D environment</p>
+        </div>
+      </div>
+    );
+  }
 };
