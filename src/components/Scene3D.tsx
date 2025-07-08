@@ -18,6 +18,7 @@ import { ScifiUpgradeAsteroidSystem } from './scifi/ScifiUpgradeAsteroidSystem';
 import { ScifiScrollUpgradeSystem } from './scifi/ScifiScrollUpgradeSystem';
 import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
 import { ScifiUpgradeGLBSystem } from './scifi/ScifiUpgradeGLBSystem';
+import { CannonPlatformSystem } from './scifi/CannonPlatformSystem';
 import { MapEditorGrid } from './MapEditor/MapEditorGrid';
 import { MapEditorControls } from './MapEditor/MapEditorControls';
 import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
@@ -201,6 +202,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 energyCredits={gameState.energyCredits || 0}
                 onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
                 purchasedUpgrades={gameState.purchasedUpgrades || []}
+              />
+              <CannonPlatformSystem
+                cannonCount={gameState.cannonCount || 1}
+                targets={enemyPositions}
+                gameState={gameState}
               />
               {!isEditorActive && (
                 <ScifiDefenseSystem 
