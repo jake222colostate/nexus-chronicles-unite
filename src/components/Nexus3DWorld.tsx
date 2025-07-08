@@ -4,7 +4,7 @@ import { Text, Sphere, Cylinder, Ring } from '@react-three/drei';
 import { Mesh, Vector3 } from 'three';
 import { NexusGround } from './NexusGround';
 import { NexusFirstPersonController } from './NexusFirstPersonController';
-import { NexusVendorStand } from './NexusVendorStand';
+// import { NexusVendorStand } from './NexusVendorStand'; // Temporarily commented out for debugging
 
 
 const NexusCore3D: React.FC = () => {
@@ -93,6 +93,8 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
     }
   };
 
+  console.log('Nexus3DWorld: About to render Canvas');
+
   try {
     return (
       <Canvas
@@ -166,7 +168,8 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
           {/* Central Nexus Core */}
           <NexusCore3D />
 
-          {/* Vendor Stands */}
+          {/* Vendor Stands - Temporarily commented out for debugging */}
+          {/*
           <NexusVendorStand
             position={[-8, 0, -8]}
             vendorName="Nexus Merchant"
@@ -187,6 +190,13 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
             standType="staffs"
             onInteract={() => handleVendorInteraction('staffs')}
           />
+          */}
+
+          {/* Test cube to verify basic rendering */}
+          <mesh position={[0, 2, 0]}>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="#00ff00" />
+          </mesh>
 
           {/* First Person Camera Controller */}
           <NexusFirstPersonController speed={8} sensitivity={0.003} />
