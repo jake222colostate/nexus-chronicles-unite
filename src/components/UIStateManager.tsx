@@ -62,12 +62,18 @@ export const useUIStateManager = (gameState: GameState) => {
   }, [gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance, gameState.mana, gameState.energyCredits]);
 
   const switchRealm = useCallback((targetRealm?: 'fantasy' | 'scifi') => {
+    console.log('UIStateManager: switchRealm called with:', targetRealm);
     setIsTransitioning(true);
     setTimeout(() => {
       if (targetRealm) {
+        console.log('UIStateManager: Setting realm to:', targetRealm);
         setCurrentRealm(targetRealm);
       } else {
-        setCurrentRealm(prev => prev === 'fantasy' ? 'scifi' : 'fantasy');
+        setCurrentRealm(prev => {
+          const newRealm = prev === 'fantasy' ? 'scifi' : 'fantasy';
+          console.log('UIStateManager: Toggling realm from', prev, 'to', newRealm);
+          return newRealm;
+        });
       }
       setIsTransitioning(false);
     }, 500);

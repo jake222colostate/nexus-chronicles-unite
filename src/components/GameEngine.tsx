@@ -66,7 +66,10 @@ const GameEngine: React.FC = () => {
   // Handle navigation from Nexus World
   useEffect(() => {
     const state = location.state as { selectedRealm?: 'fantasy' | 'scifi' };
+    console.log('GameEngine: Navigation state:', state);
+    console.log('GameEngine: Current realm:', currentRealm);
     if (state?.selectedRealm && state.selectedRealm !== currentRealm) {
+      console.log('GameEngine: Switching to realm:', state.selectedRealm);
       switchRealm(state.selectedRealm);
       // Clear the navigation state to prevent repeated switches
       window.history.replaceState(null, '', location.pathname);

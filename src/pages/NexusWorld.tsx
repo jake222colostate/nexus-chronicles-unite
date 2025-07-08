@@ -31,6 +31,7 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
 
   const handleRealmChange = (realm: 'fantasy' | 'scifi') => {
     // Navigate back to main game with the selected realm
+    console.log('NexusWorld: Navigating to realm:', realm);
     navigate('/', { state: { selectedRealm: realm } });
   };
 
