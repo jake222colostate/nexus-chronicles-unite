@@ -14,6 +14,7 @@ import { JourneyTracker } from './JourneyTracker';
 import { WeaponUpgradeSystem } from './WeaponUpgradeSystem';
 import { ScifiWeaponUpgradeSystem } from './ScifiWeaponUpgradeSystem';
 import { CrossRealmUpgradeSystem } from './CrossRealmUpgradeSystem';
+import { CannonUpgradeSystem } from './scifi/CannonUpgradeSystem';
 import { useUpgradeSystem } from '../hooks/useUpgradeSystem';
 import { useGameStateManager, fantasyBuildings, scifiBuildings } from './GameStateManager';
 import { useGameLoopManager } from './GameLoopManager';
@@ -50,6 +51,7 @@ const GameEngine: React.FC = () => {
     showCombatUpgrades,
     showWeaponUpgrades,
     showCrossRealmUpgrades,
+    showCannonUpgrades,
     playerPosition,
     currentJourneyDistance,
     canConverge,
@@ -60,6 +62,7 @@ const GameEngine: React.FC = () => {
     setShowCombatUpgrades,
     setShowWeaponUpgrades,
     setShowCrossRealmUpgrades,
+    setShowCannonUpgrades,
     switchRealm
   } = useUIStateManager(gameState);
 
@@ -183,6 +186,10 @@ const GameEngine: React.FC = () => {
     setShowWeaponUpgrades(true);
   }, [setShowWeaponUpgrades]);
 
+  const handleShowCannonUpgrades = useCallback(() => {
+    setShowCannonUpgrades(true);
+  }, [setShowCannonUpgrades]);
+
   const handleShowCrossRealmUpgrades = useCallback(() => {
     setShowCrossRealmUpgrades(true);
   }, [setShowCrossRealmUpgrades]);
@@ -262,6 +269,14 @@ const GameEngine: React.FC = () => {
     setGameState(prev => ({
       ...prev,
       energyCredits: prev.energyCredits - cost,
+    }));
+  }, [setGameState]);
+
+  const handleCannonUpgrade = useCallback((cost: number) => {
+    setGameState(prev => ({
+      ...prev,
+      energyCredits: prev.energyCredits - cost,
+      cannonCount: (prev.cannonCount || 1) + 1
     }));
   }, [setGameState]);
 
@@ -355,6 +370,18 @@ const GameEngine: React.FC = () => {
               </Button>
             </div>
 
+            {/* Cannon Upgrades Button - Only in Sci-Fi realm */}
+            {currentRealm === 'scifi' && (
+              <div className="absolute top-14 right-12 z-30">
+                <Button 
+                  onClick={handleShowCannonUpgrades}
+                  className="h-8 w-8 rounded-lg bg-gradient-to-r from-cyan-500/95 to-blue-500/95 hover:from-cyan-600/95 hover:to-blue-600/95 backdrop-blur-xl border border-cyan-400/70 transition-all duration-300 font-bold shadow-lg shadow-cyan-500/30 p-0 text-sm"
+                >
+                  🔫
+                </Button>
+              </div>
+            )}
+
             {/* Cross-Realm Upgrades Button */}
             <div className="absolute top-14 left-2 z-30">
               <Button 
@@ -367,10 +394,7 @@ const GameEngine: React.FC = () => {
           </>
         )}
 
-      {/* Minecraft Hotbar - disabled in map editor */}
-      {!isEditorActive && (
-        <MinecraftHotbar />
-      )}
+      {/* Removed Minecraft Hotbar */}
 
       {/* Enhanced Bottom Action Bar with realm-specific journey progress - disabled in map editor */}
       {!isEditorActive && (
@@ -418,6 +442,17 @@ const GameEngine: React.FC = () => {
                 onClose={() => setShowWeaponUpgrades(false)}
               />
             )
+          )}
+
+          {/* Cannon Upgrades Modal - Only in Sci-Fi realm */}
+          {showCannonUpgrades && currentRealm === 'scifi' && (
+            <CannonUpgradeSystem
+              isOpen={showCannonUpgrades}
+              onClose={() => setShowCannonUpgrades(false)}
+              currentCannonCount={stableGameState.cannonCount || 1}
+              energyCredits={stableGameState.energyCredits}
+              onUpgradeCannonCount={handleCannonUpgrade}
+            />
           )}
 
           {/* Cross-Realm Upgrades Modal */}

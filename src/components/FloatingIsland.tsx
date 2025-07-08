@@ -21,9 +21,9 @@ export const FloatingIsland: React.FC<FloatingIslandProps> = ({ realm }) => {
 
   return (
     <group position={[0, -3, -2]}>
-      {/* Main island base - increased size for cannon platform */}
+      {/* Main island base - increased size significantly for cannon platform */}
       <mesh ref={islandRef} position={[0, 0, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[6, 5, 1.5, 8]} />
+        <cylinderGeometry args={[8, 7, 1.5, 8]} />
         <meshLambertMaterial
           color={realm === 'fantasy' ? '#6366f1' : '#0891b2'}
           transparent
@@ -33,7 +33,7 @@ export const FloatingIsland: React.FC<FloatingIslandProps> = ({ realm }) => {
 
       {/* Decorative rings - adjusted for larger platform */}
       <mesh position={[0, 0.8, 0]}>
-        <ringGeometry args={[5.5, 6.5, 16]} />
+        <ringGeometry args={[7.5, 8.5, 16]} />
         <meshBasicMaterial
           color={realm === 'fantasy' ? '#8b5cf6' : '#06b6d4'}
           transparent

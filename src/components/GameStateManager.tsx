@@ -25,6 +25,7 @@ export interface GameState {
   autoManaLevel: number;
   autoManaRate: number;
   manaPerKill: number;
+  cannonCount: number;
 }
 
 export interface Building {
@@ -75,6 +76,7 @@ const defaultGameState: GameState = {
   autoManaLevel: 0,
   autoManaRate: 0,
   manaPerKill: 5,
+  cannonCount: 1,
 };
 
 export const useGameStateManager = () => {
@@ -97,6 +99,7 @@ export const useGameStateManager = () => {
         autoManaLevel: parsedState.autoManaLevel || 0,
         autoManaRate: parsedState.autoManaRate || 0,
         manaPerKill: parsedState.manaPerKill || 5,
+        cannonCount: parsedState.cannonCount || 1,
       };
     }
     return defaultGameState;

@@ -28,6 +28,7 @@ export const useUIStateManager = (gameState: GameState) => {
   const [showCombatUpgrades, setShowCombatUpgrades] = useState(false);
   const [showWeaponUpgrades, setShowWeaponUpgrades] = useState(false);
   const [showCrossRealmUpgrades, setShowCrossRealmUpgrades] = useState(false);
+  const [showCannonUpgrades, setShowCannonUpgrades] = useState(false);
 
   const playerPosition = useMemo(() => ({
     x: 0,
@@ -82,6 +83,7 @@ export const useUIStateManager = (gameState: GameState) => {
     showCombatUpgrades,
     showWeaponUpgrades,
     showCrossRealmUpgrades,
+    showCannonUpgrades,
     playerPosition,
     currentJourneyDistance,
     canConverge,
@@ -92,6 +94,7 @@ export const useUIStateManager = (gameState: GameState) => {
     setShowCombatUpgrades,
     setShowWeaponUpgrades,
     setShowCrossRealmUpgrades,
+    setShowCannonUpgrades,
     switchRealm
   };
 };

@@ -273,6 +273,7 @@ export const useUpgradeManagers = ({
         autoManaLevel: gameState.autoManaLevel,
         autoManaRate: gameState.autoManaRate,
         manaPerKill: gameState.manaPerKill,
+        cannonCount: gameState.cannonCount,
       });
     }
   }, [gameState, setGameState]);

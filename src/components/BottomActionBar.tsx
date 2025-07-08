@@ -44,16 +44,16 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
       />
       
       <div className="absolute bottom-0 left-0 right-0 z-30">
-      {/* Small inventory toggle button */}
-      <div className="absolute bottom-20 right-4">
+      {/* Small inventory toggle button - raised higher */}
+      <div className="absolute bottom-32 right-4">
         <Button
           onClick={() => setIsInventoryOpen(!isInventoryOpen)}
-          className="h-10 w-10 rounded-lg bg-amber-600/90 hover:bg-amber-700/90 border border-amber-400/60 text-amber-100 transition-all duration-300 hover:scale-105 active:scale-95 backdrop-blur-md p-0"
+          className="h-12 w-12 rounded-lg bg-amber-600/90 hover:bg-amber-700/90 border border-amber-400/60 text-amber-100 transition-all duration-300 hover:scale-105 active:scale-95 backdrop-blur-md p-0"
           style={{
             boxShadow: '0 2px 10px rgba(245, 158, 11, 0.3)'
           }}
         >
-          <Package className="w-5 h-5" />
+          <Package className="w-6 h-6" />
         </Button>
       </div>
       
