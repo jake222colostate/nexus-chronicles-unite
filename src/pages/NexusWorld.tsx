@@ -97,5 +97,4 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
     </div>
   );
 };
-
 export default NexusWorld;
