@@ -152,8 +152,8 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
     // Calculate movement direction based on camera orientation
     direction.current.set(0, 0, 0);
     
-    if (keys.current.forward) direction.current.z -= 1;
-    if (keys.current.backward) direction.current.z += 1;
+    if (keys.current.forward) direction.current.z += 1;
+    if (keys.current.backward) direction.current.z -= 1;
     if (keys.current.left) direction.current.x -= 1;
     if (keys.current.right) direction.current.x += 1;
     

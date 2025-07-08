@@ -4,122 +4,8 @@ import { Text, Sphere, Cylinder, Ring } from '@react-three/drei';
 import { Mesh, Vector3 } from 'three';
 import { NexusGround } from './NexusGround';
 import { NexusFirstPersonController } from './NexusFirstPersonController';
+import { NexusVendorStand } from './NexusVendorStand';
 
-interface NexusStandProps {
-  position: [number, number, number];
-  title: string;
-  price: number;
-  currency: string;
-  color: string;
-  glowColor: string;
-  onPurchase: () => void;
-  available: boolean;
-}
-
-const NexusStand: React.FC<NexusStandProps> = ({
-  position,
-  title,
-  price,
-  currency,
-  color,
-  glowColor,
-  onPurchase,
-  available
-}) => {
-  const meshRef = useRef<Mesh>(null);
-  const [hovered, setHovered] = useState(false);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += 0.01;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime) * 0.1;
-    }
-  });
-
-  return (
-    <group position={position}>
-      {/* Base Platform */}
-      <Cylinder args={[1.5, 1.5, 0.2]} position={[0, -0.1, 0]}>
-        <meshStandardMaterial color="#2a2a2a" />
-      </Cylinder>
-
-      {/* Main Stand */}
-      <Cylinder args={[0.3, 0.3, 2]} position={[0, 1, 0]}>
-        <meshStandardMaterial color="#1a1a1a" />
-      </Cylinder>
-
-      {/* Item Display */}
-      <mesh
-        ref={meshRef}
-        position={[0, 2.5, 0]}
-        onPointerEnter={() => setHovered(true)}
-        onPointerLeave={() => setHovered(false)}
-        onClick={available ? onPurchase : undefined}
-        scale={hovered ? 1.2 : 1}
-      >
-        <Sphere args={[0.5]}>
-          <meshStandardMaterial 
-            color={color} 
-            emissive={glowColor}
-            emissiveIntensity={available ? (hovered ? 0.3 : 0.1) : 0.05}
-            transparent
-            opacity={available ? 1 : 0.5}
-          />
-        </Sphere>
-      </mesh>
-
-      {/* Floating Ring */}
-      <mesh position={[0, 2.5, 0]}>
-        <Ring args={[0.7, 0.8, 32]}>
-          <meshStandardMaterial color={glowColor} transparent opacity={0.3} />
-        </Ring>
-      </mesh>
-
-      {/* Title Text */}
-      <Text
-        position={[0, 3.5, 0]}
-        fontSize={0.3}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {title}
-      </Text>
-
-      {/* Price Text */}
-      <Text
-        position={[0, 1.5, 0]}
-        fontSize={0.2}
-        color={available ? "#ffff00" : "#666666"}
-        anchorX="center"
-        anchorY="middle"
-      >
-        {price} {currency}
-      </Text>
-
-      {/* Availability Indicator */}
-      {!available && (
-        <Text
-          position={[0, 1.2, 0]}
-          fontSize={0.15}
-          color="#ff4444"
-          anchorX="center"
-          anchorY="middle"
-        >
-          Insufficient {currency}
-        </Text>
-      )}
-
-      {/* Light source */}
-      <pointLight 
-        position={[0, 3, 0]} 
-        color={glowColor} 
-        intensity={available ? 1 : 0.2} 
-        distance={5}
-      />
-    </group>
-  );
-};
 
 const NexusCore3D: React.FC = () => {
   const coreRef = useRef<Mesh>(null);
@@ -190,68 +76,22 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
   // Add error handling for Canvas initialization
   console.log('Nexus3DWorld: Initializing with gameState:', safeGameState);
 
-  const stands = [
-    {
-      position: [-5, 0, -5] as [number, number, number],
-      title: "Mana Amplifier",
-      price: 500,
-      currency: "Mana",
-      color: "#8B5CF6",
-      glowColor: "#A855F7",
-      type: "mana-amplifier",
-      available: safeGameState.mana >= 500
-    },
-    {
-      position: [5, 0, -5] as [number, number, number],
-      title: "Energy Booster",
-      price: 400,
-      currency: "Energy",
-      color: "#06B6D4",
-      glowColor: "#22D3EE",
-      type: "energy-booster",
-      available: safeGameState.energyCredits >= 400
-    },
-    {
-      position: [-5, 0, 5] as [number, number, number],
-      title: "Convergence Catalyst",
-      price: 10,
-      currency: "Nexus Shards",
-      color: "#F59E0B",
-      glowColor: "#FCD34D",
-      type: "convergence-catalyst",
-      available: safeGameState.nexusShards >= 10
-    },
-    {
-      position: [5, 0, 5] as [number, number, number],
-      title: "Realm Bridge",
-      price: 15,
-      currency: "Nexus Shards",
-      color: "#EF4444",
-      glowColor: "#F87171",
-      type: "realm-bridge",
-      available: safeGameState.nexusShards >= 15
-    },
-    {
-      position: [0, 0, -8] as [number, number, number],
-      title: "Nexus Multiplier",
-      price: 25,
-      currency: "Nexus Shards",
-      color: "#10B981",
-      glowColor: "#34D399",
-      type: "nexus-multiplier",
-      available: safeGameState.nexusShards >= 25
-    },
-    {
-      position: [0, 0, 8] as [number, number, number],
-      title: "Infinity Core",
-      price: 50,
-      currency: "Nexus Shards",
-      color: "#F97316",
-      glowColor: "#FB923C",
-      type: "infinity-core",
-      available: safeGameState.nexusShards >= 50
+  // Vendor interaction handlers
+  const handleVendorInteraction = (vendorType: string) => {
+    console.log(`Interacting with ${vendorType} vendor`);
+    // TODO: Open vendor modal/menu based on type
+    switch (vendorType) {
+      case 'nexus':
+        console.log('Opening Nexus Shards & Upgrades shop');
+        break;
+      case 'supplies':
+        console.log('Opening Health & Repair Kits shop');
+        break;
+      case 'staffs':
+        console.log('Opening Wizard Staffs shop');
+        break;
     }
-  ];
+  };
 
   try {
     return (
@@ -323,11 +163,30 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
             </mesh>
           </group>
 
-          {/* Test cube for reference */}
-          <mesh position={[0, 2, 0]}>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color="#00ff00" />
-          </mesh>
+          {/* Central Nexus Core */}
+          <NexusCore3D />
+
+          {/* Vendor Stands */}
+          <NexusVendorStand
+            position={[-8, 0, -8]}
+            vendorName="Nexus Merchant"
+            standType="nexus"
+            onInteract={() => handleVendorInteraction('nexus')}
+          />
+          
+          <NexusVendorStand
+            position={[8, 0, -8]}
+            vendorName="Supply Keeper"
+            standType="supplies"
+            onInteract={() => handleVendorInteraction('supplies')}
+          />
+          
+          <NexusVendorStand
+            position={[-8, 0, 8]}
+            vendorName="Staff Crafter"
+            standType="staffs"
+            onInteract={() => handleVendorInteraction('staffs')}
+          />
 
           {/* First Person Camera Controller */}
           <NexusFirstPersonController speed={8} sensitivity={0.003} />
