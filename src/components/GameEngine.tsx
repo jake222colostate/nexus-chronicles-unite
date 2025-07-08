@@ -1,4 +1,5 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { MinecraftHotbar } from './MinecraftHotbar';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -28,6 +29,7 @@ import { MapEditorToolbar } from './MapEditor/MapEditorToolbar';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
 
 const GameEngine: React.FC = () => {
+  const location = useLocation();
   const { isEditorActive } = useMapEditorStore();
   
   const {
@@ -60,6 +62,16 @@ const GameEngine: React.FC = () => {
     setShowCrossRealmUpgrades,
     switchRealm
   } = useUIStateManager(gameState);
+
+  // Handle navigation from Nexus World
+  useEffect(() => {
+    const state = location.state as { selectedRealm?: 'fantasy' | 'scifi' };
+    if (state?.selectedRealm && state.selectedRealm !== currentRealm) {
+      switchRealm(state.selectedRealm);
+      // Clear the navigation state to prevent repeated switches
+      window.history.replaceState(null, '', location.pathname);
+    }
+  }, [location.state, currentRealm, switchRealm]);
 
   const [enemyCount, setEnemyCount] = useState(0);
 
