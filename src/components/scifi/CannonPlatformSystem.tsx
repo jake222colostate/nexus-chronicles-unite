@@ -23,6 +23,8 @@ interface CannonPlatformSystemProps {
   onCannonDestroyed?: () => void;
   onRepairKitUsed?: () => void;
   gameState?: any;
+  onMeteorHit?: (id: number, damage: number) => void;
+  platformPosition?: Vector3;
 }
 
 // Cannon positions on the enlarged light blue circular platform
@@ -44,7 +46,9 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
   targets = [],
   onCannonDestroyed,
   onRepairKitUsed,
-  gameState
+  gameState,
+  onMeteorHit,
+  platformPosition = new Vector3(0, -3, -2)
 }) => {
   const { camera } = useThree();
   const [cannons, setCannons] = useState<CannonData[]>([]);
@@ -55,9 +59,16 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
   useEffect(() => {
     const newCannons: CannonData[] = [];
     for (let i = 0; i < Math.min(cannonCount, 10); i++) {
+      // Adjust cannon positions to follow platform position
+      const basePosition = CANNON_POSITIONS[i];
+      const adjustedPosition: [number, number, number] = [
+        basePosition[0] + platformPosition.x,
+        basePosition[1] + platformPosition.y,
+        basePosition[2] + platformPosition.z
+      ];
       newCannons.push({
         id: i,
-        position: CANNON_POSITIONS[i],
+        position: adjustedPosition,
         health: 100,
         maxHealth: 100,
         lastFired: 0
@@ -92,13 +103,26 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
 
     const currentTime = state.clock.elapsedTime * 1000;
     
+    // Update cannon positions to follow floating platform
+    const platformFloatingOffset = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+    
     setCannons(prev => prev.map(cannon => {
+      // Update cannon position to follow platform movement
+      const basePosition = CANNON_POSITIONS[cannon.id];
+      const updatedPosition: [number, number, number] = [
+        basePosition[0] + platformPosition.x,
+        basePosition[1] + platformPosition.y + platformFloatingOffset,
+        basePosition[2] + platformPosition.z
+      ];
+      
+      const updatedCannon = { ...cannon, position: updatedPosition };
+      
       if (cannon.health <= 0 || currentTime - cannon.lastFired < 2000) {
-        return cannon;
+        return updatedCannon;
       }
 
       // Find closest target
-      const cannonPos = new Vector3(...cannon.position);
+      const cannonPos = new Vector3(...updatedCannon.position);
       const closestTarget = targets.reduce((closest, target) => {
         const distToCannon = target.distanceTo(cannonPos);
         const distToClosest = closest.distanceTo(cannonPos);
@@ -116,26 +140,43 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
             position: cannonPos.clone().add(direction.clone().multiplyScalar(1.5)),
             direction: direction,
             speed: 0.8,
-            damage: 25
+            damage: 25,
+            targetPosition: closestTarget.clone(),
+            targetId: `meteor-${Date.now()}`
           }
         ]);
 
-        return { ...cannon, lastFired: currentTime };
+        return { ...updatedCannon, lastFired: currentTime };
       }
 
-      return cannon;
+      return updatedCannon;
     }));
 
-    // Update projectiles
+    // Update projectiles and check for hits
     setProjectiles(prev => prev
-      .map(projectile => ({
-        ...projectile,
-        position: projectile.position.clone().add(
+      .map(projectile => {
+        const newPos = projectile.position.clone().add(
           projectile.direction.clone().multiplyScalar(projectile.speed)
-        )
-      }))
+        );
+        
+        // Check for meteor hits by checking distance to all targets
+        let hit = false;
+        targets.forEach(target => {
+          if (newPos.distanceTo(target) < 1.0) {
+            hit = true;
+            // Simple hit detection - would need proper meteor ID system
+            console.log('Cannon projectile hit meteor!');
+          }
+        });
+        
+        if (hit) {
+          return null; // Remove projectile
+        }
+        
+        return { ...projectile, position: newPos };
+      })
       .filter(projectile => 
-        projectile.position.distanceTo(camera.position) < 50
+        projectile && projectile.position.distanceTo(camera.position) < 50
       )
     );
   });

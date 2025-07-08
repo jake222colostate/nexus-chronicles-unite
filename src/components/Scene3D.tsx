@@ -160,11 +160,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           />
 
-          {/* Enhanced MagicStaffWeaponSystem with enemy targeting - disabled in map editor */}
-          {!isEditorActive && (
+          {/* Enhanced MagicStaffWeaponSystem with enemy targeting - disabled in map editor and sci-fi realm */}
+          {!isEditorActive && realm === 'fantasy' && (
             <MagicStaffWeaponSystem 
               upgradeLevel={gameState.weaponUpgradeLevel || 0}
-              visible={realm === 'fantasy'}
+              visible={true}
               enemyPositions={enemyPositions}
               onHitEnemy={handleEnemyHit}
               damage={10 + (gameState.weaponUpgradeLevel || 0) * 5}
@@ -207,6 +207,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 cannonCount={gameState.cannonCount || 1}
                 targets={enemyPositions}
                 gameState={gameState}
+                platformPosition={new Vector3(0, -3, -2)}
               />
               {!isEditorActive && (
                 <ScifiDefenseSystem 
@@ -214,6 +215,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                   onEnergyGained={onEnergyGained}
                   onUpgradeClick={setSelectedUpgrade}
                   purchasedUpgrades={gameState.purchasedUpgrades || []}
+                  onMeteorPositionUpdate={handleEnemyPositionUpdate}
                 />
               )}
             </>
