@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import { Crown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Nexus3DWorld } from '@/components/Nexus3DWorld';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomActionBar } from '@/components/BottomActionBar';
@@ -21,6 +22,8 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
   },
   onUpgrade = () => {}
 }) => {
+  const navigate = useNavigate();
+
   const handleUpgrade = (upgradeType: string) => {
     console.log(`Purchasing upgrade: ${upgradeType}`);
     onUpgrade(upgradeType);
@@ -28,8 +31,7 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
 
   const handleRealmChange = (realm: 'fantasy' | 'scifi') => {
     // Navigate back to main game with the selected realm
-    // This will be handled by the main navigation
-    console.log(`Switching to ${realm} realm`);
+    navigate('/', { state: { selectedRealm: realm } });
   };
 
   return (
@@ -90,12 +92,13 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
         </ErrorBoundary>
       </div>
 
-      {/* Bottom Action Bar - consistent with main game */}
+      {/* Bottom Action Bar - consistent with main game, no journey bar */}
       <BottomActionBar
         currentRealm="fantasy"
         onRealmChange={handleRealmChange}
         isTransitioning={false}
         playerDistance={0}
+        hideJourneyBar={true}
       />
     </div>
   );

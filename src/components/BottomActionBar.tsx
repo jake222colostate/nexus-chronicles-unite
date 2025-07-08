@@ -10,13 +10,15 @@ interface BottomActionBarProps {
   onRealmChange: (realm: 'fantasy' | 'scifi') => void;
   isTransitioning?: boolean;
   playerDistance?: number;
+  hideJourneyBar?: boolean;
 }
 
 export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   currentRealm,
   onRealmChange,
   isTransitioning = false,
-  playerDistance = 0
+  playerDistance = 0,
+  hideJourneyBar = false
 }) => {
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const navigate = useNavigate();
@@ -53,20 +55,22 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
         </Button>
       </div>
       
-      {/* Simple Journey Progress Bar */}
-      <div className="px-4 pb-2">
-        <div className="text-center mb-1">
-          <span className="text-white/90 text-xs font-medium">
-            Journey: {Math.floor(playerDistance)}m | Realm: {currentRealm === 'fantasy' ? 'Fantasy' : 'Sci-Fi'}
-          </span>
+      {/* Simple Journey Progress Bar - hidden in Nexus World */}
+      {!hideJourneyBar && (
+        <div className="px-4 pb-2">
+          <div className="text-center mb-1">
+            <span className="text-white/90 text-xs font-medium">
+              Journey: {Math.floor(playerDistance)}m | Realm: {currentRealm === 'fantasy' ? 'Fantasy' : 'Sci-Fi'}
+            </span>
+          </div>
+          <div className="w-full bg-gray-800/60 rounded-full h-1 overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-purple-500 to-cyan-500 h-1 rounded-full transition-all duration-500"
+              style={{ width: `${Math.min(100, (playerDistance % 100))}%` }}
+            />
+          </div>
         </div>
-        <div className="w-full bg-gray-800/60 rounded-full h-1 overflow-hidden">
-          <div 
-            className="bg-gradient-to-r from-purple-500 to-cyan-500 h-1 rounded-full transition-all duration-500"
-            style={{ width: `${Math.min(100, (playerDistance % 100))}%` }}
-          />
-        </div>
-      </div>
+      )}
 
       {/* Main Control Bar - Lower positioning */}
       <div className="bg-black/95 backdrop-blur-xl border-t border-white/20 py-6">
