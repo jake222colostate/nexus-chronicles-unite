@@ -279,16 +279,54 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
           {/* Main directional light */}
           <directionalLight position={[10, 10, 5]} intensity={0.5} />
 
-          {/* Simple test mesh to verify Canvas works */}
+          {/* Walkable Floor System */}
+          <group>
+            {/* Main floor */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+              <planeGeometry args={[100, 100]} />
+              <meshStandardMaterial 
+                color="#1a1a2e" 
+                roughness={0.8}
+                metalness={0.1}
+              />
+            </mesh>
+            
+            {/* Grid pattern for visual reference */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+              <planeGeometry args={[100, 100]} />
+              <meshStandardMaterial 
+                color="#2a2a3e" 
+                transparent
+                opacity={0.3}
+                wireframe={true}
+              />
+            </mesh>
+
+            {/* Elevated platforms around the center */}
+            <mesh position={[0, 0.5, 0]}>
+              <cylinderGeometry args={[8, 8, 1, 32]} />
+              <meshStandardMaterial 
+                color="#2a2a4e" 
+                roughness={0.6}
+                metalness={0.2}
+              />
+            </mesh>
+
+            {/* Outer ring platform */}
+            <mesh position={[0, 0.2, 0]}>
+              <cylinderGeometry args={[15, 15, 0.4, 32]} />
+              <meshStandardMaterial 
+                color="#1a1a3e" 
+                roughness={0.8}
+                metalness={0.1}
+              />
+            </mesh>
+          </group>
+
+          {/* Test cube for reference */}
           <mesh position={[0, 2, 0]}>
             <boxGeometry args={[1, 1, 1]} />
             <meshStandardMaterial color="#00ff00" />
-          </mesh>
-
-          {/* Ground - simplified */}
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]}>
-            <planeGeometry args={[100, 100]} />
-            <meshStandardMaterial color="#1a1a2e" />
           </mesh>
 
           {/* First Person Camera Controller */}
