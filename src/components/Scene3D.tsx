@@ -181,7 +181,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               realm={realm}
               maxRotation={Math.PI / 3} // 60 degrees total range
               radius={10} // Distance from center upgrades
-              centerPoint={[0, 4, 0]} // Center of upgrade area
+              centerPoint={realm === 'scifi' ? [0, -3, -2] : [0, 4, 0]} // Platform center for sci-fi, upgrades for fantasy
             />
           )}
 
