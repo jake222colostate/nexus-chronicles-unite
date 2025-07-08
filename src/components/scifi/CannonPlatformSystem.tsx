@@ -27,18 +27,18 @@ interface CannonPlatformSystemProps {
   platformPosition?: Vector3;
 }
 
-// Cannon positions underneath the enlarged light blue circular platform
+// Cannon positions on top of the enlarged light blue circular platform
 const CANNON_POSITIONS: [number, number, number][] = [
-  [0, -3.75, -2],      // Center underneath platform
-  [-3, -3.75, -1.5],   // Front left underneath
-  [3, -3.75, -1.5],    // Front right underneath
-  [-4, -3.75, -2],     // Left underneath
-  [4, -3.75, -2],      // Right underneath
-  [-3, -3.75, -2.5],   // Back left underneath
-  [3, -3.75, -2.5],    // Back right underneath
-  [0, -3.75, -1],      // Front center underneath
-  [0, -3.75, -3],      // Back center underneath
-  [-5, -3.75, -1],     // Far left underneath
+  [0, -2.25, -2],      // Center on top of platform
+  [-3, -2.25, -1.5],   // Front left on top
+  [3, -2.25, -1.5],    // Front right on top
+  [-4, -2.25, -2],     // Left on top
+  [4, -2.25, -2],      // Right on top
+  [-3, -2.25, -2.5],   // Back left on top
+  [3, -2.25, -2.5],    // Back right on top
+  [0, -2.25, -1],      // Front center on top
+  [0, -2.25, -3],      // Back center on top
+  [-5, -2.25, -1],     // Far left on top
 ];
 
 export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
