@@ -16,10 +16,10 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
     nexusShards: 25, 
     manaPerSecond: 15, 
     energyPerSecond: 12,
-    convergenceCount: 3,
-    convergenceProgress: 45
+  convergenceCount: 3,
+  convergenceProgress: 45
   }
-) => {
+}) => {
   const navigate = useNavigate();
 
   const handleBackToGame = () => {
