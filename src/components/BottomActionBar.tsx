@@ -93,25 +93,16 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
               )}
             </Button>
 
-            {/* Nexus World Button - Replaces Tap Button */}
+            {/* Nexus World Button - Centered and properly sized */}
             <Button 
               onClick={handleNexusWorld}
-              className={`h-16 w-48 rounded-full transition-all duration-200 hover:scale-110 active:scale-92 font-bold text-2xl backdrop-blur-xl border-3 relative overflow-hidden shadow-2xl bg-gradient-to-br from-yellow-600/95 to-orange-700/95 hover:from-yellow-500/95 hover:to-orange-600/95 border-yellow-400/80 text-yellow-100`}
+              className="h-12 px-6 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 font-medium text-base backdrop-blur-xl border-2 relative overflow-hidden bg-gradient-to-br from-yellow-600/95 to-orange-700/95 hover:from-yellow-500/95 hover:to-orange-600/95 border-yellow-400/80 text-yellow-100"
               style={{
-                boxShadow: `0 0 60px rgba(251, 191, 36, 0.9), 0 10px 40px rgba(0,0,0,0.6)`,
+                boxShadow: '0 4px 20px rgba(251, 191, 36, 0.6), 0 2px 10px rgba(0,0,0,0.4)',
               }}
             >
-              {/* Enhanced glassmorphism inner glow */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-black/15 pointer-events-none rounded-full" />
-              
-              <Crown className="w-8 h-8 mr-2 relative z-10 drop-shadow-lg" />
-              <span className="relative z-10 drop-shadow-lg">Nexus</span>
-              
-              {/* Enhanced pulse animation */}
-              <div className="absolute inset-0 rounded-full animate-pulse opacity-50 bg-yellow-400/60" />
-              
-              {/* Glow ring effect */}
-              <div className="absolute inset-[-2px] rounded-full opacity-75 bg-yellow-500/30 blur-sm" />
+              <Crown className="w-4 h-4 mr-2" />
+              <span className="font-bold">Nexus World</span>
             </Button>
 
             {/* Sci-Fi Realm Button */}

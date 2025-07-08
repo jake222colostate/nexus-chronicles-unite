@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plane } from '@react-three/drei';
+import * as THREE from 'three';
 
 interface NexusGroundProps {
   size?: number;
@@ -26,8 +27,8 @@ export const NexusGround: React.FC<NexusGroundProps> = ({
       </Plane>
       
       {/* Grid lines for visual reference */}
-      <gridHelper
-        args={[size, 20, "#333344", "#222233"]}
+      <primitive
+        object={new THREE.GridHelper(size, 20, "#333344", "#222233")}
         position={[0, -0.45, 0]}
       />
       
