@@ -2,12 +2,11 @@ import React, { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Nexus3DWorld } from '@/components/Nexus3DWorld';
+import { SimpleNexusWorld } from '@/components/SimpleNexusWorld';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 interface NexusWorldProps {
   gameState?: any;
-  onUpgrade?: (upgradeId: string) => void;
 }
 
 const NexusWorld: React.FC<NexusWorldProps> = ({ 
@@ -19,19 +18,14 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
     energyPerSecond: 12,
     convergenceCount: 3,
     convergenceProgress: 45
-  },
-  onUpgrade = () => {}
-}) => {
+  }
+) => {
   const navigate = useNavigate();
 
   const handleBackToGame = () => {
     navigate('/');
   };
 
-  const handleUpgrade = (upgradeType: string) => {
-    console.log(`Purchasing upgrade: ${upgradeType}`);
-    onUpgrade(upgradeType);
-  };
 
   return (
     <div className="h-full w-full relative overflow-hidden bg-black">
@@ -95,10 +89,8 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
               </div>
             </div>
           }>
-            <Nexus3DWorld 
-              gameState={gameState}
-              onUpgrade={handleUpgrade}
-            />
+            {/* Simplified 3D world with just a floor */}
+            <SimpleNexusWorld />
           </Suspense>
         </ErrorBoundary>
       </div>
