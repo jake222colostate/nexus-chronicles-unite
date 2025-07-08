@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -70,19 +70,36 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
       {/* Controls Instructions */}
       <div className="absolute top-14 right-2 z-50">
         <div className="bg-black/60 backdrop-blur-md rounded-lg border border-white/20 p-2 text-xs text-white/70">
-          <div>Drag: Rotate View</div>
-          <div>Pinch/Scroll: Zoom</div>
+          <div>WASD/Arrows: Move</div>
+          <div>Mouse: Look around</div>
+          <div>Click: Toggle mouse look</div>
           <div>Tap Stands: Purchase</div>
         </div>
       </div>
 
       {/* 3D Nexus World */}
       <div className="absolute inset-0 pt-12">
-        <ErrorBoundary>
-          <Nexus3DWorld 
-            gameState={gameState}
-            onUpgrade={handleUpgrade}
-          />
+        <ErrorBoundary fallback={
+          <div className="flex items-center justify-center h-full w-full bg-black text-white">
+            <div className="text-center">
+              <h2 className="text-xl mb-2">Loading Nexus World...</h2>
+              <p className="text-gray-400">Initializing 3D environment</p>
+            </div>
+          </div>
+        }>
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-full w-full bg-black text-white">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
+                <p className="text-gray-400">Loading 3D world...</p>
+              </div>
+            </div>
+          }>
+            <Nexus3DWorld 
+              gameState={gameState}
+              onUpgrade={handleUpgrade}
+            />
+          </Suspense>
         </ErrorBoundary>
       </div>
     </div>

@@ -1,7 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, Suspense } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Text, Sphere, Box, Cylinder, Ring } from '@react-three/drei';
+import { Text, Sphere, Cylinder, Ring } from '@react-three/drei';
 import { Mesh, Vector3 } from 'three';
+import { NexusGround } from './NexusGround';
+import { NexusFirstPersonController } from './NexusFirstPersonController';
 
 interface NexusStandProps {
   position: [number, number, number];
@@ -165,19 +167,6 @@ const NexusCore3D: React.FC = () => {
   );
 };
 
-const NexusGround: React.FC = () => {
-  return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]}>
-      <Box args={[50, 50, 0.1]}>
-        <meshStandardMaterial 
-          color="#1a1a2e" 
-          emissive="#0f0f23"
-          emissiveIntensity={0.1}
-        />
-      </Box>
-    </mesh>
-  );
-};
 
 interface Nexus3DWorldProps {
   gameState: any;
@@ -302,17 +291,8 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
         />
       ))}
 
-      {/* Camera Controls */}
-      <OrbitControls
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        minDistance={5}
-        maxDistance={25}
-        minPolarAngle={0}
-        maxPolarAngle={Math.PI / 2}
-        target={[0, 2, 0]}
-      />
+      {/* First Person Camera Controller */}
+      <NexusFirstPersonController speed={8} sensitivity={0.003} />
 
       {/* Fog for atmosphere */}
       <fog attach="fog" args={['#0a0a1a', 10, 30]} />
