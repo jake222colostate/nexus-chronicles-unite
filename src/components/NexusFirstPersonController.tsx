@@ -77,7 +77,14 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
       }
     };
 
-    // Mouse look controls
+    // Mouse look controls - only when holding down mouse button
+    const handleMouseDown = (event: MouseEvent) => {
+      if (event.button === 0) { // Left mouse button
+        isLocked.current = true;
+        document.body.style.cursor = 'grabbing';
+      }
+    };
+
     const handleMouseMove = (event: MouseEvent) => {
       if (!isLocked.current) return;
       
@@ -86,6 +93,11 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
       
       // Clamp pitch to prevent over-rotation
       pitch.current = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, pitch.current));
+    };
+
+    const handleMouseUp = () => {
+      isLocked.current = false;
+      document.body.style.cursor = 'default';
     };
 
     // Touch controls for mobile
@@ -116,19 +128,16 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
       isLocked.current = false;
     };
 
-    // Click to enable mouse look
-    const handleCanvasClick = () => {
-      isLocked.current = !isLocked.current;
-    };
-
     // Add event listeners
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
     window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mouseleave', handleMouseUp);
     
     const canvas = document.querySelector('canvas');
     if (canvas) {
-      canvas.addEventListener('click', handleCanvasClick);
       canvas.addEventListener('touchstart', handleTouchStart);
       canvas.addEventListener('touchmove', handleTouchMove);
       canvas.addEventListener('touchend', handleTouchEnd);
@@ -138,9 +147,11 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('mouseleave', handleMouseUp);
       
       if (canvas) {
-        canvas.removeEventListener('click', handleCanvasClick);
         canvas.removeEventListener('touchstart', handleTouchStart);
         canvas.removeEventListener('touchmove', handleTouchMove);
         canvas.removeEventListener('touchend', handleTouchEnd);

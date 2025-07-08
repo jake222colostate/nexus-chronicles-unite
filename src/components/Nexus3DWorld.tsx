@@ -4,7 +4,7 @@ import { Text, Sphere, Cylinder, Ring } from '@react-three/drei';
 import { Mesh, Vector3 } from 'three';
 import { NexusGround } from './NexusGround';
 import { NexusFirstPersonController } from './NexusFirstPersonController';
-// import { NexusVendorStand } from './NexusVendorStand'; // Temporarily commented out for debugging
+import { NexusVendorStand } from './NexusVendorStand';
 
 interface Nexus3DWorldProps {
   gameState: any;
@@ -126,11 +126,27 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
             />
           </mesh>
 
-          {/* Test cube to verify basic rendering */}
-          <mesh position={[0, 2, 0]}>
-            <boxGeometry args={[1, 1, 1]} />
-            <meshStandardMaterial color="#00ff00" />
-          </mesh>
+          {/* Vendor Stands */}
+          <NexusVendorStand
+            position={[-8, 0, -8]}
+            vendorName="Nexus Merchant"
+            standType="nexus"
+            onInteract={() => handleVendorInteraction('nexus')}
+          />
+          
+          <NexusVendorStand
+            position={[8, 0, -8]}
+            vendorName="Supply Keeper"
+            standType="supplies"
+            onInteract={() => handleVendorInteraction('supplies')}
+          />
+          
+          <NexusVendorStand
+            position={[0, 0, -12]}
+            vendorName="Staff Crafter"
+            standType="staffs"
+            onInteract={() => handleVendorInteraction('staffs')}
+          />
 
           {/* First Person Camera Controller */}
           <NexusFirstPersonController speed={8} sensitivity={0.003} />

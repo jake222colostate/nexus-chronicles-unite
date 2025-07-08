@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Text, Sphere, Cylinder, Box } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 import { Mesh } from 'three';
 
 interface NexusVendorStandProps {
@@ -47,16 +47,14 @@ export const NexusVendorStand: React.FC<NexusVendorStandProps> = ({
     <group position={position}>
       {/* Stand Base */}
       <mesh position={[0, 0.5, 0]}>
-        <Cylinder args={[1.2, 1.2, 1]}>
-          <meshStandardMaterial color={colors.primary} />
-        </Cylinder>
+        <cylinderGeometry args={[1.2, 1.2, 1]} />
+        <meshStandardMaterial color={colors.primary} />
       </mesh>
 
       {/* Stand Top */}
       <mesh position={[0, 1, 0]}>
-        <Cylinder args={[1.5, 1.2, 0.2]}>
-          <meshStandardMaterial color={colors.secondary} />
-        </Cylinder>
+        <cylinderGeometry args={[1.5, 1.2, 0.2]} />
+        <meshStandardMaterial color={colors.secondary} />
       </mesh>
 
       {/* Vendor Character */}
@@ -69,23 +67,20 @@ export const NexusVendorStand: React.FC<NexusVendorStandProps> = ({
         scale={hovered ? 1.1 : 1}
       >
         {/* Head */}
-        <Sphere args={[0.3]}>
-          <meshStandardMaterial color="#FDBCB4" />
-        </Sphere>
+        <sphereGeometry args={[0.3, 16, 16]} />
+        <meshStandardMaterial color="#FDBCB4" />
       </mesh>
 
       {/* Body (separate from head to avoid nesting issues) */}
       <mesh position={[0, 1.5, 0]}>
-        <Cylinder args={[0.25, 0.35, 0.6]}>
-          <meshStandardMaterial color={colors.primary} />
-        </Cylinder>
+        <cylinderGeometry args={[0.25, 0.35, 0.6]} />
+        <meshStandardMaterial color={colors.primary} />
       </mesh>
 
       {/* Hat */}
       <mesh position={[0, 2.35, 0]}>
-        <Cylinder args={[0.1, 0.35, 0.2]}>
-          <meshStandardMaterial color={colors.secondary} />
-        </Cylinder>
+        <cylinderGeometry args={[0.1, 0.35, 0.2]} />
+        <meshStandardMaterial color={colors.secondary} />
       </mesh>
 
       {/* Vendor Name */}
@@ -114,13 +109,12 @@ export const NexusVendorStand: React.FC<NexusVendorStandProps> = ({
 
       {/* Simple Display Item */}
       <mesh position={[0, 1.15, 0.5]}>
-        <Box args={[0.2, 0.2, 0.2]}>
-          <meshStandardMaterial 
-            color={colors.glow} 
-            emissive={colors.glow}
-            emissiveIntensity={0.3}
-          />
-        </Box>
+        <boxGeometry args={[0.2, 0.2, 0.2]} />
+        <meshStandardMaterial 
+          color={colors.glow} 
+          emissive={colors.glow}
+          emissiveIntensity={0.3}
+        />
       </mesh>
 
       {/* Ambient lighting */}
