@@ -26,11 +26,8 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   const navigate = useNavigate();
   
   const handleRealmSwitch = (realm: 'fantasy' | 'scifi') => {
-    if (isNexusWorld) {
-      // From Nexus World, always allow switching to specific realm
-      onRealmChange(realm);
-    } else if (realm !== currentRealm && !isTransitioning) {
-      // From main game, only switch if different realm
+    // Always switch to the specified realm, regardless of current state
+    if (!isTransitioning) {
       onRealmChange(realm);
     }
   };

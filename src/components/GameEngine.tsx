@@ -63,18 +63,16 @@ const GameEngine: React.FC = () => {
     switchRealm
   } = useUIStateManager(gameState);
 
-  // Handle navigation from Nexus World
+  // Handle navigation from Nexus World - force realm switch
   useEffect(() => {
     const state = location.state as { selectedRealm?: 'fantasy' | 'scifi' };
-    console.log('GameEngine: Navigation state:', state);
-    console.log('GameEngine: Current realm:', currentRealm);
-    if (state?.selectedRealm && state.selectedRealm !== currentRealm) {
-      console.log('GameEngine: Switching to realm:', state.selectedRealm);
+    if (state?.selectedRealm) {
+      // Always switch to the selected realm, even if it's the same as current
       switchRealm(state.selectedRealm);
       // Clear the navigation state to prevent repeated switches
       window.history.replaceState(null, '', location.pathname);
     }
-  }, [location.state, currentRealm, switchRealm]);
+  }, [location.state, switchRealm]);
 
   const [enemyCount, setEnemyCount] = useState(0);
 
