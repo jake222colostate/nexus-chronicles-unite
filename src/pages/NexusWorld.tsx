@@ -99,6 +99,7 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
         isTransitioning={false}
         playerDistance={0}
         hideJourneyBar={true}
+        isNexusWorld={true}
       />
     </div>
   );

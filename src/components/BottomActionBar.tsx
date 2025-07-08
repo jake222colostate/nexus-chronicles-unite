@@ -11,6 +11,7 @@ interface BottomActionBarProps {
   isTransitioning?: boolean;
   playerDistance?: number;
   hideJourneyBar?: boolean;
+  isNexusWorld?: boolean;
 }
 
 export const BottomActionBar: React.FC<BottomActionBarProps> = ({
@@ -18,13 +19,14 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   onRealmChange,
   isTransitioning = false,
   playerDistance = 0,
-  hideJourneyBar = false
+  hideJourneyBar = false,
+  isNexusWorld = false
 }) => {
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
   const navigate = useNavigate();
   
   const handleRealmSwitch = (realm: 'fantasy' | 'scifi') => {
-    if (realm !== currentRealm && !isTransitioning) {
+    if ((isNexusWorld || realm !== currentRealm) && !isTransitioning) {
       onRealmChange(realm);
     }
   };
