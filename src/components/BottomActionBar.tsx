@@ -57,8 +57,8 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
         </Button>
       </div>
       
-      {/* Simple Journey Progress Bar - hidden in Nexus World and Sci-Fi realm */}
-      {!hideJourneyBar && currentRealm === 'fantasy' && (
+      {/* Simple Journey Progress Bar - hidden in Nexus World */}
+      {!hideJourneyBar && (
         <div className="px-4 pb-2">
           <div className="text-center mb-1">
             <span className="text-white/90 text-xs font-medium">
@@ -70,22 +70,6 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
               className="bg-gradient-to-r from-purple-500 to-cyan-500 h-1 rounded-full transition-all duration-500"
               style={{ width: `${Math.min(100, (playerDistance % 100))}%` }}
             />
-          </div>
-        </div>
-      )}
-
-      {/* 5-slot hotbar for sci-fi realm */}
-      {currentRealm === 'scifi' && (
-        <div className="absolute bottom-32 left-4">
-          <div className="flex gap-2">
-            {Array.from({ length: 5 }, (_, i) => (
-              <div
-                key={i}
-                className="w-12 h-12 border-2 border-cyan-400/60 bg-slate-800/50 rounded-lg flex items-center justify-center backdrop-blur-md"
-              >
-                <span className="text-cyan-300 text-sm">{i + 1}</span>
-              </div>
-            ))}
           </div>
         </div>
       )}
