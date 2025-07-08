@@ -25,18 +25,18 @@ interface CannonPlatformSystemProps {
   gameState?: any;
 }
 
-// Predefined cannon positions in a circular pattern around the center
+// Predefined cannon positions on the light blue platform towards bottom of scifi world
 const CANNON_POSITIONS: [number, number, number][] = [
-  [0, 1, 0],      // Center
-  [-3, 1, -2],    // Front left
-  [3, 1, -2],     // Front right
-  [-5, 1, 0],     // Left
-  [5, 1, 0],      // Right
-  [-3, 1, 2],     // Back left
-  [3, 1, 2],      // Back right
-  [0, 1, -4],     // Front center
-  [0, 1, 4],      // Back center
-  [-6, 1, -3],    // Far left
+  [0, 2.5, 8],      // Center of platform
+  [-2, 2.5, 7],     // Front left
+  [2, 2.5, 7],      // Front right
+  [-4, 2.5, 8],     // Left
+  [4, 2.5, 8],      // Right
+  [-2, 2.5, 9],     // Back left
+  [2, 2.5, 9],      // Back right
+  [0, 2.5, 6],      // Front center
+  [0, 2.5, 10],     // Back center
+  [-3, 2.5, 6],     // Far left
 ];
 
 export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
