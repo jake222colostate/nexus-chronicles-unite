@@ -9,16 +9,16 @@ interface NexusWorldProps {
   gameState?: any;
 }
 
-const NexusWorld: React.FC<NexusWorldProps> = ({ 
-  gameState = { 
-    mana: 1000, 
-    energyCredits: 800, 
-    nexusShards: 25, 
-    manaPerSecond: 15, 
+const NexusWorld: React.FC<NexusWorldProps> = ({
+  gameState = {
+    mana: 1000,
+    energyCredits: 800,
+    nexusShards: 25,
+    manaPerSecond: 15,
     energyPerSecond: 12,
-  convergenceCount: 3,
-  convergenceProgress: 45
-  }
+    convergenceCount: 3,
+    convergenceProgress: 45,
+  },
 }) => {
   const navigate = useNavigate();
 
