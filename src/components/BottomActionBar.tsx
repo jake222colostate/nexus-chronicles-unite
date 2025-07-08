@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface BottomActionBarProps {
   currentRealm: 'fantasy' | 'scifi';
-  onRealmChange: (realm: 'fantasy' | 'scifi') => void;
+  onRealmChange: (realm?: 'fantasy' | 'scifi') => void;
   isTransitioning?: boolean;
   playerDistance?: number;
   hideJourneyBar?: boolean;
@@ -26,7 +26,11 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   const navigate = useNavigate();
   
   const handleRealmSwitch = (realm: 'fantasy' | 'scifi') => {
-    if ((isNexusWorld || realm !== currentRealm) && !isTransitioning) {
+    if (isNexusWorld) {
+      // From Nexus World, always allow switching to specific realm
+      onRealmChange(realm);
+    } else if (realm !== currentRealm && !isTransitioning) {
+      // From main game, only switch if different realm
       onRealmChange(realm);
     }
   };

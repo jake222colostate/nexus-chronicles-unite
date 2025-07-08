@@ -61,10 +61,14 @@ export const useUIStateManager = (gameState: GameState) => {
     return Math.min(100, (fantasyProgress + scifiProgress + manaProgress + energyProgress) / 4);
   }, [gameState.fantasyJourneyDistance, gameState.scifiJourneyDistance, gameState.mana, gameState.energyCredits]);
 
-  const switchRealm = useCallback(() => {
+  const switchRealm = useCallback((targetRealm?: 'fantasy' | 'scifi') => {
     setIsTransitioning(true);
     setTimeout(() => {
-      setCurrentRealm(prev => prev === 'fantasy' ? 'scifi' : 'fantasy');
+      if (targetRealm) {
+        setCurrentRealm(targetRealm);
+      } else {
+        setCurrentRealm(prev => prev === 'fantasy' ? 'scifi' : 'fantasy');
+      }
       setIsTransitioning(false);
     }, 500);
   }, []);
