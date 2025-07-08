@@ -162,7 +162,7 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
       direction.current.normalize();
     }
     
-    // Apply camera rotation to movement direction
+    // Apply only yaw rotation to movement direction (no pitch affects movement)
     direction.current.applyAxisAngle(new Vector3(0, 1, 0), yaw.current);
     
     // Update velocity with movement
@@ -174,9 +174,18 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
     // Keep camera above ground
     camera.position.y = Math.max(1.5, camera.position.y);
     
-    // Apply rotation to camera
-    euler.current.set(pitch.current, yaw.current, 0);
-    camera.rotation.setFromVector3(euler.current);
+    // Apply rotation to camera using lookAt for proper orientation
+    const lookDirection = new Vector3(
+      Math.sin(yaw.current) * Math.cos(pitch.current),
+      Math.sin(pitch.current),
+      Math.cos(yaw.current) * Math.cos(pitch.current)
+    );
+    
+    const target = camera.position.clone().add(lookDirection);
+    camera.lookAt(target);
+    
+    // Ensure camera up vector is always pointing up (prevents tilting)
+    camera.up.set(0, 1, 0);
   });
 
   return null;
