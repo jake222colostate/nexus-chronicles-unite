@@ -6,54 +6,6 @@ import { NexusGround } from './NexusGround';
 import { NexusFirstPersonController } from './NexusFirstPersonController';
 // import { NexusVendorStand } from './NexusVendorStand'; // Temporarily commented out for debugging
 
-
-const NexusCore3D: React.FC = () => {
-  const coreRef = useRef<Mesh>(null);
-
-  useFrame((state) => {
-    if (coreRef.current) {
-      coreRef.current.rotation.y += 0.02;
-      coreRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
-    }
-  });
-
-  return (
-    <group position={[0, 4, 0]}>
-      {/* Core Orb */}
-      <mesh ref={coreRef}>
-        <Sphere args={[1.5]}>
-          <meshStandardMaterial 
-            color="#FFD700" 
-            emissive="#FFD700"
-            emissiveIntensity={0.5}
-            transparent
-            opacity={0.8}
-          />
-        </Sphere>
-      </mesh>
-
-      {/* Orbiting Rings */}
-      {[1, 2, 3].map((i) => (
-        <mesh key={i} rotation={[Math.PI / 4 * i, 0, Math.PI / 3 * i]}>
-          <Ring args={[2 + i * 0.5, 2.2 + i * 0.5, 32]}>
-            <meshStandardMaterial 
-              color="#4A90E2" 
-              transparent 
-              opacity={0.3}
-              emissive="#4A90E2"
-              emissiveIntensity={0.1}
-            />
-          </Ring>
-        </mesh>
-      ))}
-
-      {/* Core Light */}
-      <pointLight position={[0, 0, 0]} color="#FFD700" intensity={2} distance={20} />
-    </group>
-  );
-};
-
-
 interface Nexus3DWorldProps {
   gameState: any;
   onUpgrade: (upgradeType: string) => void;
@@ -73,7 +25,6 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
     ...gameState
   };
 
-  // Add error handling for Canvas initialization
   console.log('Nexus3DWorld: Initializing with gameState:', safeGameState);
 
   // Vendor interaction handlers
@@ -165,32 +116,15 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
             </mesh>
           </group>
 
-          {/* Central Nexus Core */}
-          <NexusCore3D />
-
-          {/* Vendor Stands - Temporarily commented out for debugging */}
-          {/*
-          <NexusVendorStand
-            position={[-8, 0, -8]}
-            vendorName="Nexus Merchant"
-            standType="nexus"
-            onInteract={() => handleVendorInteraction('nexus')}
-          />
-          
-          <NexusVendorStand
-            position={[8, 0, -8]}
-            vendorName="Supply Keeper"
-            standType="supplies"
-            onInteract={() => handleVendorInteraction('supplies')}
-          />
-          
-          <NexusVendorStand
-            position={[-8, 0, 8]}
-            vendorName="Staff Crafter"
-            standType="staffs"
-            onInteract={() => handleVendorInteraction('staffs')}
-          />
-          */}
+          {/* Simple Central Core instead of NexusCore3D */}
+          <mesh position={[0, 3, 0]}>
+            <sphereGeometry args={[1.5, 32, 32]} />
+            <meshStandardMaterial 
+              color="#FFD700" 
+              emissive="#FFD700"
+              emissiveIntensity={0.3}
+            />
+          </mesh>
 
           {/* Test cube to verify basic rendering */}
           <mesh position={[0, 2, 0]}>
