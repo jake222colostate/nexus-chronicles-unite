@@ -34,14 +34,14 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     const playerChunkX = Math.floor(roundedPlayerX / chunkSize);
     const playerChunkZ = Math.floor(roundedPlayerZ / chunkSize);
     
-    // EXTREME PERFORMANCE FIX: Minimal render distance for 60fps
-    const maxRenderDistance = Math.min(renderDistance, 80); // Drastically reduced from 200
-    const chunkRadius = Math.min(Math.ceil(maxRenderDistance / chunkSize), 2); // Max 2 chunks radius
-    const farAheadChunks = Math.min(Math.ceil(maxRenderDistance / chunkSize) + 2, 3); // Max 3 ahead
+    // INCREASED: Higher render distance for infinite mountain rendering
+    const maxRenderDistance = Math.min(renderDistance, 200); // Increased from 80 to 200
+    const chunkRadius = Math.min(Math.ceil(maxRenderDistance / chunkSize), 4); // Increased to 4 chunks radius
+    const farAheadChunks = Math.min(Math.ceil(maxRenderDistance / chunkSize) + 3, 6); // Increased to 6 ahead
     
-    // Extreme chunk limit reduction for 60fps
+    // INCREASED: More chunks for infinite mountain rendering
     let chunkCount = 0;
-    const maxChunks = 25; // Reduced from 100 to 25
+    const maxChunks = 60; // Increased from 25 to 60
     
     // Generate minimal chunks without overlap
     for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius && chunkCount < maxChunks; x++) {
@@ -78,11 +78,11 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     console.log(`ChunkSystem: Generated ${chunks.length} chunks (performance optimized)`);
     return chunks;
   }, [
-    // EXTREME PERFORMANCE FIX: Ultra low frequency recalculation
-    Math.floor(playerPosition.x / 100) * 100, // Increased from 50 to 100
-    Math.floor(Math.abs(playerPosition.z) / 100) * 100, // Increased from 50 to 100
+    // INCREASED RESPONSIVENESS: More frequent recalculation for infinite rendering
+    Math.floor(playerPosition.x / 50) * 50, // Reduced from 100 to 50 for better responsiveness
+    Math.floor(Math.abs(playerPosition.z) / 50) * 50, // Reduced from 100 to 50 for better responsiveness
     chunkSize, 
-    Math.min(renderDistance, 80) // Updated to match new render distance
+    Math.min(renderDistance, 200) // Updated to match new render distance
   ]);
 
   return <>{children(activeChunks)}</>;

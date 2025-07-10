@@ -21,7 +21,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
   maxY = 20,
   sensitivity = 1.0,
   realm = 'fantasy',
-  maxRotation = Math.PI / 6, // 30 degrees in radians
+  maxRotation = Math.PI * 2, // Full 360 degrees in radians
   radius = 10, // Default radius for circular movement
   centerPoint = [0, 4, 0], // Default center point at upgrade level
   minZoom = 5, // Minimum zoom distance
@@ -91,11 +91,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         // Circular movement around center point (for scifi realm)
         if (realm === 'scifi') {
           const rotateAmount = deltaX * sensitivity * 0.005;
-          const maxAngleChange = maxRotation / currentRadius.current;
-          targetAngle.current = Math.max(
-            currentAngle.current - maxAngleChange,
-            Math.min(currentAngle.current + maxAngleChange, targetAngle.current - rotateAmount)
-          );
+          targetAngle.current -= rotateAmount; // Remove rotation limits for full 360
         }
         
         lastX.current = event.touches[0].clientX;
@@ -146,11 +142,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       // Circular movement around center point (for scifi realm)
       if (realm === 'scifi') {
         const rotateAmount = deltaX * sensitivity * 0.005;
-        const maxAngleChange = maxRotation / currentRadius.current;
-        targetAngle.current = Math.max(
-          currentAngle.current - maxAngleChange,
-          Math.min(currentAngle.current + maxAngleChange, targetAngle.current - rotateAmount)
-        );
+        targetAngle.current -= rotateAmount; // Remove rotation limits for full 360
       }
       
       lastX.current = event.clientX;

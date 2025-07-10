@@ -30,20 +30,20 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       // Forward movement - no limits for infinite world
       if ((event.key === 'w' || event.key === 'W' || event.key === 'ArrowUp') && canMoveForward) {
-        moveSpeed.current = 5; // Increased speed for infinite world
+        moveSpeed.current = 7; // Increased speed from 5 to 7
         moveDirection.current = 1;
       }
       // Backward movement - allow but with reasonable limit
       if (event.key === 's' || event.key === 'S' || event.key === 'ArrowDown') {
-        moveSpeed.current = 5;
+        moveSpeed.current = 7; // Increased speed from 5 to 7
         moveDirection.current = -1;
       }
-      // Look controls
+      // Look controls - allow full 360 degree rotation
       if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft') {
-        yawAngle.current = Math.max(-Math.PI, yawAngle.current - 0.05);
+        yawAngle.current -= 0.05; // Remove limits for full rotation
       }
       if (event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight') {
-        yawAngle.current = Math.min(Math.PI, yawAngle.current + 0.05);
+        yawAngle.current += 0.05; // Remove limits for full rotation
       }
     };
 
@@ -78,7 +78,7 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
         const deltaX = event.clientX - lastMouseX.current;
         lastMouseX.current = event.clientX;
         
-        yawAngle.current = Math.max(-Math.PI, Math.min(Math.PI, yawAngle.current + deltaX * 0.003));
+        yawAngle.current += deltaX * 0.003; // Remove limits for full 360 rotation
       }
     };
 
@@ -115,20 +115,20 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
         
         // Movement in upper portion (forward)
         if (y < rect.height * 0.3 && canMoveForward) {
-          moveSpeed.current = 5;
+          moveSpeed.current = 7; // Increased speed from 5 to 7
           moveDirection.current = 1;
         }
         // Movement in lower portion (backward)
         else if (y > rect.height * 0.7) {
-          moveSpeed.current = 5;
+          moveSpeed.current = 7; // Increased speed from 5 to 7
           moveDirection.current = -1;
         }
         
-        // Look direction based on horizontal position
+        // Look direction based on horizontal position - allow full rotation
         if (x < rect.width * 0.3) {
-          yawAngle.current = Math.max(-Math.PI, yawAngle.current - 0.1);
+          yawAngle.current -= 0.1; // Remove limits for full rotation
         } else if (x > rect.width * 0.7) {
-          yawAngle.current = Math.min(Math.PI, yawAngle.current + 0.1);
+          yawAngle.current += 0.1; // Remove limits for full rotation
         }
       }
     };
