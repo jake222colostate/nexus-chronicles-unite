@@ -22,7 +22,7 @@ export const TapResourceEffect: React.FC<TapResourceEffectProps> = ({
   }, [onComplete]);
 
   return (
-    <div className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none transition-all duration-1000 ${
+    <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 pointer-events-none transition-all duration-1000 ${
       mounted ? 'opacity-0 -translate-y-20 scale-150' : 'opacity-100 translate-y-0 scale-100'
     }`}>
       <div className={`flex items-center gap-2 px-3 py-2 rounded-full backdrop-blur-md ${

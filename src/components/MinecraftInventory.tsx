@@ -27,7 +27,7 @@ export const MinecraftInventory: React.FC<MinecraftInventoryProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2">
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2">
       <div className="bg-stone-800 border-4 border-stone-600 rounded-lg p-3 max-w-sm w-full max-h-[85vh] overflow-y-auto relative">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">

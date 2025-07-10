@@ -72,9 +72,9 @@ export const CrossRealmUpgradeSystem: React.FC<CrossRealmUpgradeSystemProps> = (
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
+      className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
       style={{
-        position: 'fixed',
+        position: 'absolute',
         top: 0,
         left: 0,
         width: '100%',

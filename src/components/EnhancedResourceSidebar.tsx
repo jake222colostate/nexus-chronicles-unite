@@ -42,7 +42,7 @@ export const EnhancedResourceSidebar: React.FC<EnhancedResourceSidebarProps> = (
   };
 
   return (
-    <div className="fixed top-4 left-4 z-40 flex flex-col gap-2">
+    <div className="absolute top-4 left-4 z-40 flex flex-col gap-2">
       {/* Mana Resource */}
       <Card className={`backdrop-blur-md border-2 transition-all duration-300 ${
         realm === 'fantasy'
