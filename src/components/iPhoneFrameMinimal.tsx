@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { InventoryManager } from './InventoryManager';
 
 interface iPhoneFrameMinimalProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export const iPhoneFrameMinimal: React.FC<iPhoneFrameMinimalProps> = ({ children
         {/* Screen content - starts immediately below notch */}
         <div className="w-[375px] h-[667px] relative overflow-hidden bg-black">
           {children}
+          <InventoryManager />
         </div>
       </div>
     </div>
