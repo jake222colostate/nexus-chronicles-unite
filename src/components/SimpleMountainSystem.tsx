@@ -71,7 +71,7 @@ export const SimpleMountainSystem: React.FC<SimpleMountainSystemProps> = ({
         // Left side mountains
         instances.push({
           key: `left-${chunk.id}-${zOffset}`,
-          position: [-50, 0, finalZ] as [number, number, number],
+          position: [-35, 0, finalZ] as [number, number, number],
           scale: [2, 2, 2] as [number, number, number],
           seed: mountainSeed
         });
@@ -79,7 +79,7 @@ export const SimpleMountainSystem: React.FC<SimpleMountainSystemProps> = ({
         // Right side mountains
         instances.push({
           key: `right-${chunk.id}-${zOffset}`,
-          position: [50, 0, finalZ] as [number, number, number],
+          position: [35, 0, finalZ] as [number, number, number],
           scale: [2, 2, 2] as [number, number, number],
           seed: mountainSeed + 1000
         });

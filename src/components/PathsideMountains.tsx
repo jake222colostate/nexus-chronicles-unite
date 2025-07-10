@@ -20,7 +20,7 @@ export const PathsideMountains: React.FC = () => {
 
     const count = 15; // Increased for better infinite generation coverage
     const spacing = 8; // Keep current spacing
-    const offsetX = 40; // INCREASED from 25 to 40 - move mountains further from path
+    const offsetX = 30; // REDUCED from 40 to 30 - move mountains closer to path
     const scale = 0.08; // Slightly increased from 0.06 to 0.08 for more immersive feel
 
     console.log('PathsideMountains: Creating enlarged mountains with scale:', scale, 'at distance:', offsetX);

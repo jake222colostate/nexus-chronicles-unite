@@ -41,8 +41,8 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
         const mountainSeed = seed + i * 67;
         const z = worldZ - (i * mountainSpacing) + seededRandom(mountainSeed) * 10;
         
-        // Left side mountains - further from path
-        const leftX = -80 - seededRandom(mountainSeed + 1) * 30;
+        // Left side mountains - closer to path
+        const leftX = -60 - seededRandom(mountainSeed + 1) * 20;
         const leftY = seededRandom(mountainSeed + 2) * 2;
         
         const leftRotationX = (seededRandom(mountainSeed + 3) - 0.5) * 0.4;
@@ -57,9 +57,9 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
           scale: [leftScale, leftScale, leftScale] as [number, number, number]
         });
         
-        // Right side mountains - further from path  
+        // Right side mountains - closer to path  
         const rightSeed = mountainSeed + 1000;
-        const rightX = 80 + seededRandom(rightSeed + 1) * 30;
+        const rightX = 60 + seededRandom(rightSeed + 1) * 20;
         const rightY = seededRandom(rightSeed + 2) * 2;
         
         const rightRotationX = (seededRandom(rightSeed + 3) - 0.5) * 0.4;
