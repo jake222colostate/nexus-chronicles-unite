@@ -49,7 +49,7 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
   try {
     return (
       <Canvas
-        camera={{ position: [0, 8, 12], fov: 60 }}
+        camera={{ position: [0, 8, 15], fov: 60 }} // Moved camera back and adjusted angle
         style={{ height: '100%', width: '100%' }}
         gl={{ 
           antialias: false, 
@@ -115,16 +115,6 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
               />
             </mesh>
           </group>
-
-          {/* Simple Central Core instead of NexusCore3D */}
-          <mesh position={[0, 3, 0]}>
-            <sphereGeometry args={[1.5, 32, 32]} />
-            <meshStandardMaterial 
-              color="#FFD700" 
-              emissive="#FFD700"
-              emissiveIntensity={0.3}
-            />
-          </mesh>
 
           {/* Vendor Stands */}
           <NexusVendorStand

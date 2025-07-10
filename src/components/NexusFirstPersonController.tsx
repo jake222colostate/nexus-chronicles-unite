@@ -31,8 +31,8 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
 
   useEffect(() => {
     // Initialize camera position
-    camera.position.set(0, 2, 5);
-    camera.lookAt(0, 2, 0);
+    camera.position.set(0, 2, 8); // Moved back to see vendors
+    camera.lookAt(0, 2, -10); // Look towards vendors
     
     // Keyboard controls
     const handleKeyDown = (event: KeyboardEvent) => {

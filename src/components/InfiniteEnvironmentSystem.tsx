@@ -65,10 +65,10 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
   
   // FIXED: Much longer update intervals to prevent blinking
   const CHUNK_SIZE = 25;
-  // INCREASED: Higher render distance for infinite mountain rendering
-  const RENDER_DISTANCE = 200; // Increased from 150 to 200
-  const CLEANUP_DISTANCE = 400; // Increased from 300 to 400
-  const UPDATE_INTERVAL = 500; // Increased from 100ms to 500ms
+  // FIXED: Higher render distance for fantasy world infinite environment
+  const RENDER_DISTANCE = 250; // Increased from 200 to 250
+  const CLEANUP_DISTANCE = 450; // Increased from 400 to 450
+  const UPDATE_INTERVAL = 300; // Reduced from 500ms to 300ms for more responsive loading
 
   // Create a mountain at specified position - LOWERED into ground
   const createMountain = (x: number, z: number, seed: number): Group | null => {
@@ -256,9 +256,9 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
     const chunksToGenerate = [];
     const chunksToKeep = [];
     
-    // INCREASED: More chunks for infinite rendering
-    const startChunk = currentChunkId - 5; // Increased back to 5
-    const endChunk = currentChunkId + Math.ceil(RENDER_DISTANCE / CHUNK_SIZE) + 5; // Increased back to 5
+    // INCREASED: More chunks for continuous fantasy environment loading
+    const startChunk = currentChunkId - 6; // Increased from 5 to 6
+    const endChunk = currentChunkId + Math.ceil(RENDER_DISTANCE / CHUNK_SIZE) + 6; // Increased from 5 to 6
     
     for (let i = startChunk; i <= endChunk; i++) {
       if (!chunksRef.current.find(chunk => chunk.id === i)) {
