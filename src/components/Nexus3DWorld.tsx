@@ -6,6 +6,9 @@ import { NexusGround } from './NexusGround';
 import { NexusFirstPersonController } from './NexusFirstPersonController';
 import { NexusVendorStand } from './NexusVendorStand';
 import { NexusMerchantShop, SupplyKeeperShop, StaffCrafterShop } from './NexusVendorShops';
+import { NexusCentralCrystal } from './NexusCentralCrystal';
+import { NexusFloatingPlatform } from './NexusFloatingPlatforms';
+import { NexusSandboxGrid } from './NexusSandboxGrid';
 
 interface Nexus3DWorldProps {
   gameState: any;
@@ -37,13 +40,18 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
     setActiveShop(vendorType);
   };
 
+  // Sandbox grid interaction
+  const handleGridTileClick = (x: number, z: number) => {
+    console.log(`Clicked grid tile at ${x}, ${z}`);
+    // TODO: Implement upgrade placement logic
+  };
+
   // Purchase handler
   const handlePurchase = (item: any) => {
     console.log(`Purchasing ${item.name} for ${item.cost} ${item.currency}`);
     // TODO: Implement actual purchase logic
-    // This would deduct currency and give the item/upgrade
     onUpgrade(item.id);
-    setActiveShop(null); // Close shop after purchase
+    setActiveShop(null);
   };
 
   console.log('Nexus3DWorld: About to render Canvas');
@@ -224,26 +232,33 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
               </mesh>
             </group>
 
-            {/* Vendor Stands */}
-            <NexusVendorStand
-              position={[-8, 0, -8]}
-              vendorName="Nexus Merchant"
-              standType="nexus"
+            {/* Central Crystal - Replaces old core */}
+            <NexusCentralCrystal />
+
+            {/* Floating Vendor Platforms */}
+            <NexusFloatingPlatform 
+              position={[-8, 2, -8]}
+              vendorType="nexus"
               onInteract={() => handleVendorInteraction('nexus')}
             />
             
-            <NexusVendorStand
-              position={[8, 0, -8]}
-              vendorName="Supply Keeper"
-              standType="supplies"
+            <NexusFloatingPlatform 
+              position={[8, 2, -8]}
+              vendorType="supplies"
               onInteract={() => handleVendorInteraction('supplies')}
             />
             
-            <NexusVendorStand
-              position={[0, 0, -12]}
-              vendorName="Staff Crafter"
-              standType="staffs"
+            <NexusFloatingPlatform 
+              position={[0, 2, -12]}
+              vendorType="staffs"
               onInteract={() => handleVendorInteraction('staffs')}
+            />
+
+            {/* Sandbox Grid System */}
+            <NexusSandboxGrid 
+              position={[0, 0, 8]}
+              size={8}
+              onTileClick={handleGridTileClick}
             />
 
             {/* First Person Camera Controller */}
