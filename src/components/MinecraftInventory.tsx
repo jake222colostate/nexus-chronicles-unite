@@ -1,33 +1,18 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import { useInventoryStore, InventoryItem } from '@/stores/useInventoryStore';
 
 interface MinecraftInventoryProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface InventoryItem {
-  id: string;
-  name: string;
-  icon: string;
-  quantity: number;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
-}
-
 export const MinecraftInventory: React.FC<MinecraftInventoryProps> = ({
   isOpen,
   onClose
 }) => {
-  // Sample inventory items
-  const inventoryItems: (InventoryItem | null)[] = [
-    { id: '1', name: 'Magic Crystal', icon: '💎', quantity: 15, rarity: 'epic' },
-    { id: '2', name: 'Health Potion', icon: '🧪', quantity: 3, rarity: 'common' },
-    { id: '3', name: 'Ancient Scroll', icon: '📜', quantity: 1, rarity: 'legendary' },
-    { id: '4', name: 'Iron Sword', icon: '⚔️', quantity: 1, rarity: 'rare' },
-    { id: '5', name: 'Wood Logs', icon: '🪵', quantity: 64, rarity: 'common' },
-    ...Array(31).fill(null) // Empty slots
-  ];
+  const { hotbar, inventory } = useInventoryStore();
 
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
@@ -61,7 +46,7 @@ export const MinecraftInventory: React.FC<MinecraftInventoryProps> = ({
         <div className="mb-4">
           <h3 className="text-sm font-semibold text-stone-200 mb-2">Main Inventory</h3>
           <div className="grid grid-cols-6 gap-1 p-2 bg-stone-900/50 border-2 border-stone-700 rounded">
-            {inventoryItems.slice(0, 24).map((item, index) => (
+            {inventory.map((item, index) => (
               <div
                 key={index}
                 className={`
@@ -102,9 +87,9 @@ export const MinecraftInventory: React.FC<MinecraftInventoryProps> = ({
         <div>
           <h3 className="text-sm font-semibold text-stone-200 mb-2">Hotbar</h3>
           <div className="grid grid-cols-6 gap-1 p-2 bg-stone-900/70 border-2 border-stone-700 rounded">
-            {inventoryItems.slice(24, 30).map((item, index) => (
+            {hotbar.map((item, index) => (
               <div
-                key={index + 24}
+                key={index}
                 className={`
                   w-10 h-10 border-2 rounded flex flex-col items-center justify-center
                   cursor-pointer hover:bg-stone-600/50 transition-all duration-200
@@ -129,7 +114,7 @@ export const MinecraftInventory: React.FC<MinecraftInventoryProps> = ({
 
         {/* Stats */}
         <div className="mt-3 text-center text-stone-400 text-xs">
-          {inventoryItems.filter(item => item !== null).length} / 30 slots used
+          {[...hotbar, ...inventory].filter(item => item !== null).length} / 30 slots used
         </div>
       </div>
     </div>

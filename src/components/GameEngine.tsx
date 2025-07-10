@@ -20,6 +20,7 @@ import { useGameStateManager, fantasyBuildings, scifiBuildings } from './GameSta
 import { useGameLoopManager } from './GameLoopManager';
 import { useUpgradeManagers } from './UpgradeManagers';
 import { useUIStateManager } from './UIStateManager';
+import { InventoryManager } from './InventoryManager';
 
 import { FantasyAutoClickerUpgradeSystem } from './FantasyAutoClickerUpgradeSystem';
 import { useAutoManaSystem } from '@/hooks/useAutoManaSystem';
@@ -499,6 +500,9 @@ const GameEngine: React.FC = () => {
           )}
         </>
       )}
+
+      {/* Inventory System - disabled in map editor */}
+      {!isEditorActive && <InventoryManager />}
 
       {/* Map Editor UI Components */}
       <MapEditorToolbar />

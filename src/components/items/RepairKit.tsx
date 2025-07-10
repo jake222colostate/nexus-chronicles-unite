@@ -5,9 +5,10 @@ import { Mesh } from 'three';
 interface RepairKitProps {
   position: [number, number, number];
   onPickup?: () => void;
+  realm?: 'fantasy' | 'scifi';
 }
 
-export const RepairKit: React.FC<RepairKitProps> = ({ position, onPickup }) => {
+export const RepairKit: React.FC<RepairKitProps> = ({ position, onPickup, realm = 'scifi' }) => {
   const meshRef = useRef<Mesh>(null);
 
   // Floating animation
@@ -19,29 +20,57 @@ export const RepairKit: React.FC<RepairKitProps> = ({ position, onPickup }) => {
   });
 
   const handleClick = () => {
-    onPickup?.();
+    if (realm === 'scifi') {
+      onPickup?.();
+    }
   };
 
   return (
     <group position={position}>
+      {/* Main toolbox body */}
       <mesh ref={meshRef} onClick={handleClick}>
-        {/* Main repair kit body */}
-        <boxGeometry args={[0.3, 0.15, 0.2]} />
-        <meshStandardMaterial color="#ff4444" metalness={0.3} roughness={0.7} />
+        <boxGeometry args={[0.4, 0.2, 0.25]} />
+        <meshStandardMaterial color="#4a5568" metalness={0.7} roughness={0.3} />
       </mesh>
       
-      {/* Cross symbol on top */}
-      <mesh position={[0, 0.1, 0]}>
-        <boxGeometry args={[0.15, 0.03, 0.03]} />
-        <meshStandardMaterial color="#ffffff" />
+      {/* Toolbox lid */}
+      <mesh position={[0, 0.12, 0]}>
+        <boxGeometry args={[0.42, 0.04, 0.27]} />
+        <meshStandardMaterial color="#2d3748" metalness={0.7} roughness={0.3} />
       </mesh>
-      <mesh position={[0, 0.1, 0]}>
-        <boxGeometry args={[0.03, 0.15, 0.03]} />
-        <meshStandardMaterial color="#ffffff" />
+      
+      {/* Handle */}
+      <mesh position={[0, 0.18, 0]}>
+        <cylinderGeometry args={[0.02, 0.02, 0.15]} />
+        <meshStandardMaterial color="#1a202c" metalness={0.9} roughness={0.1} />
+      </mesh>
+      
+      {/* Latch */}
+      <mesh position={[0, 0.05, 0.13]}>
+        <boxGeometry args={[0.08, 0.02, 0.02]} />
+        <meshStandardMaterial color="#ffd700" metalness={0.8} roughness={0.2} />
+      </mesh>
+      
+      {/* Corner reinforcements */}
+      <mesh position={[-0.18, -0.05, -0.1]}>
+        <boxGeometry args={[0.03, 0.03, 0.03]} />
+        <meshStandardMaterial color="#1a202c" metalness={0.9} roughness={0.1} />
+      </mesh>
+      <mesh position={[0.18, -0.05, -0.1]}>
+        <boxGeometry args={[0.03, 0.03, 0.03]} />
+        <meshStandardMaterial color="#1a202c" metalness={0.9} roughness={0.1} />
+      </mesh>
+      <mesh position={[-0.18, -0.05, 0.1]}>
+        <boxGeometry args={[0.03, 0.03, 0.03]} />
+        <meshStandardMaterial color="#1a202c" metalness={0.9} roughness={0.1} />
+      </mesh>
+      <mesh position={[0.18, -0.05, 0.1]}>
+        <boxGeometry args={[0.03, 0.03, 0.03]} />
+        <meshStandardMaterial color="#1a202c" metalness={0.9} roughness={0.1} />
       </mesh>
       
       {/* Glow effect */}
-      <pointLight color="#ff4444" intensity={0.5} distance={2} decay={2} />
+      <pointLight color="#ffd700" intensity={0.3} distance={3} decay={2} />
     </group>
   );
 };
