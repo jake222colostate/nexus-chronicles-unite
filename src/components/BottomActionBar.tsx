@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Package, Crown } from 'lucide-react';
 import { MinecraftInventory } from './MinecraftInventory';
-import { MinecraftHotbar } from './MinecraftHotbar';
 import { useNavigate } from 'react-router-dom';
 
 interface BottomActionBarProps {
@@ -24,7 +23,6 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
   isNexusWorld = false
 }) => {
   const [isInventoryOpen, setIsInventoryOpen] = useState(false);
-  const [selectedHotbarSlot, setSelectedHotbarSlot] = useState(0);
   const navigate = useNavigate();
   
   const handleRealmSwitch = (realm: 'fantasy' | 'scifi') => {
@@ -57,14 +55,6 @@ export const BottomActionBar: React.FC<BottomActionBarProps> = ({
         >
           <Package className="w-6 h-6" />
         </Button>
-      </div>
-      
-      {/* 5-slot hotbar positioned to the left of inventory button */}
-      <div className="absolute bottom-32 right-20">
-        <MinecraftHotbar
-          selectedSlot={selectedHotbarSlot}
-          onSlotSelect={setSelectedHotbarSlot}
-        />
       </div>
       
       {/* Simple Journey Progress Bar - hidden in Nexus World and Sci-Fi realm */}
