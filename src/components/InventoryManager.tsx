@@ -38,7 +38,7 @@ export const InventoryManager: React.FC = () => {
   return (
     <>
       {/* Hotbar - always visible */}
-      <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40">
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40">
         <MinecraftHotbar
           selectedSlot={selectedHotbarSlot}
           onSlotSelect={handleHotbarSlotSelect}
@@ -53,7 +53,7 @@ export const InventoryManager: React.FC = () => {
       />
 
       {/* Inventory Toggle Button - mobile friendly */}
-      <div className="fixed bottom-2 right-2 z-40">
+      <div className="absolute bottom-2 right-2 z-40">
         <button
           onClick={toggleInventory}
           className="w-12 h-12 bg-stone-800/90 border-2 border-stone-600 rounded-lg flex items-center justify-center text-white hover:bg-stone-700/90 transition-colors"
