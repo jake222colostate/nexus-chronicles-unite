@@ -52,10 +52,12 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
 
       {/* Resource Display */}
       <div className="absolute top-14 left-2 z-50">
+        {/* Resource Display */}
         <div className="bg-black/60 backdrop-blur-md rounded-lg border border-white/20 p-2 text-xs">
           <div className="text-purple-300">Mana: {(gameState?.mana || 0).toLocaleString()}</div>
           <div className="text-cyan-300">Energy: {(gameState?.energyCredits || 0).toLocaleString()}</div>
           <div className="text-yellow-300">Shards: {gameState?.nexusShards || 0}</div>
+          <div className="text-xs text-white/50 mt-1">Resources shared across realms</div>
         </div>
       </div>
 

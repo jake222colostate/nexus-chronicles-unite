@@ -9,6 +9,8 @@ import { NexusMerchantShop, SupplyKeeperShop, StaffCrafterShop } from './NexusVe
 import { NexusCentralCrystal } from './NexusCentralCrystal';
 import { NexusFloatingPlatform } from './NexusFloatingPlatforms';
 import { NexusSandboxGrid } from './NexusSandboxGrid';
+import { NexusResourceConverter } from './NexusResourceConverter';
+import { useGameStateStore } from '@/stores/useGameStateStore';
 
 interface Nexus3DWorldProps {
   gameState: any;
@@ -22,22 +24,30 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
   // Shop state management
   const [activeShop, setActiveShop] = useState<string | null>(null);
   
-  // Ensure gameState has all required properties with defaults
+  // Use global game state store
+  const globalGameState = useGameStateStore();
+  
+  // Merge provided gameState with global state (global state takes precedence)
   const safeGameState = {
     mana: 0,
     energyCredits: 0,
     nexusShards: 0,
     manaPerSecond: 0,
     energyPerSecond: 0,
-    ...gameState
+    ...gameState,
+    ...globalGameState // Global state overrides local state
   };
 
   console.log('Nexus3DWorld: Initializing with gameState:', safeGameState);
 
   // Vendor interaction handlers
   const handleVendorInteraction = (vendorType: string) => {
-    console.log(`Opening ${vendorType} shop`);
-    setActiveShop(vendorType);
+    if (vendorType === 'converter') {
+      setActiveShop('converter');
+    } else {
+      console.log(`Opening ${vendorType} shop`);
+      setActiveShop(vendorType);
+    }
   };
 
   // Sandbox grid interaction
@@ -46,12 +56,31 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
     // TODO: Implement upgrade placement logic
   };
 
-  // Purchase handler
+  // Purchase handler with global state integration
   const handlePurchase = (item: any) => {
     console.log(`Purchasing ${item.name} for ${item.cost} ${item.currency}`);
-    // TODO: Implement actual purchase logic
-    onUpgrade(item.id);
-    setActiveShop(null);
+    
+    // Use global state store methods for purchases
+    let success = false;
+    switch (item.currency) {
+      case 'mana':
+        success = globalGameState.spendMana(item.cost);
+        break;
+      case 'energyCredits':
+        success = globalGameState.spendEnergy(item.cost);
+        break;
+      case 'nexusShards':
+        success = globalGameState.spendNexusShards(item.cost);
+        break;
+    }
+    
+    if (success) {
+      globalGameState.unlockUpgrade(item.id);
+      onUpgrade(item.id);
+      setActiveShop(null);
+    } else {
+      console.log('Insufficient resources!');
+    }
   };
 
   console.log('Nexus3DWorld: About to render Canvas');
@@ -237,6 +266,30 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
               onInteract={() => handleVendorInteraction('staffs')}
             />
 
+            {/* Resource Converter Platform */}
+            <mesh 
+              position={[-12, 2, 0]} 
+              onClick={() => handleVendorInteraction('converter')}
+            >
+              <cylinderGeometry args={[1.2, 1.2, 0.3, 16]} />
+              <meshStandardMaterial 
+                color="#f59e0b"
+                emissive="#d97706"
+                emissiveIntensity={0.4}
+                metalness={0.7}
+                roughness={0.1}
+              />
+              {/* Converter Symbol */}
+              <mesh position={[0, 0.5, 0]}>
+                <torusGeometry args={[0.4, 0.1, 8, 16]} />
+                <meshStandardMaterial 
+                  color="#fbbf24"
+                  emissive="#f59e0b"
+                  emissiveIntensity={0.6}
+                />
+              </mesh>
+            </mesh>
+
             {/* Sandbox Grid System */}
             <NexusSandboxGrid 
               position={[0, 0, 8]}
@@ -272,6 +325,11 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
           onClose={() => setActiveShop(null)}
           gameState={safeGameState}
           onPurchase={handlePurchase}
+        />
+        
+        <NexusResourceConverter
+          isOpen={activeShop === 'converter'}
+          onClose={() => setActiveShop(null)}
         />
       </>
     );
