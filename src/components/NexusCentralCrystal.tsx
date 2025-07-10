@@ -38,51 +38,51 @@ export const NexusCentralCrystal: React.FC = () => {
       <mesh position={[0, 1.1, 0]} receiveShadow>
         <cylinderGeometry args={[1.5, 1.8, 0.3, 16]} />
         <meshStandardMaterial 
-          color="#4a4a8e"
-          metalness={0.9}
+          color="#60a5fa"
+          metalness={0.7}
           roughness={0.1}
-          emissive="#3a3a7e"
-          emissiveIntensity={0.4}
+          emissive="#3b82f6"
+          emissiveIntensity={0.2}
         />
       </mesh>
 
-      {/* Main Crystal */}
+      {/* Main Crystal - Brighter */}
       <mesh ref={crystalRef} position={[0, 4, 0]} castShadow>
         <coneGeometry args={[0.8, 4, 6]} />
         <meshStandardMaterial 
-          color="#6366f1"
+          color="#60a5fa"
           transparent
           opacity={0.9}
-          emissive="#4f46e5"
-          emissiveIntensity={0.8}
-          metalness={0.3}
+          emissive="#3b82f6"
+          emissiveIntensity={0.6}
+          metalness={0.2}
           roughness={0.1}
         />
       </mesh>
 
-      {/* Crystal Top */}
+      {/* Crystal Top - Bright */}
       <mesh position={[0, 6.5, 0]} castShadow>
         <coneGeometry args={[0.4, 1, 6]} />
         <meshStandardMaterial 
-          color="#8b5cf6"
+          color="#93c5fd"
           transparent
           opacity={0.95}
-          emissive="#7c3aed"
-          emissiveIntensity={1.2}
-          metalness={0.2}
+          emissive="#60a5fa"
+          emissiveIntensity={0.8}
+          metalness={0.1}
           roughness={0.05}
         />
       </mesh>
 
-      {/* Energy Beam */}
+      {/* Bright Energy Beam */}
       <mesh ref={beamRef} position={[0, 3.5, 0]}>
         <cylinderGeometry args={[0.1, 0.3, 7]} />
         <meshStandardMaterial 
-          color="#60a5fa"
+          color="#93c5fd"
           transparent
-          opacity={0.6}
-          emissive="#3b82f6"
-          emissiveIntensity={1.5}
+          opacity={0.8}
+          emissive="#60a5fa"
+          emissiveIntensity={1.0}
         />
       </mesh>
 
