@@ -37,8 +37,8 @@ export const InventoryManager: React.FC = () => {
 
   return (
     <>
-      {/* Hotbar - always visible */}
-      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-40">
+      {/* Hotbar - compact and less intrusive */}
+      <div className="fixed bottom-16 left-1/2 transform -translate-x-1/2 z-40">
         <MinecraftHotbar
           selectedSlot={selectedHotbarSlot}
           onSlotSelect={handleHotbarSlotSelect}
@@ -52,11 +52,11 @@ export const InventoryManager: React.FC = () => {
         onClose={() => setIsInventoryOpen(false)}
       />
 
-      {/* Inventory Toggle Button - mobile friendly */}
-      <div className="absolute bottom-2 right-2 z-40">
+      {/* Inventory Toggle Button - smaller and more discrete */}
+      <div className="fixed bottom-2 right-2 z-40">
         <button
           onClick={toggleInventory}
-          className="w-12 h-12 bg-stone-800/90 border-2 border-stone-600 rounded-lg flex items-center justify-center text-white hover:bg-stone-700/90 transition-colors"
+          className="w-8 h-8 bg-stone-800/80 border border-stone-600 rounded-md flex items-center justify-center text-white hover:bg-stone-700/80 transition-colors text-xs"
         >
           📦
         </button>

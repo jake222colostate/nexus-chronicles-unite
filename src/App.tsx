@@ -7,6 +7,7 @@ import Index from './pages/Index';
 import NexusWorld from './pages/NexusWorld';
 import NotFound from './pages/NotFound';
 import { iPhoneFrameMinimal as IPhoneFrameMinimal } from '@/components/iPhoneFrameMinimal';
+import { InventoryManager } from '@/components/InventoryManager';
 
 const queryClient = new QueryClient();
 
@@ -14,13 +15,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <IPhoneFrameMinimal>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/nexus-world" element={<NexusWorld />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </IPhoneFrameMinimal>
+        <div className="relative">
+          <IPhoneFrameMinimal>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/nexus-world" element={<NexusWorld />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </IPhoneFrameMinimal>
+          <InventoryManager />
+        </div>
         <Toaster />
       </Router>
     </QueryClientProvider>
