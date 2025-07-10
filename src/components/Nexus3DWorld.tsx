@@ -66,52 +66,157 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
         }}
       >
         <Suspense fallback={null}>
-          {/* Ambient lighting */}
-          <ambientLight intensity={0.3} />
+          {/* Enhanced Lighting System */}
+          {/* Ambient lighting for general illumination */}
+          <ambientLight intensity={0.4} color="#4a4a6a" />
           
-          {/* Main directional light */}
-          <directionalLight position={[10, 10, 5]} intensity={0.5} />
+          {/* Main directional light from above */}
+          <directionalLight 
+            position={[15, 20, 10]} 
+            intensity={0.8} 
+            color="#ffffff"
+            castShadow
+            shadow-mapSize-width={2048}
+            shadow-mapSize-height={2048}
+            shadow-camera-far={50}
+            shadow-camera-left={-20}
+            shadow-camera-right={20}
+            shadow-camera-top={20}
+            shadow-camera-bottom={-20}
+          />
+          
+          {/* Atmospheric rim lighting */}
+          <directionalLight 
+            position={[-10, 15, -5]} 
+            intensity={0.3} 
+            color="#6366f1"
+          />
+          
+          {/* Central point lights for dramatic effect */}
+          <pointLight 
+            position={[0, 5, 0]} 
+            intensity={0.6} 
+            color="#8b5cf6" 
+            distance={25}
+            decay={2}
+          />
+          
+          {/* Vendor area lighting */}
+          <pointLight 
+            position={[-8, 3, -8]} 
+            intensity={0.4} 
+            color="#10b981" 
+            distance={12}
+            decay={2}
+          />
+          
+          <pointLight 
+            position={[8, 3, -8]} 
+            intensity={0.4} 
+            color="#f59e0b" 
+            distance={12}
+            decay={2}
+          />
+          
+          <pointLight 
+            position={[0, 3, -12]} 
+            intensity={0.4} 
+            color="#3b82f6" 
+            distance={12}
+            decay={2}
+          />
+          
+          {/* Floor accent lighting */}
+          <pointLight 
+            position={[0, 1, 0]} 
+            intensity={0.3} 
+            color="#ec4899" 
+            distance={15}
+            decay={1.5}
+          />
+          
+          {/* Perimeter atmospheric lights */}
+          <pointLight 
+            position={[15, 8, 15]} 
+            intensity={0.2} 
+            color="#06b6d4" 
+            distance={20}
+            decay={2}
+          />
+          
+          <pointLight 
+            position={[-15, 8, 15]} 
+            intensity={0.2} 
+            color="#f97316" 
+            distance={20}
+            decay={2}
+          />
+          
+          <pointLight 
+            position={[15, 8, -15]} 
+            intensity={0.2} 
+            color="#84cc16" 
+            distance={20}
+            decay={2}
+          />
+          
+          <pointLight 
+            position={[-15, 8, -15]} 
+            intensity={0.2} 
+            color="#ef4444" 
+            distance={20}
+            decay={2}
+          />
 
           {/* Walkable Floor System */}
           <group>
-            {/* Main floor */}
+            {/* Main floor with enhanced material */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
               <planeGeometry args={[100, 100]} />
               <meshStandardMaterial 
                 color="#1a1a2e" 
-                roughness={0.8}
-                metalness={0.1}
+                roughness={0.7}
+                metalness={0.3}
+                envMapIntensity={0.5}
               />
             </mesh>
             
-            {/* Grid pattern for visual reference */}
+            {/* Enhanced grid pattern with glow effect */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
               <planeGeometry args={[100, 100]} />
               <meshStandardMaterial 
-                color="#2a2a3e" 
+                color="#4a4a6e" 
                 transparent
-                opacity={0.3}
+                opacity={0.6}
                 wireframe={true}
+                emissive="#2a2a4e"
+                emissiveIntensity={0.1}
               />
             </mesh>
 
-            {/* Elevated platforms around the center */}
-            <mesh position={[0, 0.5, 0]}>
+            {/* Enhanced elevated platforms with better materials */}
+            <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
               <cylinderGeometry args={[8, 8, 1, 32]} />
               <meshStandardMaterial 
                 color="#2a2a4e" 
-                roughness={0.6}
-                metalness={0.2}
+                roughness={0.4}
+                metalness={0.6}
+                envMapIntensity={0.8}
+                emissive="#1a1a3e"
+                emissiveIntensity={0.1}
               />
             </mesh>
 
-            {/* Outer ring platform */}
-            <mesh position={[0, 0.2, 0]}>
+            {/* Enhanced outer ring platform */}
+            <mesh position={[0, 0.2, 0]} castShadow receiveShadow>
               <cylinderGeometry args={[15, 15, 0.4, 32]} />
               <meshStandardMaterial 
                 color="#1a1a3e" 
-                roughness={0.8}
-                metalness={0.1}
+                roughness={0.6}
+                metalness={0.4}
+                envMapIntensity={0.6}
+                emissive="#0a0a2e"
+                emissiveIntensity={0.05}
               />
             </mesh>
           </group>
@@ -141,8 +246,8 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
           {/* First Person Camera Controller */}
           <NexusFirstPersonController speed={8} sensitivity={0.003} />
 
-          {/* Fog for atmosphere */}
-          <fog attach="fog" args={['#0a0a1a', 10, 30]} />
+          {/* Enhanced atmospheric fog with better color */}
+          <fog attach="fog" args={['#0f0f2a', 15, 40]} />
         </Suspense>
       </Canvas>
     );
