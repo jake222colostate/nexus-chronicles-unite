@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useGameStateStore } from '@/stores/useGameStateStore';
 // Lazy load the heavy 3D world to avoid blocking the initial render
 const Nexus3DWorld = lazy(
   () => import('@/components/Nexus3DWorld').then((m) => ({ default: m.Nexus3DWorld }))
@@ -26,6 +27,7 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
   onUpgrade = () => {}
 }) => {
   const navigate = useNavigate();
+  const { mana, energyCredits, nexusShards } = useGameStateStore();
 
   const handleUpgrade = (upgradeType: string) => {
     console.log(`Purchasing upgrade: ${upgradeType}`);
@@ -52,22 +54,11 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
 
       {/* Resource Display */}
       <div className="absolute top-14 left-2 z-50">
-        {/* Resource Display */}
         <div className="bg-black/60 backdrop-blur-md rounded-lg border border-white/20 p-2 text-xs">
-          <div className="text-purple-300">Mana: {(gameState?.mana || 0).toLocaleString()}</div>
-          <div className="text-cyan-300">Energy: {(gameState?.energyCredits || 0).toLocaleString()}</div>
-          <div className="text-yellow-300">Shards: {gameState?.nexusShards || 0}</div>
+          <div className="text-purple-300">Mana: {mana.toLocaleString()}</div>
+          <div className="text-cyan-300">Energy: {energyCredits.toLocaleString()}</div>
+          <div className="text-yellow-300">Shards: {nexusShards}</div>
           <div className="text-xs text-white/50 mt-1">Resources shared across realms</div>
-        </div>
-      </div>
-
-      {/* Controls Instructions */}
-      <div className="absolute top-14 right-2 z-50">
-        <div className="bg-black/60 backdrop-blur-md rounded-lg border border-white/20 p-2 text-xs text-white/70">
-          <div>WASD/Arrows: Move</div>
-          <div>Mouse: Look around</div>
-          <div>Click: Toggle mouse look</div>
-          <div>Tap Stands: Purchase</div>
         </div>
       </div>
 
