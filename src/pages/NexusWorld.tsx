@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStateStore } from '@/stores/useGameStateStore';
@@ -8,6 +8,8 @@ const Nexus3DWorld = lazy(
 );
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomActionBar } from '@/components/BottomActionBar';
+import { TopHUD } from '@/components/TopHUD';
+import { QuickHelpModal } from '@/components/QuickHelpModal';
 
 interface NexusWorldProps {
   gameState?: any;
@@ -20,6 +22,7 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
   const navigate = useNavigate();
   const gameStateStore = useGameStateStore();
   const { mana, energyCredits, nexusShards, manaPerSecond, energyPerSecond, convergenceCount, convergenceProgress } = gameStateStore;
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const handleUpgrade = (upgradeType: string) => {
     console.log(`Purchasing upgrade: ${upgradeType}`);
@@ -33,8 +36,20 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
 
   return (
     <div className="h-full w-full relative overflow-hidden bg-black">
+      {/* TopHUD - consistent with main game */}
+      <TopHUD
+        realm="fantasy"
+        mana={mana}
+        energyCredits={energyCredits}
+        nexusShards={nexusShards}
+        convergenceProgress={convergenceProgress}
+        manaPerSecond={manaPerSecond}
+        energyPerSecond={energyPerSecond}
+        onHelpClick={() => setIsHelpModalOpen(true)}
+      />
+
       {/* Header with transparent background */}
-      <div className="absolute top-2 left-2 right-2 z-50 flex items-center justify-center">
+      <div className="absolute top-16 left-2 right-2 z-50 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-lg font-bold text-white/90 flex items-center gap-2">
             <Crown className="text-yellow-400" size={18} />
@@ -44,18 +59,8 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
         </div>
       </div>
 
-      {/* Resource Display */}
-      <div className="absolute top-14 left-2 z-50">
-        <div className="bg-black/60 backdrop-blur-md rounded-lg border border-white/20 p-2 text-xs">
-          <div className="text-purple-300">Mana: {mana.toLocaleString()}</div>
-          <div className="text-cyan-300">Energy: {energyCredits.toLocaleString()}</div>
-          <div className="text-yellow-300">Shards: {nexusShards}</div>
-          <div className="text-xs text-white/50 mt-1">Resources shared across realms</div>
-        </div>
-      </div>
-
       {/* 3D Nexus World */}
-      <div className="absolute inset-0 pt-12 pb-32">{/* Added bottom padding for navigation */}
+      <div className="absolute inset-0 pt-20 pb-32">{/* Added top padding for TopHUD */}
         <ErrorBoundary fallback={
           <div className="flex items-center justify-center h-full w-full bg-black text-white">
             <div className="text-center">
@@ -96,6 +101,12 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
         playerDistance={0}
         hideJourneyBar={true}
         isNexusWorld={true}
+      />
+
+      {/* Quick Help Modal */}
+      <QuickHelpModal 
+        isOpen={isHelpModalOpen} 
+        onClose={() => setIsHelpModalOpen(false)} 
       />
     </div>
   );
