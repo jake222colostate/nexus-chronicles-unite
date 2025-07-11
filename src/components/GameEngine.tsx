@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useGameStateStore } from '@/stores/useGameStateStore';
 import { MinecraftHotbar } from './MinecraftHotbar';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -32,6 +33,7 @@ import { useMapEditorStore } from '../stores/useMapEditorStore';
 const GameEngine: React.FC = () => {
   const location = useLocation();
   const { isEditorActive } = useMapEditorStore();
+  const { addMana, addEnergy } = useGameStateStore();
   
   const {
     gameState,
@@ -244,7 +246,9 @@ const GameEngine: React.FC = () => {
       ...prev,
       mana: prev.mana + amount,
     }));
-  }, [setGameState]);
+    // Also update the global state store for cross-realm visibility
+    addMana(amount);
+  }, [setGameState, addMana]);
 
   useAutoManaSystem({ onAddMana: handleAutoManaGeneration });
 
@@ -261,7 +265,9 @@ const GameEngine: React.FC = () => {
       ...prev,
       energyCredits: prev.energyCredits + amount,
     }));
-  }, [setGameState]);
+    // Also update the global state store for cross-realm visibility
+    addEnergy(amount);
+  }, [setGameState, addEnergy]);
 
   useAutoEnergySystem({ onAddEnergy: handleAutoEnergyGeneration });
 
