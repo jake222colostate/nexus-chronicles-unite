@@ -15,6 +15,9 @@ interface GameState {
   convergenceCount: number;
   convergenceProgress: number;
   
+  // Offline progression
+  lastSaveTime: number;
+  
   // Unlocked Upgrades (shared across realms)
   unlockedUpgrades: string[];
   
@@ -50,6 +53,9 @@ interface GameStateActions {
   setManaPerSecond: (rate: number) => void;
   setEnergyPerSecond: (rate: number) => void;
   
+  // Offline Progression
+  calculateOfflineProgress: () => void;
+  
   // Convergence
   incrementConvergence: () => void;
   
@@ -58,13 +64,14 @@ interface GameStateActions {
 }
 
 const initialState: GameState = {
-  mana: 1000,
-  energyCredits: 800,
+  mana: 0,
+  energyCredits: 0,
   nexusShards: 25,
-  manaPerSecond: 15,
-  energyPerSecond: 12,
-  convergenceCount: 3,
-  convergenceProgress: 45,
+  manaPerSecond: 0,
+  energyPerSecond: 0,
+  convergenceCount: 0,
+  convergenceProgress: 0,
+  lastSaveTime: Date.now(),
   unlockedUpgrades: [],
   placedUpgrades: []
 };
@@ -159,6 +166,32 @@ export const useGameStateStore = create<GameState & GameStateActions>()(
       // Rate Management
       setManaPerSecond: (rate) => set({ manaPerSecond: rate }),
       setEnergyPerSecond: (rate) => set({ energyPerSecond: rate }),
+
+      // Offline Progression
+      calculateOfflineProgress: () => {
+        const state = get();
+        const now = Date.now();
+        const timeAwayMs = now - state.lastSaveTime;
+        const timeAwaySeconds = Math.floor(timeAwayMs / 1000);
+        
+        if (timeAwaySeconds > 0) {
+          const offlineMana = state.manaPerSecond * timeAwaySeconds;
+          const offlineEnergy = state.energyPerSecond * timeAwaySeconds;
+          
+          set({
+            mana: state.mana + offlineMana,
+            energyCredits: state.energyCredits + offlineEnergy,
+            lastSaveTime: now
+          });
+          
+          // Show offline progress message if significant time passed
+          if (timeAwaySeconds > 60) {
+            console.log(`Welcome back! You earned ${offlineMana} mana and ${offlineEnergy} energy while away.`);
+          }
+        } else {
+          set({ lastSaveTime: now });
+        }
+      },
 
       // Convergence
       incrementConvergence: () =>

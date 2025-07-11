@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useAutoClickerStore } from '@/stores/useAutoClickerStore';
+import { useAutoEnergyStore } from '@/stores/useAutoEnergyStore';
 
 interface ScifiAutoClickerUpgradeSystemProps {
   currentEnergy: number;
@@ -12,7 +12,7 @@ export const ScifiAutoClickerUpgradeSystem: React.FC<ScifiAutoClickerUpgradeSyst
   currentEnergy,
   onUpgrade
 }) => {
-  const { level, manaPerSecond, upgradeCost, upgrade } = useAutoClickerStore();
+  const { level, energyPerSecond, upgradeCost, upgrade } = useAutoEnergyStore();
 
   const handleUpgrade = () => {
     if (currentEnergy >= upgradeCost) {
@@ -39,7 +39,7 @@ export const ScifiAutoClickerUpgradeSystem: React.FC<ScifiAutoClickerUpgradeSyst
           🤖 Auto Energy Lvl {level} - {upgradeCost} Energy
         </Button>
         <p className="text-center text-xs text-cyan-300 font-medium">
-          +{manaPerSecond} energy/sec
+          +{energyPerSecond} energy/sec
         </p>
       </div>
     </div>

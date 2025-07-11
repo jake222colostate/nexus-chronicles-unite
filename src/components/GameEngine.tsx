@@ -26,6 +26,8 @@ import { FantasyAutoClickerUpgradeSystem } from './FantasyAutoClickerUpgradeSyst
 import { useAutoManaSystem } from '@/hooks/useAutoManaSystem';
 import { useAutoEnergySystem } from '@/hooks/useAutoEnergySystem';
 import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
+import { useAutoManaStore } from '@/stores/useAutoManaStore';
+import { useAutoEnergyStore } from '@/stores/useAutoEnergyStore';
 import { CollisionProvider } from '@/lib/CollisionContext';
 import { MapEditorToolbar } from './MapEditor/MapEditorToolbar';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
@@ -34,6 +36,8 @@ const GameEngine: React.FC = () => {
   const location = useLocation();
   const { isEditorActive } = useMapEditorStore();
   const globalGameState = useGameStateStore();
+  const autoManaStore = useAutoManaStore();
+  const autoEnergyStore = useAutoEnergyStore();
   
   const {
     gameState,
@@ -67,6 +71,16 @@ const GameEngine: React.FC = () => {
     setShowCannonUpgrades,
     switchRealm
   } = useUIStateManager(gameState);
+
+  // Sync auto generation rates and calculate offline progress
+  useEffect(() => {
+    // Update rates in global store
+    globalGameState.setManaPerSecond(autoManaStore.manaPerSecond);
+    globalGameState.setEnergyPerSecond(autoEnergyStore.energyPerSecond);
+    
+    // Calculate offline progress on load
+    globalGameState.calculateOfflineProgress();
+  }, [autoManaStore.manaPerSecond, autoEnergyStore.energyPerSecond, globalGameState]);
 
   // Handle navigation from Nexus World - force realm switch
   useEffect(() => {

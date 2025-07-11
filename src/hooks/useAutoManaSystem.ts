@@ -1,6 +1,6 @@
 
 import { useEffect, useCallback } from 'react';
-import { useAutoClickerStore } from '@/stores/useAutoClickerStore';
+import { useAutoManaStore } from '@/stores/useAutoManaStore';
 import { useMapEditorStore } from '@/stores/useMapEditorStore';
 
 interface UseAutoManaSystemProps {
@@ -8,7 +8,7 @@ interface UseAutoManaSystemProps {
 }
 
 export const useAutoManaSystem = ({ onAddMana }: UseAutoManaSystemProps) => {
-  const manaPerSecond = useAutoClickerStore((state) => state.manaPerSecond);
+  const manaPerSecond = useAutoManaStore((state) => state.manaPerSecond);
   const isEditorActive = useMapEditorStore((state) => state.isEditorActive);
 
   const createFloatingManaText = useCallback((amount: number) => {

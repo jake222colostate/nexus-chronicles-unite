@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useAutoClickerStore } from '@/stores/useAutoClickerStore';
+import { useAutoManaStore } from '@/stores/useAutoManaStore';
 
 interface FantasyAutoClickerUpgradeSystemProps {
   currentMana: number;
@@ -12,7 +12,7 @@ export const FantasyAutoClickerUpgradeSystem: React.FC<FantasyAutoClickerUpgrade
   currentMana,
   onUpgrade
 }) => {
-  const { level, manaPerSecond, upgradeCost, upgrade } = useAutoClickerStore();
+  const { level, manaPerSecond, upgradeCost, upgrade } = useAutoManaStore();
 
   const handleUpgrade = () => {
     if (currentMana >= upgradeCost) {
