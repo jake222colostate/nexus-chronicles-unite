@@ -382,33 +382,33 @@ const GameEngine: React.FC = () => {
               />
             )}
 
-            {/* Weapon Upgrade Button */}
-            <div className="absolute top-14 right-2 z-30">
+            {/* Weapon Upgrade Button - Moved to right side, vertically centered */}
+            <div className="absolute top-1/2 right-2 transform -translate-y-1/2 z-30">
               <Button 
                 onClick={handleShowWeaponUpgrades}
-                className="h-8 w-8 rounded-lg bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0 text-sm"
+                className="h-10 w-10 rounded-lg bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0 text-sm"
               >
                 🏹
               </Button>
             </div>
 
-            {/* Cannon Upgrades Button - Only in Sci-Fi realm */}
+            {/* Cannon Upgrades Button - Moved below weapon button on right side */}
             {currentRealm === 'scifi' && (
-              <div className="absolute top-14 right-12 z-30">
+              <div className="absolute top-1/2 right-2 transform translate-y-8 z-30">
                 <Button 
                   onClick={handleShowCannonUpgrades}
-                  className="h-8 w-8 rounded-lg bg-gradient-to-r from-cyan-500/95 to-blue-500/95 hover:from-cyan-600/95 hover:to-blue-600/95 backdrop-blur-xl border border-cyan-400/70 transition-all duration-300 font-bold shadow-lg shadow-cyan-500/30 p-0 text-sm"
+                  className="h-10 w-10 rounded-lg bg-gradient-to-r from-cyan-500/95 to-blue-500/95 hover:from-cyan-600/95 hover:to-blue-600/95 backdrop-blur-xl border border-cyan-400/70 transition-all duration-300 font-bold shadow-lg shadow-cyan-500/30 p-0 text-sm"
                 >
                   🔫
                 </Button>
               </div>
             )}
 
-            {/* Cross-Realm Upgrades Button */}
-            <div className="absolute top-14 left-2 z-30">
+            {/* Cross-Realm Upgrades Button - Moved to left side, vertically centered */}
+            <div className="absolute top-1/2 left-2 transform -translate-y-1/2 z-30">
               <Button 
                 onClick={handleShowCrossRealmUpgrades}
-                className="h-8 w-8 rounded-lg bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0 text-sm"
+                className="h-10 w-10 rounded-lg bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0 text-sm"
               >
                 🏰
               </Button>
