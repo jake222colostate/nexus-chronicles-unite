@@ -33,7 +33,7 @@ import { useMapEditorStore } from '../stores/useMapEditorStore';
 const GameEngine: React.FC = () => {
   const location = useLocation();
   const { isEditorActive } = useMapEditorStore();
-  const { addMana, addEnergy } = useGameStateStore();
+  const globalGameState = useGameStateStore();
   
   const {
     gameState,
@@ -247,8 +247,8 @@ const GameEngine: React.FC = () => {
       mana: prev.mana + amount,
     }));
     // Also update the global state store for cross-realm visibility
-    addMana(amount);
-  }, [setGameState, addMana]);
+    globalGameState.addMana(amount);
+  }, [setGameState, globalGameState.addMana]);
 
   useAutoManaSystem({ onAddMana: handleAutoManaGeneration });
 
@@ -266,8 +266,8 @@ const GameEngine: React.FC = () => {
       energyCredits: prev.energyCredits + amount,
     }));
     // Also update the global state store for cross-realm visibility
-    addEnergy(amount);
-  }, [setGameState, addEnergy]);
+    globalGameState.addEnergy(amount);
+  }, [setGameState, globalGameState.addEnergy]);
 
   useAutoEnergySystem({ onAddEnergy: handleAutoEnergyGeneration });
 
@@ -305,12 +305,12 @@ const GameEngine: React.FC = () => {
       {!isEditorActive && (
         <TopHUD
           realm={currentRealm}
-          mana={stableGameState.mana}
-          energyCredits={stableGameState.energyCredits}
-          nexusShards={stableGameState.nexusShards}
-          convergenceProgress={convergenceProgress}
-          manaPerSecond={stableGameState.manaPerSecond}
-          energyPerSecond={stableGameState.energyPerSecond}
+          mana={globalGameState.mana}
+          energyCredits={globalGameState.energyCredits}
+          nexusShards={globalGameState.nexusShards}
+          convergenceProgress={globalGameState.convergenceProgress}
+          manaPerSecond={globalGameState.manaPerSecond}
+          energyPerSecond={globalGameState.energyPerSecond}
           onHelpClick={handleShowHelp}
           onCombatUpgradesClick={handleShowCombatUpgrades}
           enemyCount={enemyCount}
