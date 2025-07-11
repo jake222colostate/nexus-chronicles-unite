@@ -15,19 +15,11 @@ interface NexusWorldProps {
 }
 
 const NexusWorld: React.FC<NexusWorldProps> = ({ 
-  gameState = { 
-    mana: 1000, 
-    energyCredits: 800, 
-    nexusShards: 25, 
-    manaPerSecond: 15, 
-    energyPerSecond: 12,
-    convergenceCount: 3,
-    convergenceProgress: 45
-  },
   onUpgrade = () => {}
 }) => {
   const navigate = useNavigate();
-  const { mana, energyCredits, nexusShards } = useGameStateStore();
+  const gameStateStore = useGameStateStore();
+  const { mana, energyCredits, nexusShards, manaPerSecond, energyPerSecond, convergenceCount, convergenceProgress } = gameStateStore;
 
   const handleUpgrade = (upgradeType: string) => {
     console.log(`Purchasing upgrade: ${upgradeType}`);
@@ -81,7 +73,15 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
             </div>
           }>
             <Nexus3DWorld 
-              gameState={gameState}
+              gameState={{
+                mana,
+                energyCredits, 
+                nexusShards,
+                manaPerSecond,
+                energyPerSecond,
+                convergenceCount,
+                convergenceProgress
+              }}
               onUpgrade={handleUpgrade}
             />
           </Suspense>
