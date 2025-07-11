@@ -48,10 +48,10 @@ export const TopHUD: React.FC<TopHUDProps> = ({
   };
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-40 pointer-events-none">
+    <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
       <div className="px-3 py-1.5 pointer-events-auto">
         <div 
-          className="flex items-center justify-between bg-black/80 backdrop-blur-xl px-3 py-2 rounded-lg border border-white/25 relative min-h-[40px]"
+          className="flex items-center justify-between bg-black/80 backdrop-blur-xl px-3 py-2 rounded-lg border border-white/25 relative min-h-[40px] max-w-sm mx-auto"
           style={{
             boxShadow: '0 2px 15px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.08)',
           }}
