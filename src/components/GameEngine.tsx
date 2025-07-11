@@ -77,10 +77,12 @@ const GameEngine: React.FC = () => {
     // Update rates in global store
     globalGameState.setManaPerSecond(autoManaStore.manaPerSecond);
     globalGameState.setEnergyPerSecond(autoEnergyStore.energyPerSecond);
-    
-    // Calculate offline progress on load
+  }, [autoManaStore.manaPerSecond, autoEnergyStore.energyPerSecond]);
+
+  // Calculate offline progress once on mount
+  useEffect(() => {
     globalGameState.calculateOfflineProgress();
-  }, [autoManaStore.manaPerSecond, autoEnergyStore.energyPerSecond, globalGameState]);
+  }, []);
 
   // Handle navigation from Nexus World - force realm switch
   useEffect(() => {
