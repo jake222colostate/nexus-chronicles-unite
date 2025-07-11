@@ -84,8 +84,9 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         const deltaX = event.touches[0].clientX - lastX.current;
         const deltaY = event.touches[0].clientY - lastY.current;
         
-        // Vertical movement
-        const moveAmountY = deltaY * sensitivity * 0.01;
+        // Vertical movement - 2x faster for fantasy realm
+        const fantasySensitivityMultiplier = realm === 'fantasy' ? 2.0 : 1.0;
+        const moveAmountY = deltaY * sensitivity * 0.01 * fantasySensitivityMultiplier;
         targetY.current = Math.max(minY, Math.min(maxY, targetY.current - moveAmountY));
         
         // Circular movement around center point (for scifi realm)
@@ -135,8 +136,9 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       const deltaX = event.clientX - lastX.current;
       const deltaY = event.clientY - lastY.current;
       
-      // Vertical movement
-      const moveAmountY = deltaY * sensitivity * 0.01;
+      // Vertical movement - 2x faster for fantasy realm
+      const fantasySensitivityMultiplier = realm === 'fantasy' ? 2.0 : 1.0;
+      const moveAmountY = deltaY * sensitivity * 0.01 * fantasySensitivityMultiplier;
       targetY.current = Math.max(minY, Math.min(maxY, targetY.current - moveAmountY));
       
       // Circular movement around center point (for scifi realm)
