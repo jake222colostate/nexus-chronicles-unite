@@ -7,7 +7,7 @@ import * as THREE from 'three';
 const FallbackPathTile: React.FC<{ 
   position: [number, number, number]; 
 }> = ({ position }) => {
-  console.log('FallbackPathTile: Rendering fallback at position:', position);
+  // Rendering fallback path tile
   return (
     <group position={position}>
       <mesh receiveShadow>
@@ -27,7 +27,7 @@ const FallbackPathTile: React.FC<{
 const JapanesePathTile: React.FC<{ 
   position: [number, number, number]; 
 }> = ({ position }) => {
-  console.log('JapanesePathTile: Attempting to load stone path at position:', position);
+  // Loading Japanese stone path tile
   
   try {
     const { scene } = useGLTF('/assets/japanese_park_stone_floor_uljcfd0_low.glb');
@@ -37,10 +37,8 @@ const JapanesePathTile: React.FC<{
       return <FallbackPathTile position={position} />;
     }
 
-    console.log('JapanesePathTile: Successfully loaded GLB scene:', scene);
-
+    // Process loaded GLB scene
     const clonedScene = useMemo(() => {
-      console.log('JapanesePathTile: Cloning and processing scene...');
       const clone = scene.clone();
       
       // Create stone path material
@@ -61,7 +59,7 @@ const JapanesePathTile: React.FC<{
         }
       });
       
-      console.log(`JapanesePathTile: Processed ${meshCount} meshes in cloned scene`);
+      // Processed meshes in cloned scene
       return clone;
     }, [scene]);
 
@@ -95,17 +93,13 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyPathSystem render - Realm:', realm, 'Chunks:', chunks.length);
-
-  // Only render for fantasy realm
+  // Only render in fantasy realm
   if (realm !== 'fantasy') {
-    console.log('FantasyPathSystem: Not fantasy realm, skipping');
     return null;
   }
 
   // Generate path tile positions for seamless coverage across chunks
   const pathTilePositions = useMemo(() => {
-    console.log('Generating Japanese stone path tile positions for', chunks.length, 'chunks');
     const positions = [];
     chunks.forEach(chunk => {
       const { worldZ } = chunk;
@@ -120,22 +114,18 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
       });
     });
 
-    console.log(`Total Japanese stone path tiles generated: ${positions.length}`);
     return positions;
   }, [chunks]);
 
   return (
     <group name="FantasyPathSystem">
-      {pathTilePositions.map((pos, index) => {
-        console.log(`FantasyPathSystem: Rendering path tile ${index} at:`, [pos.x, pos.y, pos.z]);
-        return (
-          <FantasyPathTile
-            key={`fantasy-path-${pos.chunkId}-${pos.tileIndex}`}
-            position={[pos.x, pos.y, pos.z]}
-            chunkSize={chunkSize}
-          />
-        );
-      })}
+      {pathTilePositions.map((pos, index) => (
+        <FantasyPathTile
+          key={`fantasy-path-${pos.chunkId}-${pos.tileIndex}`}
+          position={[pos.x, pos.y, pos.z]}
+          chunkSize={chunkSize}
+        />
+      ))}
     </group>
   );
 };
@@ -143,9 +133,6 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
 // Preload the Japanese stone path model
 try {
   useGLTF.preload('/assets/japanese_park_stone_floor_uljcfd0_low.glb');
-  console.log('FantasyPathSystem: Successfully initiated preload of Japanese stone path');
 } catch (error) {
   console.error('FantasyPathSystem: Failed to preload Japanese stone path:', error);
 }
-
-console.log('FantasyPathSystem: Now using Japanese park stone floor asset with enhanced error handling');

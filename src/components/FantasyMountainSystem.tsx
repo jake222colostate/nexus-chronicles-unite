@@ -41,7 +41,7 @@ interface MountainProps {
 }
 
 function Mountain({ url, position, scale, side }: MountainProps) {
-  console.log('Mountain: Loading Draco-compressed from', url, 'at position:', position);
+  // Loading Draco-compressed mountain model
   
   try {
     const { scene } = useGLTF(url);
@@ -51,7 +51,7 @@ function Mountain({ url, position, scale, side }: MountainProps) {
       return <FallbackMountain position={position} scale={scale} side={side} />;
     }
     
-    console.log('Mountain: Successfully loaded Draco-compressed GLB, rendering at position:', position, 'scale:', scale);
+    // Successfully loaded mountain model
     const clonedScene = scene.clone();
     
     // Ensure all meshes in the scene have proper materials and shadows
@@ -83,34 +83,20 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
   chunkSize,
   realm
 }) => {
-  console.log('FantasyMountainSystem: Component mounted/rendered with:', {
-    realm,
-    chunksLength: chunks.length,
-    chunkSize
-  });
-
-  // Early return check with logging
+  // Only render in fantasy realm
   if (realm !== 'fantasy') {
-    console.log('FantasyMountainSystem: Not fantasy realm, realm is:', realm);
     return null;
   }
 
-  console.log('FantasyMountainSystem: Realm is fantasy, proceeding with mountain generation');
-
   const mountainInstances = useMemo(() => {
-    console.log('FantasyMountainSystem useMemo - Realm:', realm, 'Chunks:', chunks.length);
-    
+    // Generate mountain instances for each chunk
     const instances: React.ReactNode[] = [];
     
-    chunks.forEach((chunk, chunkIndex) => {
-      console.log(`FantasyMountainSystem: Processing chunk ${chunkIndex}: worldZ=${chunk.worldZ}`);
-      
+    chunks.forEach((chunk) => {
       // Create mountain instances tiled every 60 units along the Z-axis
       // Starting 30 units ahead for better coverage
       for (let zOffset = -30; zOffset < chunkSize + 20; zOffset += 60) {
         const finalZ = chunk.worldZ - zOffset;
-        
-        console.log(`FantasyMountainSystem: Creating mountains for chunk ${chunkIndex}, zOffset ${zOffset}, finalZ: ${finalZ}`);
         
         // Left side mountains slightly closer at x = -30
         instances.push(
@@ -138,11 +124,8 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
       }
     });
     
-    console.log(`FantasyMountainSystem: Created ${instances.length} mountain instances`);
     return instances;
   }, [chunks, chunkSize, realm]);
-
-  console.log('FantasyMountainSystem: About to render', mountainInstances.length, 'mountain instances');
 
   return <>{mountainInstances}</>;
 };
@@ -150,4 +133,3 @@ export const FantasyMountainSystem: React.FC<FantasyMountainSystemProps> = ({
 // Preload the Draco-compressed models
 useGLTF.preload(FANTASY_MOUNTAIN_LEFT_URL);
 useGLTF.preload(FANTASY_MOUNTAIN_RIGHT_URL);
-console.log('FantasyMountainSystem: Preloading Draco-compressed mountain models');
