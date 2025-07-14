@@ -77,7 +77,7 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
               </div>
             </div>
           }>
-            <Nexus3DWorld onTileSelect={(x, z) => console.log('Tile selected', x, z)} />
+            <Nexus3DWorld />
           </Suspense>
         </ErrorBoundary>
       </div>
