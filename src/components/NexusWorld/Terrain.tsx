@@ -1,12 +1,15 @@
 import React, { useMemo } from 'react';
-import { DataTexture, RedFormat } from 'three';
+import { DataTexture, RedFormat, AlphaFormat } from 'three';
 
 const generateNoiseTexture = (size = 256) => {
   const data = new Uint8Array(size * size);
   for (let i = 0; i < size * size; i++) {
     data[i] = Math.random() * 255;
   }
-  const texture = new DataTexture(data, size, size, RedFormat);
+  const canvas = document.createElement('canvas');
+  const gl = canvas.getContext('webgl2');
+  const format = gl ? RedFormat : AlphaFormat;
+  const texture = new DataTexture(data, size, size, format);
   texture.needsUpdate = true;
   return texture;
 };
