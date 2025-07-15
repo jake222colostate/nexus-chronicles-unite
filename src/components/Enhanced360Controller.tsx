@@ -160,7 +160,7 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
     const handleWheel = (event: WheelEvent) => {
       if (realm === 'scifi') {
         event.preventDefault();
-        const zoomSpeed = 0.002;
+        const zoomSpeed = 0.01;
         const zoomDelta = event.deltaY * zoomSpeed;
         targetRadius.current = Math.max(minZoom, Math.min(maxZoom, targetRadius.current + zoomDelta));
       }
