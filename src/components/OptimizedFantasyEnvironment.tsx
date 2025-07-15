@@ -4,7 +4,7 @@ import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
-import { NaturalMountainSystem } from './NaturalMountainSystem';
+import { GLBMountainSystem } from './GLBMountainSystem';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: ChunkData[];
@@ -36,11 +36,11 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         playerPosition={playerPosition}
       />
       
-      {/* Natural mountain system for organic infinite terrain */}
-      <NaturalMountainSystem
+      {/* Mountain system for fantasy world boundaries */}
+      <GLBMountainSystem
         chunks={chunks}
         chunkSize={chunkSize}
-        excludeTrees={true}
+        realm={realm}
       />
       
       {/* Tree system positioned within valley bounds */}
