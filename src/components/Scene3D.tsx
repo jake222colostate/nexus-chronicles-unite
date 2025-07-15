@@ -24,6 +24,7 @@ import { MapEditorControls } from './MapEditor/MapEditorControls';
 import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
 import { MapEditorFlyingCamera } from './MapEditor/MapEditorFlyingCamera';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
+import { RepairKitSpawner } from './RepairKitSpawner';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -218,6 +219,10 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                   onMeteorPositionUpdate={handleEnemyPositionUpdate}
                 />
               )}
+              <RepairKitSpawner
+                realm="scifi"
+                playerPosition={[playerPosition.x, playerPosition.y, playerPosition.z]}
+              />
             </>
           )}
 
