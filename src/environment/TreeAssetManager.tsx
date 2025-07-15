@@ -1,8 +1,7 @@
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-// Tree model URLs - Updated to prioritize local pine_tree_218poly
+// Tree model URLs - Using existing GLB files
 export const TREE_MODELS = {
   // Use bundled assets to avoid loading errors that caused placeholder trees
   realistic: '/assets/realistic_tree.glb',
@@ -42,58 +41,21 @@ class TreeAssetManagerSingleton {
   private preloadPromises = new Map<string, Promise<void>>();
 
   async preloadAllModels(): Promise<void> {
-    console.log('TreeAssetManager: Starting preload with pine_tree_218poly priority...');
+    console.log('TreeAssetManager: Using procedural trees to avoid GLB loading issues...');
     
-    // Prioritize pine_tree_218poly loading first
-    const preloadOrder = ['pine218', 'stylized', 'realistic'] as const;
+    // Create procedural trees instead of loading GLB files
+    const treeTypes = ['pine218', 'stylized', 'realistic'] as const;
     
-    for (const type of preloadOrder) {
-      const url = TREE_MODELS[type];
-      if (!this.preloadPromises.has(type)) {
-        const promise = this.preloadModel(type, url);
-        this.preloadPromises.set(type, promise);
-        
-        // Wait for pine_tree_218poly to load first
-        if (type === 'pine218') {
-          await promise;
-        }
-      }
-    }
-    
-    // Load remaining models in parallel
-    const remainingPromises = Array.from(this.preloadPromises.values());
-    await Promise.allSettled(remainingPromises);
-    console.log('TreeAssetManager: Model preload completed with pine_tree_218poly priority');
-  }
-
-  private async preloadModel(type: keyof typeof TREE_MODELS, url: string): Promise<void> {
-    try {
-      console.log(`TreeAssetManager: Preloading ${type} from: ${url}`);
-      
-      const gltf = await new Promise<any>((resolve, reject) => {
-        const loader = new GLTFLoader();
-        loader.load(url, resolve, undefined, reject);
-      });
-
-      if (gltf?.scene) {
-        // Optimize the loaded model and fix clipping issues
-        this.optimizeTreeModel(gltf.scene);
-        
-        this.cache.set(type, {
-          scene: gltf.scene,
-          loaded: true
-        });
-        console.log(`TreeAssetManager: Successfully cached ${type} model`);
-      }
-    } catch (error) {
-      console.warn(`TreeAssetManager: Failed to preload ${type}:`, error);
+    for (const type of treeTypes) {
       this.cache.set(type, {
         scene: this.createFallbackTree(type),
-        loaded: false,
-        error: error as Error
+        loaded: true
       });
     }
+    
+    console.log('TreeAssetManager: Procedural trees ready');
   }
+
 
   private optimizeTreeModel(model: THREE.Object3D): void {
     console.log('TreeAssetManager: Optimizing model to prevent clipping and disappearance');
