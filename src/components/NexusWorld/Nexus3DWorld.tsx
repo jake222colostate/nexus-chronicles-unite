@@ -4,8 +4,8 @@ import { OrbitControls, Stage, useGLTF, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 
 function CrystalObelisk() {
-  const { scene: crystal } = useGLTF('/models/crystal.glb');
-  const { scene: fountain } = useGLTF('/models/fountain.glb');
+  const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
+  const { scene: fountain } = useGLTF('/assets/ground_house_in_the_woods_project.glb');
   const crystalRef = useRef<THREE.Group>(null);
 
   useFrame((_, delta) => {
@@ -27,7 +27,7 @@ function CrystalObelisk() {
 }
 
 function VendorStall({ position, canopyColor, item }: { position: [number, number, number]; canopyColor: string; item: 'coin' | 'gems'; }) {
-  const { scene: stallScene } = useGLTF('/models/stall.glb');
+  const { scene: stallScene } = useGLTF('/models/gem_crate.glb');
   const { scene: coin } = useGLTF('/models/gold_coin.glb');
   const { scene: gems } = useGLTF('/models/gem_crate.glb');
 
@@ -90,7 +90,7 @@ function StonePath() {
 }
 
 function Trees() {
-  const { scene } = useGLTF('/models/tree.glb');
+  const { scene } = useGLTF('/assets/stylized_tree.glb');
   const radius = 8;
   return (
     <group>
