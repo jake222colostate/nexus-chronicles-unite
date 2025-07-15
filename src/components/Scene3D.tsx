@@ -12,19 +12,18 @@ import { Sun } from './Sun';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
 import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
-import { OptimizedScifiDefenseSystem } from './scifi/OptimizedScifiDefenseSystem';
-import { OptimizedFloatingUpgradeSystem } from './scifi/OptimizedFloatingUpgradeSystem';
+import { ScifiDefenseSystem } from './scifi/ScifiDefenseSystem';
+import { FloatingUpgradeSystem } from './scifi/FloatingUpgradeSystem';
 import { ScifiUpgradeAsteroidSystem } from './scifi/ScifiUpgradeAsteroidSystem';
 import { ScifiScrollUpgradeSystem } from './scifi/ScifiScrollUpgradeSystem';
 import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
 import { ScifiUpgradeGLBSystem } from './scifi/ScifiUpgradeGLBSystem';
-import { OptimizedCannonPlatformSystem } from './scifi/OptimizedCannonPlatformSystem';
+import { CannonPlatformSystem } from './scifi/CannonPlatformSystem';
 import { MapEditorGrid } from './MapEditor/MapEditorGrid';
 import { MapEditorControls } from './MapEditor/MapEditorControls';
 import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
 import { MapEditorFlyingCamera } from './MapEditor/MapEditorFlyingCamera';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
-import { OptimizedRepairKitSpawner } from './OptimizedRepairKitSpawner';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -138,17 +137,16 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
       <Canvas
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
         dpr={[1, 1]}
-        performance={{ min: 0.9 }}
+        performance={{ min: 0.8 }}
         style={{ width: '375px', height: '667px' }}
         gl={{ 
           antialias: false, 
           alpha: false,
-          powerPreference: "high-performance",
+          powerPreference: "default",
           stencil: false,
           depth: true,
           preserveDrawingBuffer: false
         }}
-        frameloop="demand"
       >
         <Suspense fallback={null}>
           <PerspectiveCamera
@@ -200,19 +198,19 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 onUpgradeClick={onUpgradeClick}
                 checkUpgradeUnlocked={checkUpgradeUnlocked}
               />
-              <OptimizedFloatingUpgradeSystem
+              <FloatingUpgradeSystem
                 energyCredits={gameState.energyCredits || 0}
                 onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
                 purchasedUpgrades={gameState.purchasedUpgrades || []}
               />
-              <OptimizedCannonPlatformSystem
+              <CannonPlatformSystem
                 cannonCount={gameState.cannonCount || 1}
                 targets={enemyPositions}
                 gameState={gameState}
                 platformPosition={new Vector3(0, -3, -2)}
               />
               {!isEditorActive && (
-                <OptimizedScifiDefenseSystem 
+                <ScifiDefenseSystem 
                   onMeteorDestroyed={onMeteorDestroyed}
                   onEnergyGained={onEnergyGained}
                   onUpgradeClick={setSelectedUpgrade}
@@ -220,10 +218,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                   onMeteorPositionUpdate={handleEnemyPositionUpdate}
                 />
               )}
-              <OptimizedRepairKitSpawner
-                realm="scifi"
-                playerPosition={[playerPosition.x, playerPosition.y, playerPosition.z]}
-              />
             </>
           )}
 

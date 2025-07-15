@@ -13,25 +13,19 @@ const Nexus3DWorld: React.FC = () => {
   console.log('Nexus3DWorld: Starting full render');
   
   return (
-    <Canvas
-      camera={{ position: [0, 4, 8], fov: 55 }}
-      style={{ height: '100%', width: '100%' }}
-      shadows
-    >
-      <color attach="background" args={["#05070a"]} />
+    <Canvas camera={{ position: [0, 3, 8], fov: 60 }} style={{ height: '100%', width: '100%' }} shadows>
+      <color attach="background" args={["#001122"]} />
       <ambientLight intensity={0.6} />
       <directionalLight position={[5, 10, 5]} intensity={1.2} castShadow />
-
+      
       <Suspense fallback={null}>
         <Environment preset="sunset" />
         <BackgroundElements />
         <Terrain />
         <CurvedPath />
         <CentralObelisk />
-        <group position={[0, 0, 2]}>
-          <VendorStall type="magic" color="#8a2be2" position={[-2, 0, 0]} />
-          <VendorStall type="tech" color="#1e90ff" position={[2, 0, 0]} />
-        </group>
+        <VendorStall type="magic" color="#8a2be2" position={[-3, 0, 2]} />
+        <VendorStall type="tech" color="#1e90ff" position={[3, 0, 2]} />
         <FancyFence />
         <PlayerControls />
       </Suspense>
