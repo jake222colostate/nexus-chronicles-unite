@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 // Lazy load the 3D scene component to avoid blocking the initial render
 const NexusWorldScene = lazy(
-  () => import('@/components/NexusWorld').then((m) => ({ default: m.default }))
+  () => import('@/components/NexusWorld/Nexus3DWorld').then((m) => ({ default: m.default }))
 );
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomActionBar } from '@/components/BottomActionBar';

@@ -124,5 +124,7 @@ export const NexusCentralCrystal = forwardRef<Mesh, CrystalProps>(({ glow = 2 },
       />
     </group>
   );
-};
+});
+
+export default NexusCentralCrystal;
 

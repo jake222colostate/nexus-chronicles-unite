@@ -1,7 +1,6 @@
-import React, { useRef, useState, Suspense, useEffect } from 'react';
+import React, { useRef, useState, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Mesh } from 'three';
-import { Pane } from 'tweakpane';
 import { EffectComposer, Bloom, GodRays } from '@react-three/postprocessing';
 import { NexusGround } from './NexusGround';
 import { NexusFirstPersonController } from './NexusFirstPersonController';
@@ -18,7 +17,7 @@ interface Nexus3DWorldProps {
   onUpgrade: (upgradeType: string) => void;
 }
 
-export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({ 
+const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({ 
   gameState,
   onUpgrade 
 }) => {
@@ -30,14 +29,6 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
   const [crystalGlow, setCrystalGlow] = useState(2);
   const crystalRef = useRef<Mesh>(null);
 
-  useEffect(() => {
-    const pane = new Pane({ title: 'Scene Controls' });
-    pane.addInput({ terrainHeight }, 'terrainHeight', { min: 1, max: 10 }).on('change', (e) => setTerrainHeight(e.value));
-    pane.addInput({ terrainFrequency }, 'terrainFrequency', { min: 0.5, max: 5 }).on('change', (e) => setTerrainFrequency(e.value));
-    pane.addInput({ treeDensity }, 'treeDensity', { min: 1, max: 20, step: 1 }).on('change', (e) => setTreeDensity(e.value));
-    pane.addInput({ crystalGlow }, 'crystalGlow', { min: 0, max: 5 }).on('change', (e) => setCrystalGlow(e.value));
-    return () => pane.dispose();
-  }, []);
   
   // Use global game state store
   const globalGameState = useGameStateStore();
@@ -324,3 +315,5 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
     );
   }
 };
+
+export default Nexus3DWorld;
