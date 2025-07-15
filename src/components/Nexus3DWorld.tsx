@@ -1,15 +1,16 @@
-import React, { useRef, useState, Suspense } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Text, Sphere, Cylinder, Ring } from '@react-three/drei';
-import { Mesh, Vector3 } from 'three';
+import React, { useRef, useState, Suspense, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { Mesh } from 'three';
+import { Pane } from 'tweakpane';
+import { EffectComposer, Bloom, GodRays } from '@react-three/postprocessing';
 import { NexusGround } from './NexusGround';
 import { NexusFirstPersonController } from './NexusFirstPersonController';
-import { NexusVendorStand } from './NexusVendorStand';
 import { NexusMerchantShop, SupplyKeeperShop, StaffCrafterShop } from './NexusVendorShops';
 import { NexusCentralCrystal } from './NexusCentralCrystal';
 import { NexusFloatingPlatform } from './NexusFloatingPlatforms';
 import { NexusSandboxGrid } from './NexusSandboxGrid';
 import { NexusResourceConverter } from './NexusResourceConverter';
+import { TreeGenerator } from './TreeGenerator';
 import { useGameStateStore } from '@/stores/useGameStateStore';
 
 interface Nexus3DWorldProps {
@@ -23,6 +24,20 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
 }) => {
   // Shop state management
   const [activeShop, setActiveShop] = useState<string | null>(null);
+  const [terrainHeight, setTerrainHeight] = useState(4);
+  const [terrainFrequency, setTerrainFrequency] = useState(2);
+  const [treeDensity, setTreeDensity] = useState(5);
+  const [crystalGlow, setCrystalGlow] = useState(2);
+  const crystalRef = useRef<Mesh>(null);
+
+  useEffect(() => {
+    const pane = new Pane({ title: 'Scene Controls' });
+    pane.addInput({ terrainHeight }, 'terrainHeight', { min: 1, max: 10 }).on('change', (e) => setTerrainHeight(e.value));
+    pane.addInput({ terrainFrequency }, 'terrainFrequency', { min: 0.5, max: 5 }).on('change', (e) => setTerrainFrequency(e.value));
+    pane.addInput({ treeDensity }, 'treeDensity', { min: 1, max: 20, step: 1 }).on('change', (e) => setTreeDensity(e.value));
+    pane.addInput({ crystalGlow }, 'crystalGlow', { min: 0, max: 5 }).on('change', (e) => setCrystalGlow(e.value));
+    return () => pane.dispose();
+  }, []);
   
   // Use global game state store
   const globalGameState = useGameStateStore();
@@ -194,58 +209,18 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
               </mesh>
             ))}
 
-            {/* Bright Platform System */}
-            <group>
-              {/* Main platform with bright materials */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-                <planeGeometry args={[40, 40]} />
-                <meshStandardMaterial 
-                  color="#9CA3AF"
-                  roughness={0.3}
-                  metalness={0.1}
-                />
-              </mesh>
-              
-              {/* Bright grid pattern */}
-              <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-                <planeGeometry args={[40, 40, 20, 20]} />
-                <meshStandardMaterial 
-                  color="#60a5fa"
-                  wireframe
-                  transparent
-                  opacity={0.4}
-                />
-              </mesh>
-
-              {/* Grass patches */}
-              {Array.from({ length: 8 }).map((_, i) => (
-                <mesh
-                  key={i}
-                  rotation={[-Math.PI / 2, 0, 0]}
-                  position={[
-                    (Math.random() - 0.5) * 30,
-                    0.02,
-                    (Math.random() - 0.5) * 30
-                  ]}
-                >
-                  <circleGeometry args={[1 + Math.random(), 8]} />
-                  <meshStandardMaterial color="#22c55e" />
-                </mesh>
-              ))}
-
-              {/* Bright elevated platform */}
-              <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
-                <cylinderGeometry args={[8, 8, 1, 16]} />
-                <meshStandardMaterial 
-                  color="#6B7280"
-                  roughness={0.2}
-                  metalness={0.3}
-                />
-              </mesh>
-            </group>
+            {/* Procedural Ground */}
+            <NexusGround size={40} maxHeight={terrainHeight} frequency={terrainFrequency} />
+            {Array.from({ length: treeDensity }).map((_, i) => (
+              <TreeGenerator key={i} position={[
+                (Math.random() - 0.5) * 30,
+                0,
+                (Math.random() - 0.5) * 30
+              ]} />
+            ))}
 
             {/* Central Crystal - Replaces old core */}
-            <NexusCentralCrystal />
+            <NexusCentralCrystal ref={crystalRef} glow={crystalGlow} />
 
             {/* Floating Vendor Platforms */}
             <NexusFloatingPlatform 
@@ -302,6 +277,10 @@ export const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
 
             {/* Bright atmospheric fog */}
             <fog attach="fog" args={['#b3d9ff', 30, 80]} />
+            <EffectComposer>
+              <Bloom luminanceThreshold={0.5} intensity={0.6} />
+              <GodRays sun={crystalRef as any} />
+            </EffectComposer>
           </Suspense>
         </Canvas>
 
