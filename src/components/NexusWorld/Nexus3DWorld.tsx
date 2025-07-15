@@ -5,6 +5,7 @@ import * as THREE from 'three';
 
 function CrystalObelisk() {
   const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
+  const { scene: fountain } = useGLTF('/models/bottle.glb');
   const crystalRef = useRef<THREE.Group>(null);
 
   useFrame((_, delta) => {
@@ -15,16 +16,9 @@ function CrystalObelisk() {
 
   return (
     <group>
-      {/* Simple fountain base using basic geometry */}
-      <mesh position={[0, 0, 0]} receiveShadow>
-        <cylinderGeometry args={[1.5, 1.5, 0.3, 16]} />
-        <meshStandardMaterial color="#888888" />
-      </mesh>
-      <mesh position={[0, 0.2, 0]} receiveShadow>
-        <cylinderGeometry args={[1.2, 1.2, 0.1, 16]} />
-        <meshStandardMaterial color="#aaaaaa" />
-      </mesh>
-      <group ref={crystalRef} position={[0, 1.2, 0]}>
+      {/* Using GLB fountain base */}
+      <primitive object={fountain.clone()} scale={2} position={[0, 0, 0]} />
+      <group ref={crystalRef} position={[0, 2, 0]}>
         <primitive object={crystal.clone()} scale={1.5} />
         <Sparkles count={20} scale={2} size={2} color="#88e5ff" />
         <pointLight position={[0, 1.5, 0]} intensity={2} color="#88e5ff" distance={6} />
@@ -34,9 +28,9 @@ function CrystalObelisk() {
 }
 
 function VendorStall({ position, canopyColor, item }: { position: [number, number, number]; canopyColor: string; item: 'coin' | 'gems'; }) {
-  const { scene: stallScene } = useGLTF('/models/gem_crate.glb');
-  const { scene: coin } = useGLTF('/models/gold_coin.glb');
-  const { scene: gems } = useGLTF('/models/gem_crate.glb');
+  const { scene: stallScene } = useGLTF('/models/lantern.glb');
+  const { scene: coin } = useGLTF('/models/dice.glb');
+  const { scene: gems } = useGLTF('/models/avocado.glb');
 
   const itemScene = item === 'coin' ? coin : gems;
 
@@ -64,7 +58,7 @@ function VendorStall({ position, canopyColor, item }: { position: [number, numbe
 }
 
 function FenceRing() {
-  const { scene } = useGLTF('/models/fence.glb');
+  const { scene } = useGLTF('/models/simple_box.glb');
   const radius = 5.5;
   const segments = 16;
   return (
@@ -77,7 +71,7 @@ function FenceRing() {
             object={scene.clone()}
             position={[Math.cos(angle) * radius, 0, Math.sin(angle) * radius]}
             rotation={[0, angle + Math.PI / 2, 0]}
-            scale={1.1}
+            scale={[0.2, 1.5, 0.2]}
           />
         );
       })}
@@ -86,18 +80,18 @@ function FenceRing() {
 }
 
 function StonePath() {
-  const { scene } = useGLTF('/models/stone_tile.glb');
+  const { scene } = useGLTF('/models/box_colors.glb');
   return (
     <group>
       {Array.from({ length: 6 }).map((_, i) => (
-        <primitive key={i} object={scene.clone()} position={[0, 0.05, 2 - i * 1.2]} scale={1.4} />
+        <primitive key={i} object={scene.clone()} position={[0, 0.05, 2 - i * 1.2]} scale={[2, 0.1, 1]} />
       ))}
     </group>
   );
 }
 
 function Trees() {
-  const { scene } = useGLTF('/assets/pine_tree_218poly.glb');
+  const { scene } = useGLTF('/models/helmet.glb');
   const radius = 8;
   return (
     <group>
@@ -107,8 +101,8 @@ function Trees() {
           <primitive
             key={i}
             object={scene.clone()}
-            position={[Math.cos(angle) * radius, 0, Math.sin(angle) * radius]}
-            scale={2}
+            position={[Math.cos(angle) * radius, 2, Math.sin(angle) * radius]}
+            scale={0.5}
           />
         );
       })}
