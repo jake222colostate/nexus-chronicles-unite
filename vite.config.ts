@@ -19,4 +19,8 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Increase the warning limit to avoid bundle size warnings during build
+    chunkSizeWarningLimit: 2000,
+  },
 }));
