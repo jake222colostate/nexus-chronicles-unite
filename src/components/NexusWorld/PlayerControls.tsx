@@ -1,4 +1,3 @@
-import { PointerLockControls } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
 import React, { useRef } from 'react';
 import * as THREE from 'three';
@@ -31,7 +30,7 @@ const PlayerControls: React.FC = () => {
     camera.rotation.set(pitchAngle.current, yawAngle.current, 0, 'YXZ');
   });
 
-  return <PointerLockControls />;
+  return null;
 };
 
 export default PlayerControls;
