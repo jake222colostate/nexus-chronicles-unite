@@ -1,30 +1,54 @@
-import React from 'react';
-import { Plane } from '@react-three/drei';
+import React, { useMemo } from 'react';
+
 import * as THREE from 'three';
+import 'three.terrain.js';
 
 interface NexusGroundProps {
   size?: number;
   color?: string;
+  maxHeight?: number;
+  frequency?: number;
 }
 
-export const NexusGround: React.FC<NexusGroundProps> = ({ 
-  size = 100, 
-  color = "#1a1a2e" 
+export const NexusGround: React.FC<NexusGroundProps> = ({
+  size = 100,
+  color = "#1a1a2e",
+  maxHeight = 4,
+  frequency = 2
 }) => {
+  const terrain = useMemo(() => {
+    try {
+      const scene = (THREE as any).Terrain({
+        easing: (THREE as any).Terrain.Linear,
+        frequency,
+        maxHeight,
+        minHeight: -maxHeight,
+        steps: 1,
+        xSegments: 63,
+        xSize: size,
+        ySegments: 63,
+        ySize: size,
+        material: new THREE.MeshStandardMaterial({ color })
+      });
+      scene.rotation.x = -Math.PI / 2;
+      return scene;
+    } catch (err) {
+      console.warn('THREE.Terrain failed, using plane geometry', err);
+      const fallback = new THREE.Mesh(
+        new THREE.PlaneGeometry(size, size, 1, 1),
+        new THREE.MeshStandardMaterial({ color })
+      );
+      fallback.rotation.x = -Math.PI / 2;
+      const group = new THREE.Group();
+      group.add(fallback);
+      return group;
+    }
+  }, [size, color, maxHeight, frequency]);
+
   return (
     <group>
-      {/* Main ground plane */}
-      <Plane
-        args={[size, size]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.5, 0]}
-      >
-        <meshStandardMaterial 
-          color={color} 
-          roughness={0.8}
-          metalness={0.1}
-        />
-      </Plane>
+      {/* Procedural terrain or fallback */}
+      <primitive object={terrain} />
       
       {/* Grid lines for visual reference */}
       <primitive
@@ -44,3 +68,4 @@ export const NexusGround: React.FC<NexusGroundProps> = ({
     </group>
   );
 };
+

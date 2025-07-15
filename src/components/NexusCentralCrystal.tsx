@@ -1,10 +1,16 @@
-import React, { useRef } from 'react';
+import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
 
-export const NexusCentralCrystal: React.FC = () => {
+interface CrystalProps {
+  glow?: number;
+}
+
+export const NexusCentralCrystal = forwardRef<Mesh, CrystalProps>(({ glow = 2 }, ref) => {
   const crystalRef = useRef<Mesh>(null);
   const beamRef = useRef<Mesh>(null);
+
+  useImperativeHandle(ref, () => crystalRef.current as Mesh, [crystalRef]);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
@@ -109,13 +115,14 @@ export const NexusCentralCrystal: React.FC = () => {
       ))}
 
       {/* Crystal Power Glow */}
-      <pointLight 
-        position={[0, 4, 0]} 
-        intensity={2} 
-        color="#6366f1" 
+      <pointLight
+        position={[0, 4, 0]}
+        intensity={glow}
+        color="#6366f1"
         distance={20}
         decay={2}
       />
     </group>
   );
 };
+
