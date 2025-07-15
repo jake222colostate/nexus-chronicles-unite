@@ -1,11 +1,9 @@
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStateStore } from '@/stores/useGameStateStore';
-// Lazy load the heavy 3D world to avoid blocking the initial render
-const Nexus3DWorld = lazy(
-  () => import('@/components/NexusWorld/Nexus3DWorld').then((m) => ({ default: m.default }))
-);
+// Directly import the world to avoid dynamic loading issues
+import Nexus3DWorld from '@/components/NexusWorld/Nexus3DWorld';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomActionBar } from '@/components/BottomActionBar';
 import { TopHUD } from '@/components/TopHUD';
