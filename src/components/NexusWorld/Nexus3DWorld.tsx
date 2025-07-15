@@ -5,7 +5,6 @@ import * as THREE from 'three';
 
 function CrystalObelisk() {
   const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
-  const { scene: fountain } = useGLTF('/assets/ground_house_in_the_woods_project.glb');
   const crystalRef = useRef<THREE.Group>(null);
 
   useFrame((_, delta) => {
@@ -16,7 +15,15 @@ function CrystalObelisk() {
 
   return (
     <group>
-      <primitive object={fountain.clone()} scale={1.2} position={[0, 0, 0]} />
+      {/* Simple fountain base using basic geometry */}
+      <mesh position={[0, 0, 0]} receiveShadow>
+        <cylinderGeometry args={[1.5, 1.5, 0.3, 16]} />
+        <meshStandardMaterial color="#888888" />
+      </mesh>
+      <mesh position={[0, 0.2, 0]} receiveShadow>
+        <cylinderGeometry args={[1.2, 1.2, 0.1, 16]} />
+        <meshStandardMaterial color="#aaaaaa" />
+      </mesh>
       <group ref={crystalRef} position={[0, 1.2, 0]}>
         <primitive object={crystal.clone()} scale={1.5} />
         <Sparkles count={20} scale={2} size={2} color="#88e5ff" />
@@ -90,7 +97,7 @@ function StonePath() {
 }
 
 function Trees() {
-  const { scene } = useGLTF('/assets/stylized_tree.glb');
+  const { scene } = useGLTF('/assets/pine_tree_218poly.glb');
   const radius = 8;
   return (
     <group>
