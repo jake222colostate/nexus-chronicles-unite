@@ -5,7 +5,7 @@ import { ChunkData } from './ChunkSystem';
 import * as THREE from 'three';
 
 // Use local mountain asset for consistent mobile rendering
-const MOUNTAIN_URL = '/assets/mountain_low_poly.glb';
+const MOUNTAIN_URL = './assets/mountain_low_poly.glb';
 
 interface CenteredMountainSystemProps {
   chunks: ChunkData[];

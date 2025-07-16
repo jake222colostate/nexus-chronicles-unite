@@ -4,9 +4,9 @@ import * as THREE from 'three';
 // Tree model URLs - Using existing GLB files
 export const TREE_MODELS = {
   // Use bundled assets to avoid loading errors that caused placeholder trees
-  realistic: '/assets/realistic_tree.glb',
-  stylized: '/assets/stylized_tree.glb',
-  pine218: '/assets/pine_tree_218poly.glb'
+  realistic: './assets/realistic_tree.glb',
+  stylized: './assets/stylized_tree.glb',
+  pine218: './assets/pine_tree_218poly.glb'
 } as const;
 
 // Updated distribution ratios to prioritize pine_tree_218poly

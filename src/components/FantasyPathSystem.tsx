@@ -30,7 +30,7 @@ const JapanesePathTile: React.FC<{
   // Loading Japanese stone path tile
   
   try {
-    const { scene } = useGLTF('/assets/japanese_park_stone_floor_uljcfd0_low.glb');
+    const { scene } = useGLTF('./assets/japanese_park_stone_floor_uljcfd0_low.glb');
     
     if (!scene) {
       console.warn('JapanesePathTile: Scene is null/undefined, using fallback');
@@ -132,7 +132,7 @@ export const FantasyPathSystem: React.FC<FantasyPathSystemProps> = ({
 
 // Preload the Japanese stone path model
 try {
-  useGLTF.preload('/assets/japanese_park_stone_floor_uljcfd0_low.glb');
+  useGLTF.preload('./assets/japanese_park_stone_floor_uljcfd0_low.glb');
 } catch (error) {
   console.error('FantasyPathSystem: Failed to preload Japanese stone path:', error);
 }
