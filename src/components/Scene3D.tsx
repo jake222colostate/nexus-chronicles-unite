@@ -29,9 +29,7 @@ const ResizeHandler = () => {
   const { camera, gl } = useThree();
   useEffect(() => {
     const handleResize = () => {
-      if ('aspect' in camera) {
-        camera.aspect = window.innerWidth / window.innerHeight;
-      }
+      camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       gl.setSize(window.innerWidth, window.innerHeight);
     };
