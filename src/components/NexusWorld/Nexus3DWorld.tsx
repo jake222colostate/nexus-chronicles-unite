@@ -1,11 +1,9 @@
 import React, { Suspense, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stage, useGLTF, Sparkles } from '@react-three/drei';
+import { OrbitControls, Stage, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 
 function CrystalObelisk() {
-  const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
-  const { scene: fountain } = useGLTF('/models/bottle.glb');
   const crystalRef = useRef<THREE.Group>(null);
 
   useFrame((_, delta) => {
@@ -16,10 +14,20 @@ function CrystalObelisk() {
 
   return (
     <group>
-      {/* Using GLB fountain base */}
-      <primitive object={fountain.clone()} scale={2} position={[0, 0, 0]} />
-      <group ref={crystalRef} position={[0, 2, 0]}>
-        <primitive object={crystal.clone()} scale={1.5} />
+      {/* Simple fountain base using basic geometry */}
+      <mesh position={[0, 0, 0]} receiveShadow>
+        <cylinderGeometry args={[1.5, 1.5, 0.3, 16]} />
+        <meshStandardMaterial color="#888888" />
+      </mesh>
+      <mesh position={[0, 0.2, 0]} receiveShadow>
+        <cylinderGeometry args={[1.2, 1.2, 0.1, 16]} />
+        <meshStandardMaterial color="#aaaaaa" />
+      </mesh>
+      <group ref={crystalRef} position={[0, 1.2, 0]}>
+        <mesh>
+          <octahedronGeometry args={[0.8]} />
+          <meshStandardMaterial color="#88e5ff" emissive="#44aaff" emissiveIntensity={0.3} />
+        </mesh>
         <Sparkles count={20} scale={2} size={2} color="#88e5ff" />
         <pointLight position={[0, 1.5, 0]} intensity={2} color="#88e5ff" distance={6} />
       </group>
@@ -28,37 +36,42 @@ function CrystalObelisk() {
 }
 
 function VendorStall({ position, canopyColor, item }: { position: [number, number, number]; canopyColor: string; item: 'coin' | 'gems'; }) {
-  const { scene: stallScene } = useGLTF('/models/lantern.glb');
-  const { scene: coin } = useGLTF('/models/dice.glb');
-  const { scene: gems } = useGLTF('/models/avocado.glb');
-
-  const itemScene = item === 'coin' ? coin : gems;
-
-  const stall = useMemo(() => {
-    const clone = stallScene.clone();
-    clone.traverse((c: any) => {
-      if (c.isMesh) {
-        c.castShadow = true;
-        c.receiveShadow = true;
-        if (c.material) {
-          c.material = c.material.clone();
-          (c.material as THREE.MeshStandardMaterial).color = new THREE.Color(canopyColor);
-        }
-      }
-    });
-    return clone;
-  }, [stallScene, canopyColor]);
-
   return (
     <group position={position}>
-      <primitive object={stall} scale={1.2} />
-      <primitive object={itemScene.clone()} position={[0, 0.8, 0]} scale={item === 'coin' ? 1.5 : 1.2} />
+      {/* Stall base platform */}
+      <mesh position={[0, 0.25, 0]}>
+        <boxGeometry args={[1.8, 0.5, 1]} />
+        <meshStandardMaterial color="#6e3b1e" />
+      </mesh>
+
+      {/* Arched roof */}
+      <mesh position={[0, 1.2, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[1.2, 0.2, 16, 32, Math.PI]} />
+        <meshStandardMaterial color={canopyColor} side={THREE.DoubleSide} />
+      </mesh>
+
+      {/* Support beams */}
+      {[[-0.9, -0.25], [0.9, -0.25]].map(([x, z]) => (
+        <mesh key={`${x}-${z}`} position={[x, 0.2, z]}>
+          <cylinderGeometry args={[0.05, 0.05, 2, 12]} />
+          <meshStandardMaterial color="#3a1e0f" />
+        </mesh>
+      ))}
+
+      {/* Item display */}
+      <mesh position={[0, 0.6, 0.5]}>
+        {item === 'coin' ? (
+          <cylinderGeometry args={[0.2, 0.2, 0.05, 16]} />
+        ) : (
+          <octahedronGeometry args={[0.3]} />
+        )}
+        <meshStandardMaterial color={item === 'coin' ? "#ffd700" : "#8b5cf6"} />
+      </mesh>
     </group>
   );
 }
 
 function FenceRing() {
-  const { scene } = useGLTF('/models/simple_box.glb');
   const radius = 5.5;
   const segments = 16;
   return (
@@ -66,13 +79,14 @@ function FenceRing() {
       {Array.from({ length: segments }).map((_, i) => {
         const angle = (i / segments) * Math.PI * 2;
         return (
-          <primitive
+          <mesh
             key={i}
-            object={scene.clone()}
-            position={[Math.cos(angle) * radius, 0, Math.sin(angle) * radius]}
+            position={[Math.cos(angle) * radius, 0.75, Math.sin(angle) * radius]}
             rotation={[0, angle + Math.PI / 2, 0]}
-            scale={[0.2, 1.5, 0.2]}
-          />
+          >
+            <boxGeometry args={[0.2, 1.5, 0.2]} />
+            <meshStandardMaterial color="#8b4513" />
+          </mesh>
         );
       })}
     </group>
@@ -80,30 +94,37 @@ function FenceRing() {
 }
 
 function StonePath() {
-  const { scene } = useGLTF('/models/box_colors.glb');
   return (
     <group>
       {Array.from({ length: 6 }).map((_, i) => (
-        <primitive key={i} object={scene.clone()} position={[0, 0.05, 2 - i * 1.2]} scale={[2, 0.1, 1]} />
+        <mesh key={i} position={[0, 0.05, 2 - i * 1.2]}>
+          <boxGeometry args={[2, 0.1, 1]} />
+          <meshStandardMaterial color="#7a7a7a" />
+        </mesh>
       ))}
     </group>
   );
 }
 
 function Trees() {
-  const { scene } = useGLTF('/models/helmet.glb');
   const radius = 8;
   return (
     <group>
       {Array.from({ length: 8 }).map((_, i) => {
         const angle = (i / 8) * Math.PI * 2;
         return (
-          <primitive
-            key={i}
-            object={scene.clone()}
-            position={[Math.cos(angle) * radius, 2, Math.sin(angle) * radius]}
-            scale={0.5}
-          />
+          <group key={i} position={[Math.cos(angle) * radius, 0, Math.sin(angle) * radius]}>
+            {/* Tree trunk */}
+            <mesh position={[0, 1, 0]}>
+              <cylinderGeometry args={[0.2, 0.3, 2, 8]} />
+              <meshStandardMaterial color="#8b4513" />
+            </mesh>
+            {/* Tree foliage */}
+            <mesh position={[0, 2.5, 0]}>
+              <coneGeometry args={[1.5, 3, 8]} />
+              <meshStandardMaterial color="#228b22" />
+            </mesh>
+          </group>
         );
       })}
     </group>
