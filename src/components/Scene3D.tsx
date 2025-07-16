@@ -1,5 +1,5 @@
 import React, { Suspense, useRef, useMemo, useCallback, useState, useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
@@ -24,6 +24,21 @@ import { MapEditorControls } from './MapEditor/MapEditorControls';
 import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
 import { MapEditorFlyingCamera } from './MapEditor/MapEditorFlyingCamera';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
+
+const ResizeHandler = () => {
+  const { camera, gl } = useThree();
+  useEffect(() => {
+    const handleResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      gl.setSize(window.innerWidth, window.innerHeight);
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, [camera, gl]);
+  return null;
+};
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -158,6 +173,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           preserveDrawingBuffer: false
         }}
       >
+        <ResizeHandler />
         <Suspense fallback={null}>
           <PerspectiveCamera
             ref={cameraRef}
