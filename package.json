@@ -8,7 +8,8 @@
     "build": "BROWSERSLIST_IGNORE_OLD_DATA=true vite build",
     "build:dev": "BROWSERSLIST_IGNORE_OLD_DATA=true vite build --mode development",
     "lint": "eslint .",
-    "preview": "BROWSERSLIST_IGNORE_OLD_DATA=true vite preview"
+    "preview": "BROWSERSLIST_IGNORE_OLD_DATA=true vite preview",
+    "ios": "npx cap sync ios && npx cap open ios"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.0",
