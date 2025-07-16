@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/sonner';
 import Index from './pages/Index';
 import NexusWorld from './pages/NexusWorld';
 import NotFound from './pages/NotFound';
-import { iPhoneFrameMinimal as IPhoneFrameMinimal } from '@/components/iPhoneFrameMinimal';
 
 const queryClient = new QueryClient();
 
@@ -14,13 +13,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HashRouter>
-        <IPhoneFrameMinimal>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/nexus-world" element={<NexusWorld />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </IPhoneFrameMinimal>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/nexus-world" element={<NexusWorld />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
         <Toaster />
       </HashRouter>
     </QueryClientProvider>
