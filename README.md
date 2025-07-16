@@ -71,3 +71,15 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Running on iOS
+
+This project uses [Capacitor](https://capacitorjs.com/) for mobile builds. After installing dependencies and building the web assets, you can generate and run the iOS project with:
+
+```sh
+npm run build
+npx cap sync ios
+npx cap open ios
+```
+
+The last command opens the Xcode workspace where you can build and deploy the app to the iOS simulator or a connected device.
