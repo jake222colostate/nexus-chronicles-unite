@@ -138,7 +138,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
         dpr={[1, 1]}
         performance={{ min: 0.8 }}
-        style={{ width: '375px', height: '667px' }}
+        style={{ width: '100%', height: '100%' }}
         gl={{ 
           antialias: false, 
           alpha: false,
@@ -156,7 +156,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             fov={65}
             near={0.01}
             far={500}
-            aspect={375 / 667}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           />
 
