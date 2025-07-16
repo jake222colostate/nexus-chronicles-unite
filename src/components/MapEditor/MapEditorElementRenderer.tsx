@@ -8,7 +8,7 @@ const ElementPreview: React.FC<{ element: MapElement; isSelected: boolean }> = (
 }) => {
   const { properties } = element;
   const { setSelectedElement } = useMapEditorStore();
-  const mountainModel = useGLTF('/newassets/Mountain.glb');
+  const mountainModel = useGLTF('https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/mountain.glb');
 
   const handleClick = (e: any) => {
     e.stopPropagation();
@@ -125,4 +125,4 @@ export const MapEditorElementRenderer: React.FC = () => {
   );
 };
 
-useGLTF.preload('/newassets/Mountain.glb');
+useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/mountain.glb');
