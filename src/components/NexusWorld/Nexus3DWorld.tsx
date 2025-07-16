@@ -1,92 +1,47 @@
 import React, { Suspense, useRef, useMemo } from 'react';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Stage, Sparkles, useTexture } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Stage, Sparkles, useGLTF, FirstPersonControls } from '@react-three/drei';
 import * as THREE from 'three';
 
+// Movement controller component
+function MovementController() {
+  const controlsRef = useRef<any>(null);
+  
+  return (
+    <FirstPersonControls
+      ref={controlsRef}
+      movementSpeed={5}
+      lookSpeed={0.1}
+      lookVertical={true}
+      constrainVertical={true}
+      verticalMin={1.1}
+      verticalMax={2.2}
+      activeLook={true}
+    />
+  );
+}
+
 function CrystalObelisk() {
+  const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
+  const { scene: fountain } = useGLTF('/models/bottle.glb');
   const crystalRef = useRef<THREE.Group>(null);
-  const waterRef = useRef<THREE.Group>(null);
+  const fountainClone = useMemo(() => fountain.clone(), [fountain]);
+  const crystalClone = useMemo(() => crystal.clone(), [crystal]);
 
   useFrame((_, delta) => {
     if (crystalRef.current) {
       crystalRef.current.rotation.y += delta * 0.5;
     }
-    if (waterRef.current) {
-      waterRef.current.rotation.y += delta * 0.3;
-    }
   });
 
   return (
     <group>
-      {/* Detailed stone fountain base with carved edges */}
-      <mesh position={[0, 0, 0]} receiveShadow castShadow>
-        <cylinderGeometry args={[2.2, 2.2, 0.4, 32]} />
-        <meshStandardMaterial color="#6b6b6b" roughness={0.8} />
-      </mesh>
+      {/* GLB fountain base */}
+      <primitive object={fountainClone} scale={[3, 1, 3]} position={[0, 0, 0]} />
       
-      {/* Inner stone rim */}
-      <mesh position={[0, 0.25, 0]} receiveShadow castShadow>
-        <cylinderGeometry args={[1.8, 1.8, 0.3, 32]} />
-        <meshStandardMaterial color="#7a7a7a" roughness={0.7} />
-      </mesh>
-
-      {/* Water surface */}
-      <group ref={waterRef} position={[0, 0.45, 0]}>
-        <mesh>
-          <cylinderGeometry args={[1.7, 1.7, 0.02, 32]} />
-          <meshStandardMaterial color="#4dd0e1" transparent opacity={0.7} />
-        </mesh>
-        {/* Water ripples */}
-        <mesh position={[0, 0.01, 0]}>
-          <cylinderGeometry args={[1.5, 1.5, 0.01, 32]} />
-          <meshStandardMaterial color="#26c6da" transparent opacity={0.5} />
-        </mesh>
-      </group>
-
-      {/* Crystal obelisk - multi-segmented */}
-      <group ref={crystalRef} position={[0, 0.5, 0]}>
-        {/* Base crystal segment */}
-        <mesh position={[0, 0.8, 0]}>
-          <coneGeometry args={[0.4, 1.2, 6]} />
-          <meshStandardMaterial 
-            color="#00e5ff" 
-            emissive="#0088cc" 
-            emissiveIntensity={0.3}
-            transparent 
-            opacity={0.9}
-            roughness={0.1}
-            metalness={0.1}
-          />
-        </mesh>
-        
-        {/* Middle crystal segment */}
-        <mesh position={[0, 1.8, 0]}>
-          <coneGeometry args={[0.3, 1.0, 6]} />
-          <meshStandardMaterial 
-            color="#00d4ff" 
-            emissive="#0099dd" 
-            emissiveIntensity={0.4}
-            transparent 
-            opacity={0.9}
-            roughness={0.1}
-            metalness={0.1}
-          />
-        </mesh>
-
-        {/* Top crystal segment */}
-        <mesh position={[0, 2.6, 0]}>
-          <coneGeometry args={[0.2, 0.8, 6]} />
-          <meshStandardMaterial 
-            color="#00c4ff" 
-            emissive="#00aaee" 
-            emissiveIntensity={0.5}
-            transparent 
-            opacity={0.9}
-            roughness={0.1}
-            metalness={0.1}
-          />
-        </mesh>
-
+      {/* GLB crystal obelisk */}
+      <group ref={crystalRef} position={[0, 1.5, 0]}>
+        <primitive object={crystalClone} scale={2} />
         <Sparkles count={30} scale={3} size={3} color="#88e5ff" />
         <pointLight position={[0, 2, 0]} intensity={3} color="#88e5ff" distance={8} />
       </group>
@@ -95,106 +50,55 @@ function CrystalObelisk() {
 }
 
 function VendorStall({ position, canopyColor, item }: { position: [number, number, number]; canopyColor: string; item: 'coin' | 'gems'; }) {
+  const { scene: stallScene } = useGLTF('/models/lantern.glb');
+  const { scene: coinScene } = useGLTF('/models/dice.glb');
+  const { scene: gemScene } = useGLTF('/models/avocado.glb');
+  
+  const stallClone = useMemo(() => stallScene.clone(), [stallScene]);
+  const itemClone = useMemo(() => {
+    const scene = item === 'coin' ? coinScene : gemScene;
+    return scene.clone();
+  }, [item, coinScene, gemScene]);
+
+  // Apply color to the stall
+  useMemo(() => {
+    stallClone.traverse((child: any) => {
+      if (child.isMesh && child.material) {
+        child.material = child.material.clone();
+        child.material.color = new THREE.Color(canopyColor);
+      }
+    });
+  }, [stallClone, canopyColor]);
+
   return (
     <group position={position}>
-      {/* Wooden stall base platform */}
-      <mesh position={[0, 0.3, 0]} castShadow receiveShadow>
-        <boxGeometry args={[2.2, 0.6, 1.4]} />
-        <meshStandardMaterial color="#8b4513" roughness={0.9} />
-      </mesh>
-
-      {/* Wooden counter */}
-      <mesh position={[0, 0.65, 0.5]} castShadow receiveShadow>
-        <boxGeometry args={[2.0, 0.1, 0.8]} />
-        <meshStandardMaterial color="#a0522d" roughness={0.8} />
-      </mesh>
-
-      {/* Support posts */}
-      {[[-0.8, 0.8], [0.8, 0.8], [-0.8, -0.2], [0.8, -0.2]].map(([x, z], i) => (
-        <mesh key={i} position={[x, 1.0, z]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.06, 0.06, 2, 8]} />
-          <meshStandardMaterial color="#654321" roughness={0.9} />
-        </mesh>
-      ))}
-
-      {/* Fabric awning */}
-      <mesh position={[0, 1.8, 0.3]} castShadow receiveShadow>
-        <boxGeometry args={[2.4, 0.05, 1.6]} />
-        <meshStandardMaterial color={canopyColor} />
-      </mesh>
-
-      {/* Awning sides */}
-      <mesh position={[0, 1.5, 1.0]} rotation={[Math.PI / 6, 0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[2.4, 0.05, 0.8]} />
-        <meshStandardMaterial color={canopyColor} />
-      </mesh>
-
-      {/* Display shelves */}
-      <mesh position={[0, 0.85, 0.6]} castShadow receiveShadow>
-        <boxGeometry args={[1.8, 0.05, 0.6]} />
-        <meshStandardMaterial color="#daa520" />
-      </mesh>
-
-      {/* Item display */}
-      <group position={[0, 0.9, 0.6]}>
-        {item === 'coin' ? (
-          <>
-            <mesh position={[0, 0.05, 0]} castShadow>
-              <cylinderGeometry args={[0.15, 0.15, 0.03, 16]} />
-              <meshStandardMaterial color="#ffd700" metalness={0.8} roughness={0.2} />
-            </mesh>
-            <mesh position={[0.2, 0.05, 0]} castShadow>
-              <cylinderGeometry args={[0.15, 0.15, 0.03, 16]} />
-              <meshStandardMaterial color="#ffd700" metalness={0.8} roughness={0.2} />
-            </mesh>
-            <mesh position={[-0.2, 0.05, 0]} castShadow>
-              <cylinderGeometry args={[0.15, 0.15, 0.03, 16]} />
-              <meshStandardMaterial color="#ffd700" metalness={0.8} roughness={0.2} />
-            </mesh>
-          </>
-        ) : (
-          <>
-            <mesh position={[0, 0.1, 0]} castShadow>
-              <octahedronGeometry args={[0.2]} />
-              <meshStandardMaterial color="#8b5cf6" emissive="#6a4c93" emissiveIntensity={0.2} />
-            </mesh>
-            <mesh position={[0.25, 0.08, 0]} castShadow>
-              <octahedronGeometry args={[0.15]} />
-              <meshStandardMaterial color="#9c27b0" emissive="#7b1fa2" emissiveIntensity={0.2} />
-            </mesh>
-            <mesh position={[-0.25, 0.08, 0]} castShadow>
-              <octahedronGeometry args={[0.15]} />
-              <meshStandardMaterial color="#673ab7" emissive="#512da8" emissiveIntensity={0.2} />
-            </mesh>
-          </>
-        )}
-      </group>
+      <primitive object={stallClone} scale={1.5} />
+      <primitive object={itemClone} position={[0, 1.2, 0]} scale={0.8} />
     </group>
   );
 }
 
 function FenceRing() {
+  const { scene: fenceScene } = useGLTF('/models/simple_box.glb');
   const radius = 6;
   const segments = 20;
+  
   return (
     <group>
       {Array.from({ length: segments }).map((_, i) => {
         const angle = (i / segments) * Math.PI * 2;
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
+        const fenceClone = fenceScene.clone();
+        
         return (
-          <group key={i} position={[x, 0, z]} rotation={[0, angle + Math.PI / 2, 0]}>
-            {/* Fence post */}
-            <mesh position={[0, 0.8, 0]} castShadow receiveShadow>
-              <boxGeometry args={[0.15, 1.6, 0.15]} />
-              <meshStandardMaterial color="#8b4513" roughness={0.9} />
-            </mesh>
-            {/* Horizontal rail */}
-            <mesh position={[0, 0.8, 0.4]} castShadow receiveShadow>
-              <boxGeometry args={[0.1, 0.1, 0.8]} />
-              <meshStandardMaterial color="#8b4513" roughness={0.9} />
-            </mesh>
-          </group>
+          <primitive
+            key={i}
+            object={fenceClone}
+            position={[x, 0.8, z]}
+            rotation={[0, angle + Math.PI / 2, 0]}
+            scale={[0.2, 1.5, 0.2]}
+          />
         );
       })}
     </group>
@@ -202,19 +106,28 @@ function FenceRing() {
 }
 
 function StonePath() {
+  const { scene: stoneScene } = useGLTF('/models/box_colors.glb');
+  
   return (
     <group>
-      {Array.from({ length: 8 }).map((_, i) => (
-        <mesh key={i} position={[0, 0.05, 3.5 - i * 1.0]} castShadow receiveShadow>
-          <boxGeometry args={[2.5, 0.15, 0.8]} />
-          <meshStandardMaterial color="#daa520" roughness={0.8} />
-        </mesh>
-      ))}
+      {Array.from({ length: 8 }).map((_, i) => {
+        const stoneClone = stoneScene.clone();
+        
+        return (
+          <primitive
+            key={i}
+            object={stoneClone}
+            position={[0, 0.05, 3.5 - i * 1.0]}
+            scale={[2.5, 0.15, 0.8]}
+          />
+        );
+      })}
     </group>
   );
 }
 
 function Trees() {
+  const { scene: treeScene } = useGLTF('/models/helmet.glb');
   const radius = 9;
   const treePositions = [
     [0, 0], [45, 0], [90, 0], [135, 0], [180, 0], [225, 0], [270, 0], [315, 0],
@@ -228,62 +141,44 @@ function Trees() {
         const treeRadius = radius + radiusOffset;
         const x = Math.cos(rad) * treeRadius;
         const z = Math.sin(rad) * treeRadius;
-        const treeHeight = 1.5 + Math.random() * 0.8;
-        const trunkRadius = 0.15 + Math.random() * 0.1;
+        const treeClone = treeScene.clone();
+        
+        // Apply green color to make it look more tree-like
+        treeClone.traverse((child: any) => {
+          if (child.isMesh && child.material) {
+            child.material = child.material.clone();
+            child.material.color = new THREE.Color('#32cd32');
+          }
+        });
         
         return (
-          <group key={i} position={[x, 0, z]}>
-            {/* Tree trunk */}
-            <mesh position={[0, treeHeight, 0]} castShadow receiveShadow>
-              <cylinderGeometry args={[trunkRadius * 0.8, trunkRadius, treeHeight * 2, 12]} />
-              <meshStandardMaterial color="#8b4513" roughness={0.9} />
-            </mesh>
-            
-            {/* Tree foliage - multiple layers for fullness */}
-            <mesh position={[0, treeHeight * 1.8, 0]} castShadow receiveShadow>
-              <icosahedronGeometry args={[1.8, 2]} />
-              <meshStandardMaterial color="#32cd32" roughness={0.8} />
-            </mesh>
-            
-            <mesh position={[0, treeHeight * 1.5, 0]} castShadow receiveShadow>
-              <icosahedronGeometry args={[1.5, 2]} />
-              <meshStandardMaterial color="#228b22" roughness={0.8} />
-            </mesh>
-            
-            <mesh position={[0, treeHeight * 2.2, 0]} castShadow receiveShadow>
-              <icosahedronGeometry args={[1.2, 2]} />
-              <meshStandardMaterial color="#3cb371" roughness={0.8} />
-            </mesh>
-          </group>
+          <primitive
+            key={i}
+            object={treeClone}
+            position={[x, 1.5, z]}
+            scale={[1.5, 2, 1.5]}
+          />
         );
       })}
     </group>
   );
 }
 
-// Enhanced ground with grass texture
+// Horizontal ground plane
 function EnhancedGround() {
   return (
     <group>
-      {/* Main circular ground */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-        <cylinderGeometry args={[12, 12, 0.2, 64]} />
+      {/* Main horizontal ground plane */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <planeGeometry args={[30, 30]} />
         <meshStandardMaterial color="#4caf50" roughness={0.9} />
       </mesh>
       
-      {/* Grass patches for detail */}
-      {Array.from({ length: 20 }).map((_, i) => {
-        const angle = (i / 20) * Math.PI * 2;
-        const distance = 3 + Math.random() * 6;
-        const x = Math.cos(angle) * distance;
-        const z = Math.sin(angle) * distance;
-        return (
-          <mesh key={i} position={[x, 0.12, z]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-            <cylinderGeometry args={[0.8, 0.8, 0.02, 16]} />
-            <meshStandardMaterial color="#66bb6a" roughness={0.9} />
-          </mesh>
-        );
-      })}
+      {/* Additional circular grass area */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
+        <circleGeometry args={[12, 64]} />
+        <meshStandardMaterial color="#66bb6a" roughness={0.9} />
+      </mesh>
     </group>
   );
 }
@@ -301,12 +196,30 @@ const SceneContent = () => (
 );
 
 const Nexus3DWorld: React.FC = () => (
-  <Canvas camera={{ position: [0, 4, 8], fov: 50 }} shadows style={{ height: '100%', width: '100%' }}>
+  <Canvas camera={{ position: [0, 2, 8], fov: 75 }} shadows style={{ height: '100%', width: '100%' }}>
     <Suspense fallback={null}>
-      <Stage adjustCamera intensity={0.6} shadows="contact" environment="sunset">
-        <SceneContent />
-      </Stage>
-      <OrbitControls enableZoom={false} />
+      {/* Enhanced lighting */}
+      <ambientLight intensity={0.4} />
+      <directionalLight
+        position={[10, 10, 5]}
+        intensity={1}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-far={50}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+      />
+      <pointLight position={[0, 5, 0]} intensity={0.5} color="#ffffff" />
+      
+      {/* Sky color */}
+      <fog attach="fog" args={['#87CEEB', 20, 100]} />
+      
+      <SceneContent />
+      
+      {/* Movement controller */}
+      <MovementController />
     </Suspense>
   </Canvas>
 );
