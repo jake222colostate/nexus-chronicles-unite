@@ -22,8 +22,8 @@ function MovementController() {
 }
 
 function CrystalObelisk() {
-  const { scene: crystal } = useGLTF('./models/crystal_obelisk.glb');
-  const { scene: fountain } = useGLTF('./models/bottle.glb');
+  const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
+  const { scene: fountain } = useGLTF('/models/bottle.glb');
   const crystalRef = useRef<THREE.Group>(null);
   const fountainClone = useMemo(() => fountain.clone(), [fountain]);
   const crystalClone = useMemo(() => crystal.clone(), [crystal]);
@@ -50,9 +50,9 @@ function CrystalObelisk() {
 }
 
 function VendorStall({ position, canopyColor, item }: { position: [number, number, number]; canopyColor: string; item: 'coin' | 'gems'; }) {
-  const { scene: stallScene } = useGLTF('./models/lantern.glb');
-  const { scene: coinScene } = useGLTF('./models/dice.glb');
-  const { scene: gemScene } = useGLTF('./models/avocado.glb');
+  const { scene: stallScene } = useGLTF('/models/lantern.glb');
+  const { scene: coinScene } = useGLTF('/models/dice.glb');
+  const { scene: gemScene } = useGLTF('/models/avocado.glb');
   
   const stallClone = useMemo(() => stallScene.clone(), [stallScene]);
   const itemClone = useMemo(() => {
@@ -79,7 +79,7 @@ function VendorStall({ position, canopyColor, item }: { position: [number, numbe
 }
 
 function FenceRing() {
-  const { scene: fenceScene } = useGLTF('./models/simple_box.glb');
+  const { scene: fenceScene } = useGLTF('/models/simple_box.glb');
   const radius = 6;
   const segments = 20;
   
@@ -128,7 +128,7 @@ function ResponsiveCanvas() {
 }
 
 function StonePath() {
-  const { scene: stoneScene } = useGLTF('./models/box_colors.glb');
+  const { scene: stoneScene } = useGLTF('/models/box_colors.glb');
   
   return (
     <group>
@@ -149,7 +149,7 @@ function StonePath() {
 }
 
 function Trees() {
-  const { scene: treeScene } = useGLTF('./models/helmet.glb');
+  const { scene: treeScene } = useGLTF('/models/helmet.glb');
   const radius = 9;
   const treePositions = [
     [0, 0], [45, 0], [90, 0], [135, 0], [180, 0], [225, 0], [270, 0], [315, 0],
