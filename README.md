@@ -83,3 +83,15 @@ npx cap open ios
 ```
 
 The last command opens the Xcode workspace where you can build and deploy the app to the iOS simulator or a connected device.
+
+## Building with Expo
+
+An `expo` directory contains a minimal React Native wrapper that loads the web app in a WebView. To run it:
+
+```sh
+cd expo
+npm install
+npx expo start
+```
+
+This launches the Expo development tools so you can open the app on iOS or Android. For a production build, use `npx expo build` or EAS.

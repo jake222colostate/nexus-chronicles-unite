@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "Nexus Chronicles Unite",
+    "slug": "nexus-chronicles-unite",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "jsEngine": "hermes",
+    "assetBundlePatterns": ["**/*"]
+  }
+}
