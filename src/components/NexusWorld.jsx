@@ -4,12 +4,12 @@ import { OrbitControls, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 
 const Scene = () => {
-  const { scene: crystal } = useGLTF('./models/crystal_obelisk.glb');
-  const { scene: goldVendor } = useGLTF('./models/vendor_gold.glb');
-  const { scene: gemVendor } = useGLTF('./models/vendor_gems.glb');
-  const { scene: tree } = useGLTF('./models/tree.glb');
-  const { scene: fencePost } = useGLTF('./models/fence_post.glb');
-  const { scene: pathTile } = useGLTF('./models/path_tile.glb');
+  const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
+  const { scene: goldVendor } = useGLTF('/models/vendor_gold.glb');
+  const { scene: gemVendor } = useGLTF('/models/vendor_gems.glb');
+  const { scene: tree } = useGLTF('/models/tree.glb');
+  const { scene: fencePost } = useGLTF('/models/fence_post.glb');
+  const { scene: pathTile } = useGLTF('/models/path_tile.glb');
 
   const crystalRef = useRef();
 
