@@ -223,13 +223,9 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     if (canvas) {
       console.log('MagicStaffWeaponSystem: Attaching click listener to canvas');
       canvas.addEventListener('click', handleClick);
-      canvas.addEventListener('pointerdown', handleClick);
-      canvas.addEventListener('touchstart', handleClick);
       return () => {
         console.log('MagicStaffWeaponSystem: Removing click listener from canvas');
         canvas.removeEventListener('click', handleClick);
-        canvas.removeEventListener('pointerdown', handleClick);
-        canvas.removeEventListener('touchstart', handleClick);
       };
     } else {
       console.warn('MagicStaffWeaponSystem: Canvas not found, cannot attach click listener');

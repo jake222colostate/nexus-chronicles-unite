@@ -19,7 +19,7 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   chunkSize,
   realm = 'fantasy'
 }) => {
-  const gltf = useGLTF('https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/mountain.glb');
+  const gltf = useGLTF('/newassets/Mountain.glb');
   const scene = gltf.scene;
 
   const shouldRender = realm === 'fantasy';
@@ -140,6 +140,6 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
 
 // Preload the local mountain model for fantasy realm
 if (typeof window !== 'undefined') {
-  useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/mountain.glb');
+  useGLTF.preload('/newassets/Mountain.glb');
   console.log('GLBMountainSystem: Preloading local mountain model');
 }

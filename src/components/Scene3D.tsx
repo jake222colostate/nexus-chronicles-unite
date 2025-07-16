@@ -1,5 +1,5 @@
-import React, { Suspense, useRef, useMemo, useCallback, useState, useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import React, { Suspense, useRef, useMemo, useCallback, useState } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { PerspectiveCamera } from '@react-three/drei';
 import { FloatingIsland } from './FloatingIsland';
 import { UpgradeNode3D } from './UpgradeNode3D';
@@ -24,23 +24,6 @@ import { MapEditorControls } from './MapEditor/MapEditorControls';
 import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
 import { MapEditorFlyingCamera } from './MapEditor/MapEditorFlyingCamera';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
-
-const ResizeHandler = () => {
-  const { camera, gl } = useThree();
-  useEffect(() => {
-    const handleResize = () => {
-      if ('aspect' in camera) {
-        camera.aspect = window.innerWidth / window.innerHeight;
-      }
-      camera.updateProjectionMatrix();
-      gl.setSize(window.innerWidth, window.innerHeight);
-    };
-    window.addEventListener('resize', handleResize);
-    handleResize();
-    return () => window.removeEventListener('resize', handleResize);
-  }, [camera, gl]);
-  return null;
-};
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -99,16 +82,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   const [selectedUpgrade, setSelectedUpgrade] = useState<string | null>(null);
   const { isEditorActive } = useMapEditorStore();
 
-  const [size, setSize] = useState({ width: window.innerWidth, height: window.innerHeight });
-
-  useEffect(() => {
-    const handleResize = () => {
-      setSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   // Stable player position for chunk system - centered in the mountain valley
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
 
@@ -165,9 +138,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
         className={`transition-all duration-500 ${isTransitioning ? 'opacity-70 blur-sm' : 'opacity-100'}`}
         dpr={[1, 1]}
         performance={{ min: 0.8 }}
-        style={{ width: size.width, height: size.height }}
-        gl={{
-          antialias: false,
+        style={{ width: '375px', height: '667px' }}
+        gl={{ 
+          antialias: false, 
           alpha: false,
           powerPreference: "default",
           stencil: false,
@@ -175,7 +148,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           preserveDrawingBuffer: false
         }}
       >
-        <ResizeHandler />
         <Suspense fallback={null}>
           <PerspectiveCamera
             ref={cameraRef}
@@ -184,7 +156,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             fov={65}
             near={0.01}
             far={500}
-            aspect={size.width / size.height}
+            aspect={375 / 667}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           />
 
