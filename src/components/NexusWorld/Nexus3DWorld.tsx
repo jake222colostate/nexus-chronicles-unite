@@ -1,5 +1,5 @@
-import React, { Suspense, useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import React, { Suspense, useRef, useMemo, useEffect } from 'react';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stage, Sparkles, useGLTF, FirstPersonControls } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -105,6 +105,26 @@ function FenceRing() {
   );
 }
 
+function ResponsiveCanvas() {
+  const { gl, camera } = useThree();
+
+  useEffect(() => {
+    const handleResize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      gl.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [gl, camera]);
+
+  return null;
+}
+
 function StonePath() {
   const { scene: stoneScene } = useGLTF('/models/box_colors.glb');
   
@@ -197,6 +217,7 @@ const SceneContent = () => (
 
 const Nexus3DWorld: React.FC = () => (
   <Canvas camera={{ position: [0, 2, 8], fov: 75 }} shadows style={{ height: '100%', width: '100%' }}>
+    <ResponsiveCanvas />
     <Suspense fallback={null}>
       {/* Enhanced lighting */}
       <ambientLight intensity={0.4} />
