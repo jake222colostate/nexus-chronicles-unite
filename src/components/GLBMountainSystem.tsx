@@ -19,6 +19,11 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   chunkSize,
   realm = 'fantasy'
 }) => {
+  // Disable GLB mountain system for now to prevent 404 errors
+  // This will be re-enabled when proper mountain models are available
+  return null;
+  
+  /*
   const gltf = useGLTF('/assets/mountain_low_poly.glb');
   const scene = gltf.scene;
 
@@ -136,10 +141,11 @@ export const GLBMountainSystem: React.FC<GLBMountainSystemProps> = ({
   }
 
   return <group>{mountainElements}</group>;
+  */
 };
 
-// Preload the local mountain model for fantasy realm
-if (typeof window !== 'undefined') {
-  useGLTF.preload('/assets/mountain_low_poly.glb');
-  console.log('GLBMountainSystem: Preloading local mountain model');
-}
+// Disable preloading for now to prevent 404 errors
+// if (typeof window !== 'undefined') {
+//   useGLTF.preload('/assets/mountain_low_poly.glb');
+//   console.log('GLBMountainSystem: Preloading local mountain model');
+// }

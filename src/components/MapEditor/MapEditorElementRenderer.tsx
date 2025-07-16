@@ -8,7 +8,8 @@ const ElementPreview: React.FC<{ element: MapElement; isSelected: boolean }> = (
 }) => {
   const { properties } = element;
   const { setSelectedElement } = useMapEditorStore();
-  const mountainModel = useGLTF('/assets/mountain_low_poly.glb');
+  // Temporarily disable mountain model loading to prevent 404 errors
+  // const mountainModel = useGLTF('/assets/mountain_low_poly.glb');
 
   const handleClick = (e: any) => {
     e.stopPropagation();
@@ -71,7 +72,9 @@ const ElementPreview: React.FC<{ element: MapElement; isSelected: boolean }> = (
 
       case 'mountain':
         return (
-          <primitive object={mountainModel.scene.clone()} onClick={handleClick} />
+          <Box args={[3, 2, 3]} onClick={handleClick}>
+            <meshStandardMaterial color="#8B7355" />
+          </Box>
         );
       
       case 'leech':
@@ -125,4 +128,5 @@ export const MapEditorElementRenderer: React.FC = () => {
   );
 };
 
-useGLTF.preload('/assets/mountain_low_poly.glb');
+// Temporarily disable mountain model preloading to prevent 404 errors
+// useGLTF.preload('/assets/mountain_low_poly.glb');
