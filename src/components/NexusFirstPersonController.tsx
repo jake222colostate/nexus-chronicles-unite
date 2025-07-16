@@ -1,6 +1,8 @@
 import React, { useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { VirtualJoystick } from './VirtualJoystick';
 
 interface NexusFirstPersonControllerProps {
   speed?: number;
@@ -12,6 +14,7 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
   sensitivity = 0.002
 }) => {
   const { camera } = useThree();
+  const isMobile = useIsMobile();
   const velocity = useRef(new Vector3());
   const direction = useRef(new Vector3());
   const euler = useRef(new Vector3());
@@ -28,6 +31,13 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
   const isLocked = useRef(false);
   const yaw = useRef(0);
   const pitch = useRef(0);
+
+  const handleJoystickMove = (dx: number, dy: number) => {
+    keys.current.forward = dy < -0.3;
+    keys.current.backward = dy > 0.3;
+    keys.current.left = dx < -0.3;
+    keys.current.right = dx > 0.3;
+  };
 
   useEffect(() => {
     // Initialize camera position
@@ -199,5 +209,9 @@ export const NexusFirstPersonController: React.FC<NexusFirstPersonControllerProp
     camera.up.set(0, 1, 0);
   });
 
-  return null;
+  return (
+    <>
+      {isMobile && <VirtualJoystick onMove={handleJoystickMove} />}
+    </>
+  );
 };

@@ -1,5 +1,7 @@
 
 import React, { useRef, useEffect } from 'react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { VirtualJoystick } from './VirtualJoystick';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Vector3 } from 'three';
 
@@ -15,6 +17,7 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
   canMoveForward
 }) => {
   const { camera } = useThree();
+  const isMobile = useIsMobile();
   const targetPosition = useRef(new Vector3(...position));
   const moveSpeed = useRef(0);
   const moveDirection = useRef(0);
@@ -24,6 +27,20 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
   const yawAngle = useRef(0);
   const isMouseDown = useRef(false);
   const lastMouseX = useRef(0);
+
+  const handleJoystickMove = (dx: number, dy: number) => {
+    if (Math.abs(dy) > 0.1) {
+      moveSpeed.current = Math.min(7, Math.abs(dy) * 7);
+      moveDirection.current = dy < 0 ? 1 : -1;
+    } else {
+      moveSpeed.current = 0;
+      moveDirection.current = 0;
+    }
+
+    if (Math.abs(dx) > 0.05) {
+      yawAngle.current += dx * 0.05;
+    }
+  };
 
   // Handle keyboard input
   useEffect(() => {
@@ -104,53 +121,42 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     };
   }, []);
 
-  // Touch controls for mobile
+  // Touch look controls for mobile
   useEffect(() => {
+    if (!isMobile) return;
     const handleTouchStart = (event: TouchEvent) => {
       if (event.touches.length === 1) {
-        const touch = event.touches[0];
-        const rect = (event.target as HTMLElement).getBoundingClientRect();
-        const y = touch.clientY - rect.top;
-        const x = touch.clientX - rect.left;
-        
-        // Movement in upper portion (forward)
-        if (y < rect.height * 0.3 && canMoveForward) {
-          moveSpeed.current = 7; // Increased speed from 5 to 7
-          moveDirection.current = 1;
-        }
-        // Movement in lower portion (backward)
-        else if (y > rect.height * 0.7) {
-          moveSpeed.current = 7; // Increased speed from 5 to 7
-          moveDirection.current = -1;
-        }
-        
-        // Look direction based on horizontal position - allow full rotation
-        if (x < rect.width * 0.3) {
-          yawAngle.current -= 0.1; // Remove limits for full rotation
-        } else if (x > rect.width * 0.7) {
-          yawAngle.current += 0.1; // Remove limits for full rotation
-        }
+        isMouseDown.current = true;
+        lastMouseX.current = event.touches[0].clientX;
       }
     };
 
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!isMouseDown.current || event.touches.length !== 1) return;
+      const deltaX = event.touches[0].clientX - lastMouseX.current;
+      lastMouseX.current = event.touches[0].clientX;
+      yawAngle.current += deltaX * 0.003;
+    };
+
     const handleTouchEnd = () => {
-      moveSpeed.current = 0;
-      moveDirection.current = 0;
+      isMouseDown.current = false;
     };
 
     const canvas = document.querySelector('canvas');
     if (canvas) {
-      canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
-      canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+      canvas.addEventListener('touchstart', handleTouchStart);
+      canvas.addEventListener('touchmove', handleTouchMove);
+      canvas.addEventListener('touchend', handleTouchEnd);
     }
 
     return () => {
       if (canvas) {
         canvas.removeEventListener('touchstart', handleTouchStart);
+        canvas.removeEventListener('touchmove', handleTouchMove);
         canvas.removeEventListener('touchend', handleTouchEnd);
       }
     };
-  }, [canMoveForward]);
+  }, [isMobile]);
 
   useFrame((state, delta) => {
     swayTime.current += delta;
@@ -192,5 +198,9 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     onPositionChange(camera.position);
   });
 
-  return null;
+  return (
+    <>
+      {isMobile && <VirtualJoystick onMove={handleJoystickMove} />}
+    </>
+  );
 };
