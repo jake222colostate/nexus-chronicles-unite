@@ -57,7 +57,7 @@ interface InfiniteEnvironmentSystemProps {
 
 export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps> = ({ playerPosition }) => {
   const { scene } = useThree();
-  const { scene: mountainModel } = useGLTF('/assets/mountain_low_poly.glb');
+  const { scene: mountainModel } = useGLTF('./assets/mountain_low_poly.glb');
   const [chunks, setChunks] = useState<EnvironmentChunk[]>([]);
   const chunksRef = useRef<EnvironmentChunk[]>([]);
   const playerPositionRef = useRef(new Vector3(0, 0, 0));
@@ -319,4 +319,4 @@ export const InfiniteEnvironmentSystem: React.FC<InfiniteEnvironmentSystemProps>
 };
 
 // Preload the mountain model
-useGLTF.preload('/assets/mountain_low_poly.glb');
+useGLTF.preload('./assets/mountain_low_poly.glb');

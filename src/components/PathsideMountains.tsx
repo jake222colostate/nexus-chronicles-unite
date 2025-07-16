@@ -6,7 +6,7 @@ import { useThree } from '@react-three/fiber';
 
 export const PathsideMountains: React.FC = () => {
   const { scene } = useThree();
-  const { scene: mountain } = useGLTF('/assets/mountain_low_poly.glb');
+  const { scene: mountain } = useGLTF('./assets/mountain_low_poly.glb');
   const mountainsRef = useRef<Group[]>([]);
 
   useEffect(() => {
@@ -80,4 +80,4 @@ export const PathsideMountains: React.FC = () => {
 };
 
 // Preload the mountain model
-useGLTF.preload('/assets/mountain_low_poly.glb');
+useGLTF.preload('./assets/mountain_low_poly.glb');

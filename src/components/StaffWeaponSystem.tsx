@@ -30,7 +30,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
   // Load staff model with proper path and error handling
   let staffScene = null;
   try {
-    const { scene } = useGLTF('staffs/staff_4.glb');
+    const { scene } = useGLTF('./newassets/staff_4.glb');
     staffScene = scene;
   } catch (error) {
     console.warn('Failed to load staff model, using fallback:', error);
@@ -129,7 +129,7 @@ export const StaffWeaponSystem: React.FC<StaffWeaponSystemProps> = ({
 };
 
 try {
-  useGLTF.preload('staffs/staff_4.glb');
+  useGLTF.preload('./newassets/staff_4.glb');
 } catch (error) {
   console.warn('Failed to preload staff model:', error);
 }
