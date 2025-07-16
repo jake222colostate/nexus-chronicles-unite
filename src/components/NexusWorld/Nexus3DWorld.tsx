@@ -113,9 +113,7 @@ function ResponsiveCanvas() {
       const width = window.innerWidth;
       const height = window.innerHeight;
       gl.setSize(width, height);
-      if ('aspect' in camera) {
-        camera.aspect = width / height;
-      }
+      camera.aspect = width / height;
       camera.updateProjectionMatrix();
     };
 

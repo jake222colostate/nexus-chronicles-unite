@@ -31,7 +31,6 @@ import { useAutoEnergyStore } from '@/stores/useAutoEnergyStore';
 import { CollisionProvider } from '@/lib/CollisionContext';
 import { MapEditorToolbar } from './MapEditor/MapEditorToolbar';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
-import { MobileControlsInstructions } from './MobileControlsInstructions';
 
 const GameEngine: React.FC = () => {
   const location = useLocation();
@@ -527,9 +526,6 @@ const GameEngine: React.FC = () => {
 
       {/* Map Editor UI Components */}
       <MapEditorToolbar />
-      
-      {/* Mobile Controls Instructions */}
-      <MobileControlsInstructions />
     </div>
     </CollisionProvider>
   );
