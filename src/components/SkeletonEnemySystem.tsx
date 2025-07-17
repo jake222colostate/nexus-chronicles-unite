@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Mesh } from 'three';
+import { useFBX } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 
 interface SkeletonEnemySystemProps {
@@ -33,6 +34,14 @@ const SkeletonModel: React.FC<{
   const meshRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
   
+  const getModelPath = (type: string) => {
+    switch (type) {
+      case 'minion': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Minion.fbx';
+      case 'rogue': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Rogue.fbx';
+      default: return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Minion.fbx';
+    }
+  };
+
   const getHealthBarColor = () => {
     const healthPercent = enemy.health / enemy.maxHealth;
     if (healthPercent > 0.6) return '#4ade80';
@@ -49,6 +58,9 @@ const SkeletonModel: React.FC<{
   };
 
   const stats = getSkeletonStats(enemy.type);
+  
+  // Load the FBX model
+  const fbxModel = useFBX(getModelPath(enemy.type));
 
   useFrame((state) => {
     if (meshRef.current && enemy.alive) {
@@ -73,46 +85,11 @@ const SkeletonModel: React.FC<{
       }}
       scale={stats.scale}
     >
-      {/* Skeleton body using simple geometry */}
-      <group>
-        {/* Body */}
-        <mesh position={[0, 1, 0]}>
-          <cylinderGeometry args={[0.3, 0.2, 1]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        {/* Head */}
-        <mesh position={[0, 1.8, 0]}>
-          <sphereGeometry args={[0.25]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        {/* Arms */}
-        <mesh position={[-0.4, 1.2, 0]} rotation={[0, 0, 0.3]}>
-          <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        <mesh position={[0.4, 1.2, 0]} rotation={[0, 0, -0.3]}>
-          <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        {/* Legs */}
-        <mesh position={[-0.15, 0.3, 0]}>
-          <cylinderGeometry args={[0.1, 0.1, 0.6]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        <mesh position={[0.15, 0.3, 0]}>
-          <cylinderGeometry args={[0.1, 0.1, 0.6]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        {/* Eyes */}
-        <mesh position={[-0.1, 1.85, 0.2]}>
-          <sphereGeometry args={[0.05]} />
-          <meshBasicMaterial color={stats.color} />
-        </mesh>
-        <mesh position={[0.1, 1.85, 0.2]}>
-          <sphereGeometry args={[0.05]} />
-          <meshBasicMaterial color={stats.color} />
-        </mesh>
-      </group>
+      <primitive 
+        object={fbxModel.clone()} 
+        castShadow
+        receiveShadow
+      />
       
       {/* Health bar */}
       <group position={[0, 2.5, 0]}>
@@ -173,21 +150,18 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
       const chunkWorldZ = chunk.z * chunkSize;
       const chunkSeed = chunk.x * 1000 + chunk.z;
 
-      // Spawn 1-3 enemies per chunk
-      const enemyCount = 1 + Math.floor(seededRandom(chunkSeed) * 3);
+      // Spawn 3-6 enemies per chunk
+      const enemyCount = 3 + Math.floor(seededRandom(chunkSeed) * 4);
       
       for (let i = 0; i < enemyCount; i++) {
         const seed = chunkSeed + i * 100;
-        const x = chunkWorldX + seededRandom(seed) * chunkSize;
-        const z = chunkWorldZ + seededRandom(seed + 1) * chunkSize;
         
-        // Force some enemies to spawn in front of player for testing
-        let finalX = x;
-        let finalZ = z;
-        if (i === 0) {
-          finalX = playerPosition.x + 15 + seededRandom(seed) * 10;
-          finalZ = playerPosition.z + 15 + seededRandom(seed + 1) * 10;
-        }
+        // Spawn enemies in front of player (positive Z direction)
+        const angle = (i / enemyCount) * Math.PI * 2; // Spread them in a circle
+        const distance = 10 + Math.random() * 20; // 10-30 units away
+        
+        const finalX = playerPosition.x + Math.sin(angle) * distance;
+        const finalZ = playerPosition.z + Math.cos(angle) * distance; // In front of player
         
         const types: ('minion' | 'rogue')[] = ['minion', 'rogue'];
         const type = types[Math.floor(seededRandom(seed + 2) * 2)];
@@ -205,7 +179,7 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
         newEnemies.push({
           id: `${chunk.x}_${chunk.z}_${type}_${i}`,
           type,
-          position: new Vector3(finalX, -0.5, finalZ),
+          position: new Vector3(finalX, -0.8, finalZ),
           health,
           maxHealth: health,
           alive: true,
