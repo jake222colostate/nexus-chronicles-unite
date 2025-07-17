@@ -1,13 +1,21 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Vector3, Group } from 'three';
-import { useGLTF } from '@react-three/drei';
-import { ChunkData } from './ChunkSystem';
+import React, { useMemo, useRef, useState, useEffect } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Vector3, Group } from "three";
+import { useGLTF } from "@react-three/drei";
+import { useGLTFWithCors } from "../lib/useGLTFWithCors";
+import { ChunkData } from "./ChunkSystem";
 
 // Preload skeleton models to avoid loading hitches
-useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb');
-useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb');
-useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb');
+const BASE_URL = import.meta.env.BASE_URL;
+useGLTF.preload(
+  `${BASE_URL}assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb`
+);
+useGLTF.preload(
+  `${BASE_URL}assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb`
+);
+useGLTF.preload(
+  `${BASE_URL}assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb`
+);
 
 interface SkeletonEnemySystemProps {
   chunks: ChunkData[];
@@ -16,10 +24,10 @@ interface SkeletonEnemySystemProps {
   onEnemyCountChange?: (count: number) => void;
   onEnemyKilled?: () => void;
   weaponDamage: number;
-  realm: 'fantasy' | 'scifi';
+  realm: "fantasy" | "scifi";
 }
 
-type SkeletonType = 'minion' | 'rogue' | 'warrior';
+type SkeletonType = "minion" | "rogue" | "warrior";
 
 interface SkeletonEnemy {
   id: string;
@@ -35,9 +43,9 @@ interface SkeletonEnemy {
 }
 
 const modelPaths: Record<SkeletonType, string> = {
-  minion: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb',
-  rogue: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb',
-  warrior: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb'
+  minion: `${BASE_URL}assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb`,
+  rogue: `${BASE_URL}assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb`,
+  warrior: `${BASE_URL}assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb`,
 };
 
 const SkeletonModel: React.FC<{
@@ -48,25 +56,26 @@ const SkeletonModel: React.FC<{
   const [hovered, setHovered] = useState(false);
   const [modelLoaded, setModelLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  
+
   const getHealthBarColor = () => {
     const healthPercent = enemy.health / enemy.maxHealth;
-    if (healthPercent > 0.6) return '#4ade80';
-    if (healthPercent > 0.3) return '#fbbf24';
-    return '#ef4444';
+    if (healthPercent > 0.6) return "#4ade80";
+    if (healthPercent > 0.3) return "#fbbf24";
+    return "#ef4444";
   };
 
-  const stats = { scale: 0.8, color: '#94a3b8' };
+  const stats = { scale: 0.8, color: "#94a3b8" };
 
   // Try to load GLB model with error handling
   let scene = null;
   try {
-    const gltf = useGLTF(modelPaths[enemy.type]);
+    const gltf = useGLTFWithCors(modelPaths[enemy.type]);
     scene = gltf.scene;
     if (!modelLoaded) setModelLoaded(true);
   } catch (error) {
-    console.warn('Failed to load GLB skeleton:', error);
-    if (!loadError) setLoadError(error instanceof Error ? error.message : 'GLB load failed');
+    console.warn("Failed to load GLB skeleton:", error);
+    if (!loadError)
+      setLoadError(error instanceof Error ? error.message : "GLB load failed");
   }
 
   useFrame((state) => {
@@ -94,11 +103,7 @@ const SkeletonModel: React.FC<{
     >
       {/* Use actual model if loaded, otherwise use simple geometry */}
       {scene && modelLoaded ? (
-        <primitive 
-          object={scene.clone()} 
-          castShadow
-          receiveShadow
-        />
+        <primitive object={scene.clone()} castShadow receiveShadow />
       ) : (
         // Simple skeleton representation as fallback
         <group>
@@ -136,15 +141,23 @@ const SkeletonModel: React.FC<{
           </mesh>
         </group>
       )}
-      
+
       {/* Health bar */}
       <group position={[0, 2.5, 0]}>
         <mesh position={[0, 0, 0]}>
           <planeGeometry args={[1.5, 0.2]} />
           <meshBasicMaterial color="#333" transparent opacity={0.8} />
         </mesh>
-        <mesh position={[(-1.5 + (enemy.health / enemy.maxHealth * 1.5)) / 2, 0, 0.01]}>
-          <planeGeometry args={[enemy.health / enemy.maxHealth * 1.5, 0.15]} />
+        <mesh
+          position={[
+            (-1.5 + (enemy.health / enemy.maxHealth) * 1.5) / 2,
+            0,
+            0.01,
+          ]}
+        >
+          <planeGeometry
+            args={[(enemy.health / enemy.maxHealth) * 1.5, 0.15]}
+          />
           <meshBasicMaterial color={getHealthBarColor()} />
         </mesh>
       </group>
@@ -160,7 +173,9 @@ const SkeletonModel: React.FC<{
       {/* Type indicator and loading status */}
       <mesh position={[0, 3, 0]}>
         <sphereGeometry args={[0.1, 8, 8]} />
-        <meshBasicMaterial color={modelLoaded ? '#00ff00' : (loadError ? '#ff0000' : stats.color)} />
+        <meshBasicMaterial
+          color={modelLoaded ? "#00ff00" : loadError ? "#ff0000" : stats.color}
+        />
       </mesh>
     </group>
   );
@@ -173,13 +188,13 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
   onEnemyCountChange,
   onEnemyKilled,
   weaponDamage,
-  realm
+  realm,
 }) => {
   const [enemies, setEnemies] = useState<SkeletonEnemy[]>([]);
   const lastSpawnTime = useRef<number>(0);
 
   // Only render for fantasy realm
-  if (realm !== 'fantasy') {
+  if (realm !== "fantasy") {
     return null;
   }
 
@@ -198,8 +213,8 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
 
       // Spawn 3-6 enemies per chunk
       const enemyCount = 3 + Math.floor(seededRandom(chunkSeed) * 4);
-      
-      const skeletonTypes: SkeletonType[] = ['minion', 'rogue', 'warrior'];
+
+      const skeletonTypes: SkeletonType[] = ["minion", "rogue", "warrior"];
 
       for (let i = 0; i < enemyCount; i++) {
         const seed = chunkSeed + i * 100;
@@ -211,10 +226,13 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
         const finalX = playerPosition.x + Math.sin(angle) * distance;
         const finalZ = playerPosition.z + Math.cos(angle) * distance; // In front of player
 
-        const type = skeletonTypes[Math.floor(seededRandom(seed + 1) * skeletonTypes.length)];
-        
+        const type =
+          skeletonTypes[
+            Math.floor(seededRandom(seed + 1) * skeletonTypes.length)
+          ];
+
         const health = 50;
-        
+
         newEnemies.push({
           id: `${chunk.x}_${chunk.z}_${type}_${i}`,
           type,
@@ -229,7 +247,7 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
             0,
             seededRandom(seed + 4) - 0.5
           ).normalize(),
-          nextMoveTime: Date.now() + Math.random() * 5000
+          nextMoveTime: Date.now() + Math.random() * 5000,
         });
       }
     });
@@ -244,7 +262,7 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
 
   // Update enemy count
   useEffect(() => {
-    const aliveEnemies = enemies.filter(e => e.alive);
+    const aliveEnemies = enemies.filter((e) => e.alive);
     if (onEnemyCountChange) {
       onEnemyCountChange(aliveEnemies.length);
     }
@@ -253,9 +271,9 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
   // Enemy AI and movement
   useFrame(() => {
     const now = Date.now();
-    
-    setEnemies(prevEnemies => 
-      prevEnemies.map(enemy => {
+
+    setEnemies((prevEnemies) =>
+      prevEnemies.map((enemy) => {
         if (!enemy.alive) return enemy;
 
         // Simple AI movement
@@ -265,23 +283,23 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
             0,
             (Math.random() - 0.5) * 2
           ).normalize();
-          
+
           return {
             ...enemy,
             moveDirection: newDirection,
-            nextMoveTime: now + 3000 + Math.random() * 2000
+            nextMoveTime: now + 3000 + Math.random() * 2000,
           };
         }
 
         // Move enemy
         const moveSpeed = 0.01;
-        const newPosition = enemy.position.clone().add(
-          enemy.moveDirection.clone().multiplyScalar(moveSpeed)
-        );
+        const newPosition = enemy.position
+          .clone()
+          .add(enemy.moveDirection.clone().multiplyScalar(moveSpeed));
 
         return {
           ...enemy,
-          position: newPosition
+          position: newPosition,
         };
       })
     );
@@ -289,22 +307,26 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
 
   const handleEnemyHit = (enemyId: string, damage: number) => {
     const now = Date.now();
-    
-    setEnemies(prevEnemies => 
-      prevEnemies.map(enemy => {
-        if (enemy.id === enemyId && enemy.alive && now - enemy.lastHitTime > 200) {
+
+    setEnemies((prevEnemies) =>
+      prevEnemies.map((enemy) => {
+        if (
+          enemy.id === enemyId &&
+          enemy.alive &&
+          now - enemy.lastHitTime > 200
+        ) {
           const newHealth = enemy.health - damage;
           const newEnemy = {
             ...enemy,
             health: Math.max(0, newHealth),
             alive: newHealth > 0,
-            lastHitTime: now
+            lastHitTime: now,
           };
-          
+
           if (newHealth <= 0 && onEnemyKilled) {
             onEnemyKilled();
           }
-          
+
           return newEnemy;
         }
         return enemy;
@@ -315,7 +337,7 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
   // Cull enemies too far from player
   const visibleEnemies = useMemo(() => {
     const renderDistance = 120;
-    return enemies.filter(enemy => {
+    return enemies.filter((enemy) => {
       const distance = enemy.position.distanceTo(playerPosition);
       return distance < renderDistance && enemy.alive;
     });
@@ -324,11 +346,7 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
   return (
     <group>
       {visibleEnemies.map((enemy) => (
-        <SkeletonModel
-          key={enemy.id}
-          enemy={enemy}
-          onHit={handleEnemyHit}
-        />
+        <SkeletonModel key={enemy.id} enemy={enemy} onHit={handleEnemyHit} />
       ))}
     </group>
   );
