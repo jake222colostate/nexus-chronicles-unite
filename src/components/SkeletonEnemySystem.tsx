@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Mesh } from 'three';
-import { useFBX, useGLTF } from '@react-three/drei';
+import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 
 interface SkeletonEnemySystemProps {
@@ -36,11 +36,11 @@ const SkeletonModel: React.FC<{
   
   const getModelPath = (type: string) => {
     switch (type) {
-      case 'mage': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Mage.fbx';
-      case 'minion': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Minion.fbx';
-      case 'rogue': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Rogue.fbx';
-      case 'warrior': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Warrior.fbx';
-      default: return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Minion.fbx';
+      case 'mage': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Mage.glb';
+      case 'minion': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb';
+      case 'rogue': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb';
+      case 'warrior': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb';
+      default: return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb';
     }
   };
 
@@ -62,49 +62,9 @@ const SkeletonModel: React.FC<{
   };
 
   const stats = getSkeletonStats(enemy.type);
-
-  // Create skeleton fallback geometry
-  const SkeletonFallback = () => (
-    <group>
-      {/* Body */}
-      <mesh position={[0, 1, 0]}>
-        <cylinderGeometry args={[0.3, 0.2, 1]} />
-        <meshStandardMaterial color="#f0f0f0" />
-      </mesh>
-      {/* Head */}
-      <mesh position={[0, 1.8, 0]}>
-        <sphereGeometry args={[0.25]} />
-        <meshStandardMaterial color="#f0f0f0" />
-      </mesh>
-      {/* Arms */}
-      <mesh position={[-0.4, 1.2, 0]} rotation={[0, 0, 0.3]}>
-        <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-        <meshStandardMaterial color="#f0f0f0" />
-      </mesh>
-      <mesh position={[0.4, 1.2, 0]} rotation={[0, 0, -0.3]}>
-        <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-        <meshStandardMaterial color="#f0f0f0" />
-      </mesh>
-      {/* Legs */}
-      <mesh position={[-0.15, 0.3, 0]}>
-        <cylinderGeometry args={[0.1, 0.1, 0.6]} />
-        <meshStandardMaterial color="#f0f0f0" />
-      </mesh>
-      <mesh position={[0.15, 0.3, 0]}>
-        <cylinderGeometry args={[0.1, 0.1, 0.6]} />
-        <meshStandardMaterial color="#f0f0f0" />
-      </mesh>
-      {/* Eyes */}
-      <mesh position={[-0.1, 1.85, 0.2]}>
-        <sphereGeometry args={[0.05]} />
-        <meshBasicMaterial color={stats.color} />
-      </mesh>
-      <mesh position={[0.1, 1.85, 0.2]}>
-        <sphereGeometry args={[0.05]} />
-        <meshBasicMaterial color={stats.color} />
-      </mesh>
-    </group>
-  );
+  
+  // Load the GLB model
+  const { scene } = useGLTF(getModelPath(enemy.type));
 
   useFrame((state) => {
     if (meshRef.current && enemy.alive) {
@@ -116,21 +76,6 @@ const SkeletonModel: React.FC<{
   });
 
   if (!enemy.alive) return null;
-
-  let SkeletonContent;
-  try {
-    const fbx = useFBX(getModelPath(enemy.type));
-    SkeletonContent = (
-      <primitive 
-        object={fbx.clone()} 
-        castShadow
-        receiveShadow
-      />
-    );
-  } catch (error) {
-    console.warn(`Failed to load skeleton ${enemy.type}:`, error);
-    SkeletonContent = <SkeletonFallback />;
-  }
 
   return (
     <group
@@ -144,7 +89,11 @@ const SkeletonModel: React.FC<{
       }}
       scale={stats.scale}
     >
-      {SkeletonContent}
+      <primitive 
+        object={scene.clone()} 
+        castShadow
+        receiveShadow
+      />
       
       {/* Health bar */}
       <group position={[0, 2.5, 0]}>
