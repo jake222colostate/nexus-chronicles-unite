@@ -39,7 +39,7 @@ export const useFantasy3DUpgradeWorld = ({
       name: 'Mana Crystal',
       cost: 50,
       manaPerSecond: 3,
-      position: [0, 2, -30],
+      position: [-12, 0.5, -30],
       tier: 0,
       unlocked: true,
       description: 'A crystallized form of pure magical energy'
@@ -49,7 +49,7 @@ export const useFantasy3DUpgradeWorld = ({
       name: 'Arcane Focus',
       cost: 250,
       manaPerSecond: 12,
-      position: [15, 2, -60],
+      position: [12, 0.5, -60],
       tier: 1,
       unlocked: maxUnlockedUpgrade >= 0,
       description: 'Concentrates magical energies for greater efficiency'
@@ -59,7 +59,7 @@ export const useFantasy3DUpgradeWorld = ({
       name: 'Mystic Fountain',
       cost: 1000,
       manaPerSecond: 30,
-      position: [-15, 2, -90],
+      position: [-12, 0.5, -90],
       tier: 2,
       unlocked: maxUnlockedUpgrade >= 1,
       description: 'An eternal wellspring of magical power'
@@ -69,7 +69,7 @@ export const useFantasy3DUpgradeWorld = ({
       name: 'Elder Artifact',
       cost: 5000,
       manaPerSecond: 100,
-      position: [0, 2, -120],
+      position: [12, 0.5, -120],
       tier: 3,
       unlocked: maxUnlockedUpgrade >= 2,
       description: 'Ancient relic of immense magical power'
@@ -79,7 +79,7 @@ export const useFantasy3DUpgradeWorld = ({
       name: 'Dragon Shrine',
       cost: 25000,
       manaPerSecond: 400,
-      position: [20, 2, -150],
+      position: [-12, 0.5, -150],
       tier: 4,
       unlocked: maxUnlockedUpgrade >= 3,
       description: 'A sacred shrine blessed by ancient dragons'
@@ -89,7 +89,7 @@ export const useFantasy3DUpgradeWorld = ({
       name: 'Celestial Nexus',
       cost: 100000,
       manaPerSecond: 1500,
-      position: [-20, 2, -180],
+      position: [12, 0.5, -180],
       tier: 5,
       unlocked: maxUnlockedUpgrade >= 4,
       description: 'Connects to the cosmic web of magical energy'
