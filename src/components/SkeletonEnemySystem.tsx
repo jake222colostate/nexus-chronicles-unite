@@ -16,7 +16,7 @@ interface SkeletonEnemySystemProps {
 
 interface SkeletonEnemy {
   id: string;
-  type: 'mage' | 'minion' | 'rogue' | 'warrior';
+  type: 'minion' | 'rogue' | 'warrior';
   position: Vector3;
   health: number;
   maxHealth: number;
@@ -36,7 +36,6 @@ const SkeletonModel: React.FC<{
   
   const getModelPath = (type: string) => {
     switch (type) {
-      case 'mage': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Mage.fbx';
       case 'minion': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Minion.fbx';
       case 'rogue': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Rogue.fbx';
       case 'warrior': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Warrior.fbx';
@@ -53,7 +52,6 @@ const SkeletonModel: React.FC<{
 
   const getSkeletonStats = (type: string) => {
     switch (type) {
-      case 'mage': return { scale: 1.2, color: '#8b5cf6' };
       case 'minion': return { scale: 0.8, color: '#94a3b8' };
       case 'rogue': return { scale: 1.0, color: '#22c55e' };
       case 'warrior': return { scale: 1.4, color: '#ef4444' };
@@ -170,12 +168,11 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
           finalZ = playerPosition.z + 15 + seededRandom(seed + 1) * 10;
         }
         
-        const types: ('mage' | 'minion' | 'rogue' | 'warrior')[] = ['mage', 'minion', 'rogue', 'warrior'];
-        const type = types[Math.floor(seededRandom(seed + 2) * 4)];
+        const types: ('minion' | 'rogue' | 'warrior')[] = ['minion', 'rogue', 'warrior'];
+        const type = types[Math.floor(seededRandom(seed + 2) * 3)];
         
         const getHealthForType = (type: string) => {
           switch (type) {
-            case 'mage': return 80;
             case 'minion': return 50;
             case 'rogue': return 60;
             case 'warrior': return 120;
