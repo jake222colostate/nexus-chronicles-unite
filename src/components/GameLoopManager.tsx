@@ -114,7 +114,7 @@ export const useGameLoopManager = ({
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
       manaPerKill,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels, setGameState, isEditorActive]);
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels, isEditorActive]);
 
   return { buffSystem };
 };

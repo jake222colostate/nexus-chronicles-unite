@@ -54,8 +54,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
     if (onEnemyCountChange) onEnemyCountChange(enemyCount);
   }, [enemyCount, onEnemyCountChange]);
 
-  // Empty positions array since we removed enemy system
-  const enemyPositions = useMemo(() => [], []);
+  // Enemy positions for weapon system
+  const enemyPositions = useMemo(() => {
+    // This will be populated by the skeleton system
+    return [];
+  }, []);
 
   // PERFORMANCE FIX: Simplified position change handler
   const handlePositionChange = (position: Vector3) => {
@@ -107,6 +110,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
               chunkSize={chunkSize}
               realm={realm}
               playerPosition={safeCameraPosition}
+              onEnemyCountChange={onEnemyCountChange}
+              onEnemyKilled={onEnemyKilled}
+              weaponDamage={weaponDamage}
             />
           )}
         </ChunkSystem>
