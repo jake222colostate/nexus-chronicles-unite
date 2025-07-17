@@ -1,8 +1,13 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Vector3, Group, Mesh } from 'three';
+import { Vector3, Group } from 'three';
 import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
+
+// Preload skeleton models to avoid loading hitches
+useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb');
+useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb');
+useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb');
 
 interface SkeletonEnemySystemProps {
   chunks: ChunkData[];
@@ -14,9 +19,11 @@ interface SkeletonEnemySystemProps {
   realm: 'fantasy' | 'scifi';
 }
 
+type SkeletonType = 'minion' | 'rogue' | 'warrior';
+
 interface SkeletonEnemy {
   id: string;
-  type: 'minion';
+  type: SkeletonType;
   position: Vector3;
   health: number;
   maxHealth: number;
@@ -27,8 +34,14 @@ interface SkeletonEnemy {
   nextMoveTime: number;
 }
 
-const SkeletonModel: React.FC<{ 
-  enemy: SkeletonEnemy; 
+const modelPaths: Record<SkeletonType, string> = {
+  minion: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb',
+  rogue: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb',
+  warrior: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb'
+};
+
+const SkeletonModel: React.FC<{
+  enemy: SkeletonEnemy;
   onHit: (id: string, damage: number) => void;
 }> = ({ enemy, onHit }) => {
   const meshRef = useRef<Group>(null);
@@ -48,7 +61,7 @@ const SkeletonModel: React.FC<{
   // Try to load GLB model with error handling
   let scene = null;
   try {
-    const gltf = useGLTF('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb');
+    const gltf = useGLTF(modelPaths[enemy.type]);
     scene = gltf.scene;
     if (!modelLoaded) setModelLoaded(true);
   } catch (error) {
@@ -186,17 +199,19 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
       // Spawn 3-6 enemies per chunk
       const enemyCount = 3 + Math.floor(seededRandom(chunkSeed) * 4);
       
+      const skeletonTypes: SkeletonType[] = ['minion', 'rogue', 'warrior'];
+
       for (let i = 0; i < enemyCount; i++) {
         const seed = chunkSeed + i * 100;
-        
+
         // Spawn enemies in front of player (positive Z direction)
         const angle = (i / enemyCount) * Math.PI * 2; // Spread them in a circle
         const distance = 10 + Math.random() * 20; // 10-30 units away
-        
+
         const finalX = playerPosition.x + Math.sin(angle) * distance;
         const finalZ = playerPosition.z + Math.cos(angle) * distance; // In front of player
-        
-        const type: 'minion' = 'minion';
+
+        const type = skeletonTypes[Math.floor(seededRandom(seed + 1) * skeletonTypes.length)];
         
         const health = 50;
         
