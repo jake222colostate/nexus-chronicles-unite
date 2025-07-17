@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
+import { useGameStateStore } from '@/stores/useGameStateStore';
 
 interface UseFantasy3DUpgradeWorldProps {
   gameState?: any;
@@ -11,6 +12,7 @@ export const useFantasy3DUpgradeWorld = ({
   gameState,
   onPlayerPositionUpdate
 }: UseFantasy3DUpgradeWorldProps) => {
+  const globalGameState = useGameStateStore();
   const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 1.6, 0));
   const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
@@ -30,16 +32,75 @@ export const useFantasy3DUpgradeWorld = ({
   const RENDER_DISTANCE = 200;
   const UPGRADE_SPACING = 35;
 
-  // Simple upgrades array since we removed the infinite upgrade system
-  const upgrades = [];
+  // Create upgrades placed along the fantasy path
+  const upgrades = [
+    {
+      id: 0,
+      name: 'Mana Crystal',
+      cost: 50,
+      manaPerSecond: 3,
+      position: [0, 2, -30],
+      tier: 0,
+      unlocked: true,
+      description: 'A crystallized form of pure magical energy'
+    },
+    {
+      id: 1,
+      name: 'Arcane Focus',
+      cost: 250,
+      manaPerSecond: 12,
+      position: [15, 2, -60],
+      tier: 1,
+      unlocked: maxUnlockedUpgrade >= 0,
+      description: 'Concentrates magical energies for greater efficiency'
+    },
+    {
+      id: 2,
+      name: 'Mystic Fountain',
+      cost: 1000,
+      manaPerSecond: 30,
+      position: [-15, 2, -90],
+      tier: 2,
+      unlocked: maxUnlockedUpgrade >= 1,
+      description: 'An eternal wellspring of magical power'
+    },
+    {
+      id: 3,
+      name: 'Elder Artifact',
+      cost: 5000,
+      manaPerSecond: 100,
+      position: [0, 2, -120],
+      tier: 3,
+      unlocked: maxUnlockedUpgrade >= 2,
+      description: 'Ancient relic of immense magical power'
+    },
+    {
+      id: 4,
+      name: 'Dragon Shrine',
+      cost: 25000,
+      manaPerSecond: 400,
+      position: [20, 2, -150],
+      tier: 4,
+      unlocked: maxUnlockedUpgrade >= 3,
+      description: 'A sacred shrine blessed by ancient dragons'
+    },
+    {
+      id: 5,
+      name: 'Celestial Nexus',
+      cost: 100000,
+      manaPerSecond: 1500,
+      position: [-20, 2, -180],
+      tier: 5,
+      unlocked: maxUnlockedUpgrade >= 4,
+      description: 'Connects to the cosmic web of magical energy'
+    }
+  ];
 
   // Update refs when gameState changes
   useEffect(() => {
-    if (gameState) {
-      currentManaRef.current = gameState.mana;
-      totalManaPerSecondRef.current = gameState.manaPerSecond;
-    }
-  }, [gameState?.mana, gameState?.manaPerSecond]);
+    currentManaRef.current = globalGameState.mana;
+    totalManaPerSecondRef.current = globalGameState.manaPerSecond;
+  }, [globalGameState.mana, globalGameState.manaPerSecond]);
 
   const handlePositionChange = useCallback((position: Vector3) => {
     setCameraPosition(position);
@@ -113,6 +174,10 @@ export const useFantasy3DUpgradeWorld = ({
         return next;
       });
       setSelectedUpgrade(null);
+      
+      // Update global game state
+      globalGameState.spendMana(upgrade.cost);
+      globalGameState.setManaPerSecond(totalManaPerSecondRef.current);
       
       console.log(`SUCCESS: Purchased ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
       console.log(`New mana: ${currentManaRef.current}, New mana/sec: ${totalManaPerSecondRef.current}`);
