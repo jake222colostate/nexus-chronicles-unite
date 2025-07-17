@@ -1,33 +1,27 @@
-import React, { Suspense, useRef, useMemo, useEffect } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Stage, Sparkles, useGLTF, FirstPersonControls } from '@react-three/drei';
+import React, { Suspense, useRef, useMemo } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 
 // Movement controller component
 function MovementController() {
-  const controlsRef = useRef<any>(null);
-  
   return (
-    <FirstPersonControls
-      ref={controlsRef}
-      movementSpeed={5}
-      lookSpeed={0.1}
-      lookVertical={true}
-      constrainVertical={true}
-      verticalMin={1.1}
-      verticalMax={2.2}
-      activeLook={true}
+    <OrbitControls
+      enablePan={true}
+      enableZoom={true}
+      enableRotate={true}
+      minDistance={3}
+      maxDistance={20}
+      minPolarAngle={0}
+      maxPolarAngle={Math.PI / 2}
     />
   );
 }
 
+// Crystal obelisk with geometric fallbacks
 function CrystalObelisk() {
-  const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
-  const { scene: fountain } = useGLTF('/models/bottle.glb');
   const crystalRef = useRef<THREE.Group>(null);
-  const fountainClone = useMemo(() => fountain.clone(), [fountain]);
-  const crystalClone = useMemo(() => crystal.clone(), [crystal]);
-
+  
   useFrame((_, delta) => {
     if (crystalRef.current) {
       crystalRef.current.rotation.y += delta * 0.5;
@@ -36,12 +30,18 @@ function CrystalObelisk() {
 
   return (
     <group>
-      {/* GLB fountain base */}
-      <primitive object={fountainClone} scale={[3, 1, 3]} position={[0, 0, 0]} />
+      {/* Foundation base */}
+      <mesh position={[0, 0.15, 0]}>
+        <cylinderGeometry args={[4.5, 4.5, 0.3, 16]} />
+        <meshStandardMaterial color="#666666" roughness={0.8} />
+      </mesh>
       
-      {/* GLB crystal obelisk */}
+      {/* Crystal obelisk */}
       <group ref={crystalRef} position={[0, 1.5, 0]}>
-        <primitive object={crystalClone} scale={2} />
+        <mesh>
+          <boxGeometry args={[1, 2, 1]} />
+          <meshStandardMaterial color="#88e5ff" transparent opacity={0.8} />
+        </mesh>
         <Sparkles count={30} scale={3} size={3} color="#88e5ff" />
         <pointLight position={[0, 2, 0]} intensity={3} color="#88e5ff" distance={8} />
       </group>
@@ -49,37 +49,41 @@ function CrystalObelisk() {
   );
 }
 
+// Vendor stall with geometric shapes
 function VendorStall({ position, canopyColor, item }: { position: [number, number, number]; canopyColor: string; item: 'coin' | 'gems'; }) {
-  const { scene: stallScene } = useGLTF('/models/lantern.glb');
-  const { scene: coinScene } = useGLTF('/models/dice.glb');
-  const { scene: gemScene } = useGLTF('/models/avocado.glb');
-  
-  const stallClone = useMemo(() => stallScene.clone(), [stallScene]);
-  const itemClone = useMemo(() => {
-    const scene = item === 'coin' ? coinScene : gemScene;
-    return scene.clone();
-  }, [item, coinScene, gemScene]);
+  const itemGeometry = useMemo(() => {
+    return item === 'coin' ? 
+      <cylinderGeometry args={[0.3, 0.3, 0.1, 16]} /> :
+      <octahedronGeometry args={[0.4]} />;
+  }, [item]);
 
-  // Apply color to the stall
-  useMemo(() => {
-    stallClone.traverse((child: any) => {
-      if (child.isMesh && child.material) {
-        child.material = child.material.clone();
-        child.material.color = new THREE.Color(canopyColor);
-      }
-    });
-  }, [stallClone, canopyColor]);
+  const itemColor = item === 'coin' ? '#ffd700' : '#9c27b0';
 
   return (
     <group position={position}>
-      <primitive object={stallClone} scale={1.5} />
-      <primitive object={itemClone} position={[0, 1.2, 0]} scale={0.8} />
+      {/* Stall base */}
+      <mesh position={[0, 0.5, 0]}>
+        <boxGeometry args={[2, 1, 2]} />
+        <meshStandardMaterial color="#8b4513" />
+      </mesh>
+      
+      {/* Canopy */}
+      <mesh position={[0, 1.8, 0]}>
+        <coneGeometry args={[1.5, 0.8, 8]} />
+        <meshStandardMaterial color={canopyColor} />
+      </mesh>
+      
+      {/* Item display */}
+      <mesh position={[0, 1.2, 0]}>
+        {itemGeometry}
+        <meshStandardMaterial color={itemColor} />
+      </mesh>
     </group>
   );
 }
 
+// Fence ring with boxes
 function FenceRing() {
-  const { scene: fenceScene } = useGLTF('/models/simple_box.glb');
   const radius = 6;
   const segments = 20;
   
@@ -89,67 +93,43 @@ function FenceRing() {
         const angle = (i / segments) * Math.PI * 2;
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
-        const fenceClone = fenceScene.clone();
         
         return (
-          <primitive
+          <mesh
             key={i}
-            object={fenceClone}
             position={[x, 0.8, z]}
             rotation={[0, angle + Math.PI / 2, 0]}
             scale={[0.2, 1.5, 0.2]}
-          />
+          >
+            <boxGeometry args={[1, 1, 1]} />
+            <meshStandardMaterial color="#8b4513" />
+          </mesh>
         );
       })}
     </group>
   );
 }
 
-function ResponsiveCanvas() {
-  const { gl, camera } = useThree();
-
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      gl.setSize(width, height);
-      if ('aspect' in camera) {
-        camera.aspect = width / height;
-        camera.updateProjectionMatrix();
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [gl, camera]);
-
-  return null;
-}
-
+// Stone path
 function StonePath() {
-  const { scene: stoneScene } = useGLTF('/models/box_colors.glb');
-  
   return (
     <group>
-      {Array.from({ length: 8 }).map((_, i) => {
-        const stoneClone = stoneScene.clone();
-        
-        return (
-          <primitive
-            key={i}
-            object={stoneClone}
-            position={[0, 0.05, 3.5 - i * 1.0]}
-            scale={[2.5, 0.15, 0.8]}
-          />
-        );
-      })}
+      {Array.from({ length: 8 }).map((_, i) => (
+        <mesh
+          key={i}
+          position={[0, 0.05, 3.5 - i * 1.0]}
+          scale={[2.5, 0.15, 0.8]}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#a0a0a0" roughness={0.9} />
+        </mesh>
+      ))}
     </group>
   );
 }
 
+// Trees with simple geometry
 function Trees() {
-  const { scene: treeScene } = useGLTF('/models/helmet.glb');
   const radius = 9;
   const treePositions = [
     [0, 0], [45, 0], [90, 0], [135, 0], [180, 0], [225, 0], [270, 0], [315, 0],
@@ -163,30 +143,28 @@ function Trees() {
         const treeRadius = radius + radiusOffset;
         const x = Math.cos(rad) * treeRadius;
         const z = Math.sin(rad) * treeRadius;
-        const treeClone = treeScene.clone();
-        
-        // Apply green color to make it look more tree-like
-        treeClone.traverse((child: any) => {
-          if (child.isMesh && child.material) {
-            child.material = child.material.clone();
-            child.material.color = new THREE.Color('#32cd32');
-          }
-        });
         
         return (
-          <primitive
-            key={i}
-            object={treeClone}
-            position={[x, 1.5, z]}
-            scale={[1.5, 2, 1.5]}
-          />
+          <group key={i} position={[x, 1.5, z]}>
+            {/* Tree trunk */}
+            <mesh position={[0, 0, 0]}>
+              <cylinderGeometry args={[0.2, 0.3, 2, 8]} />
+              <meshStandardMaterial color="#8b4513" />
+            </mesh>
+            
+            {/* Tree foliage */}
+            <mesh position={[0, 1.5, 0]}>
+              <sphereGeometry args={[1.2, 8, 6]} />
+              <meshStandardMaterial color="#32cd32" />
+            </mesh>
+          </group>
         );
       })}
     </group>
   );
 }
 
-// Horizontal ground plane
+// Ground plane
 function EnhancedGround() {
   return (
     <group>
@@ -219,7 +197,6 @@ const SceneContent = () => (
 
 const Nexus3DWorld: React.FC = () => (
   <Canvas camera={{ position: [0, 2, 8], fov: 75 }} shadows style={{ height: '100%', width: '100%' }}>
-    <ResponsiveCanvas />
     <Suspense fallback={null}>
       {/* Enhanced lighting */}
       <ambientLight intensity={0.4} />
