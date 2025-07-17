@@ -162,8 +162,13 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
         const x = chunkWorldX + seededRandom(seed) * chunkSize;
         const z = chunkWorldZ + seededRandom(seed + 1) * chunkSize;
         
-        // Avoid spawning too close to path center
-        if (Math.abs(x) < 10) continue;
+        // Force some enemies to spawn in front of player for testing
+        let finalX = x;
+        let finalZ = z;
+        if (i === 0) {
+          finalX = playerPosition.x + 15 + seededRandom(seed) * 10;
+          finalZ = playerPosition.z + 15 + seededRandom(seed + 1) * 10;
+        }
         
         const types: ('mage' | 'minion' | 'rogue' | 'warrior')[] = ['mage', 'minion', 'rogue', 'warrior'];
         const type = types[Math.floor(seededRandom(seed + 2) * 4)];
@@ -183,7 +188,7 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
         newEnemies.push({
           id: `${chunk.x}_${chunk.z}_${type}_${i}`,
           type,
-          position: new Vector3(x, -0.5, z),
+          position: new Vector3(finalX, -0.5, finalZ),
           health,
           maxHealth: health,
           alive: true,
@@ -200,7 +205,7 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
     });
 
     return newEnemies;
-  }, [chunks, chunkSize]);
+  }, [chunks, chunkSize, playerPosition]);
 
   // Update enemies state when chunks change
   useEffect(() => {
