@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Mesh } from 'three';
-import { useGLTF } from '@react-three/drei';
+import { useFBX } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 
 interface SkeletonEnemySystemProps {
@@ -36,11 +36,11 @@ const SkeletonModel: React.FC<{
   
   const getModelPath = (type: string) => {
     switch (type) {
-      case 'mage': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Mage.glb';
-      case 'minion': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb';
-      case 'rogue': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb';
-      case 'warrior': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb';
-      default: return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb';
+      case 'mage': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Mage.fbx';
+      case 'minion': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Minion.fbx';
+      case 'rogue': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Rogue.fbx';
+      case 'warrior': return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Warrior.fbx';
+      default: return '/assets/KayKit_Skeletons_1.0_FREE/characters/fbx/Skeleton_Minion.fbx';
     }
   };
 
@@ -63,8 +63,8 @@ const SkeletonModel: React.FC<{
 
   const stats = getSkeletonStats(enemy.type);
   
-  // Load the GLB model
-  const { scene } = useGLTF(getModelPath(enemy.type));
+  // Load the FBX model
+  const fbxModel = useFBX(getModelPath(enemy.type));
 
   useFrame((state) => {
     if (meshRef.current && enemy.alive) {
@@ -90,7 +90,7 @@ const SkeletonModel: React.FC<{
       scale={stats.scale}
     >
       <primitive 
-        object={scene.clone()} 
+        object={fbxModel.clone()} 
         castShadow
         receiveShadow
       />
