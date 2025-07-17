@@ -15,7 +15,7 @@ interface SkeletonEnemySystemProps {
 
 interface SkeletonEnemy {
   id: string;
-  type: 'minion' | 'rogue' | 'warrior';
+  type: 'minion' | 'rogue';
   position: Vector3;
   health: number;
   maxHealth: number;
@@ -44,7 +44,6 @@ const SkeletonModel: React.FC<{
     switch (type) {
       case 'minion': return { scale: 0.8, color: '#94a3b8' };
       case 'rogue': return { scale: 1.0, color: '#22c55e' };
-      case 'warrior': return { scale: 1.4, color: '#ef4444' };
       default: return { scale: 1.0, color: '#94a3b8' };
     }
   };
@@ -190,14 +189,13 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
           finalZ = playerPosition.z + 15 + seededRandom(seed + 1) * 10;
         }
         
-        const types: ('minion' | 'rogue' | 'warrior')[] = ['minion', 'rogue', 'warrior'];
-        const type = types[Math.floor(seededRandom(seed + 2) * 3)];
+        const types: ('minion' | 'rogue')[] = ['minion', 'rogue'];
+        const type = types[Math.floor(seededRandom(seed + 2) * 2)];
         
         const getHealthForType = (type: string) => {
           switch (type) {
             case 'minion': return 50;
             case 'rogue': return 60;
-            case 'warrior': return 120;
             default: return 50;
           }
         };
