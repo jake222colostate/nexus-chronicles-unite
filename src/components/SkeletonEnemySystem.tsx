@@ -1,7 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group, Mesh } from 'three';
-import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
 
 interface SkeletonEnemySystemProps {
@@ -34,15 +33,6 @@ const SkeletonModel: React.FC<{
   const meshRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
   
-  const getModelPath = (type: string) => {
-    switch (type) {
-      case 'minion': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb';
-      case 'rogue': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb';
-      case 'warrior': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb';
-      default: return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb';
-    }
-  };
-
   const getHealthBarColor = () => {
     const healthPercent = enemy.health / enemy.maxHealth;
     if (healthPercent > 0.6) return '#4ade80';
@@ -60,9 +50,6 @@ const SkeletonModel: React.FC<{
   };
 
   const stats = getSkeletonStats(enemy.type);
-  
-  // Load the GLB model
-  const { scene } = useGLTF(getModelPath(enemy.type));
 
   useFrame((state) => {
     if (meshRef.current && enemy.alive) {
@@ -87,11 +74,46 @@ const SkeletonModel: React.FC<{
       }}
       scale={stats.scale}
     >
-      <primitive 
-        object={scene.clone()} 
-        castShadow
-        receiveShadow
-      />
+      {/* Skeleton body using simple geometry */}
+      <group>
+        {/* Body */}
+        <mesh position={[0, 1, 0]}>
+          <cylinderGeometry args={[0.3, 0.2, 1]} />
+          <meshStandardMaterial color="#f0f0f0" />
+        </mesh>
+        {/* Head */}
+        <mesh position={[0, 1.8, 0]}>
+          <sphereGeometry args={[0.25]} />
+          <meshStandardMaterial color="#f0f0f0" />
+        </mesh>
+        {/* Arms */}
+        <mesh position={[-0.4, 1.2, 0]} rotation={[0, 0, 0.3]}>
+          <cylinderGeometry args={[0.08, 0.08, 0.8]} />
+          <meshStandardMaterial color="#f0f0f0" />
+        </mesh>
+        <mesh position={[0.4, 1.2, 0]} rotation={[0, 0, -0.3]}>
+          <cylinderGeometry args={[0.08, 0.08, 0.8]} />
+          <meshStandardMaterial color="#f0f0f0" />
+        </mesh>
+        {/* Legs */}
+        <mesh position={[-0.15, 0.3, 0]}>
+          <cylinderGeometry args={[0.1, 0.1, 0.6]} />
+          <meshStandardMaterial color="#f0f0f0" />
+        </mesh>
+        <mesh position={[0.15, 0.3, 0]}>
+          <cylinderGeometry args={[0.1, 0.1, 0.6]} />
+          <meshStandardMaterial color="#f0f0f0" />
+        </mesh>
+        {/* Eyes */}
+        <mesh position={[-0.1, 1.85, 0.2]}>
+          <sphereGeometry args={[0.05]} />
+          <meshBasicMaterial color={stats.color} />
+        </mesh>
+        <mesh position={[0.1, 1.85, 0.2]}>
+          <sphereGeometry args={[0.05]} />
+          <meshBasicMaterial color={stats.color} />
+        </mesh>
+      </group>
       
       {/* Health bar */}
       <group position={[0, 2.5, 0]}>
