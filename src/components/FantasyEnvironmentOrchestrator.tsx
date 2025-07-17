@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { ChunkData } from './ChunkSystem';
-import { GLBMountainSystem } from './GLBMountainSystem';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
 import { Vector3 } from 'three';
@@ -36,13 +35,6 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
         chunkSize={chunkSize}
         realm={realm}
         playerPosition={playerPosition}
-      />
-      
-      {/* GLB mountain system with natural X-axis rotation variations */}
-      <GLBMountainSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
       />
       
       {/* ONLY use EnhancedTreeDistribution with visibility fixes */}

@@ -9,13 +9,11 @@ import {
   OptimizedProjectileSystemHandle
 } from './OptimizedProjectileSystem';
 
-// Staff model URLs - switched to local assets so the staff reliably appears
-import { assetPath } from '../lib/assetPath';
-
+// Use procedural staff geometry instead of GLB models
 const STAFF_MODELS = {
-  tier1: assetPath('assets/mage_staff.glb'),
-  tier2: assetPath('assets/magical_staff.glb'),
-  tier3: assetPath('assets/stylized_magic_staff_of_water_game_ready.glb')
+  tier1: null,
+  tier2: null, 
+  tier3: null
 } as const;
 
 interface MagicStaffWeaponSystemProps {

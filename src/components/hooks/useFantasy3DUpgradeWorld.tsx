@@ -1,7 +1,6 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
-import { useInfiniteUpgrades } from '../InfiniteUpgradeSystem';
 
 interface UseFantasy3DUpgradeWorldProps {
   gameState?: any;
@@ -31,13 +30,8 @@ export const useFantasy3DUpgradeWorld = ({
   const RENDER_DISTANCE = 200;
   const UPGRADE_SPACING = 35;
 
-  // Get dynamic upgrades based on player position
-  const upgrades = useInfiniteUpgrades({
-    maxUnlockedUpgrade,
-    playerPosition: [cameraPosition.x, cameraPosition.y, cameraPosition.z],
-    upgradeSpacing: UPGRADE_SPACING,
-    renderDistance: RENDER_DISTANCE
-  });
+  // Simple upgrades array since we removed the infinite upgrade system
+  const upgrades = [];
 
   // Update refs when gameState changes
   useEffect(() => {

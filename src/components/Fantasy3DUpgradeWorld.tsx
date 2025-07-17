@@ -7,7 +7,6 @@ import { Fantasy3DUpgradePedestals } from './Fantasy3DUpgradePedestals';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { Fantasy3DInsufficientManaMessage } from './Fantasy3DInsufficientManaMessage';
 import { UpgradeActivationOverlay } from './UpgradeActivationOverlay';
-import { TreeAssetManager } from '../environment/TreeAssetManager';
 
 interface Fantasy3DUpgradeWorldProps {
   onUpgradeClick: (upgradeName: string) => void;
@@ -66,18 +65,9 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     }
   }, [maxUnlockedUpgrade, previousUpgradeCount]);
 
-  // Preload environment assets once on mount
+  // Assets are now procedural, so mark as loaded immediately
   useEffect(() => {
-    let cancelled = false;
-    TreeAssetManager.preloadAllModels().then(() => {
-      if (!cancelled) setAssetsLoaded(true);
-    }).catch((error) => {
-      console.error('Fantasy3DUpgradeWorld: Error loading assets:', error);
-      if (!cancelled) setAssetsLoaded(true); // Continue anyway
-    });
-    return () => {
-      cancelled = true;
-    };
+    setAssetsLoaded(true);
   }, []);
 
   // Initialize canvas when realm changes to fantasy

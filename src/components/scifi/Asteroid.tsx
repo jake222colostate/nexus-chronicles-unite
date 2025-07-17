@@ -2,9 +2,8 @@
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
-import { Html, useFBX, useGLTF } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 import { Progress } from '../ui/progress';
-import { assetPath } from '../../lib/assetPath';
 import { useRegisterCollider } from '../../lib/CollisionContext';
 
 const MAX_HEALTH = 5;
@@ -30,9 +29,7 @@ export const Asteroid: React.FC<AsteroidProps> = ({
 }) => {
   const group = useRef<Group>(null);
 
-  const fbx = useFBX(assetPath('assets/asteroid_01.fbx'));
-  const { scene: glbScene } = useGLTF(assetPath('assets/asteroid_pack_01.glb'));
-
+  // Use procedural geometry instead of GLB models
   const randomModel = useMemo(() => {
     const rand = Math.random();
     if (rand < 0.33) return 'fbx';
@@ -186,62 +183,19 @@ export const Asteroid: React.FC<AsteroidProps> = ({
       );
     }
     
-    // Regular meteor rendering (unchanged)
-    try {
-      if (randomModel === 'polygon') {
-        return (
-          <mesh scale={randomScale * 8} {...clickProps}>
-            <dodecahedronGeometry args={[1, 0]} />
-            <meshStandardMaterial 
-              color="#666666" 
-              roughness={0.8} 
-              metalness={0.2}
-              emissive="#331100"
-              emissiveIntensity={0.3}
-            />
-          </mesh>
-        );
-      } else {
-        const model = randomModel === 'fbx' ? fbx : glbScene;
-        if (model) {
-          return (
-            <primitive
-              object={model.clone()}
-              scale={randomScale}
-              {...clickProps}
-            />
-          );
-        } else {
-          // Fallback to polygon if model fails to load
-          return (
-            <mesh scale={randomScale * 8} {...clickProps}>
-              <dodecahedronGeometry args={[1, 0]} />
-              <meshStandardMaterial 
-                color="#666666" 
-                roughness={0.8} 
-                metalness={0.2}
-                emissive="#331100"
-                emissiveIntensity={0.3}
-              />
-            </mesh>
-          );
-        }
-      }
-    } catch (error) {
-      console.warn('Asteroid model render error, using fallback:', error);
-      return (
-        <mesh scale={randomScale * 8} {...clickProps}>
-          <dodecahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial 
-            color="#666666" 
-            roughness={0.8} 
-            metalness={0.2}
-            emissive="#331100"
-            emissiveIntensity={0.3}
-          />
-        </mesh>
-      );
-    }
+    // All meteors use procedural geometry now
+    return (
+      <mesh scale={randomScale * 8} {...clickProps}>
+        <dodecahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial 
+          color="#666666" 
+          roughness={0.8} 
+          metalness={0.2}
+          emissive="#331100"
+          emissiveIntensity={0.3}
+        />
+      </mesh>
+    );
   };
 
   return (

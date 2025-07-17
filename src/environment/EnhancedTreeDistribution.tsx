@@ -1,7 +1,6 @@
 import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from '../components/ChunkSystem';
 import * as THREE from 'three';
-import { TreeAssetManager, TREE_DISTRIBUTION, TREE_SCALES, TREE_Y_OFFSETS } from './TreeAssetManager';
 import { useRegisterCollider } from '@/lib/CollisionContext';
 
 interface EnhancedTreeDistributionProps {
@@ -104,9 +103,13 @@ const getTreeType = (seed: number): 'realistic' | 'stylized' | 'pine218' => {
 
 // Get randomized scale based on tree type
 const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: number): number => {
-  const scaleConfig = TREE_SCALES[treeType];
+  const scaleConfig = {
+    realistic: { min: 0.8, max: 1.2 },
+    stylized: { min: 0.9, max: 1.1 },
+    pine218: { min: 0.7, max: 1.3 }
+  };
   const random = seededRandom(seed);
-  return scaleConfig.min + (random * (scaleConfig.max - scaleConfig.min));
+  return scaleConfig[treeType].min + (random * (scaleConfig[treeType].max - scaleConfig[treeType].min));
 };
 
 // ENHANCED Tree component with proper ground connection
@@ -116,8 +119,21 @@ const GLBTree: React.FC<{
   rotation: number;
   treeType: 'realistic' | 'stylized' | 'pine218';
 }> = ({ position, scale, rotation, treeType }) => {
+  // Create procedural tree geometry
   const treeModel = useMemo(() => {
-    return TreeAssetManager.getCachedModel(treeType);
+    const group = new THREE.Group();
+    // Simple procedural tree
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.2, 0.3, 2, 8),
+      new THREE.MeshStandardMaterial({ color: '#8b4513' })
+    );
+    const foliage = new THREE.Mesh(
+      new THREE.SphereGeometry(1.2, 8, 6),
+      new THREE.MeshStandardMaterial({ color: '#32cd32' })
+    );
+    foliage.position.y = 1.5;
+    group.add(trunk, foliage);
+    return group;
   }, [treeType]);
 
   const optimizedModel = useMemo(() => {
@@ -178,7 +194,8 @@ const GLBTree: React.FC<{
 
   // ENHANCED: Proper ground connection with mountain slope calculation
   const groundHeight = getMountainSlopeHeight(position[0], position[2]);
-  const adjustedY = groundHeight + TREE_Y_OFFSETS[treeType] - 1.8; // Offset for proper grounding
+  const treeOffsets = { realistic: 0, stylized: 0, pine218: 0 };
+  const adjustedY = groundHeight + treeOffsets[treeType] - 1.8; // Offset for proper grounding
 
   const adjustedPosition: [number, number, number] = [
     position[0],
@@ -287,7 +304,8 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
           rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
           
           // ENHANCED: Calculate proper ground-connected Y position
-          finalY = terrainHeight + TREE_Y_OFFSETS[treeType] - 1.8;
+          const treeOffsets = { realistic: 0, stylized: 0, pine218: 0 };
+          finalY = terrainHeight + treeOffsets[treeType] - 1.8;
           
           validPosition = allPositions.every(pos => {
             const distance = Math.sqrt(
@@ -332,8 +350,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   );
 };
 
-// Clear cache when component unmounts
+// Clear cache when component unmounts - no longer needed
 export const clearTreeModelCache = () => {
-  TreeAssetManager.clearCache();
-  console.log('Tree model cache cleared');
+  console.log('Tree model cache cleared (procedural trees)');
 };

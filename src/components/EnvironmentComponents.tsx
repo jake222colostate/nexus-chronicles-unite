@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { ArchwayComponent } from './ArchwayComponent';
-import { CrystalComponent } from './CrystalComponent';
 import { MountainComponent } from './MountainComponent';
 import { SkyDomeComponent } from './SkyDomeComponent';
 import { TerrainComponent } from './TerrainComponent';
@@ -40,15 +38,7 @@ export const EnvironmentComponents: React.FC<EnvironmentComponentsProps> = ({
         [6 + random(7) * 4, 0, -8 + random(8) * 10] as [number, number, number],
         [-12 + random(9) * 3, 0, 5 + random(10) * 8] as [number, number, number],
         [10 + random(11) * 3, 0, 8 + random(12) * 8] as [number, number, number],
-      ],
-      // Crystals along path
-      crystals: [
-        [-3 + random(13) * 2, 2, 10 + random(14) * 6] as [number, number, number],
-        [3 + random(15) * 2, 2, 20 + random(16) * 6] as [number, number, number],
-        [-2 + random(17) * 2, 2, 35 + random(18) * 6] as [number, number, number],
-      ],
-      // Archway at specific location
-      archway: [0, 0, 30] as [number, number, number]
+      ]
     };
   };
 
@@ -87,22 +77,6 @@ export const EnvironmentComponents: React.FC<EnvironmentComponentsProps> = ({
           rotation={[0, Math.random() * Math.PI * 2, 0]}
         />
       ))}
-      
-      {/* Crystals - magical elements with animation */}
-      {positions.crystals.map((pos, index) => (
-        <CrystalComponent
-          key={`crystal-${tileIndex}-${index}`}
-          position={pos}
-          scale={[0.6, 0.6, 0.6]}
-          animate={true}
-        />
-      ))}
-      
-      {/* Archway - major landmark */}
-      <ArchwayComponent
-        position={positions.archway}
-        scale={[1.2, 1.2, 1.2]}
-      />
     </group>
   );
 };
