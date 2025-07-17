@@ -16,7 +16,7 @@ interface SkeletonEnemySystemProps {
 
 interface SkeletonEnemy {
   id: string;
-  type: 'minion' | 'rogue';
+  type: 'minion';
   position: Vector3;
   health: number;
   maxHealth: number;
@@ -33,15 +33,9 @@ const SkeletonModel: React.FC<{
 }> = ({ enemy, onHit }) => {
   const meshRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
+  const [modelLoaded, setModelLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
-  const getModelPath = (type: string) => {
-    switch (type) {
-      case 'minion': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb';
-      case 'rogue': return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb';
-      default: return '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb';
-    }
-  };
-
   const getHealthBarColor = () => {
     const healthPercent = enemy.health / enemy.maxHealth;
     if (healthPercent > 0.6) return '#4ade80';
@@ -49,18 +43,18 @@ const SkeletonModel: React.FC<{
     return '#ef4444';
   };
 
-  const getSkeletonStats = (type: string) => {
-    switch (type) {
-      case 'minion': return { scale: 0.8, color: '#94a3b8' };
-      case 'rogue': return { scale: 1.0, color: '#22c55e' };
-      default: return { scale: 1.0, color: '#94a3b8' };
-    }
-  };
+  const stats = { scale: 0.8, color: '#94a3b8' };
 
-  const stats = getSkeletonStats(enemy.type);
-  
-  // Load the GLB model
-  const { scene } = useGLTF(getModelPath(enemy.type));
+  // Try to load GLB model with error handling
+  let scene = null;
+  try {
+    const gltf = useGLTF('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb');
+    scene = gltf.scene;
+    if (!modelLoaded) setModelLoaded(true);
+  } catch (error) {
+    console.warn('Failed to load GLB skeleton:', error);
+    if (!loadError) setLoadError(error instanceof Error ? error.message : 'GLB load failed');
+  }
 
   useFrame((state) => {
     if (meshRef.current && enemy.alive) {
@@ -85,11 +79,50 @@ const SkeletonModel: React.FC<{
       }}
       scale={stats.scale}
     >
-      <primitive 
-        object={scene.clone()} 
-        castShadow
-        receiveShadow
-      />
+      {/* Use actual model if loaded, otherwise use simple geometry */}
+      {scene && modelLoaded ? (
+        <primitive 
+          object={scene.clone()} 
+          castShadow
+          receiveShadow
+        />
+      ) : (
+        // Simple skeleton representation as fallback
+        <group>
+          <mesh position={[0, 1, 0]}>
+            <cylinderGeometry args={[0.3, 0.2, 1]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[0, 1.8, 0]}>
+            <sphereGeometry args={[0.25]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[-0.4, 1.2, 0]} rotation={[0, 0, 0.3]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.8]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[0.4, 1.2, 0]} rotation={[0, 0, -0.3]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.8]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[-0.15, 0.3, 0]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.6]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[0.15, 0.3, 0]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.6]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[-0.1, 1.85, 0.2]}>
+            <sphereGeometry args={[0.05]} />
+            <meshBasicMaterial color={stats.color} />
+          </mesh>
+          <mesh position={[0.1, 1.85, 0.2]}>
+            <sphereGeometry args={[0.05]} />
+            <meshBasicMaterial color={stats.color} />
+          </mesh>
+        </group>
+      )}
       
       {/* Health bar */}
       <group position={[0, 2.5, 0]}>
@@ -111,10 +144,10 @@ const SkeletonModel: React.FC<{
         </mesh>
       )}
 
-      {/* Type indicator */}
+      {/* Type indicator and loading status */}
       <mesh position={[0, 3, 0]}>
         <sphereGeometry args={[0.1, 8, 8]} />
-        <meshBasicMaterial color={stats.color} />
+        <meshBasicMaterial color={modelLoaded ? '#00ff00' : (loadError ? '#ff0000' : stats.color)} />
       </mesh>
     </group>
   );
@@ -163,18 +196,9 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
         const finalX = playerPosition.x + Math.sin(angle) * distance;
         const finalZ = playerPosition.z + Math.cos(angle) * distance; // In front of player
         
-        const types: ('minion' | 'rogue')[] = ['minion', 'rogue'];
-        const type = types[Math.floor(seededRandom(seed + 2) * 2)];
+        const type: 'minion' = 'minion';
         
-        const getHealthForType = (type: string) => {
-          switch (type) {
-            case 'minion': return 50;
-            case 'rogue': return 60;
-            default: return 50;
-          }
-        };
-
-        const health = getHealthForType(type);
+        const health = 50;
         
         newEnemies.push({
           id: `${chunk.x}_${chunk.z}_${type}_${i}`,
