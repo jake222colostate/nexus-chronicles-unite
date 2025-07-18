@@ -306,7 +306,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
         return { ...projectile, position: newPos };
       })
       .filter(projectile => 
-        projectile && projectile.position.distanceTo(camera.position) < 50
+        projectile && projectile.position.distanceTo(camera.position) < 40
       )
     );
 
@@ -358,7 +358,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       }
     }
 
-    // Update explosion particles - fixed cleanup logic
+    // Update explosion particles - enhanced cleanup logic
     setExplosionParticles(prev => {
       const updated = prev.map(particle => {
         // Update position and physics
@@ -367,11 +367,10 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
         particle.velocity.multiplyScalar(0.98); // Air resistance
         particle.life -= 16; // Reduce life (60fps = ~16ms per frame)
         return particle;
-      });
+      }).filter(particle => particle.life > 0); // Filter immediately
       
-      // Filter out dead particles
-      const alive = updated.filter(particle => particle.life > 0);
-      return alive.length > 30 ? alive.slice(-30) : alive; // Hard limit on particles
+      // Hard limit on particles for performance
+      return updated.length > 25 ? updated.slice(-25) : updated;
     });
   });
 

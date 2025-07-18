@@ -54,10 +54,10 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
       setMeteors(prev => {
         if (prev.length >= 6) return prev; // Limit active meteors
         
-        // Spawn meteors from all angles around the camera
-        const spawnDist = 25; // Increased distance for better effect
+        // Spawn meteors from deep space - much further away
+        const spawnDist = 120; // Deep space distance
         const angle = Math.random() * Math.PI * 2; // Full 360 degree angle
-        const height = Math.random() * 8 + 2; // Random height between 2-10
+        const height = Math.random() * 15 + 5; // Higher altitude range for deep space effect
         
         // Calculate spawn position in a circle around the camera
         const x = camera.position.x + Math.cos(angle) * spawnDist;
@@ -73,7 +73,7 @@ export const ScifiDefenseSystem: React.FC<ScifiDefenseSystemProps> = ({
           {
             id: Date.now(),
             position: spawnPos,
-            velocity: dir.multiplyScalar(0.025), // Slightly slower for better tracking
+            velocity: dir.multiplyScalar(0.035), // Faster approach from deep space
             health: 5
           }
         ];
