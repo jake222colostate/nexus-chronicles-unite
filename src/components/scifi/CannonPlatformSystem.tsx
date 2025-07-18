@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Vector3 } from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { StationaryCannon } from './StationaryCannon';
@@ -15,6 +15,14 @@ interface CannonData {
 interface RepairKitData {
   id: number;
   position: [number, number, number];
+}
+
+interface ExplosionParticle {
+  id: number;
+  position: Vector3;
+  velocity: Vector3;
+  life: number;
+  maxLife: number;
 }
 
 interface CannonPlatformSystemProps {
@@ -84,6 +92,8 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
   const [cannons, setCannons] = useState<CannonData[]>([]);
   const [repairKits, setRepairKits] = useState<RepairKitData[]>([]);
   const [projectiles, setProjectiles] = useState<any[]>([]);
+  const [explosionParticles, setExplosionParticles] = useState<ExplosionParticle[]>([]);
+  const platformRotationRef = useRef(0);
 
   // Initialize cannons based on count
   useEffect(() => {
@@ -132,11 +142,33 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
     return () => clearInterval(spawnInterval);
   }, []);
 
+  // Create explosion effect
+  const createExplosion = useCallback((position: Vector3, particleCount: number = 15) => {
+    const newParticles: ExplosionParticle[] = [];
+    for (let i = 0; i < particleCount; i++) {
+      const velocity = new Vector3(
+        (Math.random() - 0.5) * 4,
+        Math.random() * 3 + 1,
+        (Math.random() - 0.5) * 4
+      );
+      newParticles.push({
+        id: Date.now() + i,
+        position: position.clone(),
+        velocity,
+        life: 2000, // 2 seconds
+        maxLife: 2000
+      });
+    }
+    setExplosionParticles(prev => [...prev, ...newParticles]);
+  }, []);
   // Auto-fire cannons at targets
   useFrame((state) => {
     if (targets.length === 0) return;
 
     const currentTime = state.clock.elapsedTime * 1000;
+    
+    // Update platform rotation to match FloatingIsland's slow rotation
+    platformRotationRef.current += 0.001; // Same speed as FloatingIsland
     
     // Update cannon positions to follow floating platform
     const platformFloatingOffset = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
@@ -188,7 +220,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       return updatedCannon;
     }));
 
-    // Update projectiles and check for hits
+    // Update projectiles and check for collisions
     setProjectiles(prev => prev
       .map(projectile => {
         const newPos = projectile.position.clone().add(
@@ -197,11 +229,24 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
         
         // Check for meteor hits by checking distance to all targets
         let hit = false;
-        targets.forEach(target => {
-          if (newPos.distanceTo(target) < 1.0) {
+        targets.forEach((target, targetIndex) => {
+          if (newPos.distanceTo(target) < 1.5) {
             hit = true;
-            // Simple hit detection - would need proper meteor ID system
+            createExplosion(target, 20); // Create explosion at meteor position
             console.log('Cannon projectile hit meteor!');
+          }
+        });
+        
+        // Check collision with cannons
+        cannons.forEach(cannon => {
+          const cannonPos = new Vector3(...cannon.position);
+          if (newPos.distanceTo(cannonPos) < 1.0) {
+            hit = true;
+            createExplosion(cannonPos, 15);
+            // Damage cannon
+            setCannons(prevCannons => prevCannons.map(c => 
+              c.id === cannon.id ? { ...c, health: Math.max(0, c.health - 25) } : c
+            ));
           }
         });
         
@@ -214,6 +259,28 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       .filter(projectile => 
         projectile && projectile.position.distanceTo(camera.position) < 50
       )
+    );
+
+    // Check meteor-to-meteor collisions
+    for (let i = 0; i < targets.length; i++) {
+      for (let j = i + 1; j < targets.length; j++) {
+        if (targets[i].distanceTo(targets[j]) < 2.0) {
+          createExplosion(targets[i], 25);
+          createExplosion(targets[j], 25);
+          console.log('Meteors collided!');
+        }
+      }
+    }
+
+    // Update explosion particles
+    setExplosionParticles(prev => prev
+      .map(particle => {
+        particle.position.add(particle.velocity.clone().multiplyScalar(0.016));
+        particle.velocity.y -= 0.05; // Gravity
+        particle.life -= 16; // Reduce life
+        return particle.life > 0 ? particle : null;
+      })
+      .filter(Boolean) as ExplosionParticle[]
     );
   });
 
@@ -254,7 +321,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
   return (
     <group position={platformPosition}>
       {/* Platform reference for rotation - cannons will rotate with this */}
-      <group rotation={[0, (Date.now() * 0.001) % (Math.PI * 2), 0]}>
+      <group rotation={[0, platformRotationRef.current, 0]}>
         {/* Render cannons as children of platform so they rotate together */}
         {activeCannons.map(cannon => {
           // Use local position relative to platform, not world position
@@ -294,6 +361,21 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
           />
         </mesh>
       ))}
+
+      {/* Render explosion particles */}
+      {explosionParticles.map(particle => {
+        const alpha = particle.life / particle.maxLife;
+        return (
+          <mesh key={particle.id} position={particle.position}>
+            <sphereGeometry args={[0.1, 6, 6]} />
+            <meshBasicMaterial 
+              color="#ff6600" 
+              transparent 
+              opacity={alpha}
+            />
+          </mesh>
+        );
+      })}
     </group>
   );
 };
