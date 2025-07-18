@@ -113,8 +113,8 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       newCannons.push({
         id: i,
         position: adjustedPosition,
-        health: 100,
-        maxHealth: 100,
+        health: 999999, // Infinite health for testing
+        maxHealth: 999999,
         lastFired: 0
       });
     }
