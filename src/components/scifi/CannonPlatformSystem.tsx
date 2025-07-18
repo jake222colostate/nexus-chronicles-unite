@@ -268,6 +268,32 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       )
     );
 
+    // Check meteor-to-cannon collisions (damage cannons on impact)
+    if (targets.length > 0 && Math.random() < 0.2) { // Check 20% of frames for better responsiveness
+      for (let i = 0; i < Math.min(targets.length, 6); i++) {
+        const meteorPos = targets[i];
+        for (let j = 0; j < cannons.length; j++) {
+          const cannon = cannons[j];
+          const cannonPos = new Vector3(...cannon.position);
+          
+          if (meteorPos.distanceTo(cannonPos) < 1.5 && cannon.health > 0) {
+            // Create explosion at cannon position
+            createExplosion(cannonPos, 10);
+            console.log(`Meteor hit cannon ${cannon.id}! Dealing 30 damage.`);
+            
+            // Damage cannon
+            setCannons(prevCannons => prevCannons.map(c => 
+              c.id === cannon.id ? { ...c, health: Math.max(0, c.health - 30) } : c
+            ));
+            
+            // Call meteor hit callback to remove meteor
+            onMeteorHit?.(i, 30);
+            break; // Only one meteor-cannon collision per frame
+          }
+        }
+      }
+    }
+
     // Check meteor-to-meteor collisions (throttled for performance)
     if (targets.length > 1 && Math.random() < 0.1) { // Only check 10% of frames
       for (let i = 0; i < Math.min(targets.length, 4); i++) { // Limit checks
