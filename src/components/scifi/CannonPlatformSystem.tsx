@@ -142,24 +142,25 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
     return () => clearInterval(spawnInterval);
   }, []);
 
-  // Create explosion effect
-  const createExplosion = useCallback((position: Vector3, particleCount: number = 15) => {
+  // Create explosion effect - optimized for 60fps
+  const createExplosion = useCallback((position: Vector3, particleCount: number = 8) => {
     const newParticles: ExplosionParticle[] = [];
-    for (let i = 0; i < particleCount; i++) {
+    // Reduced particle count for better performance
+    for (let i = 0; i < Math.min(particleCount, 10); i++) {
       const velocity = new Vector3(
-        (Math.random() - 0.5) * 4,
-        Math.random() * 3 + 1,
-        (Math.random() - 0.5) * 4
+        (Math.random() - 0.5) * 3,
+        Math.random() * 2 + 0.5,
+        (Math.random() - 0.5) * 3
       );
       newParticles.push({
-        id: Date.now() + i,
+        id: Date.now() + i + Math.random() * 1000, // Ensure unique IDs
         position: position.clone(),
         velocity,
-        life: 2000, // 2 seconds
-        maxLife: 2000
+        life: 1000, // Reduced to 1 second for better performance
+        maxLife: 1000
       });
     }
-    setExplosionParticles(prev => [...prev, ...newParticles]);
+    setExplosionParticles(prev => [...prev.slice(-20), ...newParticles]); // Limit total particles
   }, []);
   // Auto-fire cannons at targets
   useFrame((state) => {
@@ -227,28 +228,34 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
           projectile.direction.clone().multiplyScalar(projectile.speed)
         );
         
-        // Check for meteor hits by checking distance to all targets
+        // Check for meteor hits by checking distance to all targets (optimized)
         let hit = false;
-        targets.forEach((target, targetIndex) => {
-          if (newPos.distanceTo(target) < 1.5) {
+        for (let i = 0; i < targets.length && !hit; i++) {
+          const target = targets[i];
+          if (newPos.distanceTo(target) < 1.2) {
             hit = true;
-            createExplosion(target, 20); // Create explosion at meteor position
+            createExplosion(target, 6); // Reduced particle count
             console.log('Cannon projectile hit meteor!');
+            break; // Exit early for performance
           }
-        });
+        }
         
-        // Check collision with cannons
-        cannons.forEach(cannon => {
-          const cannonPos = new Vector3(...cannon.position);
-          if (newPos.distanceTo(cannonPos) < 1.0) {
-            hit = true;
-            createExplosion(cannonPos, 15);
-            // Damage cannon
-            setCannons(prevCannons => prevCannons.map(c => 
-              c.id === cannon.id ? { ...c, health: Math.max(0, c.health - 25) } : c
-            ));
+        // Check collision with cannons (optimized)
+        if (!hit) {
+          for (let i = 0; i < cannons.length && !hit; i++) {
+            const cannon = cannons[i];
+            const cannonPos = new Vector3(...cannon.position);
+            if (newPos.distanceTo(cannonPos) < 1.0) {
+              hit = true;
+              createExplosion(cannonPos, 8);
+              // Damage cannon
+              setCannons(prevCannons => prevCannons.map(c => 
+                c.id === cannon.id ? { ...c, health: Math.max(0, c.health - 25) } : c
+              ));
+              break;
+            }
           }
-        });
+        }
         
         if (hit) {
           return null; // Remove projectile
@@ -261,27 +268,35 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       )
     );
 
-    // Check meteor-to-meteor collisions
-    for (let i = 0; i < targets.length; i++) {
-      for (let j = i + 1; j < targets.length; j++) {
-        if (targets[i].distanceTo(targets[j]) < 2.0) {
-          createExplosion(targets[i], 25);
-          createExplosion(targets[j], 25);
-          console.log('Meteors collided!');
+    // Check meteor-to-meteor collisions (throttled for performance)
+    if (targets.length > 1 && Math.random() < 0.1) { // Only check 10% of frames
+      for (let i = 0; i < Math.min(targets.length, 4); i++) { // Limit checks
+        for (let j = i + 1; j < Math.min(targets.length, 4); j++) {
+          if (targets[i].distanceTo(targets[j]) < 1.8) {
+            createExplosion(targets[i], 5);
+            createExplosion(targets[j], 5);
+            console.log('Meteors collided!');
+            break; // Only one collision per frame
+          }
         }
       }
     }
 
-    // Update explosion particles
-    setExplosionParticles(prev => prev
-      .map(particle => {
+    // Update explosion particles - fixed cleanup logic
+    setExplosionParticles(prev => {
+      const updated = prev.map(particle => {
+        // Update position and physics
         particle.position.add(particle.velocity.clone().multiplyScalar(0.016));
-        particle.velocity.y -= 0.05; // Gravity
-        particle.life -= 16; // Reduce life
-        return particle.life > 0 ? particle : null;
-      })
-      .filter(Boolean) as ExplosionParticle[]
-    );
+        particle.velocity.y -= 0.08; // Gravity
+        particle.velocity.multiplyScalar(0.98); // Air resistance
+        particle.life -= 16; // Reduce life (60fps = ~16ms per frame)
+        return particle;
+      });
+      
+      // Filter out dead particles
+      const alive = updated.filter(particle => particle.life > 0);
+      return alive.length > 30 ? alive.slice(-30) : alive; // Hard limit on particles
+    });
   });
 
   const handleCannonRepair = useCallback((cannonId: number) => {
@@ -362,14 +377,15 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
         </mesh>
       ))}
 
-      {/* Render explosion particles */}
-      {explosionParticles.map(particle => {
-        const alpha = particle.life / particle.maxLife;
+      {/* Render explosion particles - optimized rendering */}
+      {explosionParticles.length > 0 && explosionParticles.map(particle => {
+        const alpha = Math.max(0, Math.min(1, particle.life / particle.maxLife));
+        const scale = 0.1 + (1 - alpha) * 0.2; // Particles grow as they fade
         return (
           <mesh key={particle.id} position={particle.position}>
-            <sphereGeometry args={[0.1, 6, 6]} />
+            <sphereGeometry args={[scale, 4, 4]} />
             <meshBasicMaterial 
-              color="#ff6600" 
+              color={alpha > 0.5 ? "#ff4400" : "#ff8800"} 
               transparent 
               opacity={alpha}
             />
