@@ -27,19 +27,38 @@ interface CannonPlatformSystemProps {
   platformPosition?: Vector3;
 }
 
-// Cannon positions on top of the enlarged light blue circular platform
-const CANNON_POSITIONS: [number, number, number][] = [
-  [0, 1, -2],      // Center on top of platform
-  [-3, 1, -1.5],   // Front left on top
-  [3, 1, -1.5],    // Front right on top
-  [-4, 1, -2],     // Left on top
-  [4, 1, -2],      // Right on top
-  [-3, 1, -2.5],   // Back left on top
-  [3, 1, -2.5],    // Back right on top
-  [0, 1, -1],      // Front center on top
-  [0, 1, -3],      // Back center on top
-  [-5, 1, -1],     // Far left on top
-];
+// Generate evenly distributed cannon positions on a circular platform
+const generateCannonPositions = (count: number, platformRadius: number = 6): [number, number, number][] => {
+  const positions: [number, number, number][] = [];
+  
+  if (count === 1) {
+    // Single cannon in center
+    positions.push([0, 1, -2]);
+  } else {
+    // Place first cannon in center if odd number
+    if (count % 2 === 1) {
+      positions.push([0, 1, -2]);
+    }
+    
+    // Distribute remaining cannons in concentric circles
+    const remainingCount = count % 2 === 1 ? count - 1 : count;
+    const ringsNeeded = Math.ceil(remainingCount / 8); // Up to 8 cannons per ring
+    
+    for (let ring = 0; ring < ringsNeeded; ring++) {
+      const ringRadius = (ring + 1) * (platformRadius / (ringsNeeded + 0.5));
+      const cannonsInRing = ring === 0 ? Math.min(remainingCount, 6) : Math.min(remainingCount - positions.length + (count % 2 === 1 ? 1 : 0), 8);
+      
+      for (let i = 0; i < cannonsInRing; i++) {
+        const angle = (i / cannonsInRing) * Math.PI * 2;
+        const x = Math.cos(angle) * ringRadius;
+        const z = Math.sin(angle) * ringRadius - 2; // Offset to match platform position
+        positions.push([x, 1, z]);
+      }
+    }
+  }
+  
+  return positions.slice(0, count);
+};
 
 export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
   cannonCount,
@@ -57,10 +76,12 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
 
   // Initialize cannons based on count
   useEffect(() => {
+    const cannonPositions = generateCannonPositions(Math.min(cannonCount, 10));
     const newCannons: CannonData[] = [];
-    for (let i = 0; i < Math.min(cannonCount, 10); i++) {
+    
+    for (let i = 0; i < cannonPositions.length; i++) {
       // Adjust cannon positions to follow platform position
-      const basePosition = CANNON_POSITIONS[i];
+      const basePosition = cannonPositions[i];
       const adjustedPosition: [number, number, number] = [
         basePosition[0] + platformPosition.x,
         basePosition[1] + platformPosition.y,
@@ -75,7 +96,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       });
     }
     setCannons(newCannons);
-  }, [cannonCount]);
+  }, [cannonCount, platformPosition]);
 
   // Spawn repair kits occasionally
   useEffect(() => {
@@ -107,8 +128,9 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
     const platformFloatingOffset = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
     
     setCannons(prev => prev.map(cannon => {
-      // Update cannon position to follow platform movement
-      const basePosition = CANNON_POSITIONS[cannon.id];
+      // Get the updated position from the generated positions
+      const cannonPositions = generateCannonPositions(Math.min(cannonCount, 10));
+      const basePosition = cannonPositions[cannon.id] || [0, 1, -2];
       const updatedPosition: [number, number, number] = [
         basePosition[0] + platformPosition.x,
         basePosition[1] + platformPosition.y + platformFloatingOffset,

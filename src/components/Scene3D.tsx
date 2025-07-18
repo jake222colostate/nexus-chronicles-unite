@@ -192,8 +192,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Sci-fi systems - with background diamonds and upgrade modules */}
           {realm === 'scifi' && (
             <>
-              {/* Distance fog for atmospheric depth */}
-              <fog attach="fog" color="#0a0a0a" near={20} far={120} />
+              {/* Enhanced fog for atmospheric depth and distant object fadeout */}
+              <fog attach="fog" color="#0a0a0a" near={15} far={80} />
               
               <ScifiUpgradeGLBSystem
                 gameState={gameState}
