@@ -142,25 +142,34 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
     return () => clearInterval(spawnInterval);
   }, []);
 
-  // Create explosion effect - optimized for 60fps
+  // Create explosion effect - enhanced visuals
   const createExplosion = useCallback((position: Vector3, particleCount: number = 8) => {
     const newParticles: ExplosionParticle[] = [];
-    // Reduced particle count for better performance
-    for (let i = 0; i < Math.min(particleCount, 10); i++) {
+    const maxParticles = Math.min(particleCount, 25); // Allow more particles for big explosions
+    
+    for (let i = 0; i < maxParticles; i++) {
+      // Create varied explosion patterns
+      const isCore = i < maxParticles * 0.3; // 30% core particles
+      
       const velocity = new Vector3(
-        (Math.random() - 0.5) * 3,
-        Math.random() * 2 + 0.5,
-        (Math.random() - 0.5) * 3
+        (Math.random() - 0.5) * (isCore ? 2 : 6), // Core particles slower
+        Math.random() * (isCore ? 1 : 4) + (isCore ? 0.2 : 0.5),
+        (Math.random() - 0.5) * (isCore ? 2 : 6)
       );
+      
       newParticles.push({
         id: Date.now() + i + Math.random() * 1000, // Ensure unique IDs
-        position: position.clone(),
+        position: position.clone().add(new Vector3(
+          (Math.random() - 0.5) * 0.3, // Small spawn radius variation
+          (Math.random() - 0.5) * 0.3,
+          (Math.random() - 0.5) * 0.3
+        )),
         velocity,
-        life: 1000, // Reduced to 1 second for better performance
-        maxLife: 1000
+        life: isCore ? 1500 : 800, // Core lasts longer
+        maxLife: isCore ? 1500 : 800
       });
     }
-    setExplosionParticles(prev => [...prev.slice(-20), ...newParticles]); // Limit total particles
+    setExplosionParticles(prev => [...prev.slice(-30), ...newParticles]); // Allow more particles
   }, []);
   // Auto-fire cannons at targets
   useFrame((state) => {
@@ -268,7 +277,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       )
     );
 
-    // Check meteor-to-cannon collisions (damage cannons on impact)
+    // Check meteor-to-cannon collisions (explode on ANY cannon, damage area)
     if (targets.length > 0 && Math.random() < 0.2) { // Check 20% of frames for better responsiveness
       for (let i = 0; i < Math.min(targets.length, 6); i++) {
         const meteorPos = targets[i];
@@ -276,18 +285,26 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
           const cannon = cannons[j];
           const cannonPos = new Vector3(...cannon.position);
           
-          if (meteorPos.distanceTo(cannonPos) < 1.5 && cannon.health > 0) {
-            // Create explosion at cannon position
-            createExplosion(cannonPos, 10);
-            console.log(`Meteor hit cannon ${cannon.id}! Dealing 30 damage.`);
+          if (meteorPos.distanceTo(cannonPos) < 1.5) { // Removed health check - explode on any cannon
+            // Create massive explosion at impact point
+            createExplosion(cannonPos, 20);
+            console.log(`Meteor exploded on cannon ${cannon.id}! Area damage explosion.`);
             
-            // Damage cannon
-            setCannons(prevCannons => prevCannons.map(c => 
-              c.id === cannon.id ? { ...c, health: Math.max(0, c.health - 30) } : c
-            ));
+            // Area damage - damage all cannons within explosion radius
+            setCannons(prevCannons => prevCannons.map(c => {
+              const cPos = new Vector3(...c.position);
+              const distance = cPos.distanceTo(cannonPos);
+              
+              if (distance < 4.0 && c.health > 0) { // 4 unit damage radius
+                const damage = distance < 2.0 ? 40 : 20; // More damage closer to explosion
+                console.log(`Explosion damaged cannon ${c.id} for ${damage} damage (distance: ${distance.toFixed(1)})`);
+                return { ...c, health: Math.max(0, c.health - damage) };
+              }
+              return c;
+            }));
             
             // Call meteor hit callback to remove meteor
-            onMeteorHit?.(i, 30);
+            onMeteorHit?.(i, 50);
             break; // Only one meteor-cannon collision per frame
           }
         }
