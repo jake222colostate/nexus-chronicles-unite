@@ -171,7 +171,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
     }
     setExplosionParticles(prev => [...prev.slice(-30), ...newParticles]); // Allow more particles
   }, []);
-  // Auto-fire cannons at targets
+  // Auto-fire cannons at targets with directional assignment
   useFrame((state) => {
     if (targets.length === 0) return;
 
@@ -199,17 +199,50 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
         return updatedCannon;
       }
 
-      // Find closest target
+      // Assign meteors to cannons based on direction/sector
       const cannonPos = new Vector3(...updatedCannon.position);
-      const closestTarget = targets.reduce((closest, target) => {
-        const distToCannon = target.distanceTo(cannonPos);
-        const distToClosest = closest.distanceTo(cannonPos);
-        return distToCannon < distToClosest ? target : closest;
-      }, targets[0]);
+      const platformCenter = new Vector3(platformPosition.x, platformPosition.y, platformPosition.z);
+      
+      // Calculate cannon's directional sector (angle from platform center)
+      const cannonDirection = cannonPos.clone().sub(platformCenter).normalize();
+      const cannonAngle = Math.atan2(cannonDirection.x, cannonDirection.z);
+      
+      // Find meteors in this cannon's sector
+      const sectorSize = (Math.PI * 2) / Math.max(cannons.length, 1); // Divide 360 degrees by number of cannons
+      const assignedMeteors = targets.filter(target => {
+        const meteorDirection = target.clone().sub(platformCenter).normalize();
+        const meteorAngle = Math.atan2(meteorDirection.x, meteorDirection.z);
+        
+        // Calculate angle difference, accounting for wrap-around
+        let angleDiff = meteorAngle - cannonAngle;
+        if (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        if (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+        
+        // Check if meteor is in this cannon's sector
+        return Math.abs(angleDiff) <= sectorSize / 2;
+      });
+      
+      // If no meteors in sector, target closest meteor as fallback
+      let targetMeteor = null;
+      if (assignedMeteors.length > 0) {
+        // Target closest meteor in assigned sector
+        targetMeteor = assignedMeteors.reduce((closest, target) => {
+          const distToCannon = target.distanceTo(cannonPos);
+          const distToClosest = closest.distanceTo(cannonPos);
+          return distToCannon < distToClosest ? target : closest;
+        }, assignedMeteors[0]);
+      } else {
+        // Fallback to closest meteor overall
+        targetMeteor = targets.reduce((closest, target) => {
+          const distToCannon = target.distanceTo(cannonPos);
+          const distToClosest = closest.distanceTo(cannonPos);
+          return distToCannon < distToClosest ? target : closest;
+        }, targets[0]);
+      }
 
-      // Fire projectile
-      if (closestTarget.distanceTo(cannonPos) < 25) {
-        const direction = closestTarget.clone().sub(cannonPos).normalize();
+      // Fire projectile at assigned target
+      if (targetMeteor && targetMeteor.distanceTo(cannonPos) < 25) {
+        const direction = targetMeteor.clone().sub(cannonPos).normalize();
         
         setProjectiles(prevProjectiles => [
           ...prevProjectiles,
@@ -219,7 +252,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
             direction: direction,
             speed: 0.8,
             damage: 25,
-            targetPosition: closestTarget.clone(),
+            targetPosition: targetMeteor.clone(),
             targetId: `meteor-${Date.now()}`
           }
         ]);
