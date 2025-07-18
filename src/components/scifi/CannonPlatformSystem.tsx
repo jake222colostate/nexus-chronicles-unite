@@ -31,32 +31,43 @@ interface CannonPlatformSystemProps {
 const generateCannonPositions = (count: number, platformRadius: number = 6): [number, number, number][] => {
   const positions: [number, number, number][] = [];
   
+  console.log(`Generating ${count} cannon positions with platform radius ${platformRadius}`);
+  
   if (count === 1) {
     // Single cannon in center
     positions.push([0, 1, -2]);
+  } else if (count <= 6) {
+    // For 2-6 cannons, arrange in a single circle
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      const radius = platformRadius * 0.7; // Use 70% of platform radius to stay well within bounds
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius - 2; // Offset to match platform position
+      positions.push([x, 1, z]);
+    }
   } else {
-    // Place first cannon in center if odd number
-    if (count % 2 === 1) {
-      positions.push([0, 1, -2]);
+    // For more than 6 cannons, use multiple rings
+    // First ring of 6 cannons
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2;
+      const radius = platformRadius * 0.5;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius - 2;
+      positions.push([x, 1, z]);
     }
     
-    // Distribute remaining cannons in concentric circles
-    const remainingCount = count % 2 === 1 ? count - 1 : count;
-    const ringsNeeded = Math.ceil(remainingCount / 8); // Up to 8 cannons per ring
-    
-    for (let ring = 0; ring < ringsNeeded; ring++) {
-      const ringRadius = (ring + 1) * (platformRadius / (ringsNeeded + 0.5));
-      const cannonsInRing = ring === 0 ? Math.min(remainingCount, 6) : Math.min(remainingCount - positions.length + (count % 2 === 1 ? 1 : 0), 8);
-      
-      for (let i = 0; i < cannonsInRing; i++) {
-        const angle = (i / cannonsInRing) * Math.PI * 2;
-        const x = Math.cos(angle) * ringRadius;
-        const z = Math.sin(angle) * ringRadius - 2; // Offset to match platform position
-        positions.push([x, 1, z]);
-      }
+    // Second ring for remaining cannons
+    const remaining = count - 6;
+    for (let i = 0; i < remaining; i++) {
+      const angle = (i / remaining) * Math.PI * 2 + Math.PI / remaining; // Offset for better distribution
+      const radius = platformRadius * 0.9;
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius - 2;
+      positions.push([x, 1, z]);
     }
   }
   
+  console.log('Generated cannon positions:', positions);
   return positions.slice(0, count);
 };
 
@@ -76,6 +87,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
 
   // Initialize cannons based on count
   useEffect(() => {
+    console.log(`CannonPlatformSystem: Setting up ${cannonCount} cannons`);
     const cannonPositions = generateCannonPositions(Math.min(cannonCount, 10));
     const newCannons: CannonData[] = [];
     
@@ -87,6 +99,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
         basePosition[1] + platformPosition.y,
         basePosition[2] + platformPosition.z
       ];
+      console.log(`Cannon ${i} positioned at:`, adjustedPosition);
       newCannons.push({
         id: i,
         position: adjustedPosition,
@@ -96,7 +109,8 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       });
     }
     setCannons(newCannons);
-  }, [cannonCount, platformPosition]);
+    console.log('All cannons positioned:', newCannons.map(c => c.position));
+  }, [cannonCount, platformPosition.x, platformPosition.y, platformPosition.z]);
 
   // Spawn repair kits occasionally
   useEffect(() => {
