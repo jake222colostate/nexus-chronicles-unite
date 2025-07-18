@@ -35,14 +35,14 @@ const generateCannonPositions = (count: number, platformRadius: number = 6): [nu
   
   if (count === 1) {
     // Single cannon in center
-    positions.push([0, 1, -2]);
+    positions.push([0, 1, 0]);
   } else if (count <= 6) {
     // For 2-6 cannons, arrange in a single circle
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
-      const radius = platformRadius * 0.7; // Use 70% of platform radius to stay well within bounds
+      const radius = platformRadius * 0.6; // Use 60% of platform radius to stay well within bounds
       const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius - 2; // Offset to match platform position
+      const z = Math.sin(angle) * radius; // Remove the -2 offset, cannons should be centered on platform
       positions.push([x, 1, z]);
     }
   } else {
@@ -50,9 +50,9 @@ const generateCannonPositions = (count: number, platformRadius: number = 6): [nu
     // First ring of 6 cannons
     for (let i = 0; i < 6; i++) {
       const angle = (i / 6) * Math.PI * 2;
-      const radius = platformRadius * 0.5;
+      const radius = platformRadius * 0.4; // Inner ring
       const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius - 2;
+      const z = Math.sin(angle) * radius; // Remove the -2 offset
       positions.push([x, 1, z]);
     }
     
@@ -60,9 +60,9 @@ const generateCannonPositions = (count: number, platformRadius: number = 6): [nu
     const remaining = count - 6;
     for (let i = 0; i < remaining; i++) {
       const angle = (i / remaining) * Math.PI * 2 + Math.PI / remaining; // Offset for better distribution
-      const radius = platformRadius * 0.9;
+      const radius = platformRadius * 0.8; // Outer ring
       const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius - 2;
+      const z = Math.sin(angle) * radius; // Remove the -2 offset
       positions.push([x, 1, z]);
     }
   }
@@ -252,18 +252,27 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
   );
 
   return (
-    <group>
-      {/* Render cannons */}
-      {activeCannons.map(cannon => (
-        <StationaryCannon
-          key={cannon.id}
-          position={cannon.position}
-          health={cannon.health}
-          maxHealth={cannon.maxHealth}
-          target={targets[0]}
-          onRepair={() => handleCannonRepair(cannon.id)}
-        />
-      ))}
+    <group position={platformPosition}>
+      {/* Platform reference for rotation - cannons will rotate with this */}
+      <group rotation={[0, (Date.now() * 0.001) % (Math.PI * 2), 0]}>
+        {/* Render cannons as children of platform so they rotate together */}
+        {activeCannons.map(cannon => {
+          // Use local position relative to platform, not world position
+          const cannonPositions = generateCannonPositions(Math.min(cannonCount, 10));
+          const localPosition = cannonPositions[cannon.id] || [0, 1, 0];
+          
+          return (
+            <StationaryCannon
+              key={cannon.id}
+              position={localPosition}
+              health={cannon.health}
+              maxHealth={cannon.maxHealth}
+              target={targets[0]}
+              onRepair={() => handleCannonRepair(cannon.id)}
+            />
+          );
+        })}
+      </group>
 
       {/* Render repair kits */}
       {repairKits.map(kit => (
