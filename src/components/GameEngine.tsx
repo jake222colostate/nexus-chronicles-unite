@@ -29,12 +29,10 @@ import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
 import { useAutoManaStore } from '@/stores/useAutoManaStore';
 import { useAutoEnergyStore } from '@/stores/useAutoEnergyStore';
 import { CollisionProvider } from '@/lib/CollisionContext';
-import { MapEditorToolbar } from './MapEditor/MapEditorToolbar';
-import { useMapEditorStore } from '../stores/useMapEditorStore';
 
 const GameEngine: React.FC = () => {
   const location = useLocation();
-  const { isEditorActive } = useMapEditorStore();
+  
   const globalGameState = useGameStateStore();
   const autoManaStore = useAutoManaStore();
   const autoEnergyStore = useAutoEnergyStore();
@@ -317,23 +315,21 @@ const GameEngine: React.FC = () => {
         onJourneyUpdate={handleJourneyUpdate}
       />
 
-      {/* Clean TopHUD with cross-realm upgrade button - disabled in map editor */}
-      {!isEditorActive && (
-        <TopHUD
-          realm={currentRealm}
-          mana={globalGameState.mana}
-          energyCredits={globalGameState.energyCredits}
-          nexusShards={globalGameState.nexusShards}
-          convergenceProgress={globalGameState.convergenceProgress}
-          manaPerSecond={globalGameState.manaPerSecond}
-          energyPerSecond={globalGameState.energyPerSecond}
-          onHelpClick={handleShowHelp}
-          onCombatUpgradesClick={handleShowCombatUpgrades}
-          enemyCount={enemyCount}
-        />
-      )}
+      {/* Clean TopHUD with cross-realm upgrade button */}
+      <TopHUD
+        realm={currentRealm}
+        mana={globalGameState.mana}
+        energyCredits={globalGameState.energyCredits}
+        nexusShards={globalGameState.nexusShards}
+        convergenceProgress={globalGameState.convergenceProgress}
+        manaPerSecond={globalGameState.manaPerSecond}
+        energyPerSecond={globalGameState.energyPerSecond}
+        onHelpClick={handleShowHelp}
+        onCombatUpgradesClick={handleShowCombatUpgrades}
+        enemyCount={enemyCount}
+      />
 
-      {/* Main Game Area - also used for map editor */}
+      {/* Main Game Area */}
       <div className="absolute inset-0 pt-12 pb-32">
         {/* Main game view without overlays */}
         <MapSkillTreeView
@@ -360,10 +356,9 @@ const GameEngine: React.FC = () => {
         />
       </div>
 
-        {/* UI Elements disabled in map editor */}
-        {!isEditorActive && (
-          <>
-            {/* Realm Transition Effect */}
+        {/* UI Elements */}
+        <>
+          {/* Realm Transition Effect */}
             <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
             {/* Fantasy AutoClicker Upgrade System - positioned top-center, only in fantasy realm */}
@@ -414,23 +409,19 @@ const GameEngine: React.FC = () => {
               </Button>
             </div>
           </>
-        )}
 
       {/* Removed Minecraft Hotbar */}
 
-      {/* Enhanced Bottom Action Bar with realm-specific journey progress - disabled in map editor */}
-      {!isEditorActive && (
-        <BottomActionBar
+      {/* Enhanced Bottom Action Bar with realm-specific journey progress */}
+      <BottomActionBar
           currentRealm={currentRealm}
           onRealmChange={switchRealm}
           isTransitioning={isTransitioning}
-          playerDistance={currentJourneyDistance}
-        />
-      )}
+        playerDistance={currentJourneyDistance}
+      />
 
-      {/* Modals disabled in map editor */}
-      {!isEditorActive && (
-        <>
+      {/* Modals */}
+      <>
           {/* Quick Help Modal */}
           <QuickHelpModal
             isOpen={showQuickHelp}
@@ -520,12 +511,9 @@ const GameEngine: React.FC = () => {
             </div>
           )}
         </>
-      )}
 
-      {/* Inventory System - disabled in map editor */}
+      {/* Inventory System */}
 
-      {/* Map Editor UI Components */}
-      <MapEditorToolbar />
     </div>
     </CollisionProvider>
   );
