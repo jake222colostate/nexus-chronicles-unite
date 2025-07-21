@@ -2,20 +2,20 @@ import React from 'react';
 import { Vector3 } from 'three';
 
 interface StartingForestBarrierProps {
-  playerPosition: Vector3;
+  playerPosition: Vector3; // Fixed HMR cache issue
 }
 
 export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
   playerPosition // Fixed HMR cache issue
 }) => {
-  // Only render if player is near starting position
-  if (Math.abs(playerPosition.z) > 50) return null;
+  // Only render when player is at spawn and forest is far behind them
+  if (Math.abs(playerPosition.z) > 50 || playerPosition.z < -10) return null;
 
   const trees = [];
   
-  // Create dense forest well behind first path tile (positive Z values - behind player)
+  // Create dense forest MUCH further behind player spawn (player spawns at 0,0,0)
   for (let x = -30; x <= 30; x += 3) {
-    for (let z = 8; z <= 50; z += 4) { // Starts at Z=8, behind first path tile
+    for (let z = 25; z <= 100; z += 4) { // Even further back: Z=25 to Z=100
       const treeId = `barrier-tree-${x}-${z}`;
       const height = 8 + Math.random() * 4; // Random height 8-12
       const width = 2 + Math.random() * 1; // Random width 2-3
@@ -52,10 +52,10 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
     <group name="starting-forest-barrier">
       {trees}
       
-      {/* Add some undergrowth bushes */}
-      {Array.from({ length: 20 }, (_, i) => {
+      {/* Add some undergrowth bushes far behind */}
+      {Array.from({ length: 15 }, (_, i) => {
         const x = -25 + Math.random() * 50;
-        const z = 10 + Math.random() * 35; // Changed to positive Z (behind player)
+        const z = 30 + Math.random() * 60; // Z=30 to Z=90
         return (
           <mesh key={`bush-${i}`} position={[x, 0.5, z]} castShadow>
             <sphereGeometry args={[1 + Math.random() * 0.5]} />
@@ -64,8 +64,8 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
         );
       })}
       
-      {/* Dense visual wall effect */}
-      <mesh position={[0, 6, 50]} rotation={[0, 0, 0]}> {/* Changed to positive Z */}
+      {/* Visual wall at very back */}
+      <mesh position={[0, 6, 100]} rotation={[0, 0, 0]}>
         <planeGeometry args={[80, 12]} />
         <meshStandardMaterial 
           color="#1a4d1a" 

@@ -113,8 +113,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           renderDistance={renderDistance}
         />
 
-        {/* Linear Forest Corridor along valley path */}
-        <LinearForestCorridor playerPosition={safeCameraPosition} />
+        {/* Linear Forest Corridor disabled - was spawning trees on path */}
+        {/* <LinearForestCorridor playerPosition={safeCameraPosition} /> */}
 
         <FogBasedChunkSystem
           playerPosition={safeCameraPosition}
