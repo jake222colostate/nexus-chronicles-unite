@@ -1,7 +1,8 @@
 
-import React, { useRef, useState, useMemo } from 'react';
+import React, { useRef, useState, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh } from 'three';
+import { useGLTFWithCors } from '@/lib/useGLTFWithCors';
 
 interface UpgradeNode3DProps {
   upgrade: any;
@@ -75,6 +76,54 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
     }
   });
 
+  // Fantasy podium model component
+  const FantasyPodiumModel = () => {
+    console.log('UpgradeNode3D: Attempting to load Podiums.glb for fantasy realm');
+    
+    try {
+      const gltf = useGLTFWithCors('/assets/upgrades/Podiums.glb');
+      console.log('UpgradeNode3D: Successfully loaded GLB', gltf);
+      
+      if (!gltf || !gltf.scene) {
+        console.warn('UpgradeNode3D: GLB loaded but no scene found');
+        throw new Error('No scene in GLB');
+      }
+      
+      return (
+        <primitive
+          ref={meshRef}
+          object={gltf.scene.clone()}
+          position={[0, 0, 0]}
+          scale={hovered ? 0.8 : 0.7} // Smaller scale for upgrade nodes
+          onClick={onClick}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+          castShadow
+          receiveShadow
+        />
+      );
+    } catch (error) {
+      console.warn('UpgradeNode3D: Failed to load Podiums.glb, using fallback', error);
+      // Fallback to geometric shapes
+      return (
+        <mesh
+          ref={meshRef}
+          onClick={onClick}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+          scale={hovered ? 1.1 : 1}
+        >
+          {geometry}
+          <meshLambertMaterial
+            color={nodeColor}
+            transparent
+            opacity={isUnlocked ? 0.9 : 0.5}
+          />
+        </mesh>
+      );
+    }
+  };
+
   return (
     <group position={position}>
       {/* Glow effect for unlocked nodes */}
@@ -89,22 +138,42 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
         </mesh>
       )}
 
-      {/* Main node */}
-      <mesh
-        ref={meshRef}
-        onClick={onClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-        scale={hovered ? 1.1 : 1}
-      >
-        {geometry}
-        
-        <meshLambertMaterial
-          color={nodeColor}
-          transparent
-          opacity={isUnlocked ? 0.9 : 0.5}
-        />
-      </mesh>
+      {/* Main node - use podium model for fantasy realm */}
+      {realm === 'fantasy' ? (
+        <Suspense fallback={
+          <mesh
+            ref={meshRef}
+            onClick={onClick}
+            onPointerOver={() => setHovered(true)}
+            onPointerOut={() => setHovered(false)}
+            scale={hovered ? 1.1 : 1}
+          >
+            {geometry}
+            <meshLambertMaterial
+              color={nodeColor}
+              transparent
+              opacity={isUnlocked ? 0.9 : 0.5}
+            />
+          </mesh>
+        }>
+          <FantasyPodiumModel />
+        </Suspense>
+      ) : (
+        <mesh
+          ref={meshRef}
+          onClick={onClick}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+          scale={hovered ? 1.1 : 1}
+        >
+          {geometry}
+          <meshLambertMaterial
+            color={nodeColor}
+            transparent
+            opacity={isUnlocked ? 0.9 : 0.5}
+          />
+        </mesh>
+      )}
 
       {/* Connection lines - simplified */}
       {position[1] > -1 && (

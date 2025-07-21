@@ -93,8 +93,17 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 
   // New podium model component - used for ALL upgrades
   const PodiumModel = () => {
+    console.log('PodiumModel: Attempting to load Podiums.glb');
+    
     try {
       const gltf = useGLTFWithCors('/assets/upgrades/Podiums.glb');
+      console.log('PodiumModel: Successfully loaded GLB', gltf);
+      
+      if (!gltf || !gltf.scene) {
+        console.warn('PodiumModel: GLB loaded but no scene found');
+        throw new Error('No scene in GLB');
+      }
+      
       return (
         <primitive
           ref={meshRef}
@@ -109,25 +118,34 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         />
       );
     } catch (error) {
-      console.warn('Failed to load podium model, falling back to default');
-      // Fallback to default crystal
+      console.warn('PodiumModel: Failed to load Podiums.glb, using fallback', error);
+      // Fallback to default crystal that looks like a podium
       return (
-        <mesh
-          ref={meshRef}
-          position={[0, 1, 0]}
-          onClick={handleClick}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-          scale={hovered ? 1.1 : 1}
-          castShadow
-        >
-          <icosahedronGeometry args={[0.8, 1]} />
-          <meshLambertMaterial
-            color={getCrystalColor()}
-            transparent
-            opacity={isUnlocked ? 0.9 : 0.5}
-          />
-        </mesh>
+        <group>
+          {/* Podium base */}
+          <mesh position={[0, 0, 0]} receiveShadow>
+            <cylinderGeometry args={[1.2, 1.5, 0.8, 8]} />
+            <meshLambertMaterial color="#8B4513" />
+          </mesh>
+          
+          {/* Crystal/upgrade indicator on top */}
+          <mesh
+            ref={meshRef}
+            position={[0, 0.8, 0]}
+            onClick={handleClick}
+            onPointerOver={handlePointerOver}
+            onPointerOut={handlePointerOut}
+            scale={hovered ? 1.1 : 1}
+            castShadow
+          >
+            <icosahedronGeometry args={[0.6, 1]} />
+            <meshLambertMaterial
+              color={getCrystalColor()}
+              transparent
+              opacity={isUnlocked ? 0.9 : 0.5}
+            />
+          </mesh>
+        </group>
       );
     }
   };
