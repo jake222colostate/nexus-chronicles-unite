@@ -13,9 +13,9 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
 
   const trees = [];
   
-  // Create dense forest behind starting point (positive Z values - behind player)
+  // Create dense forest well behind first path tile (positive Z values - behind player)
   for (let x = -30; x <= 30; x += 3) {
-    for (let z = 5; z <= 50; z += 4) { // Changed from negative to positive Z
+    for (let z = 8; z <= 50; z += 4) { // Starts at Z=8, behind first path tile
       const treeId = `barrier-tree-${x}-${z}`;
       const height = 8 + Math.random() * 4; // Random height 8-12
       const width = 2 + Math.random() * 1; // Random width 2-3
