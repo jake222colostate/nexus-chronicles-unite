@@ -1,8 +1,9 @@
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Vector3 } from 'three';
 import { useRegisterCollider } from '@/lib/CollisionContext';
+import { useGLTFWithCors } from '@/lib/useGLTFWithCors';
 
 interface EnhancedUpgradePedestalProps {
   position: [number, number, number];
@@ -88,6 +89,30 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     setHovered(false);
   };
 
+  // Check if this is every fifth upgrade (5, 10, 15, etc.)
+  const isSpecialUpgrade = upgrade.id % 5 === 0;
+
+  // Special upgrade model component
+  const SpecialUpgradeModel = () => {
+    try {
+      const gltf = useGLTFWithCors('/assets/upgrades/special_upgrade_podium.glb');
+      return (
+        <primitive
+          ref={meshRef}
+          object={gltf.scene.clone()}
+          position={[0, 1, 0]}
+          scale={hovered ? 1.1 : 1}
+          onClick={handleClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+        />
+      );
+    } catch (error) {
+      console.warn('Failed to load special upgrade model, falling back to default');
+      return null;
+    }
+  };
+
   return (
     <group position={position}>
       {/* Enhanced clickable area - larger invisible mesh for easier clicking */}
@@ -102,19 +127,49 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Pedestal base */}
-      <mesh position={[0, 0, 0]} receiveShadow>
-        <cylinderGeometry args={[1.2, 1.5, pedestalConfig.height, 8]} />
-        <meshLambertMaterial color={pedestalConfig.material} />
-      </mesh>
-      
-      {/* Pedestal rings for higher tiers */}
-      {Array.from({ length: pedestalConfig.rings }).map((_, i) => (
-        <mesh key={i} position={[0, pedestalConfig.height + 0.1 + (i * 0.3), 0]}>
-          <torusGeometry args={[1.3 + i * 0.2, 0.05, 8, 16]} />
-          <meshBasicMaterial color={pedestalConfig.material} />
-        </mesh>
-      ))}
+      {/* Render special model for every fifth upgrade */}
+      {isSpecialUpgrade ? (
+        <Suspense fallback={null}>
+          <SpecialUpgradeModel />
+        </Suspense>
+      ) : (
+        <>
+          {/* Default pedestal base */}
+          <mesh position={[0, 0, 0]} receiveShadow>
+            <cylinderGeometry args={[1.2, 1.5, pedestalConfig.height, 8]} />
+            <meshLambertMaterial color={pedestalConfig.material} />
+          </mesh>
+          
+          {/* Pedestal rings for higher tiers */}
+          {Array.from({ length: pedestalConfig.rings }).map((_, i) => (
+            <mesh key={i} position={[0, pedestalConfig.height + 0.1 + (i * 0.3), 0]}>
+              <torusGeometry args={[1.3 + i * 0.2, 0.05, 8, 16]} />
+              <meshBasicMaterial color={pedestalConfig.material} />
+            </mesh>
+          ))}
+          
+          {/* Main crystal - also clickable */}
+          <mesh
+            ref={meshRef}
+            position={[0, 1, 0]}
+            onClick={handleClick}
+            onPointerOver={handlePointerOver}
+            onPointerOut={handlePointerOut}
+            scale={hovered ? 1.1 : 1}
+            castShadow
+          >
+            {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
+            {tier === 2 && <octahedronGeometry args={[0.6]} />}
+            {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
+            {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
+            <meshLambertMaterial
+              color={getCrystalColor()}
+              transparent
+              opacity={isUnlocked ? 0.9 : 0.5}
+            />
+          </mesh>
+        </>
+      )}
       
       {/* Glow effect */}
       {isUnlocked && (
@@ -127,27 +182,6 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
           />
         </mesh>
       )}
-      
-      {/* Main crystal - also clickable */}
-      <mesh
-        ref={meshRef}
-        position={[0, 1, 0]}
-        onClick={handleClick}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-        scale={hovered ? 1.1 : 1}
-        castShadow
-      >
-        {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
-        {tier === 2 && <octahedronGeometry args={[0.6]} />}
-        {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
-        {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
-        <meshLambertMaterial
-          color={getCrystalColor()}
-          transparent
-          opacity={isUnlocked ? 0.9 : 0.5}
-        />
-      </mesh>
       
       {/* Upgrade tier indicators */}
       {isPurchased && tier > 1 && (
