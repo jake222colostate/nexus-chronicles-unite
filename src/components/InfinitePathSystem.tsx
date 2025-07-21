@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber';
 import { Vector3, Box3 } from 'three';
 import { useGLTF } from '@react-three/drei';
 
-// Preload the path model immediately
+// Preload the path model immediately - Fixed GLBModelLoader reference issue
 useGLTF.preload('/assets/Path.glb');
 
 // Path Model Component with direct useGLTF
@@ -141,7 +141,7 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     }
   });
 
-  console.log(`🛤️ Rendering ${visibleChunks.length} path segments, player at Z: ${playerPosition.z.toFixed(1)}`);
+  console.log(`🛤️ Path System Active: ${visibleChunks.length} segments, player Z: ${playerPosition.z.toFixed(1)}`);
 
   return (
     <group name="infinite-path-system">
