@@ -50,13 +50,13 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
   playerPosition
 }) => {
   // Only render when player is near spawn
-  if (Math.abs(playerPosition.z) > 100 || playerPosition.z < -20) return null;
+  if (Math.abs(playerPosition.z) > 100) return null;
 
   const trees = [];
   
-  // Create dense forest MUCH MUCH further behind player spawn (player spawns at 0,0,0)
+  // Create dense forest barrier BEHIND character (positive Z values - behind starting point)  
   for (let x = -40; x <= 40; x += 4) {
-    for (let z = 50; z <= 150; z += 6) { // WAY further back: Z=50 to Z=150
+    for (let z = 15; z <= 60; z += 6) { // POSITIVE Z: behind character as directional barrier
       const treeId = `barrier-tree-${x}-${z}`;
       const scale = 0.8 + Math.random() * 0.6; // Random scale 0.8-1.4
       const randomOffset: [number, number, number] = [
@@ -85,10 +85,10 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
     <group name="starting-forest-barrier">
       {trees}
       
-      {/* Add some undergrowth bushes way behind */}
+      {/* Add undergrowth bushes behind character */}
       {Array.from({ length: 20 }, (_, i) => {
         const x = -35 + Math.random() * 70;
-        const z = 55 + Math.random() * 80; // Z=55 to Z=135
+        const z = 20 + Math.random() * 35; // POSITIVE Z: behind character (20 to 55)
         return (
           <mesh key={`bush-${i}`} position={[x, 0.5, z]} castShadow>
             <sphereGeometry args={[1 + Math.random() * 0.8]} />
@@ -97,8 +97,8 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
         );
       })}
       
-      {/* Visual wall at very back */}
-      <mesh position={[0, 8, 150]} rotation={[0, 0, 0]}>
+      {/* Visual wall behind character */}
+      <mesh position={[0, 8, 60]} rotation={[0, 0, 0]}>
         <planeGeometry args={[100, 16]} />
         <meshStandardMaterial 
           color="#0d2818" 

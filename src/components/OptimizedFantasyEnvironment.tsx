@@ -48,24 +48,20 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         fogDistance={fogDistance}
       />
       
-      {/* Tree system disabled near spawn - was causing trees on path */}
-      {playerPosition.z < -30 && (
-        <EnhancedTreeDistribution
-          chunks={chunks}
-          chunkSize={chunkSize}
-          realm={realm}
-        />
-      )}
+      {/* Tree system enabled ahead of player */}
+      <EnhancedTreeDistribution
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
 
-      {/* Forest environment disabled near spawn - was causing trees on path */}
-      {playerPosition.z < -30 && (
-        <ForestEnvironmentSystem
-          chunks={chunks}
-          chunkSize={chunkSize}
-          realm={realm}
-          playerPosition={playerPosition}
-        />
-      )}
+      {/* Forest environment enabled ahead of player */}
+      <ForestEnvironmentSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+        playerPosition={playerPosition}
+      />
 
       {/* Skeleton enemy system */}
       <SkeletonEnemySystem
