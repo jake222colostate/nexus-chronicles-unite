@@ -1,9 +1,9 @@
 
 import React, { useRef, useState, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh, Vector3 } from 'three';
+import { Group, Mesh, Vector3 } from 'three';
 import { useRegisterCollider } from '@/lib/CollisionContext';
-import { useGLTFWithCors } from '@/lib/useGLTFWithCors';
+import { useGLTF } from '@react-three/drei';
 
 interface EnhancedUpgradePedestalProps {
   position: [number, number, number];
@@ -24,7 +24,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   onInteract,
   tier
 }) => {
-  const meshRef = useRef<Mesh>(null);
+  const meshRef = useRef<Group>(null);
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -91,63 +91,61 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 
   // All upgrades now use the same podium model
 
-  // New podium model component - used for ALL upgrades
+  // Podium model component - creates a distinctive podium structure
   const PodiumModel = () => {
-    console.log('PodiumModel: Attempting to load Podiums.glb from /assets/upgrades/Podiums.glb');
+    console.log('PodiumModel: Creating podium structure');
     
-    try {
-      const gltf = useGLTFWithCors('/assets/upgrades/Podiums.glb');
-      console.log('PodiumModel: Successfully loaded Podiums.glb', gltf);
-      
-      if (!gltf || !gltf.scene) {
-        console.error('PodiumModel: GLB loaded but no scene found');
-        throw new Error('No scene in GLB');
-      }
-      
-      return (
-        <primitive
-          ref={meshRef}
-          object={gltf.scene.clone()}
-          position={[0, 0, 0]} // Positioned to sit flat on terrain
-          scale={hovered ? 1.1 : 1.0} // Scale appropriately for fantasy world
-          onClick={handleClick}
-          onPointerOver={handlePointerOver}
-          onPointerOut={handlePointerOut}
-          castShadow
-          receiveShadow
-        />
-      );
-    } catch (error) {
-      console.error('PodiumModel: Failed to load Podiums.glb - using fallback geometry', error);
-      // Fallback to default crystal that looks like a podium
-      return (
-        <group>
-          {/* Podium base */}
-          <mesh position={[0, 0, 0]} receiveShadow>
-            <cylinderGeometry args={[1.2, 1.5, 0.8, 8]} />
-            <meshLambertMaterial color="#8B4513" />
-          </mesh>
-          
-          {/* Crystal/upgrade indicator on top */}
-          <mesh
-            ref={meshRef}
-            position={[0, 0.8, 0]}
-            onClick={handleClick}
-            onPointerOver={handlePointerOver}
-            onPointerOut={handlePointerOut}
-            scale={hovered ? 1.1 : 1}
-            castShadow
-          >
-            <icosahedronGeometry args={[0.6, 1]} />
-            <meshLambertMaterial
-              color={getCrystalColor()}
-              transparent
-              opacity={isUnlocked ? 0.9 : 0.5}
-            />
-          </mesh>
-        </group>
-      );
-    }
+    return (
+      <group
+        ref={meshRef}
+        onClick={handleClick}
+        onPointerOver={handlePointerOver}
+        onPointerOut={handlePointerOut}
+        scale={hovered ? 1.05 : 1.0}
+      >
+        {/* Podium base - wide foundation */}
+        <mesh position={[0, 0, 0]} receiveShadow castShadow>
+          <cylinderGeometry args={[1.8, 2.2, 0.6, 12]} />
+          <meshLambertMaterial color="#654321" />
+        </mesh>
+        
+        {/* Podium middle tier */}
+        <mesh position={[0, 0.5, 0]} receiveShadow castShadow>
+          <cylinderGeometry args={[1.4, 1.8, 0.4, 8]} />
+          <meshLambertMaterial color="#8B4513" />
+        </mesh>
+        
+        {/* Podium top platform */}
+        <mesh position={[0, 0.9, 0]} receiveShadow castShadow>
+          <cylinderGeometry args={[1.0, 1.4, 0.3, 6]} />
+          <meshLambertMaterial color="#A0522D" />
+        </mesh>
+        
+        {/* Crystal/upgrade indicator on top */}
+        <mesh position={[0, 1.4, 0]} castShadow>
+          {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
+          {tier === 2 && <octahedronGeometry args={[0.6]} />}
+          {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
+          {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
+          <meshLambertMaterial
+            color={getCrystalColor()}
+            transparent
+            opacity={isUnlocked ? 0.9 : 0.5}
+          />
+        </mesh>
+        
+        {/* Decorative rings around the base */}
+        <mesh position={[0, 0.3, 0]}>
+          <torusGeometry args={[2.0, 0.08, 8, 16]} />
+          <meshBasicMaterial color="#DEB887" />
+        </mesh>
+        
+        <mesh position={[0, 0.7, 0]}>
+          <torusGeometry args={[1.6, 0.06, 8, 16]} />
+          <meshBasicMaterial color="#DEB887" />
+        </mesh>
+      </group>
+    );
   };
 
   return (

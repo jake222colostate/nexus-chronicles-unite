@@ -1,8 +1,8 @@
 
 import React, { useRef, useState, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Mesh } from 'three';
-import { useGLTFWithCors } from '@/lib/useGLTFWithCors';
+import { Group, Mesh } from 'three';
+import { useGLTF } from '@react-three/drei';
 
 interface UpgradeNode3DProps {
   upgrade: any;
@@ -23,7 +23,8 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
   onClick,
   realm
 }) => {
-  const meshRef = useRef<Mesh>(null);
+  const meshRef = useRef<Group>(null);
+  const fallbackMeshRef = useRef<Mesh>(null);
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
@@ -76,43 +77,32 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
     }
   });
 
-  // Fantasy podium model component
+  // Fantasy podium model component - creates distinctive podium structure
   const FantasyPodiumModel = () => {
-    console.log('UpgradeNode3D: Attempting to load Podiums.glb from /assets/upgrades/Podiums.glb');
+    console.log('UpgradeNode3D: Creating fantasy podium structure');
     
-    try {
-      const gltf = useGLTFWithCors('/assets/upgrades/Podiums.glb');
-      console.log('UpgradeNode3D: Successfully loaded Podiums.glb', gltf);
-      
-      if (!gltf || !gltf.scene) {
-        console.error('UpgradeNode3D: GLB loaded but no scene found');
-        throw new Error('No scene in GLB');
-      }
-      
-      return (
-        <primitive
-          ref={meshRef}
-          object={gltf.scene.clone()}
-          position={[0, 0, 0]}
-          scale={hovered ? 0.8 : 0.7} // Smaller scale for upgrade nodes
-          onClick={onClick}
-          onPointerOver={() => setHovered(true)}
-          onPointerOut={() => setHovered(false)}
-          castShadow
-          receiveShadow
-        />
-      );
-    } catch (error) {
-      console.error('UpgradeNode3D: Failed to load Podiums.glb - using fallback geometry', error);
-      // Fallback to geometric shapes
-      return (
-        <mesh
-          ref={meshRef}
-          onClick={onClick}
-          onPointerOver={() => setHovered(true)}
-          onPointerOut={() => setHovered(false)}
-          scale={hovered ? 1.1 : 1}
-        >
+    return (
+      <group
+        ref={meshRef}
+        onClick={onClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        scale={hovered ? 0.8 : 0.7}
+      >
+        {/* Podium base */}
+        <mesh position={[0, 0, 0]} receiveShadow castShadow>
+          <cylinderGeometry args={[1.2, 1.5, 0.4, 8]} />
+          <meshLambertMaterial color="#654321" />
+        </mesh>
+        
+        {/* Podium top platform */}
+        <mesh position={[0, 0.3, 0]} receiveShadow castShadow>
+          <cylinderGeometry args={[0.8, 1.2, 0.2, 6]} />
+          <meshLambertMaterial color="#8B4513" />
+        </mesh>
+        
+        {/* Crystal on top */}
+        <mesh position={[0, 0.6, 0]} castShadow>
           {geometry}
           <meshLambertMaterial
             color={nodeColor}
@@ -120,8 +110,14 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
             opacity={isUnlocked ? 0.9 : 0.5}
           />
         </mesh>
-      );
-    }
+        
+        {/* Decorative ring */}
+        <mesh position={[0, 0.2, 0]}>
+          <torusGeometry args={[1.3, 0.05, 6, 12]} />
+          <meshBasicMaterial color="#DEB887" />
+        </mesh>
+      </group>
+    );
   };
 
   return (
@@ -142,7 +138,7 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
       {realm === 'fantasy' ? (
         <Suspense fallback={
           <mesh
-            ref={meshRef}
+            ref={fallbackMeshRef}
             onClick={onClick}
             onPointerOver={() => setHovered(true)}
             onPointerOut={() => setHovered(false)}
@@ -160,7 +156,7 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
         </Suspense>
       ) : (
         <mesh
-          ref={meshRef}
+          ref={fallbackMeshRef}
           onClick={onClick}
           onPointerOver={() => setHovered(true)}
           onPointerOut={() => setHovered(false)}
