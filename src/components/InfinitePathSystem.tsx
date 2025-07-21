@@ -4,7 +4,7 @@ import { Vector3, Box3 } from 'three';
 import { useGLTF } from '@react-three/drei';
 import { assetUrl } from '@/lib/utils';
 
-// Preload the path model immediately - Fixed GLBModelLoader reference issue
+// Preload the path model immediately
 useGLTF.preload(assetUrl('assets/Path.glb'));
 
 // Path Model Component with direct useGLTF

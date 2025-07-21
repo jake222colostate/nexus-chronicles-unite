@@ -1,4 +1,4 @@
-import { preloadCriticalAssets, checkAssetSize } from '@/components/GLBModelLoader';
+import { useGLTF } from '@react-three/drei';
 import { assetUrl } from '@/lib/utils';
 
 // Critical assets - must be under 15MB each
@@ -8,33 +8,36 @@ const CRITICAL_ASSETS = [
   assetUrl('assets/upgrades/LargeObelisk.glb'),
 ];
 
-// Fantasy realm assets
+// Fantasy realm assets - only using existing files
 const FANTASY_ASSETS = [
-  assetUrl('assets/terrain/FantasyTree.glb'),
-  assetUrl('assets/environment/MagicalCrystal.glb'),
-  assetUrl('assets/characters/SkeletonWarrior.glb'),
+  assetUrl('assets/environment/AncientTree.glb'), // This exists in the project
 ];
 
-// Initialize complete GLB loading system
+// Preload critical assets using useGLTF
+const preloadAssets = (paths: string[]) => {
+  paths.forEach(path => {
+    try {
+      useGLTF.preload(path);
+      console.log(`⚡ Preloaded: ${path}`);
+    } catch (error) {
+      console.warn(`⚠️ Failed to preload: ${path}`, error);
+    }
+  });
+};
+
+// Initialize GLB loading system
 export const initializeGLBSystem = async () => {
   console.log('🎮 Initializing GLB Loading System...');
   
   try {
-    // 1. Check asset sizes
-    console.log('📊 Checking asset sizes...');
-    const sizeChecks = await Promise.allSettled([
-      ...CRITICAL_ASSETS.map(path => checkAssetSize(path)),
-      ...FANTASY_ASSETS.map(path => checkAssetSize(path))
-    ]);
-    
-    // 2. Preload critical assets immediately
+    // Preload critical assets immediately
     console.log('⚡ Preloading critical assets...');
-    preloadCriticalAssets(CRITICAL_ASSETS);
+    preloadAssets(CRITICAL_ASSETS);
     
-    // 3. Lazy preload fantasy assets
+    // Lazy preload fantasy assets
     setTimeout(() => {
       console.log('🧙 Lazy loading fantasy assets...');
-      preloadCriticalAssets(FANTASY_ASSETS);
+      preloadAssets(FANTASY_ASSETS);
     }, 2000);
     
     console.log('✅ GLB Loading System initialized');
@@ -50,7 +53,7 @@ export const preloadRealmAssets = (realm: 'fantasy' | 'scifi') => {
   console.log(`🌟 Preloading ${realm} realm assets...`);
   
   if (realm === 'fantasy') {
-    preloadCriticalAssets(FANTASY_ASSETS);
+    preloadAssets(FANTASY_ASSETS);
   }
   // Add scifi assets when needed
 };
