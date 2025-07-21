@@ -8,6 +8,7 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
+import { LinearForestCorridor } from './LinearForestCorridor';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -98,6 +99,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           }}
           damage={weaponDamage}
         />
+
+        {/* Linear Forest Corridor along valley path */}
+        <LinearForestCorridor playerPosition={safeCameraPosition} />
 
         <ChunkSystem
           playerPosition={safeCameraPosition}
