@@ -91,14 +91,14 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     setHovered(false);
   };
 
-  // Pedestal/obelisk model using GLB files
+  // Pedestal/obelisk model using GLB files with fallback
   const PedestalModel = () => {
-    const assetPath =
-      modelType === 'obelisk'
-        ? '/assets/upgrades/LargeObelisk.glb'
-        : '/assets/upgrades/Podiums.glb';
-
     try {
+      const assetPath =
+        modelType === 'obelisk'
+          ? '/assets/upgrades/LargeObelisk.glb'
+          : '/assets/upgrades/Podiums.glb';
+
       const { scene } = useGLTF(assetPath);
 
       return (
@@ -111,6 +111,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         >
           <primitive object={scene.clone()} />
 
+          {/* Crystal on top for podiums */}
           {modelType !== 'obelisk' && (
             <mesh position={[0, 1.4, 0]} castShadow>
               {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
@@ -128,7 +129,33 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
       );
     } catch (error) {
       console.error('Error loading upgrade model:', error);
-      return null;
+      // Fallback to basic geometry if GLB fails
+      return (
+        <group
+          ref={meshRef}
+          onClick={handleClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+          scale={hovered ? 1.05 : 1.0}
+        >
+          {/* Basic pedestal fallback */}
+          <mesh position={[0, 0.5, 0]}>
+            <cylinderGeometry args={[1, 1.2, 1, 8]} />
+            <meshLambertMaterial color={pedestalConfig.material} />
+          </mesh>
+          <mesh position={[0, 1.4, 0]} castShadow>
+            {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
+            {tier === 2 && <octahedronGeometry args={[0.6]} />}
+            {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
+            {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
+            <meshLambertMaterial
+              color={getCrystalColor()}
+              transparent
+              opacity={isUnlocked ? 0.9 : 0.5}
+            />
+          </mesh>
+        </group>
+      );
     }
   };
 

@@ -13,15 +13,17 @@ export const useFantasy3DUpgradeWorld = ({
   onPlayerPositionUpdate
 }: UseFantasy3DUpgradeWorldProps) => {
   const globalGameState = useGameStateStore();
-  const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 1.6, 0));
+  
+  // Initialize state with stable references
+  const [cameraPosition, setCameraPosition] = useState(() => new Vector3(0, 1.6, 0));
   const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
-  const [maxUnlockedUpgrade, setMaxUnlockedUpgrade] = useState(-1);
-  const [purchasedUpgrades, setPurchasedUpgrades] = useState<Set<number>>(new Set());
+  const [maxUnlockedUpgrade, setMaxUnlockedUpgrade] = useState(() => 0); // Start with first upgrade unlocked
+  const [purchasedUpgrades, setPurchasedUpgrades] = useState(() => new Set<number>());
   
   // Use refs for values that don't need to trigger re-renders
-  const currentManaRef = useRef(gameState?.mana || 100);
-  const totalManaPerSecondRef = useRef(gameState?.manaPerSecond || 0);
+  const currentManaRef = useRef(gameState?.mana || globalGameState.mana || 100);
+  const totalManaPerSecondRef = useRef(gameState?.manaPerSecond || globalGameState.manaPerSecond || 0);
   
   // COMPLETELY NEW purchase protection system
   const activePurchaseRef = useRef<string | null>(null);
@@ -84,17 +86,23 @@ export const useFantasy3DUpgradeWorld = ({
   }
 
   const createUpgrade = (index: number): UpgradeData => {
-    const template = upgradeTemplates[index % upgradeTemplates.length];
+    const templateIndex = index % upgradeTemplates.length;
+    const template = upgradeTemplates[templateIndex];
     const lane = index % 2 === 0 ? -12 : 12;
+    
+    // Determine model type: first 4 use podium, 5th uses obelisk, then repeat
+    const cyclePosition = index % 5;
+    const modelType = cyclePosition === 4 ? 'obelisk' : 'podium';
+    
     return {
       id: index,
       name: template.name,
-      cost: template.cost,
-      manaPerSecond: template.manaPerSecond,
+      cost: template.cost * Math.pow(1.5, Math.floor(index / 5)), // Scale cost by section
+      manaPerSecond: template.manaPerSecond * Math.pow(1.3, Math.floor(index / 5)), // Scale power by section  
       description: template.description,
-      modelType: template.modelType,
+      modelType,
       position: [lane, 0.5, -30 - index * UPGRADE_SPACING],
-      tier: index % upgradeTemplates.length,
+      tier: templateIndex,
       unlocked: index === 0 || maxUnlockedUpgrade >= index - 1
     };
   };
