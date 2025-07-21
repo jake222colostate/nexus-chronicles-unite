@@ -28,6 +28,9 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   const glowRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
+  // Load special obelisk model used for milestone upgrades
+  const { scene: obeliskModel } = useGLTF('/assets/upgrades/LargeObelisk.glb');
+
   useRegisterCollider(
     `upgrade-${upgrade.id}`,
     new Vector3(...position),
@@ -122,17 +125,25 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         </mesh>
         
         {/* Crystal/upgrade indicator on top */}
-        <mesh position={[0, 1.4, 0]} castShadow>
-          {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
-          {tier === 2 && <octahedronGeometry args={[0.6]} />}
-          {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
-          {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
-          <meshLambertMaterial
-            color={getCrystalColor()}
-            transparent
-            opacity={isUnlocked ? 0.9 : 0.5}
+        {upgrade.id % 5 === 4 ? (
+          <primitive
+            object={obeliskModel.clone()}
+            position={[0, 1.4, 0]}
+            scale={0.6}
           />
-        </mesh>
+        ) : (
+          <mesh position={[0, 1.4, 0]} castShadow>
+            {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
+            {tier === 2 && <octahedronGeometry args={[0.6]} />}
+            {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
+            {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
+            <meshLambertMaterial
+              color={getCrystalColor()}
+              transparent
+              opacity={isUnlocked ? 0.9 : 0.5}
+            />
+          </mesh>
+        )}
         
         {/* Decorative rings around the base */}
         <mesh position={[0, 0.3, 0]}>
@@ -230,3 +241,5 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     </group>
   );
 };
+
+useGLTF.preload('/assets/upgrades/LargeObelisk.glb');
