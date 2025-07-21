@@ -79,9 +79,9 @@ export const MountainsGLB: React.FC<MountainsGLBProps> = ({ playerPosition }) =>
         scale={25}
       />
       
-      {/* Mountains ahead of player */}
+      {/* Additional mountains further behind player */}
       <MountainsModel
-        position={[0, 0, -15]}
+        position={[0, 0, 30]}
         rotation={[0, Math.PI, 0]}
         scale={20}
       />
