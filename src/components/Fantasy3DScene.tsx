@@ -9,6 +9,7 @@ import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { LinearForestCorridor } from './LinearForestCorridor';
+import { InfinitePathSystem } from './InfinitePathSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -98,6 +99,14 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
             onEnemyKilled?.();
           }}
           damage={weaponDamage}
+        />
+
+        {/* Infinite Path System - The walking surface */}
+        <InfinitePathSystem
+          playerPosition={safeCameraPosition}
+          chunksAhead={8}
+          chunksBehind={2}
+          renderDistance={renderDistance}
         />
 
         {/* Linear Forest Corridor along valley path */}

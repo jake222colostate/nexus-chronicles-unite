@@ -3,6 +3,7 @@ import { preloadCriticalAssets, checkAssetSize } from '@/components/GLBModelLoad
 
 // Critical assets - must be under 15MB each
 const CRITICAL_ASSETS = [
+  '/assets/Path.glb', // Main walking surface
   '/assets/upgrades/Podiums.glb',
   '/assets/upgrades/LargeObelisk.glb',
 ];
