@@ -55,9 +55,10 @@ const PathSegment: React.FC<PathSegmentProps> = ({
     index * pathLength // Repeated along Z-axis
   ], [index, pathLength]);
 
+  // Random horizontal rotation (90 degree range: -45 to +45 degrees)
   const rotation: [number, number, number] = useMemo(() => [
     0, // No X rotation
-    (Math.sin(index * 0.5) * 0.3) + (Math.random() - 0.5) * 0.2, // Random Y rotation
+    (Math.random() - 0.5) * Math.PI * 0.5, // Random Y rotation within 90 degrees (-45 to +45)
     0  // No Z rotation
   ], [index]);
 
@@ -78,10 +79,10 @@ const PathSegment: React.FC<PathSegmentProps> = ({
   if (!visible) return null;
 
   return (
-    <group ref={segmentRef} position={position} rotation={rotation} scale={[2, 1, 1.5]} name={`path-segment-${index}`}>
+    <group ref={segmentRef} position={position} rotation={rotation} scale={[2.5, 1, 2]} name={`path-segment-${index}`}>
       <Suspense fallback={
         <mesh position={[0, 0, 0]}>
-          <boxGeometry args={[4, 0.1, pathLength * 1.5]} />
+          <boxGeometry args={[6, 0.1, pathLength * 2]} />
           <meshStandardMaterial color="#8B7355" transparent opacity={0.5} />
         </mesh>
       }>
@@ -101,9 +102,9 @@ interface InfinitePathSystemProps {
 
 export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
   playerPosition = new Vector3(0, 0, 0),
-  chunksAhead = 8,    // Increased from 5 to 8 for more path segments
-  chunksBehind = 3,   // Increased from 1 to 3 for smoother transitions
-  pathLength = 6,     // Reduced from 10 to 6 for more frequent segments  
+  chunksAhead = 12,   // Increased from 8 to 12 for more path segments
+  chunksBehind = 4,   // Increased from 3 to 4 for smoother transitions  
+  pathLength = 4,     // Reduced from 6 to 4 for even more frequent segments
   renderDistance = 60
 }) => {
   const [actualPathLength, setActualPathLength] = React.useState(pathLength);
