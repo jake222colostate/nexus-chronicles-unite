@@ -99,7 +99,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           visible={true}
           enemyPositions={enemyPositions}
           onHitEnemy={(index, damage) => {
-            console.log(`Hit enemy ${index} for ${damage} damage`);
+            // console.log(`Hit enemy ${index} for ${damage} damage`);
             onEnemyKilled?.();
           }}
           damage={weaponDamage}

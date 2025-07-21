@@ -15,7 +15,7 @@ const PathModel: React.FC<{ onLoad?: (scene: any) => void }> = ({ onLoad }) => {
     // Call onLoad when model is successfully loaded
     React.useEffect(() => {
       if (scene && onLoad) {
-        console.log('✅ Path.glb loaded successfully');
+        // console.log('✅ Path.glb loaded successfully');
         onLoad(scene);
       }
     }, [scene, onLoad]);
@@ -64,15 +64,17 @@ const PathSegment: React.FC<PathSegmentProps> = ({
 
   // Calculate bounding box when model loads
   const handleModelLoad = (scene: any) => {
-    console.log(`🛤️ Path segment ${index} loaded`);
+    // console.log(`🛤️ Path segment ${index} loaded`);
     if (scene && onBoundingBoxCalculated && index === 0) {
       const box = new Box3().setFromObject(scene);
       onBoundingBoxCalculated(box);
+      /*
       console.log('📏 Path segment dimensions:', {
         width: (box.max.x - box.min.x).toFixed(2),
         height: (box.max.y - box.min.y).toFixed(2),
         length: (box.max.z - box.min.z).toFixed(2)
       });
+      */
     }
   };
 
@@ -114,7 +116,7 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     const modelLength = box.max.z - box.min.z;
     if (modelLength > 0 && modelLength !== actualPathLength) {
       setActualPathLength(modelLength);
-      console.log(`📏 Auto-detected path length: ${modelLength.toFixed(2)} units`);
+      // console.log(`📏 Auto-detected path length: ${modelLength.toFixed(2)} units`);
     }
   };
 
@@ -149,7 +151,7 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     }
   });
 
-  console.log(`🛤️ Path System Active: ${visibleChunks.length} segments, player Z: ${playerPosition.z.toFixed(1)}`);
+  // console.log(`🛤️ Path System Active: ${visibleChunks.length} segments, player Z: ${playerPosition.z.toFixed(1)}`);
 
   return (
     <group name="infinite-path-system">

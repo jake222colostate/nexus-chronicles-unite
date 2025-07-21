@@ -92,7 +92,7 @@ export const MapSkillTreeView: React.FC<MapSkillTreeViewProps> = ({
   }, [onPurchaseFantasyUpgrade]);
 
   const handleNexusShardUpgradePurchase = useCallback((upgradeId: string) => {
-    console.log('Purchasing nexus shard upgrade:', upgradeId);
+    // console.log('Purchasing nexus shard upgrade:', upgradeId);
   }, []);
 
   const removeUpgradeTooltip = useCallback((id: number) => {

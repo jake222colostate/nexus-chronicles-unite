@@ -75,7 +75,7 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
       }
     }
     
-    console.log(`ChunkSystem: Generated ${chunks.length} chunks (performance optimized)`);
+    // console.log(`ChunkSystem: Generated ${chunks.length} chunks (performance optimized)`);
     return chunks;
   }, [
     // INCREASED RESPONSIVENESS: More frequent recalculation for infinite rendering

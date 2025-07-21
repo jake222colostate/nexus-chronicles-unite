@@ -79,7 +79,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
     // Sort by distance for proper rendering order
     tiles.sort((a, b) => b.distanceToPlayer - a.distanceToPlayer);
     
-    console.log(`SeamlessGroundSystem: Generated ${tiles.length} seamless ground tiles`);
+    // console.log(`SeamlessGroundSystem: Generated ${tiles.length} seamless ground tiles`);
     return tiles;
   }, [chunks, chunkSize]);
 

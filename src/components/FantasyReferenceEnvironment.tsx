@@ -108,7 +108,7 @@ export const FantasyReferenceEnvironment: React.FC<FantasyReferenceEnvironmentPr
       }
     });
     
-    console.log(`FantasyReferenceEnvironment: Generated ${elements.length} optimized elements for ${processedChunks.length} chunks`);
+    // console.log(`FantasyReferenceEnvironment: Generated ${elements.length} optimized elements for ${processedChunks.length} chunks`);
     return elements;
   }, [chunks.slice(0, 50), playerPosition.z]); // Only depend on first 50 chunks and Z position
 

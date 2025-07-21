@@ -9,7 +9,7 @@ useGLTF.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/')
 
 // Initialize comprehensive GLB loading system
 initializeGLBSystem().then((success) => {
-  console.log('🎮 GLB Loading System:', success ? 'Ready' : 'Failed');
+  // console.log('🎮 GLB Loading System:', success ? 'Ready' : 'Failed');
 });
 
 createRoot(document.getElementById("root")!).render(<App />);

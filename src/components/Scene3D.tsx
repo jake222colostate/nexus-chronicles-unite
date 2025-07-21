@@ -75,7 +75,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   onEnergyGained,
   onPurchaseUpgrade
 }) => {
-  console.log('Scene3D: Rendering with realm:', realm);
+  // console.log('Scene3D: Rendering with realm:', realm);
   
   const cameraRef = useRef();
   const [enemyPositions, setEnemyPositions] = useState<Vector3[]>([]);
@@ -92,7 +92,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
   // Callback to handle enemy hits
   const handleEnemyHit = useCallback((index: number, damage: number) => {
-    console.log(`Enemy ${index} hit for ${damage} damage`);
+    // console.log(`Enemy ${index} hit for ${damage} damage`);
     // This would typically trigger enemy damage/death logic
   }, []);
 
@@ -110,7 +110,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
   // Memoize upgrade nodes to prevent unnecessary re-renders
   const upgradeNodes = useMemo(() => {
-    console.log('Scene3D: Creating upgrade nodes');
+    // console.log('Scene3D: Creating upgrade nodes');
     return UPGRADE_POSITIONS.map((position) => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
       if (!upgrade) return null;
@@ -130,7 +130,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     }).filter(Boolean);
   }, [gameState.purchasedUpgrades, gameState.nexusShards, checkUpgradeUnlocked, onUpgradeClick, realm]);
 
-  console.log('Scene3D: About to render Canvas');
+  // console.log('Scene3D: About to render Canvas');
 
   return (
     <div className="w-full h-full relative overflow-hidden">

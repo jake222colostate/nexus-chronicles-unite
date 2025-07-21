@@ -149,10 +149,10 @@ export const GLBModelLoader: React.FC<GLBModelLoaderProps> = (props) => {
 
 // Preload utility for critical assets
 export const preloadCriticalAssets = (paths: string[]) => {
-  console.log('🚀 Preloading critical GLB assets...');
+  // console.log('🚀 Preloading critical GLB assets...');
   paths.forEach(path => {
     useGLTF.preload(path);
-    console.log(`📦 Preloaded: ${path}`);
+    // console.log(`📦 Preloaded: ${path}`);
   });
 };
 
