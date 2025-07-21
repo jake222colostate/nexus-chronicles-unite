@@ -11,6 +11,7 @@ import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { LinearForestCorridor } from './LinearForestCorridor';
 import { InfinitePathSystem } from './InfinitePathSystem';
 import { StartingForestBarrier } from './StartingForestBarrier';
+import { PerformanceOptimizer } from './PerformanceOptimizer';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -81,6 +82,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         <color attach="background" args={['#2d1b4e']} />
 
+        {/* Performance optimization with heavy fog */}
+        <PerformanceOptimizer />
         <CasualFog />
 
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
@@ -110,7 +113,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           playerPosition={safeCameraPosition}
           chunksAhead={8}
           chunksBehind={2}
-          renderDistance={renderDistance}
+          renderDistance={30}        // Reduced from 150 for performance
         />
 
         {/* Re-enable Linear Forest Corridor but only ahead of player */}
@@ -119,9 +122,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         <FogBasedChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={renderDistance}
-          fogNear={30}
-          fogFar={120}
+          renderDistance={30}  // Reduced for performance
+          fogNear={5}          // Heavy fog starts close
+          fogFar={25}          // Heavy fog ends close
         >
           {(chunks: FogChunkData[], fogDistance: number) => (
             <OptimizedFantasyEnvironment
@@ -133,7 +136,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
               onEnemyKilled={onEnemyKilled}
               weaponDamage={weaponDamage}
               upgradesPurchased={upgradesPurchased}
-              fogDistance={fogDistance}
+              fogDistance={25}           // Reduced fog distance for performance
             />
           )}
         </FogBasedChunkSystem>
