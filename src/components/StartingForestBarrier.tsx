@@ -13,9 +13,9 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
 
   const trees = [];
   
-  // Create dense forest behind starting point (negative Z values)
+  // Create dense forest behind starting point (positive Z values - behind player)
   for (let x = -30; x <= 30; x += 3) {
-    for (let z = -50; z <= -5; z += 4) {
+    for (let z = 5; z <= 50; z += 4) { // Changed from negative to positive Z
       const treeId = `barrier-tree-${x}-${z}`;
       const height = 8 + Math.random() * 4; // Random height 8-12
       const width = 2 + Math.random() * 1; // Random width 2-3
@@ -55,7 +55,7 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
       {/* Add some undergrowth bushes */}
       {Array.from({ length: 20 }, (_, i) => {
         const x = -25 + Math.random() * 50;
-        const z = -45 + Math.random() * 35;
+        const z = 10 + Math.random() * 35; // Changed to positive Z (behind player)
         return (
           <mesh key={`bush-${i}`} position={[x, 0.5, z]} castShadow>
             <sphereGeometry args={[1 + Math.random() * 0.5]} />
@@ -65,7 +65,7 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
       })}
       
       {/* Dense visual wall effect */}
-      <mesh position={[0, 6, -50]} rotation={[0, 0, 0]}>
+      <mesh position={[0, 6, 50]} rotation={[0, 0, 0]}> {/* Changed to positive Z */}
         <planeGeometry args={[80, 12]} />
         <meshStandardMaterial 
           color="#1a4d1a" 
