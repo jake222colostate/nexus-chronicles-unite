@@ -79,29 +79,34 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
 
   // Fantasy podium model using GLB file
   const FantasyPodiumModel = () => {
-    const { scene } = useGLTF('/assets/upgrades/Podiums.glb');
-    
-    return (
-      <group
-        ref={meshRef}
-        onClick={onClick}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-        scale={hovered ? 0.8 : 0.7}
-      >
-        <primitive object={scene} />
-        
-        {/* Crystal on top */}
-        <mesh position={[0, 0.6, 0]} castShadow>
-          {geometry}
-          <meshLambertMaterial
-            color={nodeColor}
-            transparent
-            opacity={isUnlocked ? 0.9 : 0.5}
-          />
-        </mesh>
-      </group>
-    );
+    try {
+      const { scene } = useGLTF('/assets/upgrades/Podiums.glb');
+      
+      return (
+        <group
+          ref={meshRef}
+          onClick={onClick}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+          scale={hovered ? 0.8 : 0.7}
+        >
+          <primitive object={scene.clone()} />
+          
+          {/* Crystal on top */}
+          <mesh position={[0, 0.6, 0]} castShadow>
+            {geometry}
+            <meshLambertMaterial
+              color={nodeColor}
+              transparent
+              opacity={isUnlocked ? 0.9 : 0.5}
+            />
+          </mesh>
+        </group>
+      );
+    } catch (error) {
+      console.error('Error loading Podiums.glb:', error);
+      return null;
+    }
   };
 
   return (
@@ -179,3 +184,6 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
 });
 
 UpgradeNode3D.displayName = 'UpgradeNode3D';
+
+// Preload the GLB model
+useGLTF.preload('/assets/upgrades/Podiums.glb');

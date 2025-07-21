@@ -91,32 +91,37 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 
   // Podium model using the GLB file
   const PodiumModel = () => {
-    const { scene } = useGLTF('/assets/upgrades/Podiums.glb');
-    
-    return (
-      <group
-        ref={meshRef}
-        onClick={handleClick}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-        scale={hovered ? 1.05 : 1.0}
-      >
-        <primitive object={scene} />
-        
-        {/* Crystal/upgrade indicator on top */}
-        <mesh position={[0, 1.4, 0]} castShadow>
-          {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
-          {tier === 2 && <octahedronGeometry args={[0.6]} />}
-          {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
-          {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
-          <meshLambertMaterial
-            color={getCrystalColor()}
-            transparent
-            opacity={isUnlocked ? 0.9 : 0.5}
-          />
-        </mesh>
-      </group>
-    );
+    try {
+      const { scene } = useGLTF('/assets/upgrades/Podiums.glb');
+      
+      return (
+        <group
+          ref={meshRef}
+          onClick={handleClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+          scale={hovered ? 1.05 : 1.0}
+        >
+          <primitive object={scene.clone()} />
+          
+          {/* Crystal/upgrade indicator on top */}
+          <mesh position={[0, 1.4, 0]} castShadow>
+            {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
+            {tier === 2 && <octahedronGeometry args={[0.6]} />}
+            {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
+            {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
+            <meshLambertMaterial
+              color={getCrystalColor()}
+              transparent
+              opacity={isUnlocked ? 0.9 : 0.5}
+            />
+          </mesh>
+        </group>
+      );
+    } catch (error) {
+      console.error('Error loading Podiums.glb:', error);
+      return null;
+    }
   };
 
   return (
@@ -201,3 +206,6 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     </group>
   );
 };
+
+// Preload the GLB model
+useGLTF.preload('/assets/upgrades/Podiums.glb');
