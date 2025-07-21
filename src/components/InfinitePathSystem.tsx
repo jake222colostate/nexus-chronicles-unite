@@ -51,9 +51,15 @@ const PathSegment: React.FC<PathSegmentProps> = ({
 
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
-    0, // Grounded at Y = 0
+    -0.1, // Grounded at Y = -0.1 (slightly below ground)
     index * pathLength // Repeated along Z-axis
   ], [index, pathLength]);
+
+  const rotation: [number, number, number] = useMemo(() => [
+    0, // No X rotation
+    (Math.sin(index * 0.5) * 0.3) + (Math.random() - 0.5) * 0.2, // Random Y rotation
+    0  // No Z rotation
+  ], [index]);
 
   // Calculate bounding box when model loads
   const handleModelLoad = (scene: any) => {
@@ -72,10 +78,10 @@ const PathSegment: React.FC<PathSegmentProps> = ({
   if (!visible) return null;
 
   return (
-    <group ref={segmentRef} position={position} name={`path-segment-${index}`}>
+    <group ref={segmentRef} position={position} rotation={rotation} scale={[2, 1, 1.5]} name={`path-segment-${index}`}>
       <Suspense fallback={
-        <mesh position={[0, 0.05, 0]}>
-          <boxGeometry args={[4, 0.1, pathLength]} />
+        <mesh position={[0, 0, 0]}>
+          <boxGeometry args={[4, 0.1, pathLength * 1.5]} />
           <meshStandardMaterial color="#8B7355" transparent opacity={0.5} />
         </mesh>
       }>
@@ -95,10 +101,10 @@ interface InfinitePathSystemProps {
 
 export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
   playerPosition = new Vector3(0, 0, 0),
-  chunksAhead = 10,
-  chunksBehind = 2,
-  pathLength = 10,
-  renderDistance = 100
+  chunksAhead = 8,    // Increased from 5 to 8 for more path segments
+  chunksBehind = 3,   // Increased from 1 to 3 for smoother transitions
+  pathLength = 6,     // Reduced from 10 to 6 for more frequent segments  
+  renderDistance = 60
 }) => {
   const [actualPathLength, setActualPathLength] = React.useState(pathLength);
   
