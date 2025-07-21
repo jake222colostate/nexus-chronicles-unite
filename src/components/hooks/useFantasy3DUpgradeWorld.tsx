@@ -32,69 +32,103 @@ export const useFantasy3DUpgradeWorld = ({
   const RENDER_DISTANCE = 200;
   const UPGRADE_SPACING = 35;
 
-  // Create upgrades placed along the fantasy path
-  const upgrades = [
+  // Base template for the repeating upgrade sequence
+  const upgradeTemplates = [
     {
-      id: 0,
       name: 'Mana Crystal',
       cost: 50,
       manaPerSecond: 3,
-      position: [-12, 0.5, -30],
-      tier: 0,
-      unlocked: true,
-      description: 'A crystallized form of pure magical energy'
+      description: 'A crystallized form of pure magical energy',
+      modelType: 'podium' as const
     },
     {
-      id: 1,
       name: 'Arcane Focus',
       cost: 250,
       manaPerSecond: 12,
-      position: [12, 0.5, -60],
-      tier: 1,
-      unlocked: maxUnlockedUpgrade >= 0,
-      description: 'Concentrates magical energies for greater efficiency'
+      description: 'Concentrates magical energies for greater efficiency',
+      modelType: 'podium' as const
     },
     {
-      id: 2,
       name: 'Mystic Fountain',
       cost: 1000,
       manaPerSecond: 30,
-      position: [-12, 0.5, -90],
-      tier: 2,
-      unlocked: maxUnlockedUpgrade >= 1,
-      description: 'An eternal wellspring of magical power'
+      description: 'An eternal wellspring of magical power',
+      modelType: 'podium' as const
     },
     {
-      id: 3,
       name: 'Elder Artifact',
       cost: 5000,
       manaPerSecond: 100,
-      position: [12, 0.5, -120],
-      tier: 3,
-      unlocked: maxUnlockedUpgrade >= 2,
-      description: 'Ancient relic of immense magical power'
+      description: 'Ancient relic of immense magical power',
+      modelType: 'podium' as const
     },
     {
-      id: 4,
-      name: 'Dragon Shrine',
-      cost: 25000,
-      manaPerSecond: 400,
-      position: [-12, 0.5, -150],
-      tier: 4,
-      unlocked: maxUnlockedUpgrade >= 3,
-      description: 'A sacred shrine blessed by ancient dragons'
-    },
-    {
-      id: 5,
       name: 'Celestial Nexus',
       cost: 100000,
       manaPerSecond: 1500,
-      position: [12, 0.5, -180],
-      tier: 5,
-      unlocked: maxUnlockedUpgrade >= 4,
-      description: 'Connects to the cosmic web of magical energy'
+      description: 'Connects to the cosmic web of magical energy',
+      modelType: 'obelisk' as const
     }
   ];
+
+  interface UpgradeData {
+    id: number;
+    name: string;
+    cost: number;
+    manaPerSecond: number;
+    position: [number, number, number];
+    tier: number;
+    unlocked: boolean;
+    description: string;
+    modelType: 'podium' | 'obelisk';
+  }
+
+  const createUpgrade = (index: number): UpgradeData => {
+    const template = upgradeTemplates[index % upgradeTemplates.length];
+    const lane = index % 2 === 0 ? -12 : 12;
+    return {
+      id: index,
+      name: template.name,
+      cost: template.cost,
+      manaPerSecond: template.manaPerSecond,
+      description: template.description,
+      modelType: template.modelType,
+      position: [lane, 0.5, -30 - index * UPGRADE_SPACING],
+      tier: index % upgradeTemplates.length,
+      unlocked: index === 0 || maxUnlockedUpgrade >= index - 1
+    };
+  };
+
+  const [upgrades, setUpgrades] = useState<UpgradeData[]>(() =>
+    Array.from({ length: 10 }).map((_, i) => createUpgrade(i))
+  );
+
+  // Extend the upgrade list as the player moves forward
+  useEffect(() => {
+    setUpgrades(prev => {
+      const last = prev[prev.length - 1];
+      const distanceAhead = Math.abs(last.position[2] - cameraPosition.z);
+      if (distanceAhead < RENDER_DISTANCE) {
+        const next: UpgradeData[] = [];
+        let index = prev.length;
+        for (let i = 0; i < 5; i++) {
+          next.push(createUpgrade(index++));
+        }
+        return [...prev, ...next];
+      }
+      return prev;
+    });
+  }, [cameraPosition.z]);
+
+  // Update unlock status when new upgrades are purchased
+  useEffect(() => {
+    setUpgrades(prev =>
+      prev.map(u => ({
+        ...u,
+        unlocked: u.id === 0 || maxUnlockedUpgrade >= u.id - 1
+      }))
+    );
+  }, [maxUnlockedUpgrade]);
 
   // Update refs when gameState changes
   useEffect(() => {
