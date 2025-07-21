@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Object3D, InstancedMesh, Matrix4, Vector3 } from 'three';
+import { assetUrl } from '@/lib/utils';
 
 interface OptimizedPathSegmentsProps {
   playerPosition: Vector3;
@@ -20,7 +21,7 @@ export const OptimizedPathSegments: React.FC<OptimizedPathSegmentsProps> = ({
   renderDistance
 }) => {
   const meshRef = useRef<InstancedMesh>(null);
-  const { scene: pathScene } = useGLTF('/assets/Path.glb');
+  const { scene: pathScene } = useGLTF(assetUrl('assets/Path.glb'));
 
   // Calculate visible segments based on player position
   const visibleSegments = useMemo(() => {

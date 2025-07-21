@@ -3,6 +3,7 @@ import React, { useRef, useState, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Mesh } from 'three';
 import { useGLTF } from '@react-three/drei';
+import { assetUrl } from '@/lib/utils';
 
 interface UpgradeNode3DProps {
   upgrade: any;
@@ -80,7 +81,7 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
   // Fantasy podium model using GLB file
   const FantasyPodiumModel = () => {
     try {
-      const { scene } = useGLTF('/assets/upgrades/Podiums.glb');
+      const { scene } = useGLTF(assetUrl('assets/upgrades/Podiums.glb'));
       
       return (
         <group
@@ -186,4 +187,4 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
 UpgradeNode3D.displayName = 'UpgradeNode3D';
 
 // Preload the GLB model
-useGLTF.preload('/assets/upgrades/Podiums.glb');
+useGLTF.preload(assetUrl('assets/upgrades/Podiums.glb'));

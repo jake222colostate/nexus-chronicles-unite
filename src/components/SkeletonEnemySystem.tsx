@@ -6,9 +6,9 @@ import { ChunkData } from './ChunkSystem';
 import { assetUrl } from '@/lib/utils';
 
 // Preload skeleton models to avoid loading hitches
-useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb');
-useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb');
-useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb');
+useGLTF.preload(assetUrl('assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb'));
+useGLTF.preload(assetUrl('assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb'));
+useGLTF.preload(assetUrl('assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb'));
 
 interface SkeletonEnemySystemProps {
   chunks: ChunkData[];
@@ -36,9 +36,9 @@ interface SkeletonEnemy {
 }
 
 const modelPaths: Record<SkeletonType, string> = {
-  minion: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb',
-  rogue: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb',
-  warrior: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb'
+  minion: assetUrl('assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb'),
+  rogue: assetUrl('assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb'),
+  warrior: assetUrl('assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb')
 };
 
 const SkeletonModel: React.FC<{

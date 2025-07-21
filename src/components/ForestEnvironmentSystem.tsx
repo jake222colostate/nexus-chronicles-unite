@@ -2,6 +2,7 @@ import React, { useMemo, Suspense } from 'react';
 import { ChunkData } from './ChunkSystem';
 import { Vector3 } from 'three';
 import { useFBX } from '@react-three/drei';
+import { assetUrl } from '@/lib/utils';
 
 interface ForestEnvironmentSystemProps {
   chunks: ChunkData[];
@@ -21,14 +22,14 @@ interface ForestObject {
 const ForestAsset: React.FC<{ object: ForestObject }> = ({ object }) => {
   const getAssetPath = (type: string) => {
     switch (type) {
-      case 'tree1': return '/assets/LowPolyForrestAssets/Tree1.fbx';
-      case 'tree2': return '/assets/LowPolyForrestAssets/Tree2.fbx';
-      case 'rock1': return '/assets/LowPolyForrestAssets/Small Rock 1.fbx';
-      case 'rock2': return '/assets/LowPolyForrestAssets/Small Rock 2.fbx';
-      case 'rock3': return '/assets/LowPolyForrestAssets/Small Rock 3.fbx';
-      case 'log': return '/assets/LowPolyForrestAssets/Fallen Log.fbx';
-      case 'grass': return '/assets/LowPolyForrestAssets/Grass.fbx';
-      default: return '/assets/LowPolyForrestAssets/Tree1.fbx';
+      case 'tree1': return assetUrl('assets/LowPolyForrestAssets/Tree1.fbx');
+      case 'tree2': return assetUrl('assets/LowPolyForrestAssets/Tree2.fbx');
+      case 'rock1': return assetUrl('assets/LowPolyForrestAssets/Small Rock 1.fbx');
+      case 'rock2': return assetUrl('assets/LowPolyForrestAssets/Small Rock 2.fbx');
+      case 'rock3': return assetUrl('assets/LowPolyForrestAssets/Small Rock 3.fbx');
+      case 'log': return assetUrl('assets/LowPolyForrestAssets/Fallen Log.fbx');
+      case 'grass': return assetUrl('assets/LowPolyForrestAssets/Grass.fbx');
+      default: return assetUrl('assets/LowPolyForrestAssets/Tree1.fbx');
     }
   };
 

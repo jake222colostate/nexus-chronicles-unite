@@ -1,18 +1,18 @@
-import { useGLTF } from '@react-three/drei';
 import { preloadCriticalAssets, checkAssetSize } from '@/components/GLBModelLoader';
+import { assetUrl } from '@/lib/utils';
 
 // Critical assets - must be under 15MB each
 const CRITICAL_ASSETS = [
-  '/assets/Path.glb', // Main walking surface
-  '/assets/upgrades/Podiums.glb',
-  '/assets/upgrades/LargeObelisk.glb',
+  assetUrl('assets/Path.glb'), // Main walking surface
+  assetUrl('assets/upgrades/Podiums.glb'),
+  assetUrl('assets/upgrades/LargeObelisk.glb'),
 ];
 
 // Fantasy realm assets
 const FANTASY_ASSETS = [
-  '/assets/terrain/FantasyTree.glb',
-  '/assets/environment/MagicalCrystal.glb',
-  '/assets/characters/SkeletonWarrior.glb',
+  assetUrl('assets/terrain/FantasyTree.glb'),
+  assetUrl('assets/environment/MagicalCrystal.glb'),
+  assetUrl('assets/characters/SkeletonWarrior.glb'),
 ];
 
 // Initialize complete GLB loading system
