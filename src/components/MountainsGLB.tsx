@@ -10,14 +10,18 @@ interface MountainsGLBProps {
   playerPosition: Vector3;
 }
 
-// Mountains Model Component
+// Single Mountains Model Component
 const MountainsModel: React.FC<{ 
   position: [number, number, number]; 
   rotation: [number, number, number]; 
   scale: number 
 }> = ({ position, rotation, scale }) => {
+  console.log('MountainsModel rendering at position:', position, 'scale:', scale);
+  
   try {
     const { scene } = useGLTF(assetUrl('assets/environment/Mountains.glb'));
+    console.log('Mountains GLB loaded successfully:', scene);
+    
     return (
       <primitive 
         object={scene.clone()} 
@@ -30,7 +34,7 @@ const MountainsModel: React.FC<{
     );
   } catch (error) {
     console.warn('Failed to load Mountains.glb, using fallback:', error);
-    // Fallback geometry - much larger
+    // Large fallback geometry
     return (
       <group position={position} rotation={rotation}>
         <mesh position={[0, 15, 0]} castShadow>
@@ -51,40 +55,26 @@ const MountainsModel: React.FC<{
 };
 
 export const MountainsGLB: React.FC<MountainsGLBProps> = ({ playerPosition }) => {
-  const mountains = [];
+  console.log('MountainsGLB component rendering');
   
-  // Create mountain ring around the scene at closer distance
-  const mountainPositions = [
-    // Behind the player (positive Z) - closer and bigger
-    { pos: [0, 0, 80] as [number, number, number], rot: [0, 0, 0] as [number, number, number] },
-    { pos: [-60, 0, 70] as [number, number, number], rot: [0, Math.PI * 0.3, 0] as [number, number, number] },
-    { pos: [60, 0, 70] as [number, number, number], rot: [0, -Math.PI * 0.3, 0] as [number, number, number] },
-    
-    // To the sides - closer and bigger
-    { pos: [-80, 0, 20] as [number, number, number], rot: [0, Math.PI * 0.5, 0] as [number, number, number] },
-    { pos: [80, 0, 20] as [number, number, number], rot: [0, -Math.PI * 0.5, 0] as [number, number, number] },
-    
-    // Ahead of player (negative Z) - visible mountains
-    { pos: [0, 0, -60] as [number, number, number], rot: [0, Math.PI, 0] as [number, number, number] },
-    { pos: [-50, 0, -50] as [number, number, number], rot: [0, Math.PI * 0.8, 0] as [number, number, number] },
-    { pos: [50, 0, -50] as [number, number, number], rot: [0, Math.PI * 1.2, 0] as [number, number, number] },
-  ];
-
-  mountainPositions.forEach((mountain, index) => {
-    const scale = 50 + Math.random() * 30; // Much larger scale 50-80
-    mountains.push(
-      <MountainsModel
-        key={`mountain-${index}`}
-        position={mountain.pos}
-        rotation={mountain.rot}
-        scale={scale}
-      />
-    );
-  });
-
+  // Simplified - just a few large mountains to test
   return (
     <group name="mountains-glb">
-      {mountains}
+      <MountainsModel
+        position={[0, 0, 80]}
+        rotation={[0, 0, 0]}
+        scale={50}
+      />
+      <MountainsModel
+        position={[-60, 0, 70]}
+        rotation={[0, Math.PI * 0.3, 0]}
+        scale={40}
+      />
+      <MountainsModel
+        position={[60, 0, 70]}
+        rotation={[0, -Math.PI * 0.3, 0]}
+        scale={45}
+      />
     </group>
   );
 };
