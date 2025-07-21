@@ -6,7 +6,7 @@ interface StartingForestBarrierProps {
 }
 
 export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
-  playerPosition
+  playerPosition // Fixed HMR cache issue
 }) => {
   // Only render if player is near starting position
   if (Math.abs(playerPosition.z) > 50) return null;
