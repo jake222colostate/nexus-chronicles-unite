@@ -36,8 +36,8 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   
   useFrame((state) => {
     if (meshRef.current) {
-      // Gentle floating animation
-      meshRef.current.position.y = position[1] + 1 + Math.sin(state.clock.elapsedTime * 2) * 0.1;
+      // Gentle floating animation - now starting from ground level
+      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
       
       // Rotation
       if (isPurchased) {
@@ -89,26 +89,27 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     setHovered(false);
   };
 
-  // Check if this is every fifth upgrade (5, 10, 15, etc.)
-  const isSpecialUpgrade = upgrade.id % 5 === 0;
+  // All upgrades now use the same podium model
 
-  // Special upgrade model component
-  const SpecialUpgradeModel = () => {
+  // New podium model component - used for ALL upgrades
+  const PodiumModel = () => {
     try {
-      const gltf = useGLTFWithCors('/assets/upgrades/A_large_unique_ma_0721160123_texture.glb');
+      const gltf = useGLTFWithCors('/assets/upgrades/Podiums.glb');
       return (
         <primitive
           ref={meshRef}
           object={gltf.scene.clone()}
-          position={[0, 1, 0]}
-          scale={hovered ? 0.55 : 0.5} // Smaller scale for pedestals
+          position={[0, 0, 0]} // Positioned to sit flat on terrain
+          scale={hovered ? 1.1 : 1.0} // Scale appropriately for fantasy world
           onClick={handleClick}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
+          castShadow
+          receiveShadow
         />
       );
     } catch (error) {
-      console.warn('Failed to load special upgrade model, falling back to default');
+      console.warn('Failed to load podium model, falling back to default');
       // Fallback to default crystal
       return (
         <mesh
@@ -122,7 +123,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         >
           <icosahedronGeometry args={[0.8, 1]} />
           <meshLambertMaterial
-            color="#FFD700"
+            color={getCrystalColor()}
             transparent
             opacity={isUnlocked ? 0.9 : 0.5}
           />
@@ -145,58 +146,32 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Render special model for every fifth upgrade */}
-      {isSpecialUpgrade ? (
-        <Suspense fallback={null}>
-          <SpecialUpgradeModel />
-        </Suspense>
-      ) : (
-        <>
-          {/* Default pedestal base */}
-          <mesh position={[0, 0, 0]} receiveShadow>
-            <cylinderGeometry args={[1.2, 1.5, pedestalConfig.height, 8]} />
-            <meshLambertMaterial color={pedestalConfig.material} />
-          </mesh>
-          
-          {/* Pedestal rings for higher tiers */}
-          {Array.from({ length: pedestalConfig.rings }).map((_, i) => (
-            <mesh key={i} position={[0, pedestalConfig.height + 0.1 + (i * 0.3), 0]}>
-              <torusGeometry args={[1.3 + i * 0.2, 0.05, 8, 16]} />
-              <meshBasicMaterial color={pedestalConfig.material} />
-            </mesh>
-          ))}
-          
-          {/* Main crystal - also clickable */}
-          <mesh
-            ref={meshRef}
-            position={[0, 1, 0]}
-            onClick={handleClick}
-            onPointerOver={handlePointerOver}
-            onPointerOut={handlePointerOut}
-            scale={hovered ? 1.1 : 1}
-            castShadow
-          >
-            {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
-            {tier === 2 && <octahedronGeometry args={[0.6]} />}
-            {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
-            {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
-            <meshLambertMaterial
-              color={getCrystalColor()}
-              transparent
-              opacity={isUnlocked ? 0.9 : 0.5}
-            />
-          </mesh>
-        </>
-      )}
+      {/* New podium model for all upgrades */}
+      <Suspense fallback={null}>
+        <PodiumModel />
+      </Suspense>
       
-      {/* Glow effect */}
+      {/* Magical glow effect around podium base */}
       {isUnlocked && (
-        <mesh ref={glowRef} position={[0, 1.5, 0]}>
-          <sphereGeometry args={[1.5, 16, 16]} />
+        <mesh ref={glowRef} position={[0, 0.2, 0]}>
+          <cylinderGeometry args={[2, 2.2, 0.5, 32]} />
           <meshBasicMaterial
             color={getCrystalColor()}
             transparent
-            opacity={0.15}
+            opacity={0.2}
+          />
+        </mesh>
+      )}
+      
+      {/* Additional magical aura for enhanced visual appeal */}
+      {isUnlocked && canAfford && (
+        <mesh position={[0, 0.1, 0]} rotation={[0, 0, 0]}>
+          <ringGeometry args={[1.8, 2.5, 32]} />
+          <meshBasicMaterial
+            color={isPurchased ? '#10B981' : getCrystalColor()}
+            transparent
+            opacity={0.25}
+            side={2} // Double-sided
           />
         </mesh>
       )}
