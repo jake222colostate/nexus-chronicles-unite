@@ -92,16 +92,16 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   // Check if this is every fifth upgrade (5, 10, 15, etc.)
   const isSpecialUpgrade = upgrade.id % 5 === 0;
 
-  // Special upgrade model component
+  // Special upgrade model component - using one of the skeleton models for now
   const SpecialUpgradeModel = () => {
     try {
-      const gltf = useGLTFWithCors('/assets/upgrades/special_upgrade_podium.glb');
+      const gltf = useGLTFWithCors('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Mage.glb');
       return (
         <primitive
           ref={meshRef}
           object={gltf.scene.clone()}
           position={[0, 1, 0]}
-          scale={hovered ? 1.1 : 1}
+          scale={hovered ? 0.55 : 0.5} // Smaller scale for pedestals
           onClick={handleClick}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
@@ -109,7 +109,25 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
       );
     } catch (error) {
       console.warn('Failed to load special upgrade model, falling back to default');
-      return null;
+      // Fallback to default crystal
+      return (
+        <mesh
+          ref={meshRef}
+          position={[0, 1, 0]}
+          onClick={handleClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+          scale={hovered ? 1.1 : 1}
+          castShadow
+        >
+          <icosahedronGeometry args={[0.8, 1]} />
+          <meshLambertMaterial
+            color="#FFD700"
+            transparent
+            opacity={isUnlocked ? 0.9 : 0.5}
+          />
+        </mesh>
+      );
     }
   };
 
