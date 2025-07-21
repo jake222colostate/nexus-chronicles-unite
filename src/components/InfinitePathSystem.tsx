@@ -1,7 +1,36 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Box3 } from 'three';
-import { GLBModelLoader } from './GLBModelLoader';
+import { useGLTF } from '@react-three/drei';
+
+// Preload the path model immediately
+useGLTF.preload('/assets/Path.glb');
+
+// Path Model Component with direct useGLTF
+const PathModel: React.FC<{ onLoad?: (scene: any) => void }> = ({ onLoad }) => {
+  try {
+    const { scene } = useGLTF('/assets/Path.glb');
+    
+    // Call onLoad when model is successfully loaded
+    React.useEffect(() => {
+      if (scene && onLoad) {
+        console.log('✅ Path.glb loaded successfully');
+        onLoad(scene);
+      }
+    }, [scene, onLoad]);
+
+    return <primitive object={scene.clone()} castShadow receiveShadow />;
+  } catch (error) {
+    console.error('❌ Failed to load Path.glb:', error);
+    // Fallback geometry if model fails to load
+    return (
+      <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4, 0.2, 10]} />
+        <meshStandardMaterial color="#D2B48C" />
+      </mesh>
+    );
+  }
+};
 
 interface PathSegmentProps {
   index: number;
@@ -27,13 +56,14 @@ const PathSegment: React.FC<PathSegmentProps> = ({
 
   // Calculate bounding box when model loads
   const handleModelLoad = (scene: any) => {
+    console.log(`🛤️ Path segment ${index} loaded`);
     if (scene && onBoundingBoxCalculated && index === 0) {
       const box = new Box3().setFromObject(scene);
       onBoundingBoxCalculated(box);
-      console.log('🛤️ Path segment bounding box:', {
-        width: box.max.x - box.min.x,
-        height: box.max.y - box.min.y,
-        length: box.max.z - box.min.z
+      console.log('📏 Path segment dimensions:', {
+        width: (box.max.x - box.min.x).toFixed(2),
+        height: (box.max.y - box.min.y).toFixed(2),
+        length: (box.max.z - box.min.z).toFixed(2)
       });
     }
   };
@@ -41,24 +71,15 @@ const PathSegment: React.FC<PathSegmentProps> = ({
   if (!visible) return null;
 
   return (
-    <group ref={segmentRef} position={position}>
-      <GLBModelLoader
-        path="/assets/Path.glb"
-        scale={1}
-        castShadow={true}
-        receiveShadow={true}
-        onLoad={handleModelLoad}
-        onError={(error) => {
-          console.warn(`❌ Failed to load path segment ${index}:`, error);
-        }}
-        fallback={
-          // Fallback: Simple rectangular path
-          <mesh position={[0, 0.05, 0]}>
-            <boxGeometry args={[4, 0.1, pathLength]} />
-            <meshStandardMaterial color="#8B7355" />
-          </mesh>
-        }
-      />
+    <group ref={segmentRef} position={position} name={`path-segment-${index}`}>
+      <Suspense fallback={
+        <mesh position={[0, 0.05, 0]}>
+          <boxGeometry args={[4, 0.1, pathLength]} />
+          <meshStandardMaterial color="#8B7355" transparent opacity={0.5} />
+        </mesh>
+      }>
+        <PathModel onLoad={index === 0 ? handleModelLoad : undefined} />
+      </Suspense>
     </group>
   );
 };
@@ -85,7 +106,7 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     const modelLength = box.max.z - box.min.z;
     if (modelLength > 0 && modelLength !== actualPathLength) {
       setActualPathLength(modelLength);
-      console.log(`📏 Auto-detected path length: ${modelLength} units`);
+      console.log(`📏 Auto-detected path length: ${modelLength.toFixed(2)} units`);
     }
   };
 
@@ -120,27 +141,33 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     }
   });
 
-  console.log(`🛤️ Rendering ${visibleChunks.length} path segments`);
+  console.log(`🛤️ Rendering ${visibleChunks.length} path segments, player at Z: ${playerPosition.z.toFixed(1)}`);
 
   return (
     <group name="infinite-path-system">
+      {/* Debug info */}
+      <mesh position={[-5, 2, playerPosition.z]} scale={0.5}>
+        <sphereGeometry args={[0.2]} />
+        <meshBasicMaterial color="#00ff00" />
+      </mesh>
+      
       {visibleChunks.map(({ index, distance }) => (
         <PathSegment
           key={index}
           index={index}
           pathLength={actualPathLength}
           visible={distance <= renderDistance}
-          onBoundingBoxCalculated={index === 0 ? handleBoundingBoxCalculated : undefined}
+          onBoundingBoxCalculated={index === Math.floor(playerPosition.z / actualPathLength) ? handleBoundingBoxCalculated : undefined}
         />
       ))}
       
       {/* Debug helper: Show path bounds */}
       {process.env.NODE_ENV === 'development' && (
         <group>
-          {visibleChunks.slice(0, 1).map(({ index }) => (
+          {visibleChunks.slice(0, 3).map(({ index }) => (
             <mesh key={`debug-${index}`} position={[0, 0.2, index * actualPathLength]}>
               <boxGeometry args={[0.2, 0.2, 0.2]} />
-              <meshBasicMaterial color="#00ff00" />
+              <meshBasicMaterial color="#ff0000" />
             </mesh>
           ))}
         </group>
