@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { Group, Mesh, Vector3 } from 'three';
 import { useRegisterCollider } from '@/lib/CollisionContext';
 import { useGLTF } from '@react-three/drei';
+import { assetUrl } from '@/lib/utils';
 
 interface EnhancedUpgradePedestalProps {
   position: [number, number, number];
@@ -94,10 +95,11 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   // Pedestal/obelisk model using GLB files with fallback
   const PedestalModel = () => {
     try {
-      const assetPath =
+      const assetPath = assetUrl(
         modelType === 'obelisk'
           ? '/assets/upgrades/LargeObelisk.glb'
-          : '/assets/upgrades/Podiums.glb';
+          : '/assets/upgrades/Podiums.glb'
+      );
 
       const { scene } = useGLTF(assetPath);
 
@@ -243,5 +245,5 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 };
 
 // Preload the GLB model
-useGLTF.preload('/assets/upgrades/Podiums.glb');
-useGLTF.preload('/assets/upgrades/LargeObelisk.glb');
+useGLTF.preload(assetUrl('/assets/upgrades/Podiums.glb'));
+useGLTF.preload(assetUrl('/assets/upgrades/LargeObelisk.glb'));

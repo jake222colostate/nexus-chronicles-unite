@@ -1,15 +1,16 @@
 import React, { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
+import { assetUrl } from '@/lib/utils';
 import * as THREE from 'three';
 
 const Scene = () => {
-  const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
-  const { scene: goldVendor } = useGLTF('/models/vendor_gold.glb');
-  const { scene: gemVendor } = useGLTF('/models/vendor_gems.glb');
-  const { scene: tree } = useGLTF('/models/tree.glb');
-  const { scene: fencePost } = useGLTF('/models/fence_post.glb');
-  const { scene: pathTile } = useGLTF('/models/path_tile.glb');
+  const { scene: crystal } = useGLTF(assetUrl('/models/crystal_obelisk.glb'));
+  const { scene: goldVendor } = useGLTF(assetUrl('/models/vendor_gold.glb'));
+  const { scene: gemVendor } = useGLTF(assetUrl('/models/vendor_gems.glb'));
+  const { scene: tree } = useGLTF(assetUrl('/models/tree.glb'));
+  const { scene: fencePost } = useGLTF(assetUrl('/models/fence_post.glb'));
+  const { scene: pathTile } = useGLTF(assetUrl('/models/path_tile.glb'));
 
   const crystalRef = useRef();
 

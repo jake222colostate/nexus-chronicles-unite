@@ -2,14 +2,16 @@ import React, { useRef, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Box3 } from 'three';
 import { useGLTF } from '@react-three/drei';
+import { assetUrl } from '@/lib/utils';
 
 // Preload the path model immediately
-useGLTF.preload('/assets/Path.glb');
+const PATH_ASSET = assetUrl('/assets/Path.glb');
+useGLTF.preload(PATH_ASSET);
 
 // Path Model Component with direct useGLTF
 const PathModel: React.FC<{ onLoad?: (scene: any) => void }> = ({ onLoad }) => {
   try {
-    const { scene } = useGLTF('/assets/Path.glb');
+    const { scene } = useGLTF(PATH_ASSET);
     
     // Call onLoad when model is successfully loaded
     React.useEffect(() => {

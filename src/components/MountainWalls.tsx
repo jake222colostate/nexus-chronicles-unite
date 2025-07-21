@@ -1,12 +1,13 @@
 
 import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
+import { assetUrl } from '@/lib/utils';
 import { Group, Mesh } from 'three';
 import { useThree } from '@react-three/fiber';
 
 export const MountainWalls: React.FC = () => {
   const { scene } = useThree();
-  const { scene: mountainModel } = useGLTF('./assets/mountain_low_poly.glb');
+  const { scene: mountainModel } = useGLTF(assetUrl('/assets/mountain_low_poly.glb'));
   const mountainsRef = useRef<Group[]>([]);
 
   useEffect(() => {
@@ -79,4 +80,4 @@ export const MountainWalls: React.FC = () => {
 };
 
 // Preload the mountain model
-useGLTF.preload('./assets/mountain_low_poly.glb');
+useGLTF.preload(assetUrl('/assets/mountain_low_poly.glb'));
