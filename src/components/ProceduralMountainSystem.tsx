@@ -9,7 +9,7 @@ useGLTF.preload(assetUrl('assets/environment/Mountains.glb'));
 
 interface ProceduralMountainSystemProps {
   chunks: FogChunkData[];
-  playerPosition: Vector3;
+  playerPosition: Vector3; // Fixed HMR cache issue
   chunkSize: number;
 }
 

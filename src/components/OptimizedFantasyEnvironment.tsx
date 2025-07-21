@@ -6,7 +6,7 @@ import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistributio
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
 import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
 import { SkeletonEnemySystem } from './SkeletonEnemySystem';
-import { ProceduralMountainSystem } from './ProceduralMountainSystem';
+import { ProceduralMountainSystem } from './ProceduralMountainSystem'; // Fixed HMR cache issue
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: FogChunkData[];
