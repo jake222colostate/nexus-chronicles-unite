@@ -3,7 +3,7 @@ import React, { Suspense, useMemo, useState, useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { FirstPersonController } from './FirstPersonController';
-import { ChunkSystem, ChunkData } from './ChunkSystem';
+import { FogBasedChunkSystem, FogChunkData } from './FogBasedChunkSystem';
 import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
@@ -103,12 +103,14 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         {/* Linear Forest Corridor along valley path */}
         <LinearForestCorridor playerPosition={safeCameraPosition} />
 
-        <ChunkSystem
+        <FogBasedChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={50}
+          renderDistance={renderDistance}
+          fogNear={30}
+          fogFar={120}
         >
-          {(chunks: ChunkData[]) => (
+          {(chunks: FogChunkData[], fogDistance: number) => (
             <OptimizedFantasyEnvironment
               chunks={chunks}
               chunkSize={chunkSize}
@@ -117,9 +119,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
               onEnemyCountChange={onEnemyCountChange}
               onEnemyKilled={onEnemyKilled}
               weaponDamage={weaponDamage}
+              upgradesPurchased={upgradesPurchased}
+              fogDistance={fogDistance}
             />
           )}
-        </ChunkSystem>
+        </FogBasedChunkSystem>
 
         <ContactShadows 
           position={[0, -1.4, safeCameraPosition.z]} 

@@ -1,20 +1,22 @@
 
 import React, { Suspense } from 'react';
-import { ChunkData } from './ChunkSystem';
+import { FogChunkData } from './FogBasedChunkSystem';
 import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
-import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
+import { SeamlessGroundSystem } from './SeamlessGroundSystem';
 import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
 import { SkeletonEnemySystem } from './SkeletonEnemySystem';
 
 interface OptimizedFantasyEnvironmentProps {
-  chunks: ChunkData[];
+  chunks: FogChunkData[];
   chunkSize: number;
   realm: 'fantasy' | 'scifi';
   playerPosition: Vector3;
   onEnemyCountChange?: (count: number) => void;
   onEnemyKilled?: () => void;
   weaponDamage: number;
+  upgradesPurchased?: number;
+  fogDistance: number;
 }
 
 export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentProps> = ({
@@ -24,7 +26,9 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
   playerPosition,
   onEnemyCountChange,
   onEnemyKilled,
-  weaponDamage
+  weaponDamage,
+  upgradesPurchased = 0,
+  fogDistance
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -35,12 +39,13 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
 
   return (
     <Suspense fallback={null}>
-      {/* Infinite ground system for seamless terrain */}
-      <EnhancedInfiniteGroundSystem
+      {/* Seamless fog-based ground system */}
+      <SeamlessGroundSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
         playerPosition={playerPosition}
+        fogDistance={fogDistance}
       />
       
       {/* Tree system positioned within valley bounds */}
