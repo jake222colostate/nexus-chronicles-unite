@@ -78,14 +78,14 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
 
   // Fantasy podium model component
   const FantasyPodiumModel = () => {
-    console.log('UpgradeNode3D: Attempting to load Podiums.glb for fantasy realm');
+    console.log('UpgradeNode3D: Attempting to load Podiums.glb from /assets/upgrades/Podiums.glb');
     
     try {
       const gltf = useGLTFWithCors('/assets/upgrades/Podiums.glb');
-      console.log('UpgradeNode3D: Successfully loaded GLB', gltf);
+      console.log('UpgradeNode3D: Successfully loaded Podiums.glb', gltf);
       
       if (!gltf || !gltf.scene) {
-        console.warn('UpgradeNode3D: GLB loaded but no scene found');
+        console.error('UpgradeNode3D: GLB loaded but no scene found');
         throw new Error('No scene in GLB');
       }
       
@@ -103,7 +103,7 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
         />
       );
     } catch (error) {
-      console.warn('UpgradeNode3D: Failed to load Podiums.glb, using fallback', error);
+      console.error('UpgradeNode3D: Failed to load Podiums.glb - using fallback geometry', error);
       // Fallback to geometric shapes
       return (
         <mesh

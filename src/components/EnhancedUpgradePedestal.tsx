@@ -93,14 +93,14 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 
   // New podium model component - used for ALL upgrades
   const PodiumModel = () => {
-    console.log('PodiumModel: Attempting to load Podiums.glb');
+    console.log('PodiumModel: Attempting to load Podiums.glb from /assets/upgrades/Podiums.glb');
     
     try {
       const gltf = useGLTFWithCors('/assets/upgrades/Podiums.glb');
-      console.log('PodiumModel: Successfully loaded GLB', gltf);
+      console.log('PodiumModel: Successfully loaded Podiums.glb', gltf);
       
       if (!gltf || !gltf.scene) {
-        console.warn('PodiumModel: GLB loaded but no scene found');
+        console.error('PodiumModel: GLB loaded but no scene found');
         throw new Error('No scene in GLB');
       }
       
@@ -118,7 +118,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         />
       );
     } catch (error) {
-      console.warn('PodiumModel: Failed to load Podiums.glb, using fallback', error);
+      console.error('PodiumModel: Failed to load Podiums.glb - using fallback geometry', error);
       // Fallback to default crystal that looks like a podium
       return (
         <group>
