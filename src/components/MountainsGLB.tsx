@@ -57,23 +57,33 @@ const MountainsModel: React.FC<{
 export const MountainsGLB: React.FC<MountainsGLBProps> = ({ playerPosition }) => {
   console.log('MountainsGLB component rendering');
   
-  // Simplified - just a few large mountains to test
+  // Position mountains closer and within fog distance (fog is at 25)
   return (
     <group name="mountains-glb">
+      {/* Mountains behind player - within fog range */}
       <MountainsModel
-        position={[0, 0, 80]}
+        position={[0, 0, 20]}
         rotation={[0, 0, 0]}
-        scale={50}
+        scale={30}
+      />
+      
+      {/* Mountains to the sides - close and visible */}
+      <MountainsModel
+        position={[-20, 0, 10]}
+        rotation={[0, Math.PI * 0.5, 0]}
+        scale={25}
       />
       <MountainsModel
-        position={[-60, 0, 70]}
-        rotation={[0, Math.PI * 0.3, 0]}
-        scale={40}
+        position={[20, 0, 10]}
+        rotation={[0, -Math.PI * 0.5, 0]}
+        scale={25}
       />
+      
+      {/* Mountains ahead of player */}
       <MountainsModel
-        position={[60, 0, 70]}
-        rotation={[0, -Math.PI * 0.3, 0]}
-        scale={45}
+        position={[0, 0, -15]}
+        rotation={[0, Math.PI, 0]}
+        scale={20}
       />
     </group>
   );
