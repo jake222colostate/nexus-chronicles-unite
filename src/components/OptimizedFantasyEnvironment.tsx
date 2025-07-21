@@ -6,7 +6,7 @@ import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistributio
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
 import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
 import { SkeletonEnemySystem } from './SkeletonEnemySystem';
-import { ProceduralMountainSystem } from './ProceduralMountainSystem'; // Fixed HMR cache issue
+
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: FogChunkData[];
@@ -64,12 +64,6 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         playerPosition={playerPosition}
       />
 
-      {/* Procedural mountain system for dramatic backdrop */}
-      <ProceduralMountainSystem
-        chunks={chunks}
-        playerPosition={playerPosition}
-        chunkSize={chunkSize}
-      />
 
       {/* Skeleton enemy system */}
       <SkeletonEnemySystem
