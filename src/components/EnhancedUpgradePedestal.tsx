@@ -92,10 +92,10 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   // Check if this is every fifth upgrade (5, 10, 15, etc.)
   const isSpecialUpgrade = upgrade.id % 5 === 0;
 
-  // Special upgrade model component - using one of the skeleton models for now
+  // Special upgrade model component
   const SpecialUpgradeModel = () => {
     try {
-      const gltf = useGLTFWithCors('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Mage.glb');
+      const gltf = useGLTFWithCors('/assets/upgrades/A_large_unique_ma_0721160123_texture.glb');
       return (
         <primitive
           ref={meshRef}
