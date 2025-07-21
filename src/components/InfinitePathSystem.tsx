@@ -123,9 +123,9 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     const playerChunkIndex = Math.floor(playerPosition.z / actualPathLength);
     const chunks: { index: number; distance: number }[] = [];
 
-    // Generate chunks from behind player to ahead of player (flipped orientation)
-    for (let i = -chunksAhead; i <= chunksBehind; i++) {
-      const chunkIndex = playerChunkIndex - i; // Flipped direction
+    // Generate chunks to match upgrade system orientation
+    for (let i = -chunksBehind; i <= chunksAhead; i++) {
+      const chunkIndex = playerChunkIndex + i; // Standard forward direction
       const chunkZ = chunkIndex * actualPathLength;
       const distance = Math.abs(chunkZ - playerPosition.z);
       
