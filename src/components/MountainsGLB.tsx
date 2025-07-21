@@ -30,12 +30,20 @@ const MountainsModel: React.FC<{
     );
   } catch (error) {
     console.warn('Failed to load Mountains.glb, using fallback:', error);
-    // Fallback geometry
+    // Fallback geometry - much larger
     return (
       <group position={position} rotation={rotation}>
-        <mesh position={[0, 5, 0]} castShadow>
-          <coneGeometry args={[8, 15, 8]} />
+        <mesh position={[0, 15, 0]} castShadow>
+          <coneGeometry args={[25, 50, 8]} />
           <meshStandardMaterial color="#4a4a4a" />
+        </mesh>
+        <mesh position={[10, 10, 5]} castShadow>
+          <coneGeometry args={[20, 40, 6]} />
+          <meshStandardMaterial color="#5a5a5a" />
+        </mesh>
+        <mesh position={[-8, 12, -3]} castShadow>
+          <coneGeometry args={[18, 35, 7]} />
+          <meshStandardMaterial color="#3a3a3a" />
         </mesh>
       </group>
     );
@@ -45,25 +53,25 @@ const MountainsModel: React.FC<{
 export const MountainsGLB: React.FC<MountainsGLBProps> = ({ playerPosition }) => {
   const mountains = [];
   
-  // Create mountain ring around the scene at a distance
+  // Create mountain ring around the scene at closer distance
   const mountainPositions = [
-    // Behind the player (positive Z)
-    { pos: [0, 0, 150] as [number, number, number], rot: [0, 0, 0] as [number, number, number] },
-    { pos: [-80, 0, 120] as [number, number, number], rot: [0, Math.PI * 0.3, 0] as [number, number, number] },
-    { pos: [80, 0, 120] as [number, number, number], rot: [0, -Math.PI * 0.3, 0] as [number, number, number] },
+    // Behind the player (positive Z) - closer and bigger
+    { pos: [0, 0, 80] as [number, number, number], rot: [0, 0, 0] as [number, number, number] },
+    { pos: [-60, 0, 70] as [number, number, number], rot: [0, Math.PI * 0.3, 0] as [number, number, number] },
+    { pos: [60, 0, 70] as [number, number, number], rot: [0, -Math.PI * 0.3, 0] as [number, number, number] },
     
-    // To the sides
-    { pos: [-150, 0, 0] as [number, number, number], rot: [0, Math.PI * 0.5, 0] as [number, number, number] },
-    { pos: [150, 0, 0] as [number, number, number], rot: [0, -Math.PI * 0.5, 0] as [number, number, number] },
+    // To the sides - closer and bigger
+    { pos: [-80, 0, 20] as [number, number, number], rot: [0, Math.PI * 0.5, 0] as [number, number, number] },
+    { pos: [80, 0, 20] as [number, number, number], rot: [0, -Math.PI * 0.5, 0] as [number, number, number] },
     
-    // Ahead of player (negative Z) - distant mountains
-    { pos: [0, 0, -200] as [number, number, number], rot: [0, Math.PI, 0] as [number, number, number] },
-    { pos: [-100, 0, -180] as [number, number, number], rot: [0, Math.PI * 0.8, 0] as [number, number, number] },
-    { pos: [100, 0, -180] as [number, number, number], rot: [0, Math.PI * 1.2, 0] as [number, number, number] },
+    // Ahead of player (negative Z) - visible mountains
+    { pos: [0, 0, -60] as [number, number, number], rot: [0, Math.PI, 0] as [number, number, number] },
+    { pos: [-50, 0, -50] as [number, number, number], rot: [0, Math.PI * 0.8, 0] as [number, number, number] },
+    { pos: [50, 0, -50] as [number, number, number], rot: [0, Math.PI * 1.2, 0] as [number, number, number] },
   ];
 
   mountainPositions.forEach((mountain, index) => {
-    const scale = 15 + Math.random() * 10; // Random scale 15-25
+    const scale = 50 + Math.random() * 30; // Much larger scale 50-80
     mountains.push(
       <MountainsModel
         key={`mountain-${index}`}
