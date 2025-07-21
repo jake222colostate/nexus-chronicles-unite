@@ -25,13 +25,13 @@ export const NexusResourceConverter: React.FC<NexusResourceConverterProps> = ({
 
   const handleManaConversion = () => {
     if (convertManaToShards(manaToConvert)) {
-      console.log(`Converted ${manaToConvert} mana to ${Math.floor(manaToConvert * 0.1)} nexus shards`);
+      // console.log(`Converted ${manaToConvert} mana to ${Math.floor(manaToConvert * 0.1)} nexus shards`);
     }
   };
 
   const handleEnergyConversion = () => {
     if (convertEnergyToShards(energyToConvert)) {
-      console.log(`Converted ${energyToConvert} energy to ${Math.floor(energyToConvert * 0.1)} nexus shards`);
+      // console.log(`Converted ${energyToConvert} energy to ${Math.floor(energyToConvert * 0.1)} nexus shards`);
     }
   };
 

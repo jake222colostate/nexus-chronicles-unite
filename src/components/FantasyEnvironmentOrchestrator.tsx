@@ -27,7 +27,7 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
     return null;
   }
 
-  console.log('FantasyEnvironmentOrchestrator: Rendering with enhanced visibility fixes and infinite terrain');
+  // console.log('FantasyEnvironmentOrchestrator: Rendering with enhanced visibility fixes and infinite terrain');
 
   return (
     <group>

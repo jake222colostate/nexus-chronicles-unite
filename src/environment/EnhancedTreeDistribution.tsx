@@ -263,7 +263,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating properly grounded trees');
+    // console.log('EnhancedTreeDistribution: Generating properly grounded trees');
     const trees = [];
     const minDistance = 8; // Increased spacing for performance
     const maxAttempts = 20; // Reduced attempts for performance
@@ -325,7 +325,7 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} properly grounded trees`);
+    // console.log(`EnhancedTreeDistribution: Generated ${trees.length} properly grounded trees`);
     return trees;
   }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 
@@ -352,5 +352,5 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
 // Clear cache when component unmounts - no longer needed
 export const clearTreeModelCache = () => {
-  console.log('Tree model cache cleared (procedural trees)');
+  // console.log('Tree model cache cleared (procedural trees)');
 };

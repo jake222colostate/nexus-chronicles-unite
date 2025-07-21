@@ -23,7 +23,7 @@ export const MountainWalls: React.FC = () => {
     const spacingZ = 15; // Spacing between mountains
     const startZ = 20; // Start ahead of player
     
-    console.log('MountainWalls: Creating mountain wall with', clonesPerSide, 'mountains per side');
+    // console.log('MountainWalls: Creating mountain wall with', clonesPerSide, 'mountains per side');
 
     for (let i = 0; i < clonesPerSide; i++) {
       const z = startZ - (i * spacingZ);
@@ -65,7 +65,7 @@ export const MountainWalls: React.FC = () => {
       mountainsRef.current.push(rightMountain);
     }
 
-    console.log('MountainWalls: Added', mountainsRef.current.length, 'mountains to scene');
+    // console.log('MountainWalls: Added', mountainsRef.current.length, 'mountains to scene');
 
     // Cleanup function
     return () => {

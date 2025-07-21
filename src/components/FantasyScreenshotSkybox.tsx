@@ -9,11 +9,11 @@ interface FantasyScreenshotSkyboxProps {
 const FantasyScreenshotSkybox: React.FC<FantasyScreenshotSkyboxProps> = ({
   realm
 }) => {
-  console.log('FantasyScreenshotSkybox render - Realm:', realm);
+  // console.log('FantasyScreenshotSkybox render - Realm:', realm);
 
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
-    console.log('FantasyScreenshotSkybox: Not fantasy realm, skipping');
+    // console.log('FantasyScreenshotSkybox: Not fantasy realm, skipping');
     return null;
   }
 

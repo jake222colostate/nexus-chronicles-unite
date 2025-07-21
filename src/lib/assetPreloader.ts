@@ -18,7 +18,7 @@ const preloadAssets = (paths: string[]) => {
   paths.forEach(path => {
     try {
       useGLTF.preload(path);
-      console.log(`⚡ Preloaded: ${path}`);
+      // console.log(`⚡ Preloaded: ${path}`);
     } catch (error) {
       console.warn(`⚠️ Failed to preload: ${path}`, error);
     }
@@ -27,20 +27,20 @@ const preloadAssets = (paths: string[]) => {
 
 // Initialize GLB loading system
 export const initializeGLBSystem = async () => {
-  console.log('🎮 Initializing GLB Loading System...');
+  // console.log('🎮 Initializing GLB Loading System...');
   
   try {
     // Preload critical assets immediately
-    console.log('⚡ Preloading critical assets...');
+    // console.log('⚡ Preloading critical assets...');
     preloadAssets(CRITICAL_ASSETS);
     
     // Lazy preload fantasy assets
     setTimeout(() => {
-      console.log('🧙 Lazy loading fantasy assets...');
+      // console.log('🧙 Lazy loading fantasy assets...');
       preloadAssets(FANTASY_ASSETS);
     }, 2000);
     
-    console.log('✅ GLB Loading System initialized');
+    // console.log('✅ GLB Loading System initialized');
     return true;
   } catch (error) {
     console.error('❌ GLB System initialization failed:', error);
@@ -50,7 +50,7 @@ export const initializeGLBSystem = async () => {
 
 // Realm-specific preloading
 export const preloadRealmAssets = (realm: 'fantasy' | 'scifi') => {
-  console.log(`🌟 Preloading ${realm} realm assets...`);
+  // console.log(`🌟 Preloading ${realm} realm assets...`);
   
   if (realm === 'fantasy') {
     preloadAssets(FANTASY_ASSETS);

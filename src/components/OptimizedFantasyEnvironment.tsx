@@ -36,7 +36,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with forest and skeleton systems`);
+  // console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with forest and skeleton systems`);
 
   return (
     <Suspense fallback={null}>

@@ -117,7 +117,7 @@ export const FogBasedChunkSystem: React.FC<FogBasedChunkSystemProps> = React.mem
       }
     }
     
-    console.log(`FogBasedChunkSystem: Generated ${chunks.length} fog-aware chunks`);
+    // console.log(`FogBasedChunkSystem: Generated ${chunks.length} fog-aware chunks`);
     return chunks;
   }, [
     Math.floor(playerPosition.x / 20) * 20, // More responsive than before

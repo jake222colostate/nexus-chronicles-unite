@@ -76,7 +76,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   // Enhanced click handler with better event handling
   const handleClick = (event: any) => {
     event.stopPropagation();
-    console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id);
+    // console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id);
     if (isUnlocked) {
       onInteract();
     }

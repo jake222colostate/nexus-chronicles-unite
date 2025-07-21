@@ -212,7 +212,7 @@ export const ScifiUpgradeGLBSystem: React.FC<ScifiUpgradeGLBSystemProps> = ({
 }) => {
   // Validate upgrade positions don't have intersecting revolving elements
   const validatedPositions = useMemo(() => {
-    console.log('Validating upgrade positions for collision avoidance...');
+    // console.log('Validating upgrade positions for collision avoidance...');
     
     // Check all pairs of positions for collisions
     for (let i = 0; i < SCIFI_UPGRADE_POSITIONS.length; i++) {
@@ -228,7 +228,7 @@ export const ScifiUpgradeGLBSystem: React.FC<ScifiUpgradeGLBSystemProps> = ({
             Math.pow(pos1.y - pos2.y, 2) + 
             Math.pow(pos1.z - pos2.z, 2)
           );
-          console.log(`Safe distance between ${pos1.id} and ${pos2.id}: ${distance.toFixed(2)} units`);
+          // console.log(`Safe distance between ${pos1.id} and ${pos2.id}: ${distance.toFixed(2)} units`);
         }
       }
     }
