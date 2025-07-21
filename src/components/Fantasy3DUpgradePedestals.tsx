@@ -34,6 +34,7 @@ export const Fantasy3DUpgradePedestals: React.FC<Fantasy3DUpgradePedestalsProps>
             canAfford={currentManaRef.current >= upgrade.cost}
             onInteract={() => onUpgradeClick(upgrade)}
             tier={upgrade.tier + 1}
+            modelType={upgrade.modelType}
           />
         );
       })}
