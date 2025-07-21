@@ -10,6 +10,7 @@ import { Sun } from './Sun';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { LinearForestCorridor } from './LinearForestCorridor';
 import { InfinitePathSystem } from './InfinitePathSystem';
+import { StartingForestBarrier } from './StartingForestBarrier';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -100,6 +101,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           }}
           damage={weaponDamage}
         />
+
+        {/* Dense forest barrier behind starting point for direction clarity */}
+        <StartingForestBarrier playerPosition={safeCameraPosition} />
 
         {/* Infinite Path System - The walking surface */}
         <InfinitePathSystem
