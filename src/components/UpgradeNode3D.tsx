@@ -77,9 +77,9 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
     }
   });
 
-  // Fantasy podium model component - creates distinctive podium structure
+  // Fantasy podium model using GLB file
   const FantasyPodiumModel = () => {
-    console.log('UpgradeNode3D: Creating fantasy podium structure');
+    const { scene } = useGLTF('/assets/upgrades/Podiums.glb');
     
     return (
       <group
@@ -89,17 +89,7 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
         onPointerOut={() => setHovered(false)}
         scale={hovered ? 0.8 : 0.7}
       >
-        {/* Podium base */}
-        <mesh position={[0, 0, 0]} receiveShadow castShadow>
-          <cylinderGeometry args={[1.2, 1.5, 0.4, 8]} />
-          <meshLambertMaterial color="#654321" />
-        </mesh>
-        
-        {/* Podium top platform */}
-        <mesh position={[0, 0.3, 0]} receiveShadow castShadow>
-          <cylinderGeometry args={[0.8, 1.2, 0.2, 6]} />
-          <meshLambertMaterial color="#8B4513" />
-        </mesh>
+        <primitive object={scene} />
         
         {/* Crystal on top */}
         <mesh position={[0, 0.6, 0]} castShadow>
@@ -109,12 +99,6 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
             transparent
             opacity={isUnlocked ? 0.9 : 0.5}
           />
-        </mesh>
-        
-        {/* Decorative ring */}
-        <mesh position={[0, 0.2, 0]}>
-          <torusGeometry args={[1.3, 0.05, 6, 12]} />
-          <meshBasicMaterial color="#DEB887" />
         </mesh>
       </group>
     );

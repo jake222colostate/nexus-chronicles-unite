@@ -89,11 +89,9 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     setHovered(false);
   };
 
-  // All upgrades now use the same podium model
-
-  // Podium model component - creates a distinctive podium structure
+  // Podium model using the GLB file
   const PodiumModel = () => {
-    console.log('PodiumModel: Creating podium structure');
+    const { scene } = useGLTF('/assets/upgrades/Podiums.glb');
     
     return (
       <group
@@ -103,23 +101,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         onPointerOut={handlePointerOut}
         scale={hovered ? 1.05 : 1.0}
       >
-        {/* Podium base - wide foundation */}
-        <mesh position={[0, 0, 0]} receiveShadow castShadow>
-          <cylinderGeometry args={[1.8, 2.2, 0.6, 12]} />
-          <meshLambertMaterial color="#654321" />
-        </mesh>
-        
-        {/* Podium middle tier */}
-        <mesh position={[0, 0.5, 0]} receiveShadow castShadow>
-          <cylinderGeometry args={[1.4, 1.8, 0.4, 8]} />
-          <meshLambertMaterial color="#8B4513" />
-        </mesh>
-        
-        {/* Podium top platform */}
-        <mesh position={[0, 0.9, 0]} receiveShadow castShadow>
-          <cylinderGeometry args={[1.0, 1.4, 0.3, 6]} />
-          <meshLambertMaterial color="#A0522D" />
-        </mesh>
+        <primitive object={scene} />
         
         {/* Crystal/upgrade indicator on top */}
         <mesh position={[0, 1.4, 0]} castShadow>
@@ -132,17 +114,6 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
             transparent
             opacity={isUnlocked ? 0.9 : 0.5}
           />
-        </mesh>
-        
-        {/* Decorative rings around the base */}
-        <mesh position={[0, 0.3, 0]}>
-          <torusGeometry args={[2.0, 0.08, 8, 16]} />
-          <meshBasicMaterial color="#DEB887" />
-        </mesh>
-        
-        <mesh position={[0, 0.7, 0]}>
-          <torusGeometry args={[1.6, 0.06, 8, 16]} />
-          <meshBasicMaterial color="#DEB887" />
         </mesh>
       </group>
     );
