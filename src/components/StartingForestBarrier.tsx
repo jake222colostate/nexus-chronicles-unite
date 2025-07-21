@@ -75,7 +75,7 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
           key={treeId}
           position={randomOffset}
           rotation={randomRotation}
-          scale={scale * 3} // Much larger trees: 2.4x to 4.2x scale
+          scale={scale * 12} // 4x larger than current: now 9.6x to 16.8x original scale
         />
       );
     }
