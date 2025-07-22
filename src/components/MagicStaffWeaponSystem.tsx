@@ -58,7 +58,7 @@ class StaffModelCache {
     const url = STAFF_MODELS[tier];
 
     try {
-      // console.log(`StaffModelCache: Loading ${tier} staff from ${url}`);
+      console.log(`StaffModelCache: Loading ${tier} staff from ${url}`);
       
       // Use GLTFLoader with correct import
       const loader = new GLTFLoader();
@@ -69,7 +69,7 @@ class StaffModelCache {
       if (gltf?.scene) {
         this.optimizeStaffModel(gltf.scene);
         this.cachedModels.set(tier, gltf.scene);
-        // console.log(`StaffModelCache: Successfully cached ${tier} staff`);
+        console.log(`StaffModelCache: Successfully cached ${tier} staff`);
         return gltf.scene;
       } else {
         throw new Error('No scene found in GLB file');
@@ -110,7 +110,7 @@ class StaffModelCache {
   }
 
   private createFallbackStaff(tier: keyof typeof STAFF_MODELS): THREE.Object3D {
-    // console.log(`StaffModelCache: Creating fallback ${tier} staff geometry`);
+    console.log(`StaffModelCache: Creating fallback ${tier} staff geometry`);
     const group = new THREE.Group();
     
     // Different fallback designs based on tier
@@ -151,16 +151,16 @@ class StaffModelCache {
   clearCache(): void {
     this.cachedModels.clear();
     this.loadingPromises.clear();
-    // console.log('StaffModelCache: Cache cleared');
+    console.log('StaffModelCache: Cache cleared');
   }
 
   async preloadAllStaffs(): Promise<void> {
-    // console.log('StaffModelCache: Preloading all staff models...');
+    console.log('StaffModelCache: Preloading all staff models...');
     const loadPromises = Object.keys(STAFF_MODELS).map(tier => 
       this.loadModel(tier as keyof typeof STAFF_MODELS)
     );
     await Promise.allSettled(loadPromises);
-    // console.log('StaffModelCache: All staff models preloaded');
+    console.log('StaffModelCache: All staff models preloaded');
   }
 }
 
@@ -212,17 +212,17 @@ export const MagicStaffWeaponSystem: React.FC<MagicStaffWeaponSystemProps> = ({
     const handleClick = () => {
       // Allow upgrade pedestals to receive their click events by not
       // stopping propagation or preventing default behaviour.
-      // console.log('MagicStaffWeaponSystem: Canvas clicked - manual fire triggered');
+      console.log('MagicStaffWeaponSystem: Canvas clicked - manual fire triggered');
       projectileSystemRef.current?.manualFire();
     };
     
     // Get the canvas element from the WebGL renderer
     const canvas = gl.domElement;
     if (canvas) {
-      // console.log('MagicStaffWeaponSystem: Attaching click listener to canvas');
+      console.log('MagicStaffWeaponSystem: Attaching click listener to canvas');
       canvas.addEventListener('click', handleClick);
       return () => {
-        // console.log('MagicStaffWeaponSystem: Removing click listener from canvas');
+        console.log('MagicStaffWeaponSystem: Removing click listener from canvas');
         canvas.removeEventListener('click', handleClick);
       };
     } else {

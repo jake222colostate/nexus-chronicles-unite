@@ -111,40 +111,31 @@ export const useFantasy3DUpgradeWorld = ({
     Array.from({ length: 10 }).map((_, i) => createUpgrade(i))
   );
 
-  // Throttled upgrade extension to prevent excessive CPU usage
+  // Extend the upgrade list as the player moves forward
   useEffect(() => {
-    const throttledUpdate = () => {
-      setUpgrades(prev => {
-        const last = prev[prev.length - 1];
-        const distanceAhead = Math.abs(last.position[2] - cameraPosition.z);
-        if (distanceAhead < RENDER_DISTANCE) {
-          const next: UpgradeData[] = [];
-          let index = prev.length;
-          for (let i = 0; i < 3; i++) { // Reduced from 5 to 3 for performance
-            next.push(createUpgrade(index++));
-          }
-          return [...prev, ...next];
+    setUpgrades(prev => {
+      const last = prev[prev.length - 1];
+      const distanceAhead = Math.abs(last.position[2] - cameraPosition.z);
+      if (distanceAhead < RENDER_DISTANCE) {
+        const next: UpgradeData[] = [];
+        let index = prev.length;
+        for (let i = 0; i < 5; i++) {
+          next.push(createUpgrade(index++));
         }
-        return prev;
-      });
-    };
+        return [...prev, ...next];
+      }
+      return prev;
+    });
+  }, [cameraPosition.z]);
 
-    const timeoutId = setTimeout(throttledUpdate, 500); // Throttle updates
-    return () => clearTimeout(timeoutId);
-  }, [Math.floor(cameraPosition.z / 50), RENDER_DISTANCE]); // Throttled to reduce updates
-
-  // Throttled unlock status updates to prevent infinite loops
+  // Update unlock status when new upgrades are purchased
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setUpgrades(prev =>
-        prev.map(u => ({
-          ...u,
-          unlocked: u.id === 0 || maxUnlockedUpgrade >= u.id - 1
-        }))
-      );
-    }, 100); // Small delay to prevent rapid updates
-    
-    return () => clearTimeout(timeoutId);
+    setUpgrades(prev =>
+      prev.map(u => ({
+        ...u,
+        unlocked: u.id === 0 || maxUnlockedUpgrade >= u.id - 1
+      }))
+    );
   }, [maxUnlockedUpgrade]);
 
   // Update refs when gameState changes
@@ -165,13 +156,13 @@ export const useFantasy3DUpgradeWorld = ({
   }, [onPlayerPositionUpdate]);
 
   const handleUpgradeClick = useCallback((upgrade: any) => {
-    // console.log(`Clicked upgrade: ${upgrade.name}`);
+    console.log(`Clicked upgrade: ${upgrade.name}`);
     
     const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-    // console.log(`Distance to ${upgrade.name}: ${distance.toFixed(2)}`);
+    console.log(`Distance to ${upgrade.name}: ${distance.toFixed(2)}`);
     
     if (distance > 15) {
-      // console.log("Move closer to interact with this upgrade!");
+      console.log("Move closer to interact with this upgrade!");
       return;
     }
     
@@ -182,24 +173,24 @@ export const useFantasy3DUpgradeWorld = ({
     // Create unique purchase identifier
     const purchaseId = `${upgrade.id}-${Date.now()}`;
     
-    // console.log(`Purchase attempt for ${upgrade.name} with ID: ${purchaseId}`);
+    console.log(`Purchase attempt for ${upgrade.name} with ID: ${purchaseId}`);
     
     // STRICT: Only allow one purchase at a time globally
     if (activePurchaseRef.current !== null) {
-      // console.log(`Purchase blocked - another purchase active: ${activePurchaseRef.current}`);
+      console.log(`Purchase blocked - another purchase active: ${activePurchaseRef.current}`);
       return;
     }
     
     // Check if already purchased
     if (purchasedUpgrades.has(upgrade.id)) {
-      // console.log(`Purchase blocked - upgrade ${upgrade.id} already owned`);
+      console.log(`Purchase blocked - upgrade ${upgrade.id} already owned`);
       setSelectedUpgrade(null);
       return;
     }
     
     // Check mana
     if (currentManaRef.current < upgrade.cost) {
-      // console.log(`Purchase blocked - insufficient mana: ${currentManaRef.current} < ${upgrade.cost}`);
+      console.log(`Purchase blocked - insufficient mana: ${currentManaRef.current} < ${upgrade.cost}`);
       setShowInsufficientMana(true);
       setTimeout(() => setShowInsufficientMana(false), 2000);
       return;
@@ -207,7 +198,7 @@ export const useFantasy3DUpgradeWorld = ({
     
     // Lock the purchase system
     activePurchaseRef.current = purchaseId;
-    // console.log(`Purchase locked with ID: ${purchaseId}`);
+    console.log(`Purchase locked with ID: ${purchaseId}`);
     
     // Clear any existing timeout
     if (purchaseTimeoutRef.current) {
@@ -230,8 +221,8 @@ export const useFantasy3DUpgradeWorld = ({
       globalGameState.spendMana(upgrade.cost);
       globalGameState.setManaPerSecond(totalManaPerSecondRef.current);
       
-      // console.log(`SUCCESS: Purchased ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
-      // console.log(`New mana: ${currentManaRef.current}, New mana/sec: ${totalManaPerSecondRef.current}`);
+      console.log(`SUCCESS: Purchased ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
+      console.log(`New mana: ${currentManaRef.current}, New mana/sec: ${totalManaPerSecondRef.current}`);
       
     } catch (error) {
       console.error(`Purchase failed for ${upgrade.name}:`, error);
@@ -239,13 +230,13 @@ export const useFantasy3DUpgradeWorld = ({
       // Release the lock after a delay to prevent rapid clicking
       purchaseTimeoutRef.current = setTimeout(() => {
         activePurchaseRef.current = null;
-        // console.log(`Purchase lock released for ID: ${purchaseId}`);
+        console.log(`Purchase lock released for ID: ${purchaseId}`);
       }, 1000); // 1 second cooldown
     }
   }, [purchasedUpgrades]);
 
   const handleTierProgression = useCallback(() => {
-    // console.log("Tier progression triggered!");
+    console.log("Tier progression triggered!");
     // Add tier progression logic here
   }, []);
 

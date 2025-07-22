@@ -1,82 +1,49 @@
 import React from 'react';
 import { Vector3 } from 'three';
-import { useGLTF } from '@react-three/drei';
-import { assetUrl } from '@/lib/utils';
-
-// Preload the ancient tree models
-useGLTF.preload(assetUrl('assets/environment/AncientTree.glb'));
 
 interface StartingForestBarrierProps {
   playerPosition: Vector3;
 }
 
-// Ancient Tree Model Component
-const AncientTreeModel: React.FC<{ position: [number, number, number]; rotation: [number, number, number]; scale: number }> = ({ 
-  position, 
-  rotation, 
-  scale 
-}) => {
-  try {
-    const { scene } = useGLTF(assetUrl('assets/environment/AncientTree.glb'));
-    return (
-      <primitive 
-        object={scene.clone()} 
-        position={position}
-        rotation={rotation}
-        scale={[scale, scale, scale]}
-        castShadow 
-        receiveShadow 
-      />
-    );
-  } catch (error) {
-    console.warn('Failed to load AncientTree.glb, using fallback:', error);
-    // Fallback geometry
-    return (
-      <group position={position} rotation={rotation}>
-        <mesh position={[0, 4, 0]} castShadow>
-          <cylinderGeometry args={[0.3, 0.4, 8]} />
-          <meshStandardMaterial color="#8B4513" />
-        </mesh>
-        <mesh position={[0, 7, 0]} castShadow>
-          <sphereGeometry args={[3]} />
-          <meshStandardMaterial color="#228B22" />
-        </mesh>
-      </group>
-    );
-  }
-};
-
 export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
-  playerPosition
+  playerPosition // Fixed HMR cache issue
 }) => {
-  // Only render when player is near spawn
-  if (Math.abs(playerPosition.z) > 100) return null;
+  // Only render if player is near starting position
+  if (Math.abs(playerPosition.z) > 50) return null;
 
   const trees = [];
   
-  // Create dense forest barrier BEHIND character (positive Z values - behind starting point)  
-  for (let x = -40; x <= 40; x += 4) {
-    for (let z = 30; z <= 75; z += 6) { // POSITIVE Z: behind character, starting well behind spawn at Z=20
+  // Create dense forest well behind first path tile (positive Z values - behind player)
+  for (let x = -30; x <= 30; x += 3) {
+    for (let z = 8; z <= 50; z += 4) { // Starts at Z=8, behind first path tile
       const treeId = `barrier-tree-${x}-${z}`;
-      const scale = 0.8 + Math.random() * 0.6; // Random scale 0.8-1.4
-      const randomOffset: [number, number, number] = [
-        x + (Math.random() - 0.5) * 3,
-        0,
-        z + (Math.random() - 0.5) * 3
-      ];
-      const randomRotation: [number, number, number] = [
-        0,
-        Math.random() * Math.PI * 2,
-        0
-      ];
+      const height = 8 + Math.random() * 4; // Random height 8-12
+      const width = 2 + Math.random() * 1; // Random width 2-3
       
       trees.push(
-        <AncientTreeModel
-          key={treeId}
-          position={randomOffset}
-          rotation={randomRotation}
-          scale={scale * 12} // 4x larger than current: now 9.6x to 16.8x original scale
-        />
+        <group key={treeId} position={[x + (Math.random() - 0.5) * 2, 0, z + (Math.random() - 0.5) * 2]}>
+          {/* Tree trunk */}
+          <mesh position={[0, height / 2, 0]} castShadow>
+            <cylinderGeometry args={[width * 0.2, width * 0.3, height]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+          
+          {/* Tree foliage - multiple layers for density */}
+          <mesh position={[0, height * 0.8, 0]} castShadow>
+            <sphereGeometry args={[width * 1.2]} />
+            <meshStandardMaterial color="#228B22" />
+          </mesh>
+          
+          <mesh position={[0, height * 0.9, 0]} castShadow>
+            <sphereGeometry args={[width * 0.9]} />
+            <meshStandardMaterial color="#32CD32" />
+          </mesh>
+          
+          <mesh position={[0, height, 0]} castShadow>
+            <sphereGeometry args={[width * 0.6]} />
+            <meshStandardMaterial color="#228B22" />
+          </mesh>
+        </group>
       );
     }
   }
@@ -85,25 +52,25 @@ export const StartingForestBarrier: React.FC<StartingForestBarrierProps> = ({
     <group name="starting-forest-barrier">
       {trees}
       
-      {/* Add undergrowth bushes behind character */}
+      {/* Add some undergrowth bushes */}
       {Array.from({ length: 20 }, (_, i) => {
-        const x = -35 + Math.random() * 70;
-        const z = 35 + Math.random() * 35; // POSITIVE Z: behind character (35 to 70)
+        const x = -25 + Math.random() * 50;
+        const z = 10 + Math.random() * 35; // Changed to positive Z (behind player)
         return (
           <mesh key={`bush-${i}`} position={[x, 0.5, z]} castShadow>
-            <sphereGeometry args={[1 + Math.random() * 0.8]} />
+            <sphereGeometry args={[1 + Math.random() * 0.5]} />
             <meshStandardMaterial color="#006400" />
           </mesh>
         );
       })}
       
-      {/* Visual wall behind character */}
-      <mesh position={[0, 8, 75]} rotation={[0, 0, 0]}>
-        <planeGeometry args={[100, 16]} />
+      {/* Dense visual wall effect */}
+      <mesh position={[0, 6, 50]} rotation={[0, 0, 0]}> {/* Changed to positive Z */}
+        <planeGeometry args={[80, 12]} />
         <meshStandardMaterial 
-          color="#0d2818" 
+          color="#1a4d1a" 
           transparent 
-          opacity={0.9}
+          opacity={0.8}
           side={2} // Double-sided
         />
       </mesh>

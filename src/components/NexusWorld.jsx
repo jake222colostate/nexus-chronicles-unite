@@ -7,7 +7,9 @@ const Scene = () => {
   const { scene: crystal } = useGLTF('/models/crystal_obelisk.glb');
   const { scene: goldVendor } = useGLTF('/models/vendor_gold.glb');
   const { scene: gemVendor } = useGLTF('/models/vendor_gems.glb');
+  const { scene: tree } = useGLTF('/models/tree.glb');
   const { scene: fencePost } = useGLTF('/models/fence_post.glb');
+  const { scene: pathTile } = useGLTF('/models/path_tile.glb');
 
   const crystalRef = useRef();
 
@@ -36,17 +38,15 @@ const Scene = () => {
         <meshStandardMaterial color="#4caf50" />
       </mesh>
 
-      {/* Path - simple polygon walkway */}
+      {/* Path */}
       {Array.from({ length: 6 }).map((_, i) => (
-        <mesh
-          key={`path-${i}`}
-          position={[0, 0.01, 3 - i]}
+        <primitive
+          key={i}
+          object={pathTile.clone()}
+          position={[0, 0, 3 - i]}
           rotation={[-Math.PI / 2, 0, 0]}
-          receiveShadow
-        >
-          <planeGeometry args={[2.4, 2.4, 2, 2]} />
-          <meshStandardMaterial color="#c2b280" />
-        </mesh>
+          scale={1.2}
+        />
       ))}
 
       {/* Crystal */}
@@ -61,18 +61,9 @@ const Scene = () => {
       <primitive object={goldVendor.clone()} position={[-3, 0, 2]} scale={1.2} />
       <primitive object={gemVendor.clone()} position={[3, 0, 2]} scale={1.2} />
 
-      {/* Trees - polygon models */}
+      {/* Trees */}
       {treePositions.map((pos, idx) => (
-        <group key={`tree-${idx}`} position={pos} scale={2}>
-          <mesh castShadow receiveShadow>
-            <cylinderGeometry args={[0.1, 0.2, 1.5, 6]} />
-            <meshStandardMaterial color="#8b5a2b" />
-          </mesh>
-          <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
-            <coneGeometry args={[0.9, 2, 8]} />
-            <meshStandardMaterial color="#228b22" />
-          </mesh>
-        </group>
+        <primitive key={idx} object={tree.clone()} position={pos} scale={2} />
       ))}
 
       {/* Fence Posts */}

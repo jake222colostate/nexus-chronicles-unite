@@ -130,7 +130,7 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
       }
     });
     
-    // console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments moved to ±15 units`);
+    console.log(`ContinuousMountainSystem: Generated ${segments.length} mountain segments moved to ±15 units`);
     return segments;
   }, [chunks, chunkSize]);
 

@@ -16,7 +16,7 @@ const NexusWorld: React.FC<NexusWorldProps> = ({
   const navigate = useNavigate();
 
   const handleUpgrade = (upgradeType: string) => {
-    // console.log(`Purchasing upgrade: ${upgradeType}`);
+    console.log(`Purchasing upgrade: ${upgradeType}`);
     onUpgrade(upgradeType);
   };
 

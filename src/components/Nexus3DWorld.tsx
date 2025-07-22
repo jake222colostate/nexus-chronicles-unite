@@ -44,27 +44,27 @@ const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
     ...globalGameState // Global state overrides local state
   };
 
-  // console.log('Nexus3DWorld: Initializing with gameState:', safeGameState);
+  console.log('Nexus3DWorld: Initializing with gameState:', safeGameState);
 
   // Vendor interaction handlers
   const handleVendorInteraction = (vendorType: string) => {
     if (vendorType === 'converter') {
       setActiveShop('converter');
     } else {
-      // console.log(`Opening ${vendorType} shop`);
+      console.log(`Opening ${vendorType} shop`);
       setActiveShop(vendorType);
     }
   };
 
   // Sandbox grid interaction
   const handleGridTileClick = (x: number, z: number) => {
-    // console.log(`Clicked grid tile at ${x}, ${z}`);
+    console.log(`Clicked grid tile at ${x}, ${z}`);
     // TODO: Implement upgrade placement logic
   };
 
   // Purchase handler with global state integration
   const handlePurchase = (item: any) => {
-    // console.log(`Purchasing ${item.name} for ${item.cost} ${item.currency}`);
+    console.log(`Purchasing ${item.name} for ${item.cost} ${item.currency}`);
     
     // Use global state store methods for purchases
     let success = false;
@@ -85,11 +85,11 @@ const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
       onUpgrade(item.id);
       setActiveShop(null);
     } else {
-      // console.log('Insufficient resources!');
+      console.log('Insufficient resources!');
     }
   };
 
-  // console.log('Nexus3DWorld: About to render Canvas');
+  console.log('Nexus3DWorld: About to render Canvas');
 
   try {
     return (
@@ -104,7 +104,7 @@ const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
             powerPreference: "high-performance"
           }}
           onCreated={({ gl }) => {
-            // console.log('Canvas created successfully');
+            console.log('Canvas created successfully');
             gl.setClearColor('#87CEEB'); // Bright sky blue
           }}
           onError={(error) => {

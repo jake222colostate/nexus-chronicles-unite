@@ -91,7 +91,7 @@ export const OptimizedProjectileSystem = forwardRef<
         groupRef.current.add(mesh);
       }
       meshPoolInitialized.current = true;
-      // console.log('OptimizedProjectileSystem: Mesh pool initialized');
+      console.log('OptimizedProjectileSystem: Mesh pool initialized');
     }
   }, [projectileGeometry, projectileMaterial]);
 
@@ -107,18 +107,18 @@ export const OptimizedProjectileSystem = forwardRef<
   const fireProjectile = (staffPos: THREE.Vector3, targets: THREE.Vector3[] = []) => {
     // FIXED: Check if mesh pool is initialized before firing
     if (!meshPoolInitialized.current || meshPoolRef.current.length === 0) {
-      // console.log('OptimizedProjectileSystem: Mesh pool not ready, skipping fire');
+      console.log('OptimizedProjectileSystem: Mesh pool not ready, skipping fire');
       return;
     }
 
     // FIXED: Comprehensive validation to prevent all crashes
     if (!isValidVector3(staffPos)) {
-      // console.log('OptimizedProjectileSystem: Invalid staff position, skipping fire');
+      console.log('OptimizedProjectileSystem: Invalid staff position, skipping fire');
       return;
     }
 
     if (!Array.isArray(targets) || targets.length === 0) {
-      // console.log('OptimizedProjectileSystem: No valid targets, skipping fire');
+      console.log('OptimizedProjectileSystem: No valid targets, skipping fire');
       return;
     }
 
@@ -126,7 +126,7 @@ export const OptimizedProjectileSystem = forwardRef<
     const validTargets = targets.filter(target => isValidVector3(target));
 
     if (validTargets.length === 0) {
-      // console.log('OptimizedProjectileSystem: No valid targets after filtering, skipping fire');
+      console.log('OptimizedProjectileSystem: No valid targets after filtering, skipping fire');
       return;
     }
 
@@ -148,7 +148,7 @@ export const OptimizedProjectileSystem = forwardRef<
         }
       });
     } catch (error) {
-      // console.log('OptimizedProjectileSystem: Error calculating target distance, using first target');
+      console.log('OptimizedProjectileSystem: Error calculating target distance, using first target');
       closestIndex = 0;
     }
 
@@ -157,7 +157,7 @@ export const OptimizedProjectileSystem = forwardRef<
 
     // FIXED: Additional safety check for mesh existence
     if (!mesh) {
-      // console.log('OptimizedProjectileSystem: Mesh not found at index', projectileIndex);
+      console.log('OptimizedProjectileSystem: Mesh not found at index', projectileIndex);
       return;
     }
 
@@ -191,9 +191,9 @@ export const OptimizedProjectileSystem = forwardRef<
       material.color.setHex(0x00ffff);
       material.emissive.setHex(0x00ffff);
       
-      // console.log('OptimizedProjectileSystem: Projectile fired successfully from staff tip');
+      console.log('OptimizedProjectileSystem: Projectile fired successfully from staff tip');
     } catch (error) {
-      // console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating');
+      console.log('OptimizedProjectileSystem: Error setting up projectile, deactivating');
       projectile.active = false;
       mesh.visible = false;
     }
@@ -203,7 +203,7 @@ export const OptimizedProjectileSystem = forwardRef<
   const manualFire = () => {
     if (isValidVector3(staffTipPosition) && Array.isArray(targetPositions) && targetPositions.length > 0) {
       fireProjectile(staffTipPosition, targetPositions);
-      // console.log('OptimizedProjectileSystem: Manual fire triggered from staff tip');
+      console.log('OptimizedProjectileSystem: Manual fire triggered from staff tip');
     }
   };
 
@@ -229,9 +229,9 @@ export const OptimizedProjectileSystem = forwardRef<
       try {
         fireProjectile(staffTipPosition, targetPositions);
         lastAutoFireTimeRef.current = now;
-        // console.log('OptimizedProjectileSystem: Auto-fire triggered from staff tip');
+        console.log('OptimizedProjectileSystem: Auto-fire triggered from staff tip');
       } catch (error) {
-        // console.log('OptimizedProjectileSystem: Auto-fire failed, continuing render loop');
+        console.log('OptimizedProjectileSystem: Auto-fire failed, continuing render loop');
       }
     }
 
@@ -271,7 +271,7 @@ export const OptimizedProjectileSystem = forwardRef<
                 continue;
               }
             } catch (error) {
-              // console.log('OptimizedProjectileSystem: Collision check failed, deactivating projectile');
+              console.log('OptimizedProjectileSystem: Collision check failed, deactivating projectile');
               projectile.active = false;
               mesh.visible = false;
               continue;
@@ -295,7 +295,7 @@ export const OptimizedProjectileSystem = forwardRef<
         }
       } catch (error) {
         // If any projectile update fails, deactivate it and continue
-        // console.log('OptimizedProjectileSystem: Projectile update failed, deactivating');
+        console.log('OptimizedProjectileSystem: Projectile update failed, deactivating');
         projectile.active = false;
         mesh.visible = false;
       }

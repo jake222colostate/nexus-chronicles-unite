@@ -50,7 +50,7 @@ export const useGameLoopManager = ({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isEditorActive]); // Removed setGameState from dependencies
+  }, [setGameState, isEditorActive]);
 
   // Enhanced production calculation with cross-realm upgrades
   useEffect(() => {
@@ -114,7 +114,7 @@ export const useGameLoopManager = ({
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
       manaPerKill,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, crossRealmUpgradesWithLevels, isEditorActive]); // Fixed dependencies
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels, isEditorActive]);
 
   return { buffSystem };
 };

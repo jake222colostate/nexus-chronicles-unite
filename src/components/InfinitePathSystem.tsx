@@ -4,9 +4,33 @@ import { Vector3, Box3 } from 'three';
 import { useGLTF } from '@react-three/drei';
 import { assetUrl } from '@/lib/utils';
 
-// GLB assets disabled - Path Model Component returns null
+// Preload the path model immediately
+useGLTF.preload(assetUrl('assets/Path.glb'));
+
+// Path Model Component with direct useGLTF
 const PathModel: React.FC<{ onLoad?: (scene: any) => void }> = ({ onLoad }) => {
-  return null;
+  try {
+    const { scene } = useGLTF(assetUrl('assets/Path.glb'));
+    
+    // Call onLoad when model is successfully loaded
+    React.useEffect(() => {
+      if (scene && onLoad) {
+        console.log('✅ Path.glb loaded successfully');
+        onLoad(scene);
+      }
+    }, [scene, onLoad]);
+
+    return <primitive object={scene.clone()} castShadow receiveShadow />;
+  } catch (error) {
+    console.error('❌ Failed to load Path.glb:', error);
+    // Fallback geometry if model fails to load
+    return (
+      <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4, 0.2, 10]} />
+        <meshStandardMaterial color="#D2B48C" />
+      </mesh>
+    );
+  }
 };
 
 interface PathSegmentProps {
@@ -28,7 +52,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
     -0.1, // Grounded at Y = -0.1 (slightly below ground)
-    -index * pathLength // NEGATIVE Z for forward spawning (in front of character)
+    -index * pathLength // NEGATIVE Z for forward movement (to match upgrade system)
   ], [index, pathLength]);
 
   // Random horizontal rotation (90 degree range: -45 to +45 degrees)
@@ -40,17 +64,15 @@ const PathSegment: React.FC<PathSegmentProps> = ({
 
   // Calculate bounding box when model loads
   const handleModelLoad = (scene: any) => {
-    // console.log(`🛤️ Path segment ${index} loaded`);
+    console.log(`🛤️ Path segment ${index} loaded`);
     if (scene && onBoundingBoxCalculated && index === 0) {
       const box = new Box3().setFromObject(scene);
       onBoundingBoxCalculated(box);
-      /*
       console.log('📏 Path segment dimensions:', {
         width: (box.max.x - box.min.x).toFixed(2),
         height: (box.max.y - box.min.y).toFixed(2),
         length: (box.max.z - box.min.z).toFixed(2)
       });
-      */
     }
   };
 
@@ -92,7 +114,7 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     const modelLength = box.max.z - box.min.z;
     if (modelLength > 0 && modelLength !== actualPathLength) {
       setActualPathLength(modelLength);
-      // console.log(`📏 Auto-detected path length: ${modelLength.toFixed(2)} units`);
+      console.log(`📏 Auto-detected path length: ${modelLength.toFixed(2)} units`);
     }
   };
 
@@ -101,10 +123,10 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     const playerChunkIndex = Math.floor(-playerPosition.z / actualPathLength); // Negative Z for forward
     const chunks: { index: number; distance: number }[] = [];
 
-    // Generate chunks in front of player (negative Z direction)
+    // Generate chunks to match upgrade system orientation (negative Z forward)
     for (let i = -chunksBehind; i <= chunksAhead; i++) {
       const chunkIndex = playerChunkIndex + i;
-      const chunkZ = -chunkIndex * actualPathLength; // NEGATIVE Z for forward spawning
+      const chunkZ = -chunkIndex * actualPathLength; // Negative Z for positioning
       const distance = Math.abs(chunkZ - playerPosition.z);
       
       // Only render chunks within render distance
@@ -127,7 +149,7 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     }
   });
 
-  // console.log(`🛤️ Path System Active: ${visibleChunks.length} segments, player Z: ${playerPosition.z.toFixed(1)}`);
+  console.log(`🛤️ Path System Active: ${visibleChunks.length} segments, player Z: ${playerPosition.z.toFixed(1)}`);
 
   return (
     <group name="infinite-path-system">

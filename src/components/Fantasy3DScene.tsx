@@ -11,10 +11,6 @@ import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { LinearForestCorridor } from './LinearForestCorridor';
 import { InfinitePathSystem } from './InfinitePathSystem';
 import { StartingForestBarrier } from './StartingForestBarrier';
-import { PerformanceOptimizer } from './PerformanceOptimizer';
-import { Performance60FPSManager } from './Performance60FPSManager';
-import { PerformanceMonitor } from './PerformanceMonitor';
-import { CPUUsageOptimizer } from './CPUUsageOptimizer';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -85,11 +81,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         <color attach="background" args={['#2d1b4e']} />
 
-        {/* CPU and performance optimization */}
-        <CPUUsageOptimizer enabled={true} />
-        <Performance60FPSManager targetFPS={60} adaptiveQuality={true} />
-        <PerformanceMonitor targetFPS={60} />
-        <PerformanceOptimizer />
         <CasualFog />
 
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
@@ -105,7 +96,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           visible={true}
           enemyPositions={enemyPositions}
           onHitEnemy={(index, damage) => {
-            // console.log(`Hit enemy ${index} for ${damage} damage`);
+            console.log(`Hit enemy ${index} for ${damage} damage`);
             onEnemyKilled?.();
           }}
           damage={weaponDamage}
@@ -117,20 +108,20 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         {/* Infinite Path System - The walking surface */}
         <InfinitePathSystem
           playerPosition={safeCameraPosition}
-          chunksAhead={6}            // Reduced for 60 FPS
+          chunksAhead={8}
           chunksBehind={2}
-          renderDistance={20}        // Further reduced for performance
+          renderDistance={renderDistance}
         />
 
-        {/* Re-enable Linear Forest Corridor but only ahead of player */}
+        {/* Linear Forest Corridor along valley path */}
         <LinearForestCorridor playerPosition={safeCameraPosition} />
 
         <FogBasedChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={20}  // Further reduced for 60 FPS
-          fogNear={3}          // Even closer fog for performance
-          fogFar={18}          // Tighter fog range
+          renderDistance={renderDistance}
+          fogNear={30}
+          fogFar={120}
         >
           {(chunks: FogChunkData[], fogDistance: number) => (
             <OptimizedFantasyEnvironment
@@ -142,7 +133,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
               onEnemyKilled={onEnemyKilled}
               weaponDamage={weaponDamage}
               upgradesPurchased={upgradesPurchased}
-              fogDistance={18}           // Optimized for 60 FPS
+              fogDistance={fogDistance}
             />
           )}
         </FogBasedChunkSystem>

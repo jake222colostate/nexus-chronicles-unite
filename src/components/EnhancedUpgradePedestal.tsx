@@ -76,7 +76,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   // Enhanced click handler with better event handling
   const handleClick = (event: any) => {
     event.stopPropagation();
-    // console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id);
+    console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id);
     if (isUnlocked) {
       onInteract();
     }
@@ -129,7 +129,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         </group>
       );
     } catch (error) {
-      // Silently fallback to basic geometry if GLB fails (reduces console spam)
+      console.error('Error loading upgrade model:', error);
       // Fallback to basic geometry if GLB fails
       return (
         <group

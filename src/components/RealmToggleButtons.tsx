@@ -16,7 +16,7 @@ export const RealmToggleButtons: React.FC<RealmToggleButtonsProps> = ({
 }) => {
   const handleRealmSwitch = (realm: 'fantasy' | 'scifi') => {
     if (realm !== currentRealm && !isTransitioning) {
-      // console.log(`Switching to ${realm} realm`);
+      console.log(`Switching to ${realm} realm`);
       onRealmChange(realm);
     }
   };

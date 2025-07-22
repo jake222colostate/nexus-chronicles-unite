@@ -31,7 +31,7 @@ export const InfiniteGroundSystem: React.FC<InfiniteGroundSystemProps> = ({
       });
     });
     
-    // console.log(`InfiniteGroundSystem: Generated ${instances.length} ground chunks for infinite terrain`);
+    console.log(`InfiniteGroundSystem: Generated ${instances.length} ground chunks for infinite terrain`);
     return instances;
   }, [chunks, chunkSize]);
 

@@ -68,7 +68,7 @@ export const useMovementControls = () => {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
 
-    // console.log('Movement controls initialized');
+    console.log('Movement controls initialized');
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);

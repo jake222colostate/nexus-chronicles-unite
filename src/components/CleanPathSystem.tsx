@@ -38,7 +38,7 @@ export const CleanPathSystem: React.FC<CleanPathSystemProps> = ({
       });
     });
 
-    // console.log(`CleanPathSystem: Generated ${elements.length} wide straight path segments`);
+    console.log(`CleanPathSystem: Generated ${elements.length} wide straight path segments`);
     return elements;
   }, [chunks, chunkSize]);
 

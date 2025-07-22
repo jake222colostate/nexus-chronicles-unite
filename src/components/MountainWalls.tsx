@@ -1,36 +1,17 @@
 
 import React, { useRef, useEffect } from 'react';
-import { Group, Mesh, ConeGeometry, MeshStandardMaterial, Mesh as ThreeMesh } from 'three';
+import { useGLTF } from '@react-three/drei';
+import { Group, Mesh } from 'three';
 import { useThree } from '@react-three/fiber';
+import { assetUrl } from '@/lib/utils';
 
 export const MountainWalls: React.FC = () => {
   const { scene } = useThree();
+  const { scene: mountainModel } = useGLTF(assetUrl('assets/mountain_low_poly.glb'));
   const mountainsRef = useRef<Group[]>([]);
 
   useEffect(() => {
-    const createMountain = (scale: number) => {
-      const group = new Group();
-      const main = new ThreeMesh(
-        new ConeGeometry(8 * scale, 12 * scale, 8),
-        new MeshStandardMaterial({ color: '#6B7280' })
-      );
-      const second = new ThreeMesh(
-        new ConeGeometry(6 * scale, 10 * scale, 6),
-        new MeshStandardMaterial({ color: '#4B5563' })
-      );
-      second.position.set(4 * scale, 0, 3 * scale);
-      const third = new ThreeMesh(
-        new ConeGeometry(5 * scale, 8 * scale, 6),
-        new MeshStandardMaterial({ color: '#374151' })
-      );
-      third.position.set(-3 * scale, 0, -2 * scale);
-      [main, second, third].forEach(m => {
-        m.castShadow = true;
-        m.receiveShadow = true;
-      });
-      group.add(main, second, third);
-      return group;
-    };
+    if (!mountainModel) return;
 
     // Clean up existing mountains
     mountainsRef.current.forEach(mountain => {
@@ -38,33 +19,65 @@ export const MountainWalls: React.FC = () => {
     });
     mountainsRef.current = [];
 
-    const clonesPerSide = 8;
-    const spacingZ = 15;
-    const startZ = 20;
+    const clonesPerSide = 8; // More mountains for better wall effect
+    const spacingZ = 15; // Spacing between mountains
+    const startZ = 20; // Start ahead of player
+    
+    console.log('MountainWalls: Creating mountain wall with', clonesPerSide, 'mountains per side');
 
     for (let i = 0; i < clonesPerSide; i++) {
       const z = startZ - (i * spacingZ);
 
-      const leftMountain = createMountain(3);
+      // Left side mountains (mirrored)
+      const leftMountain = mountainModel.clone() as Group;
       leftMountain.position.set(-25, 0, z);
-      leftMountain.scale.x *= -1;
+      leftMountain.scale.set(-3, 3, 3);
+      leftMountain.castShadow = true;
+      leftMountain.receiveShadow = true;
+      
+      // Apply materials for visibility
+      leftMountain.traverse((child) => {
+        if ((child as Mesh).isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+      
       scene.add(leftMountain);
       mountainsRef.current.push(leftMountain);
 
-      const rightMountain = createMountain(3);
+      // Right side mountains (normal)
+      const rightMountain = mountainModel.clone() as Group;
       rightMountain.position.set(25, 0, z);
+      rightMountain.scale.set(3, 3, 3);
+      rightMountain.castShadow = true;
+      rightMountain.receiveShadow = true;
+      
+      // Apply materials for visibility
+      rightMountain.traverse((child) => {
+        if ((child as Mesh).isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+      
       scene.add(rightMountain);
       mountainsRef.current.push(rightMountain);
     }
 
+    console.log('MountainWalls: Added', mountainsRef.current.length, 'mountains to scene');
+
+    // Cleanup function
     return () => {
       mountainsRef.current.forEach(mountain => {
         scene.remove(mountain);
       });
       mountainsRef.current = [];
     };
-  }, [scene]);
+  }, [mountainModel, scene]);
 
   return null;
 };
 
+// Preload the mountain model
+useGLTF.preload(assetUrl('assets/mountain_low_poly.glb'));

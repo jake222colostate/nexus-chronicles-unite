@@ -39,7 +39,7 @@ interface CannonPlatformSystemProps {
 const generateCannonPositions = (count: number, platformRadius: number = 6): [number, number, number][] => {
   const positions: [number, number, number][] = [];
   
-  // console.log(`Generating ${count} cannon positions with platform radius ${platformRadius}`);
+  console.log(`Generating ${count} cannon positions with platform radius ${platformRadius}`);
   
   if (count === 1) {
     // Single cannon in center
@@ -75,7 +75,7 @@ const generateCannonPositions = (count: number, platformRadius: number = 6): [nu
     }
   }
   
-  // console.log('Generated cannon positions:', positions);
+  console.log('Generated cannon positions:', positions);
   return positions.slice(0, count);
 };
 
@@ -97,7 +97,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
 
   // Initialize cannons based on count
   useEffect(() => {
-    // console.log(`CannonPlatformSystem: Setting up ${cannonCount} cannons`);
+    console.log(`CannonPlatformSystem: Setting up ${cannonCount} cannons`);
     const cannonPositions = generateCannonPositions(Math.min(cannonCount, 10));
     const newCannons: CannonData[] = [];
     
@@ -109,7 +109,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
         basePosition[1] + platformPosition.y,
         basePosition[2] + platformPosition.z
       ];
-      // console.log(`Cannon ${i} positioned at:`, adjustedPosition);
+      console.log(`Cannon ${i} positioned at:`, adjustedPosition);
       newCannons.push({
         id: i,
         position: adjustedPosition,
@@ -119,7 +119,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
       });
     }
     setCannons(newCannons);
-    // console.log('All cannons positioned:', newCannons.map(c => c.position));
+    console.log('All cannons positioned:', newCannons.map(c => c.position));
   }, [cannonCount, platformPosition.x, platformPosition.y, platformPosition.z]);
 
   // Spawn repair kits occasionally
@@ -277,7 +277,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
           if (newPos.distanceTo(target) < 1.2) {
             hit = true;
             createExplosion(target, 6); // Reduced particle count
-            // console.log('Cannon projectile hit meteor!');
+            console.log('Cannon projectile hit meteor!');
             break; // Exit early for performance
           }
         }
@@ -321,7 +321,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
           if (meteorPos.distanceTo(cannonPos) < 1.5) { // Removed health check - explode on any cannon
             // Create massive explosion at impact point
             createExplosion(cannonPos, 20);
-            // console.log(`Meteor exploded on cannon ${cannon.id}! Area damage explosion.`);
+            console.log(`Meteor exploded on cannon ${cannon.id}! Area damage explosion.`);
             
             // Area damage - damage all cannons within explosion radius
             setCannons(prevCannons => prevCannons.map(c => {
@@ -330,7 +330,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
               
               if (distance < 4.0 && c.health > 0) { // 4 unit damage radius
                 const damage = distance < 2.0 ? 40 : 20; // More damage closer to explosion
-                // console.log(`Explosion damaged cannon ${c.id} for ${damage} damage (distance: ${distance.toFixed(1)})`);
+                console.log(`Explosion damaged cannon ${c.id} for ${damage} damage (distance: ${distance.toFixed(1)})`);
                 return { ...c, health: Math.max(0, c.health - damage) };
               }
               return c;
@@ -351,7 +351,7 @@ export const CannonPlatformSystem: React.FC<CannonPlatformSystemProps> = ({
           if (targets[i].distanceTo(targets[j]) < 1.8) {
             createExplosion(targets[i], 5);
             createExplosion(targets[j], 5);
-            // console.log('Meteors collided!');
+            console.log('Meteors collided!');
             break; // Only one collision per frame
           }
         }

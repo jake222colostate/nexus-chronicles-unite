@@ -40,7 +40,7 @@ export const useCameraMovement = ({
       camera.updateProjectionMatrix();
     }
     
-    // console.log('Camera initialized at position:', camera.position);
+    console.log('Camera initialized at position:', camera.position);
   }, [camera]);
 
   useFrame((state, delta) => {
@@ -104,7 +104,7 @@ export const useCameraMovement = ({
     
     // Log movement for debugging
     if (isMoving) {
-      // console.log('Camera moving to:', targetPosition.current);
+      console.log('Camera moving to:', targetPosition.current);
     }
   });
 };

@@ -13,7 +13,7 @@ export const useMouseLookControls = () => {
         isMouseDown.current = true;
         lastMouse.current = { x: event.clientX, y: event.clientY };
         event.preventDefault();
-        // console.log('Mouse down detected');
+        console.log('Mouse down detected');
       }
     };
 
@@ -32,7 +32,7 @@ export const useMouseLookControls = () => {
 
     const handleMouseUp = () => {
       if (isMouseDown.current) {
-        // console.log('Mouse up detected');
+        console.log('Mouse up detected');
       }
       isMouseDown.current = false;
     };
@@ -41,7 +41,7 @@ export const useMouseLookControls = () => {
     const setupEventListeners = () => {
       const canvas = document.querySelector('canvas');
       if (canvas) {
-        // console.log('Canvas found, setting up mouse controls');
+        console.log('Canvas found, setting up mouse controls');
         canvas.addEventListener('mousedown', handleMouseDown);
         canvas.addEventListener('mousemove', handleMouseMove);
         canvas.addEventListener('mouseup', handleMouseUp);

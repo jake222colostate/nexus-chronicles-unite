@@ -42,7 +42,7 @@ export const EnhancedInfiniteGroundSystem: React.FC<EnhancedInfiniteGroundSystem
       });
     }
     
-    // console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} optimized ground tiles`);
+    console.log(`EnhancedInfiniteGroundSystem: Generated ${tiles.length} optimized ground tiles`);
     return tiles;
   }, [
     Math.floor(playerPosition.z / 25) * 25, // Reduced frequency

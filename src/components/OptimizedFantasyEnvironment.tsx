@@ -5,8 +5,7 @@ import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
 import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
-import { OptimizedEnemySystem } from './OptimizedEnemySystem';
-import { ProceduralMountainSystem } from './ProceduralMountainSystem'; // Fixed HMR cache issue
+import { SkeletonEnemySystem } from './SkeletonEnemySystem';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: FogChunkData[];
@@ -36,7 +35,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  // console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with forest and skeleton systems`);
+  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with forest and skeleton systems`);
 
   return (
     <Suspense fallback={null}>
@@ -49,14 +48,14 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         fogDistance={fogDistance}
       />
       
-      {/* Tree system enabled ahead of player */}
+      {/* Tree system positioned within valley bounds */}
       <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
       />
 
-      {/* Forest environment enabled ahead of player */}
+      {/* Forest environment with all assets */}
       <ForestEnvironmentSystem
         chunks={chunks}
         chunkSize={chunkSize}
@@ -64,15 +63,8 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         playerPosition={playerPosition}
       />
 
-      {/* Procedural mountain system for dramatic backdrop */}
-      <ProceduralMountainSystem
-        chunks={chunks}
-        playerPosition={playerPosition}
-        chunkSize={chunkSize}
-      />
-
-      {/* Optimized enemy system for 60 FPS */}
-      <OptimizedEnemySystem
+      {/* Skeleton enemy system */}
+      <SkeletonEnemySystem
         chunks={chunks}
         chunkSize={chunkSize}
         playerPosition={playerPosition}
@@ -80,7 +72,6 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         onEnemyKilled={onEnemyKilled}
         weaponDamage={weaponDamage}
         realm={realm}
-        maxEnemies={10}
       />
     </Suspense>
   );

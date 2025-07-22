@@ -68,7 +68,7 @@ export const MapEditorControls: React.FC = () => {
         realm: 'fantasy' as 'fantasy' | 'scifi'
       };
       addElement(newElement);
-      // console.log('Placed element:', newElement);
+      console.log('Placed element:', newElement);
     } else if (selectedTool === 'delete') {
       // Delete closest element with left click
       let closestElement: MapElement | null = null;
@@ -84,7 +84,7 @@ export const MapEditorControls: React.FC = () => {
 
       if (closestElement) {
         removeElement(closestElement.id);
-        // console.log('Deleted element:', closestElement.id);
+        console.log('Deleted element:', closestElement.id);
       }
     }
   };
@@ -121,10 +121,10 @@ export const MapEditorControls: React.FC = () => {
     if (closestElement) {
       if (selectedTool === 'delete') {
         removeElement(closestElement.id);
-        // console.log('Deleted element:', closestElement.id);
+        console.log('Deleted element:', closestElement.id);
       } else {
         setSelectedElement(closestElement.id);
-        // console.log('Selected element:', closestElement.id);
+        console.log('Selected element:', closestElement.id);
       }
     }
   };

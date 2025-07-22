@@ -136,7 +136,7 @@ export const createGameStateActions = (set: any, get: any): GameStateActions => 
       
       // Show offline progress message if significant time passed
       if (timeAwaySeconds > 60) {
-        // console.log(`Welcome back! You earned ${offlineMana} mana and ${offlineEnergy} energy while away.`);
+        console.log(`Welcome back! You earned ${offlineMana} mana and ${offlineEnergy} energy while away.`);
       }
     } else {
       set({ lastSaveTime: now });
