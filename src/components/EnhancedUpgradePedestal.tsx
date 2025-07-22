@@ -129,7 +129,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         </group>
       );
     } catch (error) {
-      console.error('Error loading upgrade model:', error);
+      // Silently fallback to basic geometry if GLB fails (reduces console spam)
       // Fallback to basic geometry if GLB fails
       return (
         <group

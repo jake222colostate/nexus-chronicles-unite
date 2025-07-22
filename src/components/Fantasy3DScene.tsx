@@ -12,6 +12,8 @@ import { LinearForestCorridor } from './LinearForestCorridor';
 import { InfinitePathSystem } from './InfinitePathSystem';
 import { StartingForestBarrier } from './StartingForestBarrier';
 import { PerformanceOptimizer } from './PerformanceOptimizer';
+import { Performance60FPSManager } from './Performance60FPSManager';
+import { PerformanceMonitor } from './PerformanceMonitor';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -82,7 +84,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         <color attach="background" args={['#2d1b4e']} />
 
-        {/* Performance optimization with heavy fog */}
+        {/* Advanced 60 FPS performance management */}
+        <Performance60FPSManager targetFPS={60} adaptiveQuality={true} />
+        <PerformanceMonitor targetFPS={60} />
         <PerformanceOptimizer />
         <CasualFog />
 
@@ -111,9 +115,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         {/* Infinite Path System - The walking surface */}
         <InfinitePathSystem
           playerPosition={safeCameraPosition}
-          chunksAhead={8}
+          chunksAhead={6}            // Reduced for 60 FPS
           chunksBehind={2}
-          renderDistance={30}        // Reduced from 150 for performance
+          renderDistance={20}        // Further reduced for performance
         />
 
         {/* Re-enable Linear Forest Corridor but only ahead of player */}
@@ -122,9 +126,9 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         <FogBasedChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={30}  // Reduced for performance
-          fogNear={5}          // Heavy fog starts close
-          fogFar={25}          // Heavy fog ends close
+          renderDistance={20}  // Further reduced for 60 FPS
+          fogNear={3}          // Even closer fog for performance
+          fogFar={18}          // Tighter fog range
         >
           {(chunks: FogChunkData[], fogDistance: number) => (
             <OptimizedFantasyEnvironment
@@ -136,7 +140,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
               onEnemyKilled={onEnemyKilled}
               weaponDamage={weaponDamage}
               upgradesPurchased={upgradesPurchased}
-              fogDistance={25}           // Reduced fog distance for performance
+              fogDistance={18}           // Optimized for 60 FPS
             />
           )}
         </FogBasedChunkSystem>

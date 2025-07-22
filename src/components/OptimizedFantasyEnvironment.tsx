@@ -5,7 +5,7 @@ import { Vector3 } from 'three';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
 import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
-import { SkeletonEnemySystem } from './SkeletonEnemySystem';
+import { OptimizedEnemySystem } from './OptimizedEnemySystem';
 import { ProceduralMountainSystem } from './ProceduralMountainSystem'; // Fixed HMR cache issue
 
 interface OptimizedFantasyEnvironmentProps {
@@ -71,8 +71,8 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         chunkSize={chunkSize}
       />
 
-      {/* Skeleton enemy system */}
-      <SkeletonEnemySystem
+      {/* Optimized enemy system for 60 FPS */}
+      <OptimizedEnemySystem
         chunks={chunks}
         chunkSize={chunkSize}
         playerPosition={playerPosition}
@@ -80,6 +80,7 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         onEnemyKilled={onEnemyKilled}
         weaponDamage={weaponDamage}
         realm={realm}
+        maxEnemies={10}
       />
     </Suspense>
   );
