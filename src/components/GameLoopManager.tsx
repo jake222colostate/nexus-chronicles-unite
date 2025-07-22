@@ -53,7 +53,6 @@ export const useGameLoopManager = ({
 
   // Enhanced production calculation with cross-realm upgrades
   useEffect(() => {
-    
     let manaRate = 0;
     let energyRate = 0;
     let manaPerKill = 5;
@@ -107,13 +106,25 @@ export const useGameLoopManager = ({
     const fantasyBonus = 1 + (energyRate * 0.01);
     const scifiBonus = 1 + (manaRate * 0.01);
 
-    setGameState(prev => ({
-      ...prev,
-      manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
-      energyPerSecond: energyRate * scifiBonus * globalMultiplier,
-      manaPerKill,
-    }));
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels]);
+    const newManaPerSecond = manaRate * fantasyBonus * globalMultiplier;
+    const newEnergyPerSecond = energyRate * scifiBonus * globalMultiplier;
+    
+    setGameState(prev => {
+      // Only update if values actually changed to prevent infinite loops
+      if (Math.abs(prev.manaPerSecond - newManaPerSecond) < 0.01 && 
+          Math.abs(prev.energyPerSecond - newEnergyPerSecond) < 0.01 && 
+          prev.manaPerKill === manaPerKill) {
+        return prev;
+      }
+      
+      return {
+        ...prev,
+        manaPerSecond: newManaPerSecond,
+        energyPerSecond: newEnergyPerSecond,
+        manaPerKill,
+      };
+    });
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, crossRealmUpgradesWithLevels, setGameState]);
 
   return { buffSystem };
 };

@@ -14,12 +14,12 @@ export const UltimateFantasyOptimizer: React.FC<UltimateFantasyOptimizerProps> =
   playerPosition,
   children
 }) => {
-  // Ultra-aggressive performance budget for 60 FPS
+  // Optimized performance budget for stable 60 FPS
   const performanceBudget = {
-    maxDrawCalls: 150,       // Reduced from typical 300
-    maxPolygons: 100000,     // Reduced from typical 200k
-    targetFPS: 60,           // Strict 60 FPS target
-    maxMemoryMB: 100         // Conservative memory limit
+    maxDrawCalls: 200,       // Reasonable draw call limit
+    maxPolygons: 300000,     // Increased for proper loading
+    targetFPS: 45,           // More achievable target
+    maxMemoryMB: 200         // Increased memory allowance
   };
 
   const handleBudgetExceeded = (stats: any, budget: any) => {
@@ -55,14 +55,14 @@ export const UltimateFantasyOptimizer: React.FC<UltimateFantasyOptimizerProps> =
         {(loadedChunks, spatialSystem) => (
           /* Animation budget system for managing animation performance */
           <AnimationBudgetSystem
-            maxActiveAnimations={20}   // Limit concurrent animations
-            viewDistance={100}         // Reduce animation distance
+            maxActiveAnimations={30}   // Increased animation limit
+            viewDistance={120}         // Reasonable animation distance
             cameraPosition={playerPosition}
           >
             {/* Frustum culling for all child elements */}
             <FrustumCullingSystem
               enabled={true}
-              cullDistance={150}  // Aggressive culling distance
+              cullDistance={180}  // Less aggressive culling
             >
               {children}
             </FrustumCullingSystem>

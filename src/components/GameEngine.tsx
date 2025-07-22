@@ -262,7 +262,7 @@ const GameEngine: React.FC = () => {
     }));
     // Also update the global state store for cross-realm visibility
     globalGameState.addMana(amount);
-  }, [setGameState, globalGameState.addMana]);
+  }, [setGameState, globalGameState]);
 
   useAutoManaSystem({ onAddMana: handleAutoManaGeneration });
 
@@ -281,7 +281,7 @@ const GameEngine: React.FC = () => {
     }));
     // Also update the global state store for cross-realm visibility
     globalGameState.addEnergy(amount);
-  }, [setGameState, globalGameState.addEnergy]);
+  }, [setGameState, globalGameState]);
 
   useAutoEnergySystem({ onAddEnergy: handleAutoEnergyGeneration });
 
