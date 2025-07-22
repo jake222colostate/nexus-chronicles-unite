@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FogChunkData } from './FogBasedChunkSystem';
+import { ChunkData } from './ChunkSystem';
 import { MagicalFantasySkybox } from './MagicalFantasySkybox';
 import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
 import { CleanPathSystem } from './CleanPathSystem';
@@ -9,19 +9,17 @@ import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistributio
 import * as THREE from 'three';
 
 interface FantasyScreenshotEnvironmentProps {
-  chunks: FogChunkData[];
+  chunks: ChunkData[];
   chunkSize: number;
   realm: 'fantasy' | 'scifi';
   playerPosition?: THREE.Vector3;
-  fogDistance: number;
 }
 
 export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironmentProps> = ({
   chunks,
   chunkSize,
   realm,
-  playerPosition = new THREE.Vector3(0, 0, 0),
-  fogDistance
+  playerPosition = new THREE.Vector3(0, 0, 0)
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {

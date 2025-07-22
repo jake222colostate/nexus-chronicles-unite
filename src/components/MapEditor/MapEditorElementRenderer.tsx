@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMapEditorStore, MapElement } from '../../stores/useMapEditorStore';
-import { Box, Sphere, Cone } from '@react-three/drei';
+import { Box, Sphere, Cone, useGLTF } from '@react-three/drei';
 
 const ElementPreview: React.FC<{ element: MapElement; isSelected: boolean }> = ({
   element,
@@ -8,7 +8,8 @@ const ElementPreview: React.FC<{ element: MapElement; isSelected: boolean }> = (
 }) => {
   const { properties } = element;
   const { setSelectedElement } = useMapEditorStore();
-
+  // Temporarily disable mountain model loading to prevent 404 errors
+  // const mountainModel = useGLTF('/assets/mountain_low_poly.glb');
 
   const handleClick = (e: any) => {
     e.stopPropagation();
@@ -127,3 +128,5 @@ export const MapEditorElementRenderer: React.FC = () => {
   );
 };
 
+// Temporarily disable mountain model preloading to prevent 404 errors
+// useGLTF.preload('/assets/mountain_low_poly.glb');

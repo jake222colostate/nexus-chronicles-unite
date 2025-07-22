@@ -3,13 +3,12 @@ import React, { Suspense, useMemo, useState, useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { FirstPersonController } from './FirstPersonController';
-import { FogBasedChunkSystem, FogChunkData } from './FogBasedChunkSystem';
+import { ChunkSystem, ChunkData } from './ChunkSystem';
 import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { LinearForestCorridor } from './LinearForestCorridor';
-import { InfinitePathSystem } from './InfinitePathSystem';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -101,39 +100,26 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           damage={weaponDamage}
         />
 
-        {/* PERFORMANCE OPTIMIZED: Infinite Path System with reduced chunks */}
-        <InfinitePathSystem
-          playerPosition={safeCameraPosition}
-          chunksAhead={5} // REDUCED from 8 to 5
-          chunksBehind={1} // REDUCED from 2 to 1
-          renderDistance={Math.min(renderDistance, 80)} // CAPPED render distance
-        />
-
         {/* Linear Forest Corridor along valley path */}
         <LinearForestCorridor playerPosition={safeCameraPosition} />
 
-        {/* PERFORMANCE OPTIMIZED: Fog-based chunk system with reduced load */}
-        <FogBasedChunkSystem
+        <ChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={Math.min(renderDistance, 100)} // CAPPED render distance
-          fogNear={20} // INCREASED fog near for better culling
-          fogFar={80} // REDUCED fog far for better performance
+          renderDistance={50}
         >
-          {(chunks: FogChunkData[], fogDistance: number) => (
+          {(chunks: ChunkData[]) => (
             <OptimizedFantasyEnvironment
-              chunks={chunks.slice(0, 15)} // LIMIT: Only render first 15 chunks
+              chunks={chunks}
               chunkSize={chunkSize}
               realm={realm}
               playerPosition={safeCameraPosition}
               onEnemyCountChange={onEnemyCountChange}
               onEnemyKilled={onEnemyKilled}
               weaponDamage={weaponDamage}
-              upgradesPurchased={upgradesPurchased}
-              fogDistance={Math.min(fogDistance, 60)} // CAPPED fog distance
             />
           )}
-        </FogBasedChunkSystem>
+        </ChunkSystem>
 
         <ContactShadows 
           position={[0, -1.4, safeCameraPosition.z]} 

@@ -13,17 +13,15 @@ export const useFantasy3DUpgradeWorld = ({
   onPlayerPositionUpdate
 }: UseFantasy3DUpgradeWorldProps) => {
   const globalGameState = useGameStateStore();
-  
-  // Initialize state with stable references
-  const [cameraPosition, setCameraPosition] = useState(() => new Vector3(0, 1.6, 0));
+  const [cameraPosition, setCameraPosition] = useState(new Vector3(0, 1.6, 0));
   const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
-  const [maxUnlockedUpgrade, setMaxUnlockedUpgrade] = useState(() => 0); // Start with first upgrade unlocked
-  const [purchasedUpgrades, setPurchasedUpgrades] = useState(() => new Set<number>());
+  const [maxUnlockedUpgrade, setMaxUnlockedUpgrade] = useState(-1);
+  const [purchasedUpgrades, setPurchasedUpgrades] = useState<Set<number>>(new Set());
   
   // Use refs for values that don't need to trigger re-renders
-  const currentManaRef = useRef(gameState?.mana || globalGameState.mana || 100);
-  const totalManaPerSecondRef = useRef(gameState?.manaPerSecond || globalGameState.manaPerSecond || 0);
+  const currentManaRef = useRef(gameState?.mana || 100);
+  const totalManaPerSecondRef = useRef(gameState?.manaPerSecond || 0);
   
   // COMPLETELY NEW purchase protection system
   const activePurchaseRef = useRef<string | null>(null);
@@ -34,109 +32,69 @@ export const useFantasy3DUpgradeWorld = ({
   const RENDER_DISTANCE = 200;
   const UPGRADE_SPACING = 35;
 
-  // Base template for the repeating upgrade sequence
-  const upgradeTemplates = [
+  // Create upgrades placed along the fantasy path
+  const upgrades = [
     {
+      id: 0,
       name: 'Mana Crystal',
       cost: 50,
       manaPerSecond: 3,
-      description: 'A crystallized form of pure magical energy',
-      modelType: 'podium' as const
+      position: [-12, 0.5, -30],
+      tier: 0,
+      unlocked: true,
+      description: 'A crystallized form of pure magical energy'
     },
     {
+      id: 1,
       name: 'Arcane Focus',
       cost: 250,
       manaPerSecond: 12,
-      description: 'Concentrates magical energies for greater efficiency',
-      modelType: 'podium' as const
+      position: [12, 0.5, -60],
+      tier: 1,
+      unlocked: maxUnlockedUpgrade >= 0,
+      description: 'Concentrates magical energies for greater efficiency'
     },
     {
+      id: 2,
       name: 'Mystic Fountain',
       cost: 1000,
       manaPerSecond: 30,
-      description: 'An eternal wellspring of magical power',
-      modelType: 'podium' as const
+      position: [-12, 0.5, -90],
+      tier: 2,
+      unlocked: maxUnlockedUpgrade >= 1,
+      description: 'An eternal wellspring of magical power'
     },
     {
+      id: 3,
       name: 'Elder Artifact',
       cost: 5000,
       manaPerSecond: 100,
-      description: 'Ancient relic of immense magical power',
-      modelType: 'podium' as const
+      position: [12, 0.5, -120],
+      tier: 3,
+      unlocked: maxUnlockedUpgrade >= 2,
+      description: 'Ancient relic of immense magical power'
     },
     {
+      id: 4,
+      name: 'Dragon Shrine',
+      cost: 25000,
+      manaPerSecond: 400,
+      position: [-12, 0.5, -150],
+      tier: 4,
+      unlocked: maxUnlockedUpgrade >= 3,
+      description: 'A sacred shrine blessed by ancient dragons'
+    },
+    {
+      id: 5,
       name: 'Celestial Nexus',
       cost: 100000,
       manaPerSecond: 1500,
-      description: 'Connects to the cosmic web of magical energy',
-      modelType: 'obelisk' as const
+      position: [12, 0.5, -180],
+      tier: 5,
+      unlocked: maxUnlockedUpgrade >= 4,
+      description: 'Connects to the cosmic web of magical energy'
     }
   ];
-
-  interface UpgradeData {
-    id: number;
-    name: string;
-    cost: number;
-    manaPerSecond: number;
-    position: [number, number, number];
-    tier: number;
-    unlocked: boolean;
-    description: string;
-    modelType: 'podium' | 'obelisk';
-  }
-
-  const createUpgrade = (index: number): UpgradeData => {
-    const templateIndex = index % upgradeTemplates.length;
-    const template = upgradeTemplates[templateIndex];
-    const lane = index % 2 === 0 ? -12 : 12;
-    
-    // Determine model type: first 4 use podium, 5th uses obelisk, then repeat
-    const cyclePosition = index % 5;
-    const modelType = cyclePosition === 4 ? 'obelisk' : 'podium';
-    
-    return {
-      id: index,
-      name: template.name,
-      cost: template.cost * Math.pow(1.5, Math.floor(index / 5)), // Scale cost by section
-      manaPerSecond: template.manaPerSecond * Math.pow(1.3, Math.floor(index / 5)), // Scale power by section  
-      description: template.description,
-      modelType,
-      position: [lane, 0.5, -30 - index * UPGRADE_SPACING],
-      tier: templateIndex,
-      unlocked: index === 0 || maxUnlockedUpgrade >= index - 1
-    };
-  };
-
-  const [upgrades, setUpgrades] = useState<UpgradeData[]>(() =>
-    Array.from({ length: 10 }).map((_, i) => createUpgrade(i))
-  );
-
-  // Extend the upgrade list as the player moves forward
-  useEffect(() => {
-    setUpgrades(prev => {
-      const last = prev[prev.length - 1];
-      const distanceAhead = Math.abs(last.position[2] - cameraPosition.z);
-      if (distanceAhead < RENDER_DISTANCE) {
-        const next: UpgradeData[] = [];
-        let index = prev.length;
-        for (let i = 0; i < 5; i++) {
-          next.push(createUpgrade(index++));
-        }
-        return [...prev, ...next];
-      }
-      return prev;
-    });
-  }, [cameraPosition.z]);
-
-  // Update unlock status when new upgrades are purchased
-  useEffect(() => {
-    setUpgrades(prev =>
-      prev.map(u => ({
-        ...u,
-        unlocked: u.id === 0 || maxUnlockedUpgrade >= u.id - 1
-      }))
-    );
-  }, [maxUnlockedUpgrade]);
 
   // Update refs when gameState changes
   useEffect(() => {

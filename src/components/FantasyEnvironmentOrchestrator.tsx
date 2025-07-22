@@ -1,17 +1,16 @@
 
 import React from 'react';
-import { FogChunkData } from './FogBasedChunkSystem';
+import { ChunkData } from './ChunkSystem';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
-import { SeamlessGroundSystem } from './SeamlessGroundSystem';
+import { EnhancedInfiniteGroundSystem } from './EnhancedInfiniteGroundSystem';
 import { Vector3 } from 'three';
 
 interface FantasyEnvironmentOrchestratorProps {
-  chunks: FogChunkData[];
+  chunks: ChunkData[];
   chunkSize: number;
   realm: 'fantasy' | 'scifi';
   playerPosition?: Vector3;
   onEnemyPositionUpdate?: (positions: Vector3[]) => void;
-  fogDistance: number;
 }
 
 export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestratorProps> = ({
@@ -19,8 +18,7 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
   chunkSize,
   realm,
   playerPosition = new Vector3(0, 0, 0),
-  onEnemyPositionUpdate,
-  fogDistance
+  onEnemyPositionUpdate
 }) => {
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
@@ -31,13 +29,12 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
 
   return (
     <group>
-      {/* Seamless fog-based ground system */}
-      <SeamlessGroundSystem
+      {/* Enhanced infinite ground system - renders first to ensure base layer */}
+      <EnhancedInfiniteGroundSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
         playerPosition={playerPosition}
-        fogDistance={fogDistance}
       />
       
       {/* ONLY use EnhancedTreeDistribution with visibility fixes */}

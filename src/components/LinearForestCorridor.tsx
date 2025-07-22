@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Vector3 } from 'three';
-import { assetUrl } from '@/lib/utils';
 
 interface LinearForestCorridorProps {
   playerPosition?: Vector3;
@@ -17,13 +16,13 @@ interface ForestElement {
 const ForestAsset: React.FC<{ element: ForestElement }> = ({ element }) => {
   const getModelPath = (type: string): string => {
     const modelPaths: Record<string, string> = {
-      tree1: assetUrl('assets/forestGLB/Tree1.glb'),
-      tree2: assetUrl('assets/forestGLB/Tree2.glb'),
-      grass: assetUrl('assets/forestGLB/Grass.glb'),
-      log: assetUrl('assets/forestGLB/FallenLog.glb'),
-      rock1: assetUrl('assets/forestGLB/SmallRock1.glb'),
-      rock2: assetUrl('assets/forestGLB/SmallRock2.glb'),
-      rock3: assetUrl('assets/forestGLB/SmallRock3.glb'),
+      tree1: '/assets/forestGLB/Tree1.glb',
+      tree2: '/assets/forestGLB/Tree2.glb',
+      grass: '/assets/forestGLB/Grass.glb',
+      log: '/assets/forestGLB/FallenLog.glb',
+      rock1: '/assets/forestGLB/SmallRock1.glb',
+      rock2: '/assets/forestGLB/SmallRock2.glb',
+      rock3: '/assets/forestGLB/SmallRock3.glb',
     };
     return modelPaths[type] || modelPaths.tree1;
   };
@@ -76,7 +75,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
       
       elements.push({
         type: leftTreeType,
-        position: [leftX, -1, z], // Positive Z to spawn ahead
+        position: [leftX, -1, z],
         rotation: [0, seededRandom(z * 567) * Math.PI * 2, 0],
         scale: [leftScale, leftScale, leftScale]
       });
@@ -88,7 +87,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
       
       elements.push({
         type: rightTreeType,
-        position: [rightX, -1, z], // Positive Z to spawn ahead
+        position: [rightX, -1, z],
         rotation: [0, seededRandom(z * 678) * Math.PI * 2, 0],
         scale: [rightScale, rightScale, rightScale]
       });
@@ -99,7 +98,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         const farLeftX = -pathWidth - 8 - seededRandom(z * 111) * 6;
         elements.push({
           type: seededRandom(z * 222) > 0.5 ? 'tree1' : 'tree2',
-          position: [farLeftX, -1, z + seededRandom(z * 333) * 3], // Positive Z to spawn ahead
+          position: [farLeftX, -1, z + seededRandom(z * 333) * 3],
           rotation: [0, seededRandom(z * 444) * Math.PI * 2, 0],
           scale: [0.6 + seededRandom(z * 555) * 0.4, 0.6 + seededRandom(z * 555) * 0.4, 0.6 + seededRandom(z * 555) * 0.4]
         });
@@ -108,7 +107,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         const farRightX = pathWidth + 8 + seededRandom(z * 666) * 6;
         elements.push({
           type: seededRandom(z * 777) > 0.5 ? 'tree1' : 'tree2',
-          position: [farRightX, -1, z + seededRandom(z * 888) * 3], // Positive Z to spawn ahead
+          position: [farRightX, -1, z + seededRandom(z * 888) * 3],
           rotation: [0, seededRandom(z * 999) * Math.PI * 2, 0],
           scale: [0.6 + seededRandom(z * 111) * 0.4, 0.6 + seededRandom(z * 111) * 0.4, 0.6 + seededRandom(z * 111) * 0.4]
         });
@@ -122,7 +121,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         const detailType = seededRandom(z * 2222) > 0.6 ? 'log' : `rock${Math.floor(seededRandom(z * 3333) * 3) + 1}`;
         elements.push({
           type: detailType,
-          position: [-pathWidth - 1 - seededRandom(z * 4444) * 2, -1, z], // Positive Z to spawn ahead
+          position: [-pathWidth - 1 - seededRandom(z * 4444) * 2, -1, z],
           rotation: [0, seededRandom(z * 5555) * Math.PI * 2, 0],
           scale: [0.8 + seededRandom(z * 6666) * 0.4, 0.8 + seededRandom(z * 6666) * 0.4, 0.8 + seededRandom(z * 6666) * 0.4]
         });
@@ -133,7 +132,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         const detailType = seededRandom(z * 8888) > 0.6 ? 'log' : `rock${Math.floor(seededRandom(z * 9999) * 3) + 1}`;
         elements.push({
           type: detailType,
-          position: [pathWidth + 1 + seededRandom(z * 1212) * 2, -1, z], // Positive Z to spawn ahead
+          position: [pathWidth + 1 + seededRandom(z * 1212) * 2, -1, z],
           rotation: [0, seededRandom(z * 1313) * Math.PI * 2, 0],
           scale: [0.8 + seededRandom(z * 1414) * 0.4, 0.8 + seededRandom(z * 1414) * 0.4, 0.8 + seededRandom(z * 1414) * 0.4]
         });
@@ -149,7 +148,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         if (seededRandom(z * (1717 + side)) > 0.5) {
           elements.push({
             type: 'grass',
-            position: [grassX, -1, z + seededRandom(z * (1818 + side)) * 2], // Positive Z to spawn ahead
+            position: [grassX, -1, z + seededRandom(z * (1818 + side)) * 2],
             rotation: [0, seededRandom(z * (1919 + side)) * Math.PI * 2, 0],
             scale: [0.6 + seededRandom(z * (2020 + side)) * 0.6, 0.6 + seededRandom(z * (2020 + side)) * 0.6, 0.6 + seededRandom(z * (2020 + side)) * 0.6]
           });
@@ -160,16 +159,16 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
     return elements;
   }, []);
 
-  // PERFORMANCE OPTIMIZED: Filter visible elements based on reduced render distance
+  // Filter visible elements based on render distance
   const visibleElements = useMemo(() => {
-    const renderDistance = 40; // REDUCED from 60 to 40 for better performance
+    const renderDistance = 60;
     return forestElements.filter(element => {
       const distance = Math.sqrt(
         Math.pow(element.position[0] - playerPosition.x, 2) +
         Math.pow(element.position[2] - playerPosition.z, 2)
       );
       return distance < renderDistance;
-    }).slice(0, 50); // LIMIT: Maximum 50 visible elements
+    });
   }, [forestElements, playerPosition]);
 
   return (
@@ -185,10 +184,10 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
 };
 
 // Preload GLB models
-useGLTF.preload(assetUrl('assets/forestGLB/Tree1.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/Tree2.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/Grass.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/FallenLog.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/SmallRock1.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/SmallRock2.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/SmallRock3.glb'));
+useGLTF.preload('/assets/forestGLB/Tree1.glb');
+useGLTF.preload('/assets/forestGLB/Tree2.glb');
+useGLTF.preload('/assets/forestGLB/Grass.glb');
+useGLTF.preload('/assets/forestGLB/FallenLog.glb');
+useGLTF.preload('/assets/forestGLB/SmallRock1.glb');
+useGLTF.preload('/assets/forestGLB/SmallRock2.glb');
+useGLTF.preload('/assets/forestGLB/SmallRock3.glb');

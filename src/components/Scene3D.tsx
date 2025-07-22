@@ -6,7 +6,7 @@ import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { Enhanced360Controller } from './Enhanced360Controller';
-import { FogBasedChunkSystem } from './FogBasedChunkSystem';
+import { ChunkSystem } from './ChunkSystem';
 import { FantasyEnvironmentOrchestrator } from './FantasyEnvironmentOrchestrator';
 import { Sun } from './Sun';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
@@ -225,24 +225,21 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           {/* Fantasy environment - now enabled in map editor too */}
           {realm === 'fantasy' && (
-            <FogBasedChunkSystem
+            <ChunkSystem
               playerPosition={playerPosition}
               chunkSize={50}
               renderDistance={150}
-              fogNear={40}
-              fogFar={120}
             >
-              {(chunks, fogDistance) => (
+              {(chunks) => (
                 <FantasyEnvironmentOrchestrator
                   chunks={chunks}
                   chunkSize={50}
                   realm={realm}
                   playerPosition={playerPosition}
                   onEnemyPositionUpdate={handleEnemyPositionUpdate}
-                  fogDistance={fogDistance}
                 />
               )}
-            </FogBasedChunkSystem>
+            </ChunkSystem>
           )}
 
           {/* Show upgrade nodes in both realms (including map editor for visibility) */}

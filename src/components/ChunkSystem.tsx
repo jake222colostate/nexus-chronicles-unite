@@ -43,32 +43,34 @@ export const ChunkSystem: React.FC<ChunkSystemProps> = React.memo(({
     let chunkCount = 0;
     const maxChunks = 60; // Increased from 25 to 60
     
-    // Generate chunks only in front of the player
+    // Generate minimal chunks without overlap
     for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius && chunkCount < maxChunks; x++) {
-      for (let z = playerChunkZ; z <= playerChunkZ + farAheadChunks && chunkCount < maxChunks; z++) {
-        const worldX = x * chunkSize;
-        const worldZ = -z * chunkSize;
-
-        // PERFORMANCE FIX: Much more aggressive distance-based culling
-        const distanceToPlayer = Math.sqrt(
-          Math.pow(worldX - roundedPlayerX, 2) +
-          Math.pow(worldZ - roundedPlayerZ, 2)
-        );
-
-        // PERFORMANCE FIX: Strict distance check without buffer
-        if (distanceToPlayer <= maxRenderDistance) {
-          const seed = ((x & 0xFFFF) << 16) | (z & 0xFFFF);
-
-          chunks.push({
-            id: `chunk_${x}_${z}`,
-            x,
-            z,
-            worldX,
-            worldZ,
-            seed: Math.abs(seed) % 10000
-          });
-
-          chunkCount++;
+      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + farAheadChunks && chunkCount < maxChunks; z++) {
+        if (z >= -Math.ceil(maxRenderDistance / chunkSize)) {
+          const worldX = x * chunkSize;
+          const worldZ = -z * chunkSize;
+          
+          // PERFORMANCE FIX: Much more aggressive distance-based culling
+          const distanceToPlayer = Math.sqrt(
+            Math.pow(worldX - roundedPlayerX, 2) + 
+            Math.pow(worldZ - roundedPlayerZ, 2)
+          );
+          
+          // PERFORMANCE FIX: Strict distance check without buffer
+          if (distanceToPlayer <= maxRenderDistance) {
+            const seed = ((x & 0xFFFF) << 16) | (z & 0xFFFF);
+            
+            chunks.push({
+              id: `chunk_${x}_${z}`,
+              x,
+              z,
+              worldX,
+              worldZ,
+              seed: Math.abs(seed) % 10000
+            });
+            
+            chunkCount++;
+          }
         }
       }
     }

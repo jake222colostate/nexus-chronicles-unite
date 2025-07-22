@@ -3,7 +3,6 @@ import React, { useRef, useState, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Mesh } from 'three';
 import { useGLTF } from '@react-three/drei';
-import { assetUrl } from '@/lib/utils';
 
 interface UpgradeNode3DProps {
   upgrade: any;
@@ -80,34 +79,29 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
 
   // Fantasy podium model using GLB file
   const FantasyPodiumModel = () => {
-    try {
-      const { scene } = useGLTF(assetUrl('assets/upgrades/Podiums.glb'));
-      
-      return (
-        <group
-          ref={meshRef}
-          onClick={onClick}
-          onPointerOver={() => setHovered(true)}
-          onPointerOut={() => setHovered(false)}
-          scale={hovered ? 0.8 : 0.7}
-        >
-          <primitive object={scene.clone()} />
-          
-          {/* Crystal on top */}
-          <mesh position={[0, 0.6, 0]} castShadow>
-            {geometry}
-            <meshLambertMaterial
-              color={nodeColor}
-              transparent
-              opacity={isUnlocked ? 0.9 : 0.5}
-            />
-          </mesh>
-        </group>
-      );
-    } catch (error) {
-      console.error('Error loading Podiums.glb:', error);
-      return null;
-    }
+    const { scene } = useGLTF('/assets/upgrades/Podiums.glb');
+    
+    return (
+      <group
+        ref={meshRef}
+        onClick={onClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        scale={hovered ? 0.8 : 0.7}
+      >
+        <primitive object={scene} />
+        
+        {/* Crystal on top */}
+        <mesh position={[0, 0.6, 0]} castShadow>
+          {geometry}
+          <meshLambertMaterial
+            color={nodeColor}
+            transparent
+            opacity={isUnlocked ? 0.9 : 0.5}
+          />
+        </mesh>
+      </group>
+    );
   };
 
   return (
@@ -185,6 +179,3 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
 });
 
 UpgradeNode3D.displayName = 'UpgradeNode3D';
-
-// Preload the GLB model
-useGLTF.preload(assetUrl('assets/upgrades/Podiums.glb'));

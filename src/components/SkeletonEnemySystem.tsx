@@ -1,9 +1,14 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
+import { useGLTF } from '@react-three/drei';
 import { ChunkData } from './ChunkSystem';
+import { assetUrl } from '@/lib/utils';
 
-// Skeleton models don't exist - using fallback geometry
+// Preload skeleton models to avoid loading hitches
+useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb');
+useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb');
+useGLTF.preload('/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb');
 
 interface SkeletonEnemySystemProps {
   chunks: ChunkData[];
@@ -30,7 +35,11 @@ interface SkeletonEnemy {
   nextMoveTime: number;
 }
 
-// Using fallback geometry since skeleton models don't exist
+const modelPaths: Record<SkeletonType, string> = {
+  minion: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Minion.glb',
+  rogue: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Rogue.glb',
+  warrior: '/assets/KayKit_Skeletons_1.0_FREE/characters/gltf/Skeleton_Warrior.glb'
+};
 
 const SkeletonModel: React.FC<{
   enemy: SkeletonEnemy;
@@ -38,8 +47,8 @@ const SkeletonModel: React.FC<{
 }> = ({ enemy, onHit }) => {
   const meshRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
-  const [modelLoaded] = useState(true); // Always loaded since using fallback geometry
-  const [loadError] = useState<string | null>(null);
+  const [modelLoaded, setModelLoaded] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   const getHealthBarColor = () => {
     const healthPercent = enemy.health / enemy.maxHealth;
@@ -50,7 +59,16 @@ const SkeletonModel: React.FC<{
 
   const stats = { scale: 0.8, color: '#94a3b8' };
 
-  // Using fallback geometry since skeleton models don't exist
+  // Try to load GLB model with error handling
+  let scene = null;
+  try {
+    const gltf = useGLTF(modelPaths[enemy.type]);
+    scene = gltf.scene;
+    if (!modelLoaded) setModelLoaded(true);
+  } catch (error) {
+    console.warn('Failed to load GLB skeleton:', error);
+    if (!loadError) setLoadError(error instanceof Error ? error.message : 'GLB load failed');
+  }
 
   useFrame((state) => {
     if (meshRef.current && enemy.alive) {
@@ -75,41 +93,50 @@ const SkeletonModel: React.FC<{
       }}
       scale={stats.scale}
     >
-      {/* Simple skeleton representation using fallback geometry */}
-      <group>
-        <mesh position={[0, 1, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.3, 0.2, 1]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
-          <sphereGeometry args={[0.25]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        <mesh position={[-0.4, 1.2, 0]} rotation={[0, 0, 0.3]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        <mesh position={[0.4, 1.2, 0]} rotation={[0, 0, -0.3]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        <mesh position={[-0.15, 0.3, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.1, 0.1, 0.6]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        <mesh position={[0.15, 0.3, 0]} castShadow receiveShadow>
-          <cylinderGeometry args={[0.1, 0.1, 0.6]} />
-          <meshStandardMaterial color="#f0f0f0" />
-        </mesh>
-        <mesh position={[-0.1, 1.85, 0.2]}>
-          <sphereGeometry args={[0.05]} />
-          <meshBasicMaterial color={stats.color} />
-        </mesh>
-        <mesh position={[0.1, 1.85, 0.2]}>
-          <sphereGeometry args={[0.05]} />
-          <meshBasicMaterial color={stats.color} />
-        </mesh>
-      </group>
+      {/* Use actual model if loaded, otherwise use simple geometry */}
+      {scene && modelLoaded ? (
+        <primitive 
+          object={scene.clone()} 
+          castShadow
+          receiveShadow
+        />
+      ) : (
+        // Simple skeleton representation as fallback
+        <group>
+          <mesh position={[0, 1, 0]}>
+            <cylinderGeometry args={[0.3, 0.2, 1]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[0, 1.8, 0]}>
+            <sphereGeometry args={[0.25]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[-0.4, 1.2, 0]} rotation={[0, 0, 0.3]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.8]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[0.4, 1.2, 0]} rotation={[0, 0, -0.3]}>
+            <cylinderGeometry args={[0.08, 0.08, 0.8]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[-0.15, 0.3, 0]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.6]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[0.15, 0.3, 0]}>
+            <cylinderGeometry args={[0.1, 0.1, 0.6]} />
+            <meshStandardMaterial color="#f0f0f0" />
+          </mesh>
+          <mesh position={[-0.1, 1.85, 0.2]}>
+            <sphereGeometry args={[0.05]} />
+            <meshBasicMaterial color={stats.color} />
+          </mesh>
+          <mesh position={[0.1, 1.85, 0.2]}>
+            <sphereGeometry args={[0.05]} />
+            <meshBasicMaterial color={stats.color} />
+          </mesh>
+        </group>
+      )}
       
       {/* Health bar */}
       <group position={[0, 2.5, 0]}>

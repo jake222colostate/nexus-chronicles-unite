@@ -24,11 +24,6 @@ export const Fantasy3DUpgradePedestals: React.FC<Fantasy3DUpgradePedestalsProps>
         const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
         if (distance > 120) return null;
         
-        // Determine model type based on sections of five
-        // Upgrades 1-4, 6-9, 11-14, etc. use podium
-        // Upgrades 5, 10, 15, etc. use obelisk
-        const modelType = upgrade.id % 5 === 0 ? 'obelisk' : 'podium';
-        
         return (
           <EnhancedUpgradePedestal
             key={upgrade.id}
@@ -39,7 +34,6 @@ export const Fantasy3DUpgradePedestals: React.FC<Fantasy3DUpgradePedestalsProps>
             canAfford={currentManaRef.current >= upgrade.cost}
             onInteract={() => onUpgradeClick(upgrade)}
             tier={upgrade.tier + 1}
-            modelType={modelType}
           />
         );
       })}
