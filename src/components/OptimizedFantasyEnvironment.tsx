@@ -7,7 +7,8 @@ import { Vector3 } from 'three';
 // import { OptimizedMountainSystem } from './OptimizedMountainSystem';
 // import { OptimizedPathSystem } from './OptimizedPathSystem';
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
-import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
+import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
+import { SimpleTreeSystem } from './SimpleTreeSystem';
 import { SkeletonEnemySystem } from './SkeletonEnemySystem';
 
 
@@ -76,12 +77,18 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         fogDistance={fogDistance}
       />
 
-      {/* Forest environment enabled ahead of player */}
-      <ForestEnvironmentSystem
+      {/* Procedural mountains */}
+      <ProceduralMountainTerrain
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
-        playerPosition={playerPosition}
+      />
+
+      {/* Simple trees ahead of player */}
+      <SimpleTreeSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
       />
 
       {/* Skeleton enemy system */}

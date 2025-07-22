@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { FogChunkData } from './FogBasedChunkSystem';
-import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
+import { SimpleTreeSystem } from './SimpleTreeSystem';
+import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
 import { Vector3 } from 'three';
 
 interface FantasyEnvironmentOrchestratorProps {
@@ -40,8 +41,15 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
         fogDistance={fogDistance}
       />
       
-      {/* ONLY use EnhancedTreeDistribution with visibility fixes */}
-      <EnhancedTreeDistribution
+      {/* Procedural mountains using simple geometry */}
+      <ProceduralMountainTerrain
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
+
+      {/* Simple tree system for fast loading */}
+      <SimpleTreeSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
