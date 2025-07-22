@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Frustum, Matrix4, Vector3, Group, Mesh } from 'three';
+import { Frustum, Matrix4, Group, Mesh, BufferGeometry, Sphere } from 'three';
 
 interface FrustumCullingSystemProps {
   children: React.ReactNode;
@@ -19,6 +19,7 @@ export const FrustumCullingSystem: React.FC<FrustumCullingSystemProps> = ({
   // Create frustum for culling calculations
   const frustum = useRef(new Frustum());
   const cameraMatrix = useRef(new Matrix4());
+  const sphereCache = useRef(new WeakMap<BufferGeometry, Sphere>());
   
   useFrame(() => {
     if (!enabled || !groupRef.current) return;
@@ -36,14 +37,23 @@ export const FrustumCullingSystem: React.FC<FrustumCullingSystemProps> = ({
           child.visible = false;
           return;
         }
-        
-        // Frustum-based culling
+
+        // Frustum-based culling for meshes
         if (child instanceof Mesh && child.geometry) {
-          child.geometry.computeBoundingSphere();
-          if (child.geometry.boundingSphere) {
-            const sphere = child.geometry.boundingSphere.clone();
-            sphere.applyMatrix4(child.matrixWorld);
-            child.visible = frustum.current.intersectsSphere(sphere);
+          let sphere = sphereCache.current.get(child.geometry as BufferGeometry);
+          if (!sphere) {
+            child.geometry.computeBoundingSphere();
+            if (child.geometry.boundingSphere) {
+              sphere = child.geometry.boundingSphere.clone();
+              sphereCache.current.set(child.geometry as BufferGeometry, sphere);
+            }
+          }
+          if (sphere) {
+            const worldSphere = sphere.clone();
+            worldSphere.applyMatrix4(child.matrixWorld);
+            child.visible = frustum.current.intersectsSphere(worldSphere);
+          } else {
+            child.visible = true;
           }
         } else {
           child.visible = true; // Keep groups visible for traversal
