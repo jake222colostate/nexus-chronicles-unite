@@ -15,7 +15,7 @@ export const CPUUsageOptimizer: React.FC<CPUUsageOptimizerProps> = ({ enabled = 
     if (!enabled) return;
 
     // Throttle animations for better CPU usage
-    let frameThrottle = false;
+    const frameThrottle = false;
     const throttleDelay = 16; // ~60fps
 
     // Optimize React dev tools if present

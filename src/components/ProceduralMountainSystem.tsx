@@ -1,11 +1,7 @@
 import React, { useMemo } from 'react';
-import { useGLTF } from '@react-three/drei';
 import { Vector3 } from 'three';
-import { assetUrl } from '@/lib/utils';
 import { FogChunkData } from './FogBasedChunkSystem';
 
-// Preload the mountains model
-useGLTF.preload(assetUrl('assets/environment/Mountains.glb'));
 
 interface ProceduralMountainSystemProps {
   chunks: FogChunkData[];
@@ -22,43 +18,27 @@ interface MountainInstance {
 }
 
 // Mountain Model Component
-const MountainModel: React.FC<{ 
-  position: [number, number, number]; 
-  rotation: [number, number, number]; 
-  scale: number 
+const MountainModel: React.FC<{
+  position: [number, number, number];
+  rotation: [number, number, number];
+  scale: number
 }> = ({ position, rotation, scale }) => {
-  try {
-    const { scene } = useGLTF(assetUrl('assets/environment/Mountains.glb'));
-    return (
-      <primitive 
-        object={scene.clone()} 
-        position={position}
-        rotation={rotation}
-        scale={[scale, scale, scale]}
-        castShadow 
-        receiveShadow 
-      />
-    );
-  } catch (error) {
-    console.warn('Failed to load Mountains.glb, using fallback:', error);
-    // Fallback mountain geometry
-    return (
-      <group position={position} rotation={rotation}>
-        <mesh castShadow receiveShadow>
-          <coneGeometry args={[8 * scale, 12 * scale, 8]} />
-          <meshStandardMaterial color="#6B7280" />
-        </mesh>
-        <mesh position={[4 * scale, 0, 3 * scale]} castShadow receiveShadow>
-          <coneGeometry args={[6 * scale, 10 * scale, 6]} />
-          <meshStandardMaterial color="#4B5563" />
-        </mesh>
-        <mesh position={[-3 * scale, 0, -2 * scale]} castShadow receiveShadow>
-          <coneGeometry args={[5 * scale, 8 * scale, 6]} />
-          <meshStandardMaterial color="#374151" />
-        </mesh>
-      </group>
-    );
-  }
+  return (
+    <group position={position} rotation={rotation}>
+      <mesh castShadow receiveShadow>
+        <coneGeometry args={[8 * scale, 12 * scale, 8]} />
+        <meshStandardMaterial color="#6B7280" />
+      </mesh>
+      <mesh position={[4 * scale, 0, 3 * scale]} castShadow receiveShadow>
+        <coneGeometry args={[6 * scale, 10 * scale, 6]} />
+        <meshStandardMaterial color="#4B5563" />
+      </mesh>
+      <mesh position={[-3 * scale, 0, -2 * scale]} castShadow receiveShadow>
+        <coneGeometry args={[5 * scale, 8 * scale, 6]} />
+        <meshStandardMaterial color="#374151" />
+      </mesh>
+    </group>
+  );
 };
 
 export const ProceduralMountainSystem: React.FC<ProceduralMountainSystemProps> = ({
