@@ -101,27 +101,28 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           damage={weaponDamage}
         />
 
-        {/* Infinite Path System - The walking surface */}
+        {/* PERFORMANCE OPTIMIZED: Infinite Path System with reduced chunks */}
         <InfinitePathSystem
           playerPosition={safeCameraPosition}
-          chunksAhead={8}
-          chunksBehind={2}
-          renderDistance={renderDistance}
+          chunksAhead={5} // REDUCED from 8 to 5
+          chunksBehind={1} // REDUCED from 2 to 1
+          renderDistance={Math.min(renderDistance, 80)} // CAPPED render distance
         />
 
         {/* Linear Forest Corridor along valley path */}
         <LinearForestCorridor playerPosition={safeCameraPosition} />
 
+        {/* PERFORMANCE OPTIMIZED: Fog-based chunk system with reduced load */}
         <FogBasedChunkSystem
           playerPosition={safeCameraPosition}
           chunkSize={chunkSize}
-          renderDistance={renderDistance}
-          fogNear={30}
-          fogFar={120}
+          renderDistance={Math.min(renderDistance, 100)} // CAPPED render distance
+          fogNear={20} // INCREASED fog near for better culling
+          fogFar={80} // REDUCED fog far for better performance
         >
           {(chunks: FogChunkData[], fogDistance: number) => (
             <OptimizedFantasyEnvironment
-              chunks={chunks}
+              chunks={chunks.slice(0, 15)} // LIMIT: Only render first 15 chunks
               chunkSize={chunkSize}
               realm={realm}
               playerPosition={safeCameraPosition}
@@ -129,7 +130,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
               onEnemyKilled={onEnemyKilled}
               weaponDamage={weaponDamage}
               upgradesPurchased={upgradesPurchased}
-              fogDistance={fogDistance}
+              fogDistance={Math.min(fogDistance, 60)} // CAPPED fog distance
             />
           )}
         </FogBasedChunkSystem>

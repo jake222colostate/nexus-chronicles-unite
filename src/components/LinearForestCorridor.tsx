@@ -160,16 +160,16 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
     return elements;
   }, []);
 
-  // Filter visible elements based on render distance
+  // PERFORMANCE OPTIMIZED: Filter visible elements based on reduced render distance
   const visibleElements = useMemo(() => {
-    const renderDistance = 60;
+    const renderDistance = 40; // REDUCED from 60 to 40 for better performance
     return forestElements.filter(element => {
       const distance = Math.sqrt(
         Math.pow(element.position[0] - playerPosition.x, 2) +
         Math.pow(element.position[2] - playerPosition.z, 2)
       );
       return distance < renderDistance;
-    });
+    }).slice(0, 50); // LIMIT: Maximum 50 visible elements
   }, [forestElements, playerPosition]);
 
   return (
