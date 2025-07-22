@@ -89,28 +89,16 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     }
   });
 
-  // Performance profiling overlay
+  // Performance profiling overlay - render outside Canvas
   if (enableProfiling) {
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 10,
-        left: 10,
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        color: 'white',
-        padding: '10px',
-        borderRadius: '5px',
-        fontFamily: 'monospace',
-        fontSize: '12px',
-        zIndex: 1000
-      }}>
-        <div>FPS: {currentStats.fps.toFixed(1)} (Target: {budget.targetFPS})</div>
-        <div>Draw Calls: {currentStats.drawCalls} (Max: {budget.maxDrawCalls})</div>
-        <div>Polygons: {currentStats.polygons} (Max: {budget.maxPolygons})</div>
-        <div>Memory: {currentStats.memoryUsageMB.toFixed(1)}MB (Max: {budget.maxMemoryMB}MB)</div>
-        <div>Frame Time: {currentStats.frameTime.toFixed(2)}ms</div>
-      </div>
-    );
+    // This should be rendered outside the Canvas, not inside
+    console.log('Performance Stats:', {
+      fps: currentStats.fps.toFixed(1),
+      drawCalls: currentStats.drawCalls,
+      polygons: currentStats.polygons,
+      memory: currentStats.memoryUsageMB.toFixed(1) + 'MB',
+      frameTime: currentStats.frameTime.toFixed(2) + 'ms'
+    });
   }
 
   return null;

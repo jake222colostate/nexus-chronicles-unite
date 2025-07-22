@@ -37,7 +37,7 @@ export const UltimateFantasyOptimizer: React.FC<UltimateFantasyOptimizerProps> =
       <PerformanceMonitor
         budget={performanceBudget}
         onBudgetExceeded={handleBudgetExceeded}
-        enableProfiling={true} // Set to false in production
+        enableProfiling={false} // Disabled to prevent HTML in Canvas error
       />
 
       {/* Dynamic asset streaming for efficient memory usage */}
