@@ -1,6 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
+import { FrameLimiter } from './FrameLimiter';
 import { useFantasy3DUpgradeWorld } from './hooks/useFantasy3DUpgradeWorld';
 import { Fantasy3DScene } from './Fantasy3DScene';
 import { Fantasy3DUpgradePedestals } from './Fantasy3DUpgradePedestals';
@@ -97,10 +98,11 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         )}
         {isCanvasReady && assetsLoaded && (
           <Canvas
+            frameloop="demand"
             key="fantasy-canvas"
             dpr={[1, 1]}
-            camera={{ 
-              position: [0, 5, 12], 
+            camera={{
+              position: [0, 5, 12],
               fov: 50,
               near: 0.1,
               far: 1200
@@ -115,6 +117,7 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               state.camera.updateProjectionMatrix();
             }}
           >
+            <FrameLimiter fps={60} />
             <Fantasy3DScene
               cameraPosition={cameraPosition}
               onPositionChange={handlePositionChange}

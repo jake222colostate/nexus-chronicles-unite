@@ -74,9 +74,9 @@ export const FogBasedChunkSystem: React.FC<FogBasedChunkSystemProps> = React.mem
     let chunkCount = 0;
     const maxChunks = 80; // Increased for smooth transitions
     
-    // Generate chunks with fog-based opacity
+    // Generate chunks with fog-based opacity only ahead of the player
     for (let x = playerChunkX - chunkRadius; x <= playerChunkX + chunkRadius && chunkCount < maxChunks; x++) {
-      for (let z = playerChunkZ - chunkRadius; z <= playerChunkZ + farAheadChunks && chunkCount < maxChunks; z++) {
+      for (let z = playerChunkZ; z <= playerChunkZ + farAheadChunks && chunkCount < maxChunks; z++) {
         const worldX = x * chunkSize;
         const worldZ = -z * chunkSize;
         

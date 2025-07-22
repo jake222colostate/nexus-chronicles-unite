@@ -52,7 +52,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
     0, // Grounded at Y = 0
-    index * pathLength // Repeated along Z-axis
+    -index * pathLength // Repeated along negative Z-axis so the path spawns ahead
   ], [index, pathLength]);
 
   // Calculate bounding box when model loads
