@@ -19,12 +19,10 @@ interface ChunkAsset {
 
 const worldChunks: Record<string, ChunkAsset[]> = {
   '0,0': [
-    { file: 'assets/Path.glb', position: [0, -1, 0] },
-    { file: 'assets/environment/AncientTree.glb', position: [2, 0, 5] },
-    { file: 'assets/environment/AncientTree2.glb', position: [-3, 0, 4] }
+    // Decorative assets disabled
   ],
   '1,0': [
-    { file: 'assets/environment/Mountains.glb', position: [10, 0, 0], scale: 15, lod: true }
+    // Decorative assets disabled
   ],
   '0,1': [
     { file: 'assets/upgrades/LargeObelisk.glb', position: [0, 0, 18], scale: 2, lod: true }

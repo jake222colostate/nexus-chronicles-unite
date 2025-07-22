@@ -2,9 +2,10 @@
 import React, { Suspense } from 'react';
 import { FogChunkData } from './FogBasedChunkSystem';
 import { Vector3 } from 'three';
-import { OptimizedGLBTreeSystem } from './OptimizedGLBTreeSystem';
-import { OptimizedMountainSystem } from './OptimizedMountainSystem';
-import { OptimizedPathSystem } from './OptimizedPathSystem';
+// GLB-based decorative systems are disabled for now
+// import { OptimizedGLBTreeSystem } from './OptimizedGLBTreeSystem';
+// import { OptimizedMountainSystem } from './OptimizedMountainSystem';
+// import { OptimizedPathSystem } from './OptimizedPathSystem';
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
 import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
 import { SkeletonEnemySystem } from './SkeletonEnemySystem';
@@ -38,31 +39,33 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
+  const showDecorations = false;
+
   // console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with forest and skeleton systems`);
 
   return (
     <Suspense fallback={null}>
-      {/* Optimized GLB-based path system */}
-      <OptimizedPathSystem
-        playerPosition={playerPosition}
-        chunksAhead={8}
-        chunksBehind={2}
-        chunkSize={chunkSize}
-      />
-      
-      {/* Optimized GLB-based tree system with instancing */}
-      <OptimizedGLBTreeSystem
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
-        playerPosition={playerPosition}
-      />
-
-      {/* Optimized GLB-based mountain system with LOD */}
-      <OptimizedMountainSystem
-        playerPosition={playerPosition}
-        realm={realm}
-      />
+      {/* Decorative GLB systems temporarily disabled */}
+      {showDecorations && (
+        <>
+          <OptimizedPathSystem
+            playerPosition={playerPosition}
+            chunksAhead={8}
+            chunksBehind={2}
+            chunkSize={chunkSize}
+          />
+          <OptimizedGLBTreeSystem
+            chunks={chunks}
+            chunkSize={chunkSize}
+            realm={realm}
+            playerPosition={playerPosition}
+          />
+          <OptimizedMountainSystem
+            playerPosition={playerPosition}
+            realm={realm}
+          />
+        </>
+      )}
 
       {/* Seamless fog-based ground system */}
       <SeamlessGroundSystem
