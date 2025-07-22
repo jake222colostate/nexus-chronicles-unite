@@ -1,3 +1,4 @@
+console.log('🎮 GameEngine.tsx starting...');
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useGameStateStore } from '@/stores/useGameStateStore';
@@ -31,6 +32,7 @@ import { useAutoEnergyStore } from '@/stores/useAutoEnergyStore';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 const GameEngine: React.FC = () => {
+  console.log('🎮 GameEngine component rendering...');
   const location = useLocation();
   
   const globalGameState = useGameStateStore();
