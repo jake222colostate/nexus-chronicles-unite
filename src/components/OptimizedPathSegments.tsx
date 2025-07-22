@@ -20,67 +20,8 @@ export const OptimizedPathSegments: React.FC<OptimizedPathSegmentsProps> = ({
   pathLength,
   renderDistance
 }) => {
-  const meshRef = useRef<InstancedMesh>(null);
-  const { scene: pathScene } = useGLTF(assetUrl('assets/Path.glb'));
-
-  // Calculate visible segments based on player position
-  const visibleSegments = useMemo(() => {
-    const playerChunkIndex = Math.floor(playerPosition.z / pathLength);
-    const segments: { index: number; position: Vector3 }[] = [];
-
-    for (let i = -2; i <= segmentCount; i++) {
-      const segmentIndex = playerChunkIndex + i;
-      const segmentPosition = new Vector3(0, 0, segmentIndex * pathLength);
-      const distance = segmentPosition.distanceTo(playerPosition);
-
-      if (distance <= renderDistance) {
-        segments.push({ index: segmentIndex, position: segmentPosition });
-      }
-    }
-
-    return segments;
-  }, [playerPosition.z, pathLength, segmentCount, renderDistance]);
-
-  // Update instance matrices
-  useEffect(() => {
-    if (!meshRef.current || !pathScene) return;
-
-    visibleSegments.forEach((segment, i) => {
-      const matrix = new Matrix4();
-      matrix.setPosition(segment.position);
-      meshRef.current!.setMatrixAt(i, matrix);
-    });
-
-    meshRef.current.instanceMatrix.needsUpdate = true;
-    meshRef.current.count = visibleSegments.length;
-  }, [visibleSegments, pathScene]);
-
-  if (!pathScene) return null;
-
-  // Extract geometry and material from the loaded scene
-  let geometry = null;
-  let material = null;
-
-  pathScene.traverse((child) => {
-    if (child.type === 'Mesh') {
-      geometry = (child as any).geometry;
-      material = (child as any).material;
-    }
-  });
-
-  if (!geometry || !material) {
-    console.warn('⚠️ Could not extract geometry/material from Path.glb');
-    return null;
-  }
-
-  return (
-    <instancedMesh
-      ref={meshRef}
-      args={[geometry, material, Math.max(segmentCount + 4, 10)]}
-      castShadow
-      receiveShadow
-    />
-  );
+  // GLB assets disabled - returning null to disable path rendering
+  return null;
 };
 
 // Performance monitoring hook for path system

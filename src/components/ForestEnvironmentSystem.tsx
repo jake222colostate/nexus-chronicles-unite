@@ -114,6 +114,8 @@ export const ForestEnvironmentSystem: React.FC<ForestEnvironmentSystemProps> = (
   realm,
   playerPosition
 }) => {
+  // GLB/FBX assets disabled - returning null to disable forest rendering
+  return null;
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
     return null;

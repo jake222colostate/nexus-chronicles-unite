@@ -4,33 +4,9 @@ import { Vector3, Box3 } from 'three';
 import { useGLTF } from '@react-three/drei';
 import { assetUrl } from '@/lib/utils';
 
-// Preload the path model immediately
-useGLTF.preload(assetUrl('assets/Path.glb'));
-
-// Path Model Component with direct useGLTF
+// GLB assets disabled - Path Model Component returns null
 const PathModel: React.FC<{ onLoad?: (scene: any) => void }> = ({ onLoad }) => {
-  try {
-    const { scene } = useGLTF(assetUrl('assets/Path.glb'));
-    
-    // Call onLoad when model is successfully loaded
-    React.useEffect(() => {
-      if (scene && onLoad) {
-        // console.log('✅ Path.glb loaded successfully');
-        onLoad(scene);
-      }
-    }, [scene, onLoad]);
-
-    return <primitive object={scene.clone()} castShadow receiveShadow />;
-  } catch (error) {
-    console.error('❌ Failed to load Path.glb:', error);
-    // Fallback geometry if model fails to load
-    return (
-      <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4, 0.2, 10]} />
-        <meshStandardMaterial color="#D2B48C" />
-      </mesh>
-    );
-  }
+  return null;
 };
 
 interface PathSegmentProps {
