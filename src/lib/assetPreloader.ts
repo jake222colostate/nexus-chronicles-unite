@@ -3,13 +3,15 @@ import { assetUrl } from '@/lib/utils';
 
 // Critical assets - must be under 15MB each
 const CRITICAL_ASSETS = [
-  // assetUrl('assets/Path.glb'), // Temporarily disabled
+  assetUrl('assets/Path.glb'), // Main walking surface
   assetUrl('assets/upgrades/Podiums.glb'),
   assetUrl('assets/upgrades/LargeObelisk.glb'),
 ];
 
-// Fantasy realm assets - all available GLB files
-const FANTASY_ASSETS: string[] = [];
+// Fantasy realm assets - only using existing files
+const FANTASY_ASSETS = [
+  assetUrl('assets/environment/AncientTree.glb'), // This exists in the project
+];
 
 // Preload critical assets using useGLTF
 const preloadAssets = (paths: string[]) => {

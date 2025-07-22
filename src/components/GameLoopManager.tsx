@@ -1,6 +1,6 @@
 
 import { useEffect, useRef } from 'react';
-
+import { useMapEditorStore } from '../stores/useMapEditorStore';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { GameState, fantasyBuildings, scifiBuildings } from './GameStateManager';
@@ -25,10 +25,11 @@ export const useGameLoopManager = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
   const purchasedUpgradesCount = stablePurchasedUpgrades.length;
-  
+  const isEditorActive = useMapEditorStore((state) => state.isEditorActive);
 
   // Game loop - now includes auto mana generation
   useEffect(() => {
+    if (isEditorActive) return;
     intervalRef.current = setInterval(() => {
       setGameState(prev => {
         const deltaTime = 0.1; // 100ms intervals
@@ -49,10 +50,11 @@ export const useGameLoopManager = ({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [setGameState]);
+  }, [setGameState, isEditorActive]);
 
   // Enhanced production calculation with cross-realm upgrades
   useEffect(() => {
+    if (isEditorActive) return;
     let manaRate = 0;
     let energyRate = 0;
     let manaPerKill = 5;
@@ -106,25 +108,13 @@ export const useGameLoopManager = ({
     const fantasyBonus = 1 + (energyRate * 0.01);
     const scifiBonus = 1 + (manaRate * 0.01);
 
-    const newManaPerSecond = manaRate * fantasyBonus * globalMultiplier;
-    const newEnergyPerSecond = energyRate * scifiBonus * globalMultiplier;
-    
-    setGameState(prev => {
-      // Only update if values actually changed to prevent infinite loops
-      if (Math.abs(prev.manaPerSecond - newManaPerSecond) < 0.01 && 
-          Math.abs(prev.energyPerSecond - newEnergyPerSecond) < 0.01 && 
-          prev.manaPerKill === manaPerKill) {
-        return prev;
-      }
-      
-      return {
-        ...prev,
-        manaPerSecond: newManaPerSecond,
-        energyPerSecond: newEnergyPerSecond,
-        manaPerKill,
-      };
-    });
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, crossRealmUpgradesWithLevels, setGameState]);
+    setGameState(prev => ({
+      ...prev,
+      manaPerSecond: manaRate * fantasyBonus * globalMultiplier,
+      energyPerSecond: energyRate * scifiBonus * globalMultiplier,
+      manaPerKill,
+    }));
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels, isEditorActive]);
 
   return { buffSystem };
 };

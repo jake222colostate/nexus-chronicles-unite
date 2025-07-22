@@ -2,15 +2,11 @@
 import React, { Suspense } from 'react';
 import { FogChunkData } from './FogBasedChunkSystem';
 import { Vector3 } from 'three';
-// GLB-based decorative systems are disabled for now
-// import { OptimizedGLBTreeSystem } from './OptimizedGLBTreeSystem';
-// import { OptimizedMountainSystem } from './OptimizedMountainSystem';
-// import { OptimizedPathSystem } from './OptimizedPathSystem';
+import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
-import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
-import { SimpleTreeSystem } from './SimpleTreeSystem';
+import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
 import { SkeletonEnemySystem } from './SkeletonEnemySystem';
-
+import { ProceduralMountainSystem } from './ProceduralMountainSystem'; // Fixed HMR cache issue
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: FogChunkData[];
@@ -40,34 +36,10 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
     return null;
   }
 
-  const showDecorations = false;
-
   // console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with forest and skeleton systems`);
 
   return (
     <Suspense fallback={null}>
-      {/* Decorative GLB systems temporarily disabled */}
-      {showDecorations && (
-        <>
-          <OptimizedPathSystem
-            playerPosition={playerPosition}
-            chunksAhead={8}
-            chunksBehind={2}
-            chunkSize={chunkSize}
-          />
-          <OptimizedGLBTreeSystem
-            chunks={chunks}
-            chunkSize={chunkSize}
-            realm={realm}
-            playerPosition={playerPosition}
-          />
-          <OptimizedMountainSystem
-            playerPosition={playerPosition}
-            realm={realm}
-          />
-        </>
-      )}
-
       {/* Seamless fog-based ground system */}
       <SeamlessGroundSystem
         chunks={chunks}
@@ -76,19 +48,27 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         playerPosition={playerPosition}
         fogDistance={fogDistance}
       />
-
-      {/* Procedural mountains */}
-      <ProceduralMountainTerrain
+      
+      {/* Tree system enabled ahead of player */}
+      <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
       />
 
-      {/* Simple trees ahead of player */}
-      <SimpleTreeSystem
+      {/* Forest environment enabled ahead of player */}
+      <ForestEnvironmentSystem
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}
+        playerPosition={playerPosition}
+      />
+
+      {/* Procedural mountain system for dramatic backdrop */}
+      <ProceduralMountainSystem
+        chunks={chunks}
+        playerPosition={playerPosition}
+        chunkSize={chunkSize}
       />
 
       {/* Skeleton enemy system */}

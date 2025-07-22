@@ -5,7 +5,7 @@ import { MagicalFantasySkybox } from './MagicalFantasySkybox';
 import { ProceduralMountainTerrain } from './ProceduralMountainTerrain';
 import { CleanPathSystem } from './CleanPathSystem';
 import { ImprovedFantasyLighting } from './ImprovedFantasyLighting';
-import { SimpleTreeSystem } from './SimpleTreeSystem';
+import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import * as THREE from 'three';
 
 interface FantasyScreenshotEnvironmentProps {
@@ -49,8 +49,8 @@ export const FantasyScreenshotEnvironment: React.FC<FantasyScreenshotEnvironment
         realm={realm}
       />
       
-      {/* Simple tree system for quick screenshots */}
-      <SimpleTreeSystem
+      {/* Enhanced Tree Distribution System with proper GLB loading */}
+      <EnhancedTreeDistribution
         chunks={chunks}
         chunkSize={chunkSize}
         realm={realm}

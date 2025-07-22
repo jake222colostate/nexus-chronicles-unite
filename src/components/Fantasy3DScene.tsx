@@ -8,15 +8,11 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
-// Temporarily disable decorative GLB-based systems
-// import { LinearForestCorridor } from './LinearForestCorridor';
-// import { InfinitePathSystem } from './InfinitePathSystem';
-// import { OptimizedStartingForestBarrier } from './OptimizedStartingForestBarrier';
-
+import { LinearForestCorridor } from './LinearForestCorridor';
+import { InfinitePathSystem } from './InfinitePathSystem';
+import { StartingForestBarrier } from './StartingForestBarrier';
 import { PerformanceOptimizer } from './PerformanceOptimizer';
-import { UltimateFantasyOptimizer } from './UltimateFantasyOptimizer';
 import { CollisionProvider } from '@/lib/CollisionContext';
-import { initializeAllOptimizations } from '../utils/GLBOptimizationUtils';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -48,12 +44,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   upgradesPurchased = 0
 }) => {
   const [enemyCount, setEnemyCount] = useState(0);
-  const showDecorations = false;
-
-  // Initialize optimization systems once
-  useEffect(() => {
-    initializeAllOptimizations();
-  }, []);
 
   // PERFORMANCE FIX: Simplified camera position validation
   const safeCameraPosition = useMemo(() => {
@@ -83,83 +73,82 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   return (
     <CollisionProvider>
-      <UltimateFantasyOptimizer playerPosition={safeCameraPosition}>
-        <Suspense fallback={null}>
-          <FirstPersonController
-            position={[0, 2, 20]}
-            onPositionChange={handlePositionChange}
-            canMoveForward={true}
-          />
+      <Suspense fallback={null}>
+        <FirstPersonController
+          position={[0, 2, 20]}
+          onPositionChange={handlePositionChange}
+          canMoveForward={true}
+        />
 
-          <color attach="background" args={['#2d1b4e']} />
+        <color attach="background" args={['#2d1b4e']} />
 
-          {/* Ultra-aggressive performance optimization */}
-          <PerformanceOptimizer />
-          <CasualFog />
+        {/* Performance optimization with heavy fog */}
+        <PerformanceOptimizer />
+        <CasualFog />
 
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-            <planeGeometry args={[100, 100]} />
-            <meshStandardMaterial color="#2d4a2d" />
-          </mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
+          <planeGeometry args={[100, 100]} />
+          <meshStandardMaterial color="#2d4a2d" />
+        </mesh>
 
-          <ambientLight intensity={0.3} />
-          <Sun position={[10, 20, 5]} />
+        <ambientLight intensity={0.4} />
+        <Sun position={[10, 20, 5]} />
 
-          <MagicStaffWeaponSystem
-            upgradeLevel={maxUnlockedUpgrade}
-            visible={true}
-            enemyPositions={enemyPositions}
-            onHitEnemy={(index, damage) => {
-              onEnemyKilled?.();
-            }}
-            damage={weaponDamage}
-          />
+        <MagicStaffWeaponSystem
+          upgradeLevel={maxUnlockedUpgrade}
+          visible={true}
+          enemyPositions={enemyPositions}
+          onHitEnemy={(index, damage) => {
+            // console.log(`Hit enemy ${index} for ${damage} damage`);
+            onEnemyKilled?.();
+          }}
+          damage={weaponDamage}
+        />
 
-          {/* Decorative GLB systems temporarily disabled */}
-          {showDecorations && (
-            <>
-              <OptimizedStartingForestBarrier playerPosition={safeCameraPosition} />
-              <InfinitePathSystem
-                playerPosition={safeCameraPosition}
-                chunksAhead={6}
-                chunksBehind={1}
-                renderDistance={25}
-              />
-              <LinearForestCorridor playerPosition={safeCameraPosition} />
-            </>
+        {/* Dense forest barrier behind starting point for direction clarity */}
+        <StartingForestBarrier playerPosition={safeCameraPosition} />
+
+        {/* Infinite Path System - The walking surface */}
+        <InfinitePathSystem
+          playerPosition={safeCameraPosition}
+          chunksAhead={8}
+          chunksBehind={2}
+          renderDistance={30}        // Reduced from 150 for performance
+        />
+
+        {/* Re-enable Linear Forest Corridor but only ahead of player */}
+        <LinearForestCorridor playerPosition={safeCameraPosition} />
+
+        <FogBasedChunkSystem
+          playerPosition={safeCameraPosition}
+          chunkSize={chunkSize}
+          renderDistance={30}  // Reduced for performance
+          fogNear={5}          // Heavy fog starts close
+          fogFar={25}          // Heavy fog ends close
+        >
+          {(chunks: FogChunkData[], fogDistance: number) => (
+            <OptimizedFantasyEnvironment
+              chunks={chunks}
+              chunkSize={chunkSize}
+              realm={realm}
+              playerPosition={safeCameraPosition}
+              onEnemyCountChange={onEnemyCountChange}
+              onEnemyKilled={onEnemyKilled}
+              weaponDamage={weaponDamage}
+              upgradesPurchased={upgradesPurchased}
+              fogDistance={25}           // Reduced fog distance for performance
+            />
           )}
+        </FogBasedChunkSystem>
 
-          <FogBasedChunkSystem
-            playerPosition={safeCameraPosition}
-            chunkSize={chunkSize}
-            renderDistance={25}  // Ultra-aggressive reduction
-            fogNear={5}
-            fogFar={20}          // Very close fog for maximum performance
-          >
-            {(chunks: FogChunkData[], fogDistance: number) => (
-              <OptimizedFantasyEnvironment
-                chunks={chunks}
-                chunkSize={chunkSize}
-                realm={realm}
-                playerPosition={safeCameraPosition}
-                onEnemyCountChange={onEnemyCountChange}
-                onEnemyKilled={onEnemyKilled}
-                weaponDamage={weaponDamage}
-                upgradesPurchased={upgradesPurchased}
-                fogDistance={20}     // Ultra-reduced fog distance
-              />
-            )}
-          </FogBasedChunkSystem>
-
-          <ContactShadows 
-            position={[0, -1.4, safeCameraPosition.z]} 
-            opacity={0.01}     // Reduced shadow opacity
-            scale={6}          // Reduced shadow scale
-            blur={0.5}         // Reduced blur for performance
-            far={1.5}          // Reduced shadow distance
-          />
-        </Suspense>
-      </UltimateFantasyOptimizer>
+        <ContactShadows 
+          position={[0, -1.4, safeCameraPosition.z]} 
+          opacity={0.02}
+          scale={8}
+          blur={1} 
+          far={2}
+        />
+      </Suspense>
     </CollisionProvider>
   );
 });

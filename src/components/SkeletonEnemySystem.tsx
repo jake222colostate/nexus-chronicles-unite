@@ -225,13 +225,10 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
   }, [enemies, onEnemyCountChange]);
 
   // Enemy AI and movement
-  const frameRef = useRef(0);
   useFrame(() => {
-    frameRef.current++;
-    if (frameRef.current % 10 !== 0) return; // update every 10 frames
     const now = Date.now();
-
-    setEnemies(prevEnemies =>
+    
+    setEnemies(prevEnemies => 
       prevEnemies.map(enemy => {
         if (!enemy.alive) return enemy;
 
