@@ -111,31 +111,40 @@ export const useFantasy3DUpgradeWorld = ({
     Array.from({ length: 10 }).map((_, i) => createUpgrade(i))
   );
 
-  // Extend the upgrade list as the player moves forward
+  // Throttled upgrade extension to prevent excessive CPU usage
   useEffect(() => {
-    setUpgrades(prev => {
-      const last = prev[prev.length - 1];
-      const distanceAhead = Math.abs(last.position[2] - cameraPosition.z);
-      if (distanceAhead < RENDER_DISTANCE) {
-        const next: UpgradeData[] = [];
-        let index = prev.length;
-        for (let i = 0; i < 5; i++) {
-          next.push(createUpgrade(index++));
+    const throttledUpdate = () => {
+      setUpgrades(prev => {
+        const last = prev[prev.length - 1];
+        const distanceAhead = Math.abs(last.position[2] - cameraPosition.z);
+        if (distanceAhead < RENDER_DISTANCE) {
+          const next: UpgradeData[] = [];
+          let index = prev.length;
+          for (let i = 0; i < 3; i++) { // Reduced from 5 to 3 for performance
+            next.push(createUpgrade(index++));
+          }
+          return [...prev, ...next];
         }
-        return [...prev, ...next];
-      }
-      return prev;
-    });
-  }, [cameraPosition.z]);
+        return prev;
+      });
+    };
 
-  // Update unlock status when new upgrades are purchased
+    const timeoutId = setTimeout(throttledUpdate, 500); // Throttle updates
+    return () => clearTimeout(timeoutId);
+  }, [Math.floor(cameraPosition.z / 50), RENDER_DISTANCE]); // Throttled to reduce updates
+
+  // Throttled unlock status updates to prevent infinite loops
   useEffect(() => {
-    setUpgrades(prev =>
-      prev.map(u => ({
-        ...u,
-        unlocked: u.id === 0 || maxUnlockedUpgrade >= u.id - 1
-      }))
-    );
+    const timeoutId = setTimeout(() => {
+      setUpgrades(prev =>
+        prev.map(u => ({
+          ...u,
+          unlocked: u.id === 0 || maxUnlockedUpgrade >= u.id - 1
+        }))
+      );
+    }, 100); // Small delay to prevent rapid updates
+    
+    return () => clearTimeout(timeoutId);
   }, [maxUnlockedUpgrade]);
 
   // Update refs when gameState changes

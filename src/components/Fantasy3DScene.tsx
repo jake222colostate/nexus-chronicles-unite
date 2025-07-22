@@ -14,6 +14,7 @@ import { StartingForestBarrier } from './StartingForestBarrier';
 import { PerformanceOptimizer } from './PerformanceOptimizer';
 import { Performance60FPSManager } from './Performance60FPSManager';
 import { PerformanceMonitor } from './PerformanceMonitor';
+import { CPUUsageOptimizer } from './CPUUsageOptimizer';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -84,7 +85,8 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         <color attach="background" args={['#2d1b4e']} />
 
-        {/* Advanced 60 FPS performance management */}
+        {/* CPU and performance optimization */}
+        <CPUUsageOptimizer enabled={true} />
         <Performance60FPSManager targetFPS={60} adaptiveQuality={true} />
         <PerformanceMonitor targetFPS={60} />
         <PerformanceOptimizer />
