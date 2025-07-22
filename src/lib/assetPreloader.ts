@@ -8,9 +8,11 @@ const CRITICAL_ASSETS = [
   assetUrl('assets/upgrades/LargeObelisk.glb'),
 ];
 
-// Fantasy realm assets - only using existing files
+// Fantasy realm assets - all available GLB files
 const FANTASY_ASSETS = [
-  assetUrl('assets/environment/AncientTree.glb'), // This exists in the project
+  assetUrl('assets/environment/AncientTree.glb'),
+  assetUrl('assets/environment/AncientTree2.glb'), 
+  assetUrl('assets/environment/Mountains.glb'),
 ];
 
 // Preload critical assets using useGLTF

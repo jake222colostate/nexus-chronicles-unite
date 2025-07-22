@@ -2,7 +2,9 @@
 import React, { Suspense } from 'react';
 import { FogChunkData } from './FogBasedChunkSystem';
 import { Vector3 } from 'three';
-import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
+import { OptimizedGLBTreeSystem } from './OptimizedGLBTreeSystem';
+import { OptimizedMountainSystem } from './OptimizedMountainSystem';
+import { OptimizedPathSystem } from './OptimizedPathSystem';
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
 import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
 import { SkeletonEnemySystem } from './SkeletonEnemySystem';
@@ -40,6 +42,28 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
 
   return (
     <Suspense fallback={null}>
+      {/* Optimized GLB-based path system */}
+      <OptimizedPathSystem
+        playerPosition={playerPosition}
+        chunksAhead={8}
+        chunksBehind={2}
+        chunkSize={chunkSize}
+      />
+      
+      {/* Optimized GLB-based tree system with instancing */}
+      <OptimizedGLBTreeSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+        playerPosition={playerPosition}
+      />
+
+      {/* Optimized GLB-based mountain system with LOD */}
+      <OptimizedMountainSystem
+        playerPosition={playerPosition}
+        realm={realm}
+      />
+
       {/* Seamless fog-based ground system */}
       <SeamlessGroundSystem
         chunks={chunks}
@@ -47,13 +71,6 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         realm={realm}
         playerPosition={playerPosition}
         fogDistance={fogDistance}
-      />
-      
-      {/* Tree system enabled ahead of player */}
-      <EnhancedTreeDistribution
-        chunks={chunks}
-        chunkSize={chunkSize}
-        realm={realm}
       />
 
       {/* Forest environment enabled ahead of player */}
@@ -63,7 +80,6 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         realm={realm}
         playerPosition={playerPosition}
       />
-
 
       {/* Skeleton enemy system */}
       <SkeletonEnemySystem
