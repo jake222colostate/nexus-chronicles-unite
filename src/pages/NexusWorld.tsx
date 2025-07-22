@@ -1,7 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
-// Lazy load the 3D scene component to avoid blocking the initial render
-const NexusWorldScene = lazy(() => import('@/components/NexusWorld/Nexus3DWorld'));
+// Lazy load the chunked 3D scene component
+const NexusWorldScene = lazy(() => import('@/components/ChunkedWorld/ChunkedFantasyWorld'));
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomActionBar } from '@/components/BottomActionBar';
 

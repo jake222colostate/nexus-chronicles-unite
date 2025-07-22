@@ -9,7 +9,8 @@
     "build:dev": "BROWSERSLIST_IGNORE_OLD_DATA=true vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "ios": "npx cap sync ios && npx cap open ios"
+    "ios": "npx cap sync ios && npx cap open ios",
+    "compress:glb": "node scripts/compress-glb.js"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.0",
@@ -89,6 +90,7 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "gltfpack": "^0.24.0",
     "lovable-tagger": "^1.1.7",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.11",
