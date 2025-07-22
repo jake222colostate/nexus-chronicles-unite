@@ -13,7 +13,9 @@ import { InfinitePathSystem } from './InfinitePathSystem';
 import { OptimizedStartingForestBarrier } from './OptimizedStartingForestBarrier';
 
 import { PerformanceOptimizer } from './PerformanceOptimizer';
+import { UltimateFantasyOptimizer } from './UltimateFantasyOptimizer';
 import { CollisionProvider } from '@/lib/CollisionContext';
+import { initializeAllOptimizations } from '../utils/GLBOptimizationUtils';
 
 interface Fantasy3DSceneProps {
   cameraPosition: Vector3;
@@ -46,6 +48,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 }) => {
   const [enemyCount, setEnemyCount] = useState(0);
 
+  // Initialize optimization systems once
+  useEffect(() => {
+    initializeAllOptimizations();
+  }, []);
+
   // PERFORMANCE FIX: Simplified camera position validation
   const safeCameraPosition = useMemo(() => {
     if (!cameraPosition || isNaN(cameraPosition.x) || isNaN(cameraPosition.y) || isNaN(cameraPosition.z)) {
@@ -74,83 +81,83 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
   return (
     <CollisionProvider>
-      <Suspense fallback={null}>
-        <FirstPersonController
-          position={[0, 2, 20]}
-          onPositionChange={handlePositionChange}
-          canMoveForward={true}
-        />
+      <UltimateFantasyOptimizer playerPosition={safeCameraPosition}>
+        <Suspense fallback={null}>
+          <FirstPersonController
+            position={[0, 2, 20]}
+            onPositionChange={handlePositionChange}
+            canMoveForward={true}
+          />
 
-        <color attach="background" args={['#2d1b4e']} />
+          <color attach="background" args={['#2d1b4e']} />
 
-        {/* Performance optimization with heavy fog */}
-        <PerformanceOptimizer />
-        <CasualFog />
+          {/* Ultra-aggressive performance optimization */}
+          <PerformanceOptimizer />
+          <CasualFog />
 
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
-          <planeGeometry args={[100, 100]} />
-          <meshStandardMaterial color="#2d4a2d" />
-        </mesh>
+          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
+            <planeGeometry args={[100, 100]} />
+            <meshStandardMaterial color="#2d4a2d" />
+          </mesh>
 
-        <ambientLight intensity={0.4} />
-        <Sun position={[10, 20, 5]} />
+          <ambientLight intensity={0.3} />
+          <Sun position={[10, 20, 5]} />
 
-        <MagicStaffWeaponSystem
-          upgradeLevel={maxUnlockedUpgrade}
-          visible={true}
-          enemyPositions={enemyPositions}
-          onHitEnemy={(index, damage) => {
-            // console.log(`Hit enemy ${index} for ${damage} damage`);
-            onEnemyKilled?.();
-          }}
-          damage={weaponDamage}
-        />
+          <MagicStaffWeaponSystem
+            upgradeLevel={maxUnlockedUpgrade}
+            visible={true}
+            enemyPositions={enemyPositions}
+            onHitEnemy={(index, damage) => {
+              onEnemyKilled?.();
+            }}
+            damage={weaponDamage}
+          />
 
-        {/* Optimized forest barrier with instanced GLB trees */}
-        <OptimizedStartingForestBarrier playerPosition={safeCameraPosition} />
+          {/* Optimized forest barrier with instanced GLB trees */}
+          <OptimizedStartingForestBarrier playerPosition={safeCameraPosition} />
 
+          {/* Reduced path system for performance */}
+          <InfinitePathSystem
+            playerPosition={safeCameraPosition}
+            chunksAhead={6}      // Reduced from 8
+            chunksBehind={1}     // Reduced from 2
+            renderDistance={25}  // Heavily reduced for 60 FPS
+          />
 
-        {/* Infinite Path System - The walking surface */}
-        <InfinitePathSystem
-          playerPosition={safeCameraPosition}
-          chunksAhead={8}
-          chunksBehind={2}
-          renderDistance={30}        // Reduced from 150 for performance
-        />
+          {/* Reduced forest corridor */}
+          <LinearForestCorridor playerPosition={safeCameraPosition} />
 
-        {/* Re-enable Linear Forest Corridor but only ahead of player */}
-        <LinearForestCorridor playerPosition={safeCameraPosition} />
+          <FogBasedChunkSystem
+            playerPosition={safeCameraPosition}
+            chunkSize={chunkSize}
+            renderDistance={25}  // Ultra-aggressive reduction
+            fogNear={5}
+            fogFar={20}          // Very close fog for maximum performance
+          >
+            {(chunks: FogChunkData[], fogDistance: number) => (
+              <OptimizedFantasyEnvironment
+                chunks={chunks}
+                chunkSize={chunkSize}
+                realm={realm}
+                playerPosition={safeCameraPosition}
+                onEnemyCountChange={onEnemyCountChange}
+                onEnemyKilled={onEnemyKilled}
+                weaponDamage={weaponDamage}
+                upgradesPurchased={upgradesPurchased}
+                fogDistance={20}     // Ultra-reduced fog distance
+              />
+            )}
+          </FogBasedChunkSystem>
 
-        <FogBasedChunkSystem
-          playerPosition={safeCameraPosition}
-          chunkSize={chunkSize}
-          renderDistance={30}  // Reduced for performance
-          fogNear={5}          // Heavy fog starts close
-          fogFar={25}          // Heavy fog ends close
-        >
-          {(chunks: FogChunkData[], fogDistance: number) => (
-            <OptimizedFantasyEnvironment
-              chunks={chunks}
-              chunkSize={chunkSize}
-              realm={realm}
-              playerPosition={safeCameraPosition}
-              onEnemyCountChange={onEnemyCountChange}
-              onEnemyKilled={onEnemyKilled}
-              weaponDamage={weaponDamage}
-              upgradesPurchased={upgradesPurchased}
-              fogDistance={25}           // Reduced fog distance for performance
-            />
-          )}
-        </FogBasedChunkSystem>
-
-        <ContactShadows 
-          position={[0, -1.4, safeCameraPosition.z]} 
-          opacity={0.02}
-          scale={8}
-          blur={1} 
-          far={2}
-        />
-      </Suspense>
+          <ContactShadows 
+            position={[0, -1.4, safeCameraPosition.z]} 
+            opacity={0.01}     // Reduced shadow opacity
+            scale={6}          // Reduced shadow scale
+            blur={0.5}         // Reduced blur for performance
+            far={1.5}          // Reduced shadow distance
+          />
+        </Suspense>
+      </UltimateFantasyOptimizer>
     </CollisionProvider>
   );
 });
