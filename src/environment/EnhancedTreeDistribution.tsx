@@ -1,10 +1,10 @@
 import React, { useMemo, Suspense } from 'react';
-import { ChunkData } from '../components/ChunkSystem';
+import { FogChunkData } from '../components/FogBasedChunkSystem';
 import * as THREE from 'three';
 import { useRegisterCollider } from '@/lib/CollisionContext';
 
 interface EnhancedTreeDistributionProps {
-  chunks: ChunkData[];
+  chunks: FogChunkData[];
   chunkSize: number;
   realm: 'fantasy' | 'scifi';
 }
