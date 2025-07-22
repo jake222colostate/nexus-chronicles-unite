@@ -33,7 +33,15 @@ import { MapEditorToolbar } from './MapEditor/MapEditorToolbar';
 import { useMapEditorStore } from '../stores/useMapEditorStore';
 
 const GameEngine: React.FC = () => {
-  const location = useLocation();
+  // Safe location hook with fallback
+  let location: any = null;
+  try {
+    location = useLocation();
+  } catch (error) {
+    console.warn('useLocation hook failed, likely outside Router context:', error);
+    location = { state: null, pathname: '/' };
+  }
+  
   const { isEditorActive } = useMapEditorStore();
   const globalGameState = useGameStateStore();
   const autoManaStore = useAutoManaStore();
@@ -86,14 +94,18 @@ const GameEngine: React.FC = () => {
 
   // Handle navigation from Nexus World - force realm switch
   useEffect(() => {
+    if (!location || !location.state) return;
+    
     const state = location.state as { selectedRealm?: 'fantasy' | 'scifi' };
     if (state?.selectedRealm) {
       // Always switch to the selected realm, even if it's the same as current
       switchRealm(state.selectedRealm);
       // Clear the navigation state to prevent repeated switches
-      window.history.replaceState(null, '', location.pathname);
+      if (location.pathname && window.history) {
+        window.history.replaceState(null, '', location.pathname);
+      }
     }
-  }, [location.state, switchRealm]);
+  }, [location?.state, switchRealm, location?.pathname]);
 
   const [enemyCount, setEnemyCount] = useState(0);
 
