@@ -2,7 +2,6 @@
 import React, { useRef, useState, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Mesh } from 'three';
-import { useGLTF } from '@react-three/drei';
 
 interface UpgradeNode3DProps {
   upgrade: any;
@@ -77,36 +76,37 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
     }
   });
 
-  // Fantasy podium model using GLB file
+  // Fantasy podium model using basic geometry (GLB files removed for performance)
   const FantasyPodiumModel = () => {
-    try {
-      const { scene } = useGLTF('/assets/upgrades/Podiums.glb');
-      
-      return (
-        <group
-          ref={meshRef}
-          onClick={onClick}
-          onPointerOver={() => setHovered(true)}
-          onPointerOut={() => setHovered(false)}
-          scale={hovered ? 0.8 : 0.7}
-        >
-          <primitive object={scene.clone()} />
-          
-          {/* Crystal on top */}
-          <mesh position={[0, 0.6, 0]} castShadow>
-            {geometry}
-            <meshLambertMaterial
-              color={nodeColor}
-              transparent
-              opacity={isUnlocked ? 0.9 : 0.5}
-            />
-          </mesh>
-        </group>
-      );
-    } catch (error) {
-      console.error('Error loading Podiums.glb:', error);
-      return null;
-    }
+    return (
+      <group
+        ref={meshRef}
+        onClick={onClick}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        scale={hovered ? 0.8 : 0.7}
+      >
+        {/* Basic pedestal base */}
+        <mesh position={[0, 0.3, 0]}>
+          <cylinderGeometry args={[0.8, 1.0, 0.6, 8]} />
+          <meshLambertMaterial
+            color={realm === 'fantasy' ? '#8b5cf6' : '#06b6d4'}
+            transparent
+            opacity={0.8}
+          />
+        </mesh>
+        
+        {/* Crystal on top */}
+        <mesh position={[0, 0.8, 0]} castShadow>
+          {geometry}
+          <meshLambertMaterial
+            color={nodeColor}
+            transparent
+            opacity={isUnlocked ? 0.9 : 0.5}
+          />
+        </mesh>
+      </group>
+    );
   };
 
   return (
@@ -185,5 +185,4 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
 
 UpgradeNode3D.displayName = 'UpgradeNode3D';
 
-// Preload the GLB model
-useGLTF.preload('/assets/upgrades/Podiums.glb');
+// GLB models removed for performance - using basic geometry instead
