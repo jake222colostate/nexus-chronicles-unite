@@ -52,7 +52,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
     0, // Grounded at Y = 0
-    -index * pathLength // Repeated along negative Z-axis so the path spawns ahead
+    index * pathLength // Path spawns ahead in positive Z direction
   ], [index, pathLength]);
 
   // Calculate bounding box when model loads
@@ -113,14 +113,14 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
 
   // Calculate which chunks to render based on player position
   const visibleChunks = useMemo(() => {
-    const playerChunkIndex = Math.floor(playerPosition.z / actualPathLength);
+    const playerChunkIndex = Math.floor(-playerPosition.z / actualPathLength); // Negative because player moves in -Z
     const chunks: { index: number; distance: number }[] = [];
 
     // Generate chunks from behind player to ahead of player
     for (let i = -chunksBehind; i <= chunksAhead; i++) {
       const chunkIndex = playerChunkIndex + i;
       const chunkZ = chunkIndex * actualPathLength;
-      const distance = Math.abs(chunkZ - playerPosition.z);
+      const distance = Math.abs(chunkZ + playerPosition.z); // Adjusted for negative Z movement
       
       // Only render chunks within render distance
       if (distance <= renderDistance) {

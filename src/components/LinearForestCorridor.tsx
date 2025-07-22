@@ -76,7 +76,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
       
       elements.push({
         type: leftTreeType,
-        position: [leftX, -1, -z],
+        position: [leftX, -1, z], // Positive Z to spawn ahead
         rotation: [0, seededRandom(z * 567) * Math.PI * 2, 0],
         scale: [leftScale, leftScale, leftScale]
       });
@@ -88,7 +88,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
       
       elements.push({
         type: rightTreeType,
-        position: [rightX, -1, -z],
+        position: [rightX, -1, z], // Positive Z to spawn ahead
         rotation: [0, seededRandom(z * 678) * Math.PI * 2, 0],
         scale: [rightScale, rightScale, rightScale]
       });
@@ -99,7 +99,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         const farLeftX = -pathWidth - 8 - seededRandom(z * 111) * 6;
         elements.push({
           type: seededRandom(z * 222) > 0.5 ? 'tree1' : 'tree2',
-          position: [farLeftX, -1, -(z + seededRandom(z * 333) * 3)],
+          position: [farLeftX, -1, z + seededRandom(z * 333) * 3], // Positive Z to spawn ahead
           rotation: [0, seededRandom(z * 444) * Math.PI * 2, 0],
           scale: [0.6 + seededRandom(z * 555) * 0.4, 0.6 + seededRandom(z * 555) * 0.4, 0.6 + seededRandom(z * 555) * 0.4]
         });
@@ -108,7 +108,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         const farRightX = pathWidth + 8 + seededRandom(z * 666) * 6;
         elements.push({
           type: seededRandom(z * 777) > 0.5 ? 'tree1' : 'tree2',
-          position: [farRightX, -1, -(z + seededRandom(z * 888) * 3)],
+          position: [farRightX, -1, z + seededRandom(z * 888) * 3], // Positive Z to spawn ahead
           rotation: [0, seededRandom(z * 999) * Math.PI * 2, 0],
           scale: [0.6 + seededRandom(z * 111) * 0.4, 0.6 + seededRandom(z * 111) * 0.4, 0.6 + seededRandom(z * 111) * 0.4]
         });
@@ -122,7 +122,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         const detailType = seededRandom(z * 2222) > 0.6 ? 'log' : `rock${Math.floor(seededRandom(z * 3333) * 3) + 1}`;
         elements.push({
           type: detailType,
-          position: [-pathWidth - 1 - seededRandom(z * 4444) * 2, -1, -z],
+          position: [-pathWidth - 1 - seededRandom(z * 4444) * 2, -1, z], // Positive Z to spawn ahead
           rotation: [0, seededRandom(z * 5555) * Math.PI * 2, 0],
           scale: [0.8 + seededRandom(z * 6666) * 0.4, 0.8 + seededRandom(z * 6666) * 0.4, 0.8 + seededRandom(z * 6666) * 0.4]
         });
@@ -133,7 +133,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         const detailType = seededRandom(z * 8888) > 0.6 ? 'log' : `rock${Math.floor(seededRandom(z * 9999) * 3) + 1}`;
         elements.push({
           type: detailType,
-          position: [pathWidth + 1 + seededRandom(z * 1212) * 2, -1, -z],
+          position: [pathWidth + 1 + seededRandom(z * 1212) * 2, -1, z], // Positive Z to spawn ahead
           rotation: [0, seededRandom(z * 1313) * Math.PI * 2, 0],
           scale: [0.8 + seededRandom(z * 1414) * 0.4, 0.8 + seededRandom(z * 1414) * 0.4, 0.8 + seededRandom(z * 1414) * 0.4]
         });
@@ -149,7 +149,7 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
         if (seededRandom(z * (1717 + side)) > 0.5) {
           elements.push({
             type: 'grass',
-            position: [grassX, -1, -(z + seededRandom(z * (1818 + side)) * 2)],
+            position: [grassX, -1, z + seededRandom(z * (1818 + side)) * 2], // Positive Z to spawn ahead
             rotation: [0, seededRandom(z * (1919 + side)) * Math.PI * 2, 0],
             scale: [0.6 + seededRandom(z * (2020 + side)) * 0.6, 0.6 + seededRandom(z * (2020 + side)) * 0.6, 0.6 + seededRandom(z * (2020 + side)) * 0.6]
           });
