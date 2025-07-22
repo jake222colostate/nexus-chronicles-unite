@@ -41,10 +41,7 @@ export const useGLBSceneReuse = (url: string) => {
 // Preload critical GLB assets with compression awareness
 export const preloadGLBAssets = () => {
   const assets = [
-    'assets/Path.glb',
-    'assets/environment/AncientTree.glb', 
-    'assets/environment/AncientTree2.glb',
-    'assets/environment/Mountains.glb',
+    // Decorative assets disabled
     'assets/upgrades/Podiums.glb',
     'assets/upgrades/LargeObelisk.glb'
   ];

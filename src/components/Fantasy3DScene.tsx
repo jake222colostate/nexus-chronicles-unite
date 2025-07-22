@@ -8,9 +8,10 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
-import { LinearForestCorridor } from './LinearForestCorridor';
-import { InfinitePathSystem } from './InfinitePathSystem';
-import { OptimizedStartingForestBarrier } from './OptimizedStartingForestBarrier';
+// Temporarily disable decorative GLB-based systems
+// import { LinearForestCorridor } from './LinearForestCorridor';
+// import { InfinitePathSystem } from './InfinitePathSystem';
+// import { OptimizedStartingForestBarrier } from './OptimizedStartingForestBarrier';
 
 import { PerformanceOptimizer } from './PerformanceOptimizer';
 import { UltimateFantasyOptimizer } from './UltimateFantasyOptimizer';
@@ -47,6 +48,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
   upgradesPurchased = 0
 }) => {
   const [enemyCount, setEnemyCount] = useState(0);
+  const showDecorations = false;
 
   // Initialize optimization systems once
   useEffect(() => {
@@ -113,19 +115,19 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
             damage={weaponDamage}
           />
 
-          {/* Optimized forest barrier with instanced GLB trees */}
-          <OptimizedStartingForestBarrier playerPosition={safeCameraPosition} />
-
-          {/* Reduced path system for performance */}
-          <InfinitePathSystem
-            playerPosition={safeCameraPosition}
-            chunksAhead={6}      // Reduced from 8
-            chunksBehind={1}     // Reduced from 2
-            renderDistance={25}  // Heavily reduced for 60 FPS
-          />
-
-          {/* Reduced forest corridor */}
-          <LinearForestCorridor playerPosition={safeCameraPosition} />
+          {/* Decorative GLB systems temporarily disabled */}
+          {showDecorations && (
+            <>
+              <OptimizedStartingForestBarrier playerPosition={safeCameraPosition} />
+              <InfinitePathSystem
+                playerPosition={safeCameraPosition}
+                chunksAhead={6}
+                chunksBehind={1}
+                renderDistance={25}
+              />
+              <LinearForestCorridor playerPosition={safeCameraPosition} />
+            </>
+          )}
 
           <FogBasedChunkSystem
             playerPosition={safeCameraPosition}
