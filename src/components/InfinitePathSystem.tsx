@@ -32,7 +32,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
     -0.1, // Slightly lowered to sit on ground
-    index * pathLength // POSITIVE Z for forward movement (corrected orientation)
+    -index * pathLength // NEGATIVE Z for forward movement (player moves in -Z direction)
   ], [index, pathLength]);
 
   // Random horizontal rotation (90 degree range: -45 to +45 degrees)
@@ -78,13 +78,13 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
 
   // Calculate which chunks to render based on player position
   const visibleChunks = useMemo(() => {
-    const playerChunkIndex = Math.floor(playerPosition.z / actualPathLength); // Positive Z for forward
+    const playerChunkIndex = Math.floor(-playerPosition.z / actualPathLength); // Player moves in negative Z
     const chunks: { index: number; distance: number }[] = [];
 
     // Generate chunks to render path forward from spawn point
     for (let i = -chunksBehind; i <= chunksAhead; i++) {
-      const chunkIndex = playerChunkIndex - i; // Flip the direction
-      const chunkZ = chunkIndex * actualPathLength;
+      const chunkIndex = playerChunkIndex + i; // Generate chunks ahead and behind player
+      const chunkZ = -chunkIndex * actualPathLength; // Negative Z for forward path
       const distance = Math.abs(chunkZ - playerPosition.z);
       
       // Only render chunks within render distance
@@ -131,7 +131,7 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
       {process.env.NODE_ENV === 'development' && (
         <group>
           {visibleChunks.slice(0, 3).map(({ index }) => (
-            <mesh key={`debug-${index}`} position={[0, 0.2, index * actualPathLength]}>
+            <mesh key={`debug-${index}`} position={[0, 0.2, -index * actualPathLength]}>
               <boxGeometry args={[0.2, 0.2, 0.2]} />
               <meshBasicMaterial color="#ff0000" />
             </mesh>
