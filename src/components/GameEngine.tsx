@@ -302,21 +302,20 @@ const GameEngine: React.FC = () => {
 
   return (
     <CollisionProvider>
-    <div className="h-full w-full relative overflow-hidden bg-black">
-      {/* Enhanced background with better layering */}
-      <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
-      
-      {/* Enhanced particle background for visual depth */}
-      <EnhancedParticleBackground realm={currentRealm} />
+      <div className="h-full w-full relative overflow-hidden bg-black">
+        {/* Enhanced background with better layering */}
+        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
+        
+        {/* Enhanced particle background for visual depth */}
+        <EnhancedParticleBackground realm={currentRealm} />
 
-      {/* Journey Tracker - invisible component that tracks real movement */}
-      <JourneyTracker 
-        playerPosition={stablePlayerPosition}
-        onJourneyUpdate={handleJourneyUpdate}
-      />
+        {/* Journey Tracker - invisible component that tracks real movement */}
+        <JourneyTracker 
+          playerPosition={stablePlayerPosition}
+          onJourneyUpdate={handleJourneyUpdate}
+        />
 
-      {/* Clean TopHUD with cross-realm upgrade button */}
-      {(
+        {/* TopHUD with cross-realm upgrade button */}
         <TopHUD
           realm={currentRealm}
           mana={globalGameState.mana}
@@ -329,105 +328,97 @@ const GameEngine: React.FC = () => {
           onCombatUpgradesClick={handleShowCombatUpgrades}
           enemyCount={enemyCount}
         />
-      )}
 
-      {/* Main Game Area */}
-      <div className="absolute inset-0 pt-12 pb-32">
-        {/* Main game view without overlays */}
-        <MapSkillTreeView
-          realm={currentRealm}
-          buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : stableGameState.scifiBuildings}
-          manaPerSecond={stableGameState.manaPerSecond}
-          energyPerSecond={stableGameState.energyPerSecond}
-          onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
-          buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
-          currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
-          gameState={stableGameState}
-          onPurchaseUpgrade={purchaseUpgrade}
-          onPurchaseScifiUpgrade={purchaseScifiUpgrade}
-          onPurchaseFantasyUpgrade={purchaseFantasyUpgrade}
-          isTransitioning={isTransitioning}
-          showTapEffect={showTapEffect}
-          onTapEffectComplete={handleTapEffectComplete}
-          onPlayerPositionUpdate={handlePlayerPositionUpdate}
-          onEnemyCountChange={handleEnemyCountChange}
-          onEnemyKilled={handleEnemyKilled}
-          onMeteorDestroyed={handleMeteorDestroyed}
-          weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
-          upgradesPurchased={stableGameState.purchasedUpgrades.length}
-        />
-      </div>
+        {/* Main Game Area */}
+        <div className="absolute inset-0 pt-12 pb-32">
+          {/* Main game view without overlays */}
+          <MapSkillTreeView
+            realm={currentRealm}
+            buildings={currentRealm === 'fantasy' ? stableGameState.fantasyBuildings : stableGameState.scifiBuildings}
+            manaPerSecond={stableGameState.manaPerSecond}
+            energyPerSecond={stableGameState.energyPerSecond}
+            onBuyBuilding={(buildingId) => buyBuilding(buildingId, currentRealm === 'fantasy')}
+            buildingData={currentRealm === 'fantasy' ? fantasyBuildings : scifiBuildings}
+            currency={currentRealm === 'fantasy' ? stableGameState.mana : stableGameState.energyCredits}
+            gameState={stableGameState}
+            onPurchaseUpgrade={purchaseUpgrade}
+            onPurchaseScifiUpgrade={purchaseScifiUpgrade}
+            onPurchaseFantasyUpgrade={purchaseFantasyUpgrade}
+            isTransitioning={isTransitioning}
+            showTapEffect={showTapEffect}
+            onTapEffectComplete={handleTapEffectComplete}
+            onPlayerPositionUpdate={handlePlayerPositionUpdate}
+            onEnemyCountChange={handleEnemyCountChange}
+            onEnemyKilled={handleEnemyKilled}
+            onMeteorDestroyed={handleMeteorDestroyed}
+            weaponDamage={currentRealm === 'fantasy' ? weaponStats.damage : scifiWeaponStats.damage}
+            upgradesPurchased={stableGameState.purchasedUpgrades.length}
+          />
+        </div>
 
         {/* UI Elements */}
-        {(
-          <>
-            {/* Realm Transition Effect */}
-            <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
+        <>
+          {/* Realm Transition Effect */}
+          <RealmTransition currentRealm={currentRealm} isTransitioning={isTransitioning} />
 
-            {/* Fantasy AutoClicker Upgrade System - positioned top-center, only in fantasy realm */}
-            {currentRealm === 'fantasy' && (
-              <FantasyAutoClickerUpgradeSystem
-                currentMana={stableGameState.mana}
-                onUpgrade={handleFantasyAutoClickerUpgrade}
-              />
-            )}
+          {/* Fantasy AutoClicker Upgrade System - positioned top-center, only in fantasy realm */}
+          {currentRealm === 'fantasy' && (
+            <FantasyAutoClickerUpgradeSystem
+              currentMana={stableGameState.mana}
+              onUpgrade={handleFantasyAutoClickerUpgrade}
+            />
+          )}
 
-            {/* Sci-Fi AutoClicker Upgrade System - positioned top-center, only in sci-fi realm */}
-            {currentRealm === 'scifi' && (
-              <ScifiAutoClickerUpgradeSystem
-                currentEnergy={stableGameState.energyCredits}
-                onUpgrade={handleScifiAutoClickerUpgrade}
-              />
-            )}
+          {/* Sci-Fi AutoClicker Upgrade System - positioned top-center, only in sci-fi realm */}
+          {currentRealm === 'scifi' && (
+            <ScifiAutoClickerUpgradeSystem
+              currentEnergy={stableGameState.energyCredits}
+              onUpgrade={handleScifiAutoClickerUpgrade}
+            />
+          )}
 
-            {/* Weapon Upgrade Button - Moved to right side, vertically centered */}
-            <div className="absolute top-1/2 right-2 transform -translate-y-1/2 z-30">
+          {/* Weapon Upgrade Button - Moved to right side, vertically centered */}
+          <div className="absolute top-1/2 right-2 transform -translate-y-1/2 z-30">
+            <Button 
+              onClick={handleShowWeaponUpgrades}
+              className="h-10 w-10 rounded-lg bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0 text-sm"
+            >
+              🏹
+            </Button>
+          </div>
+
+          {/* Cannon Upgrades Button - Moved below weapon button on right side */}
+          {currentRealm === 'scifi' && (
+            <div className="absolute top-1/2 right-2 transform translate-y-8 z-30">
               <Button 
-                onClick={handleShowWeaponUpgrades}
-                className="h-10 w-10 rounded-lg bg-gradient-to-r from-orange-500/95 to-red-500/95 hover:from-orange-600/95 hover:to-red-600/95 backdrop-blur-xl border border-orange-400/70 transition-all duration-300 font-bold shadow-lg shadow-orange-500/30 p-0 text-sm"
+                onClick={handleShowCannonUpgrades}
+                className="h-10 w-10 rounded-lg bg-gradient-to-r from-cyan-500/95 to-blue-500/95 hover:from-cyan-600/95 hover:to-blue-600/95 backdrop-blur-xl border border-cyan-400/70 transition-all duration-300 font-bold shadow-lg shadow-cyan-500/30 p-0 text-sm"
               >
-                🏹
+                🔫
               </Button>
             </div>
+          )}
 
-            {/* Cannon Upgrades Button - Moved below weapon button on right side */}
-            {currentRealm === 'scifi' && (
-              <div className="absolute top-1/2 right-2 transform translate-y-8 z-30">
-                <Button 
-                  onClick={handleShowCannonUpgrades}
-                  className="h-10 w-10 rounded-lg bg-gradient-to-r from-cyan-500/95 to-blue-500/95 hover:from-cyan-600/95 hover:to-blue-600/95 backdrop-blur-xl border border-cyan-400/70 transition-all duration-300 font-bold shadow-lg shadow-cyan-500/30 p-0 text-sm"
-                >
-                  🔫
-                </Button>
-              </div>
-            )}
+          {/* Cross-Realm Upgrades Button - Moved to left side, vertically centered */}
+          <div className="absolute top-1/2 left-2 transform -translate-y-1/2 z-30">
+            <Button 
+              onClick={handleShowCrossRealmUpgrades}
+              className="h-10 w-10 rounded-lg bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0 text-sm"
+            >
+              🏰
+            </Button>
+          </div>
+        </>
 
-            {/* Cross-Realm Upgrades Button - Moved to left side, vertically centered */}
-            <div className="absolute top-1/2 left-2 transform -translate-y-1/2 z-30">
-              <Button 
-                onClick={handleShowCrossRealmUpgrades}
-                className="h-10 w-10 rounded-lg bg-gradient-to-r from-indigo-500/95 to-purple-500/95 hover:from-indigo-600/95 hover:to-purple-600/95 backdrop-blur-xl border border-indigo-400/70 transition-all duration-300 font-bold shadow-lg shadow-indigo-500/30 p-0 text-sm"
-              >
-                🏰
-              </Button>
-            </div>
-          </>
-        )}
-
-      {/* Removed Minecraft Hotbar */}
-
-      {/* Enhanced Bottom Action Bar with realm-specific journey progress */}
-      {(
+        {/* Enhanced Bottom Action Bar with realm-specific journey progress */}
         <BottomActionBar
           currentRealm={currentRealm}
           onRealmChange={switchRealm}
           isTransitioning={isTransitioning}
           playerDistance={currentJourneyDistance}
         />
-      )}
 
-      {/* Modals */}
-      {(
+        {/* Modals */}
         <>
           {/* Quick Help Modal */}
           <QuickHelpModal
@@ -518,11 +509,7 @@ const GameEngine: React.FC = () => {
             </div>
           )}
         </>
-      )}
-
-      {/* Inventory System - disabled in map editor */}
-
-    </div>
+      </div>
     </CollisionProvider>
   );
 };
