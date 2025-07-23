@@ -22,7 +22,7 @@ export const Fantasy3DUpgradePedestals: React.FC<Fantasy3DUpgradePedestalsProps>
     <>
       {upgrades.map((upgrade) => {
         const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
-        if (distance > 120) return null;
+        if (distance > 50) return null; // Reduced render distance for performance
         
         // Determine model type based on sections of five
         // Upgrades 1-4, 6-9, 11-14, etc. use podium
