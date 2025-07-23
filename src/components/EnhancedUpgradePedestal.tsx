@@ -3,7 +3,8 @@ import React, { useRef, useState, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Group, Mesh, Vector3 } from 'three';
 import { useRegisterCollider } from '@/lib/CollisionContext';
-
+import { useGLTF } from '@react-three/drei';
+import { assetUrl } from '@/lib/utils';
 
 interface EnhancedUpgradePedestalProps {
   position: [number, number, number];
@@ -91,56 +92,72 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     setHovered(false);
   };
 
-  // Simple geometry pedestal/obelisk for performance
+  // Pedestal/obelisk model using GLB files with fallback
   const PedestalModel = () => {
-    return (
-      <group
-        ref={meshRef}
-        onClick={handleClick}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-        scale={hovered ? 1.05 : 1.0}
-      >
-        {modelType === 'obelisk' ? (
-          // Obelisk design
-          <>
-            <mesh position={[0, 1, 0]} castShadow receiveShadow>
-              <boxGeometry args={[0.8, 2, 0.8]} />
-              <meshLambertMaterial color={pedestalConfig.material} />
-            </mesh>
-            <mesh position={[0, 2.2, 0]} castShadow receiveShadow>
-              <coneGeometry args={[0.5, 0.8, 4]} />
-              <meshLambertMaterial color={pedestalConfig.material} />
-            </mesh>
-          </>
-        ) : (
-          // Podium design
-          <>
-            <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
-              <cylinderGeometry args={[1.2, 1.5, 1, 8]} />
-              <meshLambertMaterial color={pedestalConfig.material} />
-            </mesh>
-            <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
-              <cylinderGeometry args={[0.8, 1.0, 0.4, 8]} />
-              <meshLambertMaterial color={pedestalConfig.material} />
-            </mesh>
-          </>
-        )}
+    try {
+      const assetPath =
+        modelType === 'obelisk'
+          ? assetUrl('assets/upgrades/LargeObelisk.glb')
+          : assetUrl('assets/upgrades/Podiums.glb');
 
-        {/* Crystal on top */}
-        <mesh position={[0, modelType === 'obelisk' ? 2.8 : 1.6, 0]} castShadow>
-          {tier === 1 && <tetrahedronGeometry args={[0.4]} />}
-          {tier === 2 && <octahedronGeometry args={[0.5]} />}
-          {tier === 3 && <dodecahedronGeometry args={[0.6]} />}
-          {tier >= 4 && <icosahedronGeometry args={[0.7, 1]} />}
-          <meshLambertMaterial
-            color={getCrystalColor()}
-            transparent
-            opacity={isUnlocked ? 0.9 : 0.5}
-          />
-        </mesh>
-      </group>
-    );
+      const { scene } = useGLTF(assetPath);
+
+      return (
+        <group
+          ref={meshRef}
+          onClick={handleClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+          scale={hovered ? 1.05 : 1.0}
+        >
+          <primitive object={scene.clone()} />
+
+          {/* Crystal on top for podiums */}
+          {modelType !== 'obelisk' && (
+            <mesh position={[0, 1.4, 0]} castShadow>
+              {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
+              {tier === 2 && <octahedronGeometry args={[0.6]} />}
+              {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
+              {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
+              <meshLambertMaterial
+                color={getCrystalColor()}
+                transparent
+                opacity={isUnlocked ? 0.9 : 0.5}
+              />
+            </mesh>
+          )}
+        </group>
+      );
+    } catch (error) {
+      console.error('Error loading upgrade model:', error);
+      // Fallback to basic geometry if GLB fails
+      return (
+        <group
+          ref={meshRef}
+          onClick={handleClick}
+          onPointerOver={handlePointerOver}
+          onPointerOut={handlePointerOut}
+          scale={hovered ? 1.05 : 1.0}
+        >
+          {/* Basic pedestal fallback */}
+          <mesh position={[0, 0.5, 0]}>
+            <cylinderGeometry args={[1, 1.2, 1, 8]} />
+            <meshLambertMaterial color={pedestalConfig.material} />
+          </mesh>
+          <mesh position={[0, 1.4, 0]} castShadow>
+            {tier === 1 && <tetrahedronGeometry args={[0.5]} />}
+            {tier === 2 && <octahedronGeometry args={[0.6]} />}
+            {tier === 3 && <dodecahedronGeometry args={[0.7]} />}
+            {tier >= 4 && <icosahedronGeometry args={[0.8, 1]} />}
+            <meshLambertMaterial
+              color={getCrystalColor()}
+              transparent
+              opacity={isUnlocked ? 0.9 : 0.5}
+            />
+          </mesh>
+        </group>
+      );
+    }
   };
 
   return (
@@ -226,4 +243,6 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   );
 };
 
-// No GLB preloading needed - using simple geometry for performance
+// Preload the GLB model
+useGLTF.preload(assetUrl('assets/upgrades/Podiums.glb'));
+useGLTF.preload(assetUrl('assets/upgrades/LargeObelisk.glb'));

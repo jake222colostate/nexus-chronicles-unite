@@ -1,6 +1,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useAutoEnergyStore } from '@/stores/useAutoEnergyStore';
+import { useMapEditorStore } from '@/stores/useMapEditorStore';
 
 interface UseAutoEnergySystemProps {
   onAddEnergy: (amount: number) => void;
@@ -8,6 +9,7 @@ interface UseAutoEnergySystemProps {
 
 export const useAutoEnergySystem = ({ onAddEnergy }: UseAutoEnergySystemProps) => {
   const energyPerSecond = useAutoEnergyStore((state) => state.energyPerSecond);
+  const isEditorActive = useMapEditorStore((state) => state.isEditorActive);
 
   const createFloatingEnergyText = useCallback((amount: number) => {
     const energyDisplay = document.querySelector('[data-energy-display]');
@@ -36,7 +38,7 @@ export const useAutoEnergySystem = ({ onAddEnergy }: UseAutoEnergySystemProps) =
   }, []);
 
   useEffect(() => {
-    if (energyPerSecond <= 0) return;
+    if (isEditorActive || energyPerSecond <= 0) return;
 
     const interval = setInterval(() => {
       onAddEnergy(energyPerSecond);
@@ -44,5 +46,5 @@ export const useAutoEnergySystem = ({ onAddEnergy }: UseAutoEnergySystemProps) =
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [energyPerSecond, onAddEnergy, createFloatingEnergyText]);
+  }, [energyPerSecond, onAddEnergy, createFloatingEnergyText, isEditorActive]);
 };

@@ -58,3 +58,4 @@ export const TreeComponent: React.FC<TreeComponentProps> = ({
 
 // Preload the Draco-compressed model
 useGLTF.preload('https://raw.githubusercontent.com/jake222colostate/UpdatedModels/main/tree_draco.glb');
+console.log('TreeComponent: Preloading Draco-compressed tree model');

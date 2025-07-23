@@ -19,6 +19,11 @@ import { ScifiScrollUpgradeSystem } from './scifi/ScifiScrollUpgradeSystem';
 import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
 import { ScifiUpgradeGLBSystem } from './scifi/ScifiUpgradeGLBSystem';
 import { CannonPlatformSystem } from './scifi/CannonPlatformSystem';
+import { MapEditorGrid } from './MapEditor/MapEditorGrid';
+import { MapEditorControls } from './MapEditor/MapEditorControls';
+import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
+import { MapEditorFlyingCamera } from './MapEditor/MapEditorFlyingCamera';
+import { useMapEditorStore } from '../stores/useMapEditorStore';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -70,10 +75,12 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   onEnergyGained,
   onPurchaseUpgrade
 }) => {
+  console.log('Scene3D: Rendering with realm:', realm);
   
   const cameraRef = useRef();
   const [enemyPositions, setEnemyPositions] = useState<Vector3[]>([]);
   const [selectedUpgrade, setSelectedUpgrade] = useState<string | null>(null);
+  const { isEditorActive } = useMapEditorStore();
 
   // Stable player position for chunk system - centered in the mountain valley
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
@@ -85,6 +92,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
   // Callback to handle enemy hits
   const handleEnemyHit = useCallback((index: number, damage: number) => {
+    console.log(`Enemy ${index} hit for ${damage} damage`);
     // This would typically trigger enemy damage/death logic
   }, []);
 
@@ -102,6 +110,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
   // Memoize upgrade nodes to prevent unnecessary re-renders
   const upgradeNodes = useMemo(() => {
+    console.log('Scene3D: Creating upgrade nodes');
     return UPGRADE_POSITIONS.map((position) => {
       const upgrade = enhancedHybridUpgrades.find(u => u.id === position.id);
       if (!upgrade) return null;
@@ -121,6 +130,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     }).filter(Boolean);
   }, [gameState.purchasedUpgrades, gameState.nexusShards, checkUpgradeUnlocked, onUpgradeClick, realm]);
 
+  console.log('Scene3D: About to render Canvas');
 
   return (
     <div className="w-full h-full relative overflow-hidden">
@@ -142,15 +152,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <PerspectiveCamera
             ref={cameraRef}
             makeDefault
-            position={[0, 2, 10]}
+            position={isEditorActive ? [0, 5, 15] : [0, 2, 10]}
             fov={65}
             near={0.01}
             far={500}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           />
 
-          {/* Enhanced MagicStaffWeaponSystem with enemy targeting - only in fantasy realm */}
-          {realm === 'fantasy' && (
+          {/* Enhanced MagicStaffWeaponSystem with enemy targeting - disabled in map editor and sci-fi realm */}
+          {!isEditorActive && realm === 'fantasy' && (
             <MagicStaffWeaponSystem 
               upgradeLevel={gameState.weaponUpgradeLevel || 0}
               visible={true}
@@ -161,16 +171,18 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           )}
 
           {/* Enhanced camera controller with circular movement around center upgrades */}
-          <Enhanced360Controller
-            camera={cameraRef.current}
-            minY={-5}
-            maxY={350}
-            sensitivity={0.8}
-            realm={realm}
-            maxRotation={Math.PI / 3} // 60 degrees total range
-            radius={10} // Distance from center upgrades
-            centerPoint={realm === 'scifi' ? [0, -3, -2] : [0, 4, 0]} // Platform center for sci-fi, upgrades for fantasy
-          />
+          {!isEditorActive && (
+            <Enhanced360Controller 
+              camera={cameraRef.current}
+              minY={-5}
+              maxY={350}
+              sensitivity={0.8}
+              realm={realm}
+              maxRotation={Math.PI / 3} // 60 degrees total range
+              radius={10} // Distance from center upgrades
+              centerPoint={realm === 'scifi' ? [0, -3, -2] : [0, 4, 0]} // Platform center for sci-fi, upgrades for fantasy
+            />
+          )}
 
           {/* ENHANCED: Keep lighting active during map editing */}
           <ImprovedFantasyLighting />
@@ -199,13 +211,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 gameState={gameState}
                 platformPosition={new Vector3(0, -3, -2)}
               />
-              <ScifiDefenseSystem
+              {!isEditorActive && (
+                <ScifiDefenseSystem 
                   onMeteorDestroyed={onMeteorDestroyed}
                   onEnergyGained={onEnergyGained}
                   onUpgradeClick={setSelectedUpgrade}
                   purchasedUpgrades={gameState.purchasedUpgrades || []}
                   onMeteorPositionUpdate={handleEnemyPositionUpdate}
                 />
+              )}
             </>
           )}
 
@@ -234,11 +248,16 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Show upgrade nodes in both realms (including map editor for visibility) */}
           {upgradeNodes}
 
-          {/* Tap effect */}
-          {showTapEffect && onTapEffectComplete && (
+          {/* Tap effect disabled in map editor */}
+          {showTapEffect && onTapEffectComplete && !isEditorActive && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
           )}
 
+          {/* Map Editor Components */}
+          <MapEditorGrid />
+          <MapEditorControls />
+          <MapEditorElementRenderer />
+          <MapEditorFlyingCamera />
         </Suspense>
       </Canvas>
 
@@ -250,8 +269,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
         <div />
       </Suspense>
 
-      {/* Sci-fi upgrade modal outside Canvas */}
-      {realm === 'scifi' && selectedUpgrade && (
+      {/* Sci-fi upgrade modal outside Canvas - disabled in map editor */}
+      {realm === 'scifi' && selectedUpgrade && !isEditorActive && (
         <ScifiUpgradeModal
           upgradeId={selectedUpgrade}
           energyCredits={gameState.energyCredits || 0}

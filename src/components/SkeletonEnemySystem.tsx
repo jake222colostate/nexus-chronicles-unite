@@ -3,6 +3,8 @@ import { useFrame } from '@react-three/fiber';
 import { Vector3, Group } from 'three';
 import { ChunkData } from './ChunkSystem';
 
+// Skeleton models don't exist - using fallback geometry
+
 interface SkeletonEnemySystemProps {
   chunks: ChunkData[];
   chunkSize: number;
@@ -28,6 +30,7 @@ interface SkeletonEnemy {
   nextMoveTime: number;
 }
 
+// Using fallback geometry since skeleton models don't exist
 
 const SkeletonModel: React.FC<{
   enemy: SkeletonEnemy;
@@ -35,6 +38,8 @@ const SkeletonModel: React.FC<{
 }> = ({ enemy, onHit }) => {
   const meshRef = useRef<Group>(null);
   const [hovered, setHovered] = useState(false);
+  const [modelLoaded] = useState(true); // Always loaded since using fallback geometry
+  const [loadError] = useState<string | null>(null);
   
   const getHealthBarColor = () => {
     const healthPercent = enemy.health / enemy.maxHealth;
@@ -45,15 +50,7 @@ const SkeletonModel: React.FC<{
 
   const stats = { scale: 0.8, color: '#94a3b8' };
 
-  // Use simple geometry for better performance and reliability
-  const getSkeletonColor = () => {
-    switch (enemy.type) {
-      case 'warrior': return '#ff6b6b';
-      case 'rogue': return '#4ecdc4';
-      case 'minion': return '#ffe66d';
-      default: return '#f0f0f0';
-    }
-  };
+  // Using fallback geometry since skeleton models don't exist
 
   useFrame((state) => {
     if (meshRef.current && enemy.alive) {
@@ -78,46 +75,39 @@ const SkeletonModel: React.FC<{
       }}
       scale={stats.scale}
     >
-      {/* Simple skeleton representation for optimal performance */}
+      {/* Simple skeleton representation using fallback geometry */}
       <group>
-        {/* Body */}
-        <mesh position={[0, 1, 0]} castShadow>
+        <mesh position={[0, 1, 0]} castShadow receiveShadow>
           <cylinderGeometry args={[0.3, 0.2, 1]} />
-          <meshStandardMaterial color={getSkeletonColor()} />
+          <meshStandardMaterial color="#f0f0f0" />
         </mesh>
-        {/* Head */}
-        <mesh position={[0, 1.8, 0]} castShadow>
+        <mesh position={[0, 1.8, 0]} castShadow receiveShadow>
           <sphereGeometry args={[0.25]} />
-          <meshStandardMaterial color={getSkeletonColor()} />
+          <meshStandardMaterial color="#f0f0f0" />
         </mesh>
-        {/* Left arm */}
-        <mesh position={[-0.4, 1.2, 0]} rotation={[0, 0, 0.3]} castShadow>
+        <mesh position={[-0.4, 1.2, 0]} rotation={[0, 0, 0.3]} castShadow receiveShadow>
           <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-          <meshStandardMaterial color={getSkeletonColor()} />
+          <meshStandardMaterial color="#f0f0f0" />
         </mesh>
-        {/* Right arm */}
-        <mesh position={[0.4, 1.2, 0]} rotation={[0, 0, -0.3]} castShadow>
+        <mesh position={[0.4, 1.2, 0]} rotation={[0, 0, -0.3]} castShadow receiveShadow>
           <cylinderGeometry args={[0.08, 0.08, 0.8]} />
-          <meshStandardMaterial color={getSkeletonColor()} />
+          <meshStandardMaterial color="#f0f0f0" />
         </mesh>
-        {/* Left leg */}
-        <mesh position={[-0.15, 0.3, 0]} castShadow>
+        <mesh position={[-0.15, 0.3, 0]} castShadow receiveShadow>
           <cylinderGeometry args={[0.1, 0.1, 0.6]} />
-          <meshStandardMaterial color={getSkeletonColor()} />
+          <meshStandardMaterial color="#f0f0f0" />
         </mesh>
-        {/* Right leg */}
-        <mesh position={[0.15, 0.3, 0]} castShadow>
+        <mesh position={[0.15, 0.3, 0]} castShadow receiveShadow>
           <cylinderGeometry args={[0.1, 0.1, 0.6]} />
-          <meshStandardMaterial color={getSkeletonColor()} />
+          <meshStandardMaterial color="#f0f0f0" />
         </mesh>
-        {/* Eyes */}
         <mesh position={[-0.1, 1.85, 0.2]}>
           <sphereGeometry args={[0.05]} />
-          <meshBasicMaterial color="#ff0000" />
+          <meshBasicMaterial color={stats.color} />
         </mesh>
         <mesh position={[0.1, 1.85, 0.2]}>
           <sphereGeometry args={[0.05]} />
-          <meshBasicMaterial color="#ff0000" />
+          <meshBasicMaterial color={stats.color} />
         </mesh>
       </group>
       
@@ -141,10 +131,10 @@ const SkeletonModel: React.FC<{
         </mesh>
       )}
 
-      {/* Type indicator */}
+      {/* Type indicator and loading status */}
       <mesh position={[0, 3, 0]}>
         <sphereGeometry args={[0.1, 8, 8]} />
-        <meshBasicMaterial color={stats.color} />
+        <meshBasicMaterial color={modelLoaded ? '#00ff00' : (loadError ? '#ff0000' : stats.color)} />
       </mesh>
     </group>
   );

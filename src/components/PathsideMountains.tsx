@@ -3,10 +3,11 @@ import React, { useRef, useEffect } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Group, Mesh } from 'three';
 import { useThree } from '@react-three/fiber';
+import { assetUrl } from '@/lib/utils';
 
 export const PathsideMountains: React.FC = () => {
   const { scene } = useThree();
-  const { scene: mountain } = useGLTF('./assets/mountain_low_poly.glb');
+  const { scene: mountain } = useGLTF(assetUrl('assets/mountain_low_poly.glb'));
   const mountainsRef = useRef<Group[]>([]);
 
   useEffect(() => {
@@ -23,6 +24,7 @@ export const PathsideMountains: React.FC = () => {
     const offsetX = 30; // REDUCED from 40 to 30 - move mountains closer to path
     const scale = 0.08; // Slightly increased from 0.06 to 0.08 for more immersive feel
 
+    console.log('PathsideMountains: Creating enlarged mountains with scale:', scale, 'at distance:', offsetX);
 
     for (let i = 0; i < count; i++) {
       const z = -i * spacing;
@@ -64,6 +66,7 @@ export const PathsideMountains: React.FC = () => {
       mountainsRef.current.push(right);
     }
 
+    console.log('PathsideMountains: Added', mountainsRef.current.length, 'enlarged mountains at ±40 units');
 
     // Cleanup function
     return () => {
@@ -78,4 +81,4 @@ export const PathsideMountains: React.FC = () => {
 };
 
 // Preload the mountain model
-useGLTF.preload('./assets/mountain_low_poly.glb');
+useGLTF.preload(assetUrl('assets/mountain_low_poly.glb'));

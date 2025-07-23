@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useGLTF } from '@react-three/drei';
 import { Vector3 } from 'three';
+import { assetUrl } from '@/lib/utils';
 
 interface LinearForestCorridorProps {
   playerPosition?: Vector3;
@@ -16,13 +17,13 @@ interface ForestElement {
 const ForestAsset: React.FC<{ element: ForestElement }> = ({ element }) => {
   const getModelPath = (type: string): string => {
     const modelPaths: Record<string, string> = {
-      tree1: '/assets/forestGLB/Tree1.glb',
-      tree2: '/assets/forestGLB/Tree2.glb',
-      grass: '/assets/forestGLB/Grass.glb',
-      log: '/assets/forestGLB/FallenLog.glb',
-      rock1: '/assets/forestGLB/SmallRock1.glb',
-      rock2: '/assets/forestGLB/SmallRock2.glb',
-      rock3: '/assets/forestGLB/SmallRock3.glb',
+      tree1: assetUrl('assets/forestGLB/Tree1.glb'),
+      tree2: assetUrl('assets/forestGLB/Tree2.glb'),
+      grass: assetUrl('assets/forestGLB/Grass.glb'),
+      log: assetUrl('assets/forestGLB/FallenLog.glb'),
+      rock1: assetUrl('assets/forestGLB/SmallRock1.glb'),
+      rock2: assetUrl('assets/forestGLB/SmallRock2.glb'),
+      rock3: assetUrl('assets/forestGLB/SmallRock3.glb'),
     };
     return modelPaths[type] || modelPaths.tree1;
   };
@@ -184,10 +185,10 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
 };
 
 // Preload GLB models
-useGLTF.preload('/assets/forestGLB/Tree1.glb');
-useGLTF.preload('/assets/forestGLB/Tree2.glb');
-useGLTF.preload('/assets/forestGLB/Grass.glb');
-useGLTF.preload('/assets/forestGLB/FallenLog.glb');
-useGLTF.preload('/assets/forestGLB/SmallRock1.glb');
-useGLTF.preload('/assets/forestGLB/SmallRock2.glb');
-useGLTF.preload('/assets/forestGLB/SmallRock3.glb');
+useGLTF.preload(assetUrl('assets/forestGLB/Tree1.glb'));
+useGLTF.preload(assetUrl('assets/forestGLB/Tree2.glb'));
+useGLTF.preload(assetUrl('assets/forestGLB/Grass.glb'));
+useGLTF.preload(assetUrl('assets/forestGLB/FallenLog.glb'));
+useGLTF.preload(assetUrl('assets/forestGLB/SmallRock1.glb'));
+useGLTF.preload(assetUrl('assets/forestGLB/SmallRock2.glb'));
+useGLTF.preload(assetUrl('assets/forestGLB/SmallRock3.glb'));

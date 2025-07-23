@@ -30,13 +30,49 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
   upgradesPurchased = 0,
   fogDistance
 }) => {
-  // DISABLED FOR PERFORMANCE - All forest elements removed
-  console.log(`OptimizedFantasyEnvironment: Disabled for performance`);
-  
-  // Set enemy count to 0 immediately
-  React.useEffect(() => {
-    if (onEnemyCountChange) onEnemyCountChange(0);
-  }, [onEnemyCountChange]);
+  // Only render for fantasy realm
+  if (realm !== 'fantasy') {
+    return null;
+  }
 
-  return null;
+  console.log(`OptimizedFantasyEnvironment: Rendering fantasy realm with forest and skeleton systems`);
+
+  return (
+    <Suspense fallback={null}>
+      {/* Seamless fog-based ground system */}
+      <SeamlessGroundSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+        playerPosition={playerPosition}
+        fogDistance={fogDistance}
+      />
+      
+      {/* Tree system positioned within valley bounds */}
+      <EnhancedTreeDistribution
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+      />
+
+      {/* Forest environment with all assets */}
+      <ForestEnvironmentSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+        playerPosition={playerPosition}
+      />
+
+      {/* Skeleton enemy system */}
+      <SkeletonEnemySystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        playerPosition={playerPosition}
+        onEnemyCountChange={onEnemyCountChange}
+        onEnemyKilled={onEnemyKilled}
+        weaponDamage={weaponDamage}
+        realm={realm}
+      />
+    </Suspense>
+  );
 };
