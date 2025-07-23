@@ -178,69 +178,9 @@ export const RealisticTreeSystem: React.FC<RealisticTreeSystemProps> = React.mem
   chunkSize,
   realm
 }) => {
-  // Only render for fantasy realm
-  if (realm !== 'fantasy') {
-    return null;
-  }
-
-  const treePositions = useMemo(() => {
-    const positions = [];
-    
-    chunks.forEach(chunk => {
-      const { worldX, worldZ, seed } = chunk;
-      
-      // Generate more trees with better distribution
-      const treeCount = 4 + Math.floor(seededRandom(seed + 300) * 4);
-      
-      for (let i = 0; i < treeCount; i++) {
-        const treeSeed = seed + i * 91 + 3000;
-        
-        // Better positioning along the path sides
-        const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-        const x = side * (6 + seededRandom(treeSeed) * 8); // 6-14 units from center
-        const z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
-        const scale = 0.7 + seededRandom(treeSeed + 2) * 0.6;
-        
-        // Choose tree type based on seed
-        const typeRand = seededRandom(treeSeed + 3);
-        let treeType: 'oak' | 'pine' | 'birch';
-        if (typeRand < 0.4) treeType = 'oak';
-        else if (typeRand < 0.7) treeType = 'pine';
-        else treeType = 'birch';
-        
-        // Check spacing with other trees
-        const validPosition = positions.every(pos => {
-          const distance = Math.sqrt(
-            Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
-          );
-          return distance >= 5;
-        });
-        
-        if (validPosition) {
-          positions.push({
-            x, z, scale, seed: treeSeed, treeType,
-            chunkId: chunk.id
-          });
-        }
-      }
-    });
-    
-    return positions;
-  }, [chunks, chunkSize]);
-
-  return (
-    <group>
-      {treePositions.map((pos, index) => (
-        <RealisticTree
-          key={`realistic_tree_${pos.chunkId}_${index}`}
-          position={[pos.x, 0, pos.z]}
-          scale={pos.scale}
-          seed={pos.seed}
-          treeType={pos.treeType}
-        />
-      ))}
-    </group>
-  );
+  // DISABLED FOR PERFORMANCE - Trees removed
+  console.log('RealisticTreeSystem: Disabled for performance');
+  return null;
 });
 
 RealisticTreeSystem.displayName = 'RealisticTreeSystem';

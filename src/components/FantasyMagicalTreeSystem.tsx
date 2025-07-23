@@ -105,61 +105,9 @@ export const FantasyMagicalTreeSystem: React.FC<FantasyMagicalTreeSystemProps> =
   chunkSize,
   realm
 }) => {
-  // Only render for fantasy realm
-  if (realm !== 'fantasy') {
-    return null;
-  }
-
-  const treePositions = useMemo(() => {
-    const positions = [];
-    
-    chunks.forEach(chunk => {
-      const { worldX, worldZ, seed } = chunk;
-      
-      // Reduced tree density for better performance
-      const treeCount = 2 + Math.floor(seededRandom(seed + 300) * 3);
-      
-      for (let i = 0; i < treeCount; i++) {
-        const treeSeed = seed + i * 91 + 3000;
-        
-        // Optimized tree positioning
-        const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
-        const x = side * (4 + seededRandom(treeSeed) * 4);
-        const z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
-        const scale = 0.8 + seededRandom(treeSeed + 2) * 0.3;
-        
-        // Simplified spacing check
-        const validPosition = positions.every(pos => {
-          const distance = Math.sqrt(
-            Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
-          );
-          return distance >= 4;
-        });
-        
-        if (validPosition) {
-          positions.push({
-            x, z, scale, seed: treeSeed,
-            chunkId: chunk.id
-          });
-        }
-      }
-    });
-    
-    return positions;
-  }, [chunks, chunkSize]);
-
-  return (
-    <group>
-      {treePositions.map((pos, index) => (
-        <MagicalTree
-          key={`magical_tree_${pos.chunkId}_${index}`}
-          position={[pos.x, 0, pos.z]}
-          scale={pos.scale}
-          seed={pos.seed}
-        />
-      ))}
-    </group>
-  );
+  // DISABLED FOR PERFORMANCE - Trees removed
+  console.log('FantasyMagicalTreeSystem: Disabled for performance');
+  return null;
 });
 
 FantasyMagicalTreeSystem.displayName = 'FantasyMagicalTreeSystem';

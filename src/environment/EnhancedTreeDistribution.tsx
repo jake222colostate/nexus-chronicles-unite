@@ -258,96 +258,9 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
   chunkSize,
   realm
 }) => {
-  const treePositions = useMemo(() => {
-    if (realm !== 'fantasy') {
-      return [];
-    }
-
-    console.log('EnhancedTreeDistribution: Generating properly grounded trees');
-    const trees = [];
-    const minDistance = 8; // Increased spacing for performance
-    const maxAttempts = 20; // Reduced attempts for performance
-
-    chunks.forEach(chunk => {
-      const { worldX, worldZ, seed } = chunk;
-      const treeCount = 3 + Math.floor(seededRandom(seed + 99) * 2); // Reduced from 8-14 to 3-5
-      const allPositions = [];
-      
-      for (let i = 0; i < treeCount; i++) {
-        let attempts = 0;
-        let validPosition = false;
-        let x, z, terrainHeight, treeType, scale, rotation, finalY;
-        
-        while (!validPosition && attempts < maxAttempts) {
-          const treeSeed = seed + i * 157 + chunk.x * 1000 + chunk.z * 100;
-
-          x = (seededRandom(treeSeed) - 0.5) * 300;
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
-          
-          // ENHANCED: Use proper mountain slope height for validation
-          terrainHeight = getMountainSlopeHeight(x, z);
-          
-          if (!isValidTreePosition(x, z)) {
-            attempts++;
-            continue;
-          }
-          
-          // Prefer pine trees on mountain sides
-          const distanceFromCenter = Math.abs(x);
-          if (distanceFromCenter > 80) {
-            treeType = seededRandom(treeSeed + 2) < 0.8 ? 'pine218' : 'stylized';
-          } else {
-            treeType = getTreeType(treeSeed + 2);
-          }
-          
-          scale = getTreeScale(treeType, treeSeed + 3);
-          rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          
-          // ENHANCED: Calculate proper ground-connected Y position
-          const treeOffsets = { realistic: 0, stylized: 0, pine218: 0 };
-          finalY = terrainHeight + treeOffsets[treeType] - 1.8;
-          
-          validPosition = allPositions.every(pos => {
-            const distance = Math.sqrt(
-              Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
-            );
-            return distance >= minDistance;
-          });
-          
-          attempts++;
-        }
-        
-        if (validPosition) {
-          const position = { x, y: finalY, z, scale, rotation, treeType };
-          allPositions.push(position);
-          trees.push(position);
-        }
-      }
-    });
-    
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} properly grounded trees`);
-    return trees;
-  }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
-
-  if (realm !== 'fantasy' || treePositions.length === 0) {
-    return null;
-  }
-
-  return (
-    <Suspense fallback={null}>
-      <group>
-        {treePositions.map((tree, index) => (
-          <GLBTree
-            key={`tree-${index}`}
-            position={[tree.x, tree.y, tree.z]}
-            scale={tree.scale}
-            rotation={tree.rotation}
-            treeType={tree.treeType}
-          />
-        ))}
-      </group>
-    </Suspense>
-  );
+  // DISABLED FOR PERFORMANCE - All trees removed
+  console.log('EnhancedTreeDistribution: Disabled for performance');
+  return null;
 };
 
 // Clear cache when component unmounts - no longer needed
