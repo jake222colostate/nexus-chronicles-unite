@@ -122,10 +122,10 @@ export const FantasyMagicalTreeSystem: React.FC<FantasyMagicalTreeSystemProps> =
       for (let i = 0; i < treeCount; i++) {
         const treeSeed = seed + i * 91 + 3000;
         
-        // Optimized tree positioning
+        // Bias tree positioning toward forward direction (positive Z)
         const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
         const x = side * (4 + seededRandom(treeSeed) * 4);
-        const z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
+        const z = worldZ + seededRandom(treeSeed + 1) * chunkSize * 0.8; // Bias forward
         const scale = 0.8 + seededRandom(treeSeed + 2) * 0.3;
         
         // Simplified spacing check

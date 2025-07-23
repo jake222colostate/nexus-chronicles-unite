@@ -19,7 +19,7 @@ const PathModel: React.FC<{ onLoad?: (scene: any) => void }> = ({ onLoad }) => {
   }, [onLoad]);
 
   return (
-    <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
+    <mesh position={[0, 0, 0]} castShadow receiveShadow>
       <boxGeometry args={[4, 0.2, 10]} />
       <meshStandardMaterial color="#D2B48C" />
     </mesh>
@@ -44,7 +44,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
 
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
-    -0.1, // Grounded at Y = -0.1 (slightly below ground)
+    -0.2, // Lowered to touch ground
     index * pathLength // POSITIVE Z for forward movement (corrected orientation)
   ], [index, pathLength]);
 

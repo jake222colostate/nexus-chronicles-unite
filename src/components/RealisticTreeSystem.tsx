@@ -195,10 +195,10 @@ export const RealisticTreeSystem: React.FC<RealisticTreeSystemProps> = React.mem
       for (let i = 0; i < treeCount; i++) {
         const treeSeed = seed + i * 91 + 3000;
         
-        // Better positioning along the path sides
+        // Bias tree positioning toward forward direction (positive Z)
         const side = seededRandom(treeSeed + 10) > 0.5 ? 1 : -1;
         const x = side * (6 + seededRandom(treeSeed) * 8); // 6-14 units from center
-        const z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
+        const z = worldZ + seededRandom(treeSeed + 1) * chunkSize * 0.9; // Bias forward
         const scale = 0.7 + seededRandom(treeSeed + 2) * 0.6;
         
         // Choose tree type based on seed
