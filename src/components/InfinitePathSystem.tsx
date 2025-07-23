@@ -52,7 +52,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
     -0.1, // Grounded at Y = -0.1 (slightly below ground)
-    -index * pathLength // NEGATIVE Z for forward movement (to match upgrade system)
+    index * pathLength // POSITIVE Z for forward movement (corrected orientation)
   ], [index, pathLength]);
 
   // Random horizontal rotation (90 degree range: -45 to +45 degrees)
@@ -120,13 +120,13 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
 
   // Calculate which chunks to render based on player position
   const visibleChunks = useMemo(() => {
-    const playerChunkIndex = Math.floor(-playerPosition.z / actualPathLength); // Negative Z for forward
+    const playerChunkIndex = Math.floor(playerPosition.z / actualPathLength); // Positive Z for forward
     const chunks: { index: number; distance: number }[] = [];
 
     // Generate chunks to match upgrade system orientation (negative Z forward)
     for (let i = -chunksBehind; i <= chunksAhead; i++) {
       const chunkIndex = playerChunkIndex + i;
-      const chunkZ = -chunkIndex * actualPathLength; // Negative Z for positioning
+      const chunkZ = chunkIndex * actualPathLength; // Positive Z for positioning
       const distance = Math.abs(chunkZ - playerPosition.z);
       
       // Only render chunks within render distance
