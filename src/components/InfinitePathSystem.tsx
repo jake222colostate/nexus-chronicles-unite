@@ -4,20 +4,7 @@ import { Vector3, Box3 } from 'three';
 
 // Basic Path Geometry Component
 const PathModel: React.FC<{ onLoad?: (scene: any) => void }> = ({ onLoad }) => {
-  // Use basic geometry instead of GLB
-  React.useEffect(() => {
-    if (onLoad) {
-      console.log('✅ Basic path geometry loaded');
-      // Create a mock scene object for bounding box calculation
-      const mockScene = {
-        userData: { 
-          boundingBox: { min: { x: -2, y: 0, z: -5 }, max: { x: 2, y: 0.2, z: 5 } }
-        }
-      };
-      onLoad(mockScene);
-    }
-  }, [onLoad]);
-
+  // Use basic geometry instead of GLB - no need for bounding box calculation
   return (
     <mesh position={[0, 0, 0]} castShadow receiveShadow>
       <boxGeometry args={[4, 0.2, 10]} />
@@ -55,18 +42,10 @@ const PathSegment: React.FC<PathSegmentProps> = ({
     0  // No Z rotation
   ], [index]);
 
-  // Calculate bounding box when model loads
+  // Calculate bounding box when model loads - removed for basic geometry
   const handleModelLoad = (scene: any) => {
     console.log(`🛤️ Path segment ${index} loaded`);
-    if (scene && onBoundingBoxCalculated && index === 0) {
-      const box = new Box3().setFromObject(scene);
-      onBoundingBoxCalculated(box);
-      console.log('📏 Path segment dimensions:', {
-        width: (box.max.x - box.min.x).toFixed(2),
-        height: (box.max.y - box.min.y).toFixed(2),
-        length: (box.max.z - box.min.z).toFixed(2)
-      });
-    }
+    // Skip bounding box calculation for basic geometry
   };
 
   if (!visible) return null;
@@ -79,7 +58,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
           <meshStandardMaterial color="#8B7355" transparent opacity={0.5} />
         </mesh>
       }>
-        <PathModel onLoad={index === 0 ? handleModelLoad : undefined} />
+        <PathModel />
       </Suspense>
     </group>
   );
@@ -97,19 +76,10 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
   playerPosition = new Vector3(0, 0, 0),
   chunksAhead = 12,   // Increased from 8 to 12 for more path segments
   chunksBehind = 4,   // Increased from 3 to 4 for smoother transitions  
-  pathLength = 4,     // Reduced from 6 to 4 for even more frequent segments
+  pathLength = 10,    // Fixed length for basic geometry (matches boxGeometry args)
   renderDistance = 60
 }) => {
-  const [actualPathLength, setActualPathLength] = React.useState(pathLength);
-  
-  // Auto-calculate path length from model bounding box
-  const handleBoundingBoxCalculated = (box: Box3) => {
-    const modelLength = box.max.z - box.min.z;
-    if (modelLength > 0 && modelLength !== actualPathLength) {
-      setActualPathLength(modelLength);
-      console.log(`📏 Auto-detected path length: ${modelLength.toFixed(2)} units`);
-    }
-  };
+  const actualPathLength = pathLength; // Use fixed length for basic geometry
 
   // Calculate which chunks to render based on player position
   const visibleChunks = useMemo(() => {
@@ -158,7 +128,7 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
           index={index}
           pathLength={actualPathLength}
           visible={distance <= renderDistance}
-          onBoundingBoxCalculated={index === Math.floor(playerPosition.z / actualPathLength) ? handleBoundingBoxCalculated : undefined}
+          onBoundingBoxCalculated={undefined}
         />
       ))}
       
