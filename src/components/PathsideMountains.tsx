@@ -23,7 +23,6 @@ export const PathsideMountains: React.FC = () => {
     const offsetX = 30; // REDUCED from 40 to 30 - move mountains closer to path
     const scale = 0.08; // Slightly increased from 0.06 to 0.08 for more immersive feel
 
-    console.log('PathsideMountains: Creating enlarged mountains with scale:', scale, 'at distance:', offsetX);
 
     for (let i = 0; i < count; i++) {
       const z = -i * spacing;
@@ -65,7 +64,6 @@ export const PathsideMountains: React.FC = () => {
       mountainsRef.current.push(right);
     }
 
-    console.log('PathsideMountains: Added', mountainsRef.current.length, 'enlarged mountains at ±40 units');
 
     // Cleanup function
     return () => {

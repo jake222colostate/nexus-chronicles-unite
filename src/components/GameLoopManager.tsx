@@ -1,6 +1,5 @@
 
 import { useEffect, useRef } from 'react';
-import { useMapEditorStore } from '../stores/useMapEditorStore';
 import { useBuffSystem } from './CrossRealmBuffSystem';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { GameState, fantasyBuildings, scifiBuildings } from './GameStateManager';
@@ -25,11 +24,9 @@ export const useGameLoopManager = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const buffSystem = useBuffSystem(stableFantasyBuildings, stableScifiBuildings);
   const purchasedUpgradesCount = stablePurchasedUpgrades.length;
-  const isEditorActive = useMapEditorStore((state) => state.isEditorActive);
 
   // Game loop - now includes auto mana generation
   useEffect(() => {
-    if (isEditorActive) return;
     intervalRef.current = setInterval(() => {
       setGameState(prev => {
         const deltaTime = 0.1; // 100ms intervals
@@ -50,11 +47,10 @@ export const useGameLoopManager = ({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [setGameState, isEditorActive]);
+  }, [setGameState]);
 
   // Enhanced production calculation with cross-realm upgrades
   useEffect(() => {
-    if (isEditorActive) return;
     let manaRate = 0;
     let energyRate = 0;
     let manaPerKill = 5;
@@ -114,7 +110,7 @@ export const useGameLoopManager = ({
       energyPerSecond: energyRate * scifiBonus * globalMultiplier,
       manaPerKill,
     }));
-  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels, isEditorActive]);
+  }, [stableFantasyBuildings, stableScifiBuildings, purchasedUpgradesCount, buffSystem, crossRealmUpgradesWithLevels]);
 
   return { buffSystem };
 };
