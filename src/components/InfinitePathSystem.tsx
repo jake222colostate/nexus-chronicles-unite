@@ -31,7 +31,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
 
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
-    0, // At ground level
+    -0.1, // Slightly lowered to sit on ground
     index * pathLength // POSITIVE Z for forward movement (corrected orientation)
   ], [index, pathLength]);
 
