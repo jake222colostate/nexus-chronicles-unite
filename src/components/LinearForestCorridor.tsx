@@ -17,37 +17,70 @@ interface ForestElement {
 const ForestAsset: React.FC<{ element: ForestElement }> = ({ element }) => {
   const getModelPath = (type: string): string => {
     const modelPaths: Record<string, string> = {
-      tree1: assetUrl('assets/forestGLB/Tree1.glb'),
-      tree2: assetUrl('assets/forestGLB/Tree2.glb'),
-      grass: assetUrl('assets/forestGLB/Grass.glb'),
-      log: assetUrl('assets/forestGLB/FallenLog.glb'),
-      rock1: assetUrl('assets/forestGLB/SmallRock1.glb'),
-      rock2: assetUrl('assets/forestGLB/SmallRock2.glb'),
-      rock3: assetUrl('assets/forestGLB/SmallRock3.glb'),
+      tree1: assetUrl('assets/environment/AncientTree.glb'),
+      tree2: assetUrl('assets/environment/AncientTree2.glb'),
+      grass: assetUrl('assets/environment/AncientTree.glb'), // Use tree as fallback
+      log: assetUrl('assets/environment/AncientTree.glb'),
+      rock1: assetUrl('assets/environment/AncientTree.glb'),
+      rock2: assetUrl('assets/environment/AncientTree2.glb'),
+      rock3: assetUrl('assets/environment/AncientTree.glb'),
     };
     return modelPaths[type] || modelPaths.tree1;
   };
 
-  try {
-    const { scene } = useGLTF(getModelPath(element.type));
-    
-    return (
-      <primitive
-        object={scene.clone()}
-        position={element.position}
-        rotation={element.rotation}
-        scale={element.scale}
-      />
-    );
-  } catch (error) {
-    // Fallback geometry if GLB fails to load
-    return (
-      <mesh position={element.position} rotation={element.rotation} scale={element.scale}>
-        <boxGeometry args={[0.5, 1, 0.5]} />
-        <meshStandardMaterial color="#228B22" />
-      </mesh>
-    );
-  }
+  // Use simple geometry instead of GLB for better performance and reliability
+  const getGeometry = (type: string) => {
+    switch (type) {
+      case 'tree1':
+      case 'tree2':
+        return (
+          <group position={element.position} rotation={element.rotation} scale={element.scale}>
+            {/* Tree trunk */}
+            <mesh position={[0, 2, 0]} castShadow>
+              <cylinderGeometry args={[0.2, 0.3, 4]} />
+              <meshStandardMaterial color="#8B4513" />
+            </mesh>
+            {/* Tree foliage */}
+            <mesh position={[0, 4, 0]} castShadow>
+              <sphereGeometry args={[1.5]} />
+              <meshStandardMaterial color="#228B22" />
+            </mesh>
+          </group>
+        );
+      case 'grass':
+        return (
+          <mesh position={element.position} rotation={element.rotation} scale={element.scale}>
+            <cylinderGeometry args={[0.1, 0.2, 0.8]} />
+            <meshStandardMaterial color="#32CD32" />
+          </mesh>
+        );
+      case 'log':
+        return (
+          <mesh position={element.position} rotation={element.rotation} scale={element.scale}>
+            <cylinderGeometry args={[0.3, 0.3, 2]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+        );
+      case 'rock1':
+      case 'rock2':
+      case 'rock3':
+        return (
+          <mesh position={element.position} rotation={element.rotation} scale={element.scale}>
+            <boxGeometry args={[0.8, 0.4, 0.6]} />
+            <meshStandardMaterial color="#696969" />
+          </mesh>
+        );
+      default:
+        return (
+          <mesh position={element.position} rotation={element.rotation} scale={element.scale}>
+            <boxGeometry args={[0.5, 1, 0.5]} />
+            <meshStandardMaterial color="#228B22" />
+          </mesh>
+        );
+    }
+  };
+
+  return getGeometry(element.type);
 };
 
 export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
@@ -184,11 +217,6 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
   );
 };
 
-// Preload GLB models
-useGLTF.preload(assetUrl('assets/forestGLB/Tree1.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/Tree2.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/Grass.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/FallenLog.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/SmallRock1.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/SmallRock2.glb'));
-useGLTF.preload(assetUrl('assets/forestGLB/SmallRock3.glb'));
+// Preload existing GLB models
+useGLTF.preload(assetUrl('assets/environment/AncientTree.glb'));
+useGLTF.preload(assetUrl('assets/environment/AncientTree2.glb'));
