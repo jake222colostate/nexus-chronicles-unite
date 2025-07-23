@@ -114,6 +114,8 @@ export const ForestEnvironmentSystem: React.FC<ForestEnvironmentSystemProps> = (
   realm,
   playerPosition
 }) => {
+  // DISABLED: Tree and path GLB models rendering disabled
+  return null;
   // Only render for fantasy realm
   if (realm !== 'fantasy') {
     return null;

@@ -53,6 +53,8 @@ const ForestAsset: React.FC<{ element: ForestElement }> = ({ element }) => {
 export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
   playerPosition = new Vector3(0, 0, 0)
 }) => {
+  // DISABLED: GLB models rendering disabled
+  return null;
   const forestElements = useMemo(() => {
     const elements: ForestElement[] = [];
     
