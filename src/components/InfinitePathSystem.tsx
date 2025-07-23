@@ -1,36 +1,29 @@
 import React, { useRef, useMemo, Suspense } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Vector3, Box3 } from 'three';
-import { useGLTF } from '@react-three/drei';
-import { assetUrl } from '@/lib/utils';
 
-// Preload the path model immediately
-useGLTF.preload(assetUrl('assets/Path.glb'));
-
-// Path Model Component with direct useGLTF
+// Basic Path Geometry Component
 const PathModel: React.FC<{ onLoad?: (scene: any) => void }> = ({ onLoad }) => {
-  try {
-    const { scene } = useGLTF(assetUrl('assets/Path.glb'));
-    
-    // Call onLoad when model is successfully loaded
-    React.useEffect(() => {
-      if (scene && onLoad) {
-        console.log('✅ Path.glb loaded successfully');
-        onLoad(scene);
-      }
-    }, [scene, onLoad]);
+  // Use basic geometry instead of GLB
+  React.useEffect(() => {
+    if (onLoad) {
+      console.log('✅ Basic path geometry loaded');
+      // Create a mock scene object for bounding box calculation
+      const mockScene = {
+        userData: { 
+          boundingBox: { min: { x: -2, y: 0, z: -5 }, max: { x: 2, y: 0.2, z: 5 } }
+        }
+      };
+      onLoad(mockScene);
+    }
+  }, [onLoad]);
 
-    return <primitive object={scene.clone()} castShadow receiveShadow />;
-  } catch (error) {
-    console.error('❌ Failed to load Path.glb:', error);
-    // Fallback geometry if model fails to load
-    return (
-      <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4, 0.2, 10]} />
-        <meshStandardMaterial color="#D2B48C" />
-      </mesh>
-    );
-  }
+  return (
+    <mesh position={[0, 0.05, 0]} castShadow receiveShadow>
+      <boxGeometry args={[4, 0.2, 10]} />
+      <meshStandardMaterial color="#D2B48C" />
+    </mesh>
+  );
 };
 
 interface PathSegmentProps {
