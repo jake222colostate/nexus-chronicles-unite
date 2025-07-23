@@ -123,10 +123,10 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
     const playerChunkIndex = Math.floor(playerPosition.z / actualPathLength); // Positive Z for forward
     const chunks: { index: number; distance: number }[] = [];
 
-    // Generate chunks to match upgrade system orientation (negative Z forward)
+    // Generate chunks to render path forward from spawn point
     for (let i = -chunksBehind; i <= chunksAhead; i++) {
-      const chunkIndex = playerChunkIndex + i;
-      const chunkZ = chunkIndex * actualPathLength; // Positive Z for positioning
+      const chunkIndex = playerChunkIndex - i; // Flip the direction
+      const chunkZ = chunkIndex * actualPathLength;
       const distance = Math.abs(chunkZ - playerPosition.z);
       
       // Only render chunks within render distance
