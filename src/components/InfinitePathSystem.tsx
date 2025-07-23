@@ -6,7 +6,7 @@ import { Vector3, Box3 } from 'three';
 const PathModel: React.FC<{ onLoad?: (scene: any) => void }> = ({ onLoad }) => {
   // Use basic geometry instead of GLB - no need for bounding box calculation
   return (
-    <mesh position={[0, -0.5, 0]} castShadow receiveShadow>
+    <mesh position={[0, 0, 0]} castShadow receiveShadow>
       <boxGeometry args={[4, 0.2, 10]} />
       <meshStandardMaterial color="#D2B48C" />
     </mesh>
@@ -31,7 +31,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
 
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
-    -0.7, // Lowered to sit on ground properly
+    0, // At ground level
     index * pathLength // POSITIVE Z for forward movement (corrected orientation)
   ], [index, pathLength]);
 
