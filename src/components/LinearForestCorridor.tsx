@@ -63,9 +63,9 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
     };
 
     // Path configuration
-    const pathLength = 35; // units forward
-    const pathWidth = 4; // clear center path width
-    const pathStart = -5; // start slightly behind player
+    const pathLength = 80; // units forward  
+    const pathWidth = 8; // clear center path width
+    const pathStart = 20; // start well ahead of player spawn
     
     // Tree placement along the corridor
     for (let z = pathStart; z < pathLength; z += 6 + seededRandom(z * 123) * 4) {

@@ -138,8 +138,8 @@ export const ForestEnvironmentSystem: React.FC<ForestEnvironmentSystemProps> = (
         const x = chunkWorldX + seededRandom(seed) * chunkSize;
         const z = chunkWorldZ + seededRandom(seed + 1) * chunkSize;
         
-        // Avoid placing trees too close to the path (center)
-        if (Math.abs(x) < 15) continue;
+        // Avoid placing trees too close to the path (center) and near spawn
+        if (Math.abs(x) < 20 || (Math.abs(z) < 25 && Math.abs(x) < 30)) continue;
         
         const treeType = seededRandom(seed + 2) > 0.5 ? 'tree1' : 'tree2';
         const scale = 0.8 + seededRandom(seed + 3) * 0.6;
