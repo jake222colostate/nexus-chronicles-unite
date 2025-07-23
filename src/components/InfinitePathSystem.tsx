@@ -42,11 +42,6 @@ const PathSegment: React.FC<PathSegmentProps> = ({
     0  // No Z rotation
   ], [index]);
 
-  // Calculate bounding box when model loads - removed for basic geometry
-  const handleModelLoad = (scene: any) => {
-    console.log(`🛤️ Path segment ${index} loaded`);
-    // Skip bounding box calculation for basic geometry
-  };
 
   if (!visible) return null;
 
@@ -128,7 +123,7 @@ export const InfinitePathSystem: React.FC<InfinitePathSystemProps> = ({
           index={index}
           pathLength={actualPathLength}
           visible={distance <= renderDistance}
-          onBoundingBoxCalculated={undefined}
+          
         />
       ))}
       

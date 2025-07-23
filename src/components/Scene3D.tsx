@@ -19,11 +19,6 @@ import { ScifiScrollUpgradeSystem } from './scifi/ScifiScrollUpgradeSystem';
 import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
 import { ScifiUpgradeGLBSystem } from './scifi/ScifiUpgradeGLBSystem';
 import { CannonPlatformSystem } from './scifi/CannonPlatformSystem';
-import { MapEditorGrid } from './MapEditor/MapEditorGrid';
-import { MapEditorControls } from './MapEditor/MapEditorControls';
-import { MapEditorElementRenderer } from './MapEditor/MapEditorElementRenderer';
-import { MapEditorFlyingCamera } from './MapEditor/MapEditorFlyingCamera';
-import { useMapEditorStore } from '../stores/useMapEditorStore';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -80,7 +75,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   const cameraRef = useRef();
   const [enemyPositions, setEnemyPositions] = useState<Vector3[]>([]);
   const [selectedUpgrade, setSelectedUpgrade] = useState<string | null>(null);
-  const { isEditorActive } = useMapEditorStore();
+  
 
   // Stable player position for chunk system - centered in the mountain valley
   const playerPosition = useMemo(() => new Vector3(0, 0, 0), []);
@@ -152,15 +147,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           <PerspectiveCamera
             ref={cameraRef}
             makeDefault
-            position={isEditorActive ? [0, 5, 15] : [0, 2, 10]}
+            position={[0, 2, 10]}
             fov={65}
             near={0.01}
             far={500}
             onUpdate={(cam) => cam.updateProjectionMatrix()}
           />
 
-          {/* Enhanced MagicStaffWeaponSystem with enemy targeting - disabled in map editor and sci-fi realm */}
-          {!isEditorActive && realm === 'fantasy' && (
+          {/* Enhanced MagicStaffWeaponSystem with enemy targeting - only in fantasy realm */}
+          {realm === 'fantasy' && (
             <MagicStaffWeaponSystem 
               upgradeLevel={gameState.weaponUpgradeLevel || 0}
               visible={true}
@@ -171,7 +166,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           )}
 
           {/* Enhanced camera controller with circular movement around center upgrades */}
-          {!isEditorActive && (
+          {(
             <Enhanced360Controller 
               camera={cameraRef.current}
               minY={-5}
@@ -184,10 +179,10 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             />
           )}
 
-          {/* ENHANCED: Keep lighting active during map editing */}
+          {/* ENHANCED: Lighting */}
           <ImprovedFantasyLighting />
 
-          {/* Use existing environment even in map editor mode */}
+          {/* Environment */}
           <FloatingIsland realm={realm} />
           {/* Sci-fi systems - with background diamonds and upgrade modules */}
           {realm === 'scifi' && (
@@ -211,7 +206,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 gameState={gameState}
                 platformPosition={new Vector3(0, -3, -2)}
               />
-              {!isEditorActive && (
+              {(
                 <ScifiDefenseSystem 
                   onMeteorDestroyed={onMeteorDestroyed}
                   onEnergyGained={onEnergyGained}
@@ -223,7 +218,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             </>
           )}
 
-          {/* Fantasy environment - now enabled in map editor too */}
+          {/* Fantasy environment */}
           {realm === 'fantasy' && (
             <FogBasedChunkSystem
               playerPosition={playerPosition}
@@ -245,19 +240,14 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             </FogBasedChunkSystem>
           )}
 
-          {/* Show upgrade nodes in both realms (including map editor for visibility) */}
+          {/* Show upgrade nodes in both realms */}
           {upgradeNodes}
 
-          {/* Tap effect disabled in map editor */}
-          {showTapEffect && onTapEffectComplete && !isEditorActive && (
+          {/* Tap effect */}
+          {showTapEffect && onTapEffectComplete && (
             <TapEffect3D realm={realm} onComplete={onTapEffectComplete} />
           )}
 
-          {/* Map Editor Components */}
-          <MapEditorGrid />
-          <MapEditorControls />
-          <MapEditorElementRenderer />
-          <MapEditorFlyingCamera />
         </Suspense>
       </Canvas>
 
@@ -269,8 +259,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
         <div />
       </Suspense>
 
-      {/* Sci-fi upgrade modal outside Canvas - disabled in map editor */}
-      {realm === 'scifi' && selectedUpgrade && !isEditorActive && (
+      {/* Sci-fi upgrade modal outside Canvas */}
+      {realm === 'scifi' && selectedUpgrade && (
         <ScifiUpgradeModal
           upgradeId={selectedUpgrade}
           energyCredits={gameState.energyCredits || 0}
