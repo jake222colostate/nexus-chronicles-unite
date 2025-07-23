@@ -53,8 +53,6 @@ const ForestAsset: React.FC<{ element: ForestElement }> = ({ element }) => {
 export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
   playerPosition = new Vector3(0, 0, 0)
 }) => {
-  // DISABLED: GLB models rendering disabled
-  return null;
   const forestElements = useMemo(() => {
     const elements: ForestElement[] = [];
     
@@ -65,12 +63,12 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
     };
 
     // Path configuration
-    const pathLength = 80; // units forward  
+    const pathLength = 80; // units backward from spawn
     const pathWidth = 8; // clear center path width
-    const pathStart = 20; // start well ahead of player spawn
+    const pathStart = -80; // start well behind player spawn (negative Z)
     
-    // Tree placement along the corridor
-    for (let z = pathStart; z < pathLength; z += 6 + seededRandom(z * 123) * 4) {
+    // Tree placement along the corridor behind player
+    for (let z = pathStart; z < pathStart + pathLength; z += 6 + seededRandom(z * 123) * 4) {
       // Left side trees
       const leftX = -pathWidth - 2 - seededRandom(z * 456) * 8; // 2-10 units from path center
       const leftTreeType = seededRandom(z * 789) > 0.5 ? 'tree1' : 'tree2';
@@ -117,8 +115,8 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
       }
     }
 
-    // Fallen logs and rocks along path edges
-    for (let z = pathStart; z < pathLength; z += 8 + seededRandom(z * 1234) * 6) {
+    // Fallen logs and rocks along path edges behind player
+    for (let z = pathStart; z < pathStart + pathLength; z += 8 + seededRandom(z * 1234) * 6) {
       // Left side details
       if (seededRandom(z * 1111) > 0.7) {
         const detailType = seededRandom(z * 2222) > 0.6 ? 'log' : `rock${Math.floor(seededRandom(z * 3333) * 3) + 1}`;
@@ -142,8 +140,8 @@ export const LinearForestCorridor: React.FC<LinearForestCorridorProps> = ({
       }
     }
 
-    // Grass clusters throughout
-    for (let z = pathStart; z < pathLength; z += 3 + seededRandom(z * 1515) * 2) {
+    // Grass clusters throughout behind player
+    for (let z = pathStart; z < pathStart + pathLength; z += 3 + seededRandom(z * 1515) * 2) {
       for (let side = 0; side < 2; side++) {
         const xSide = side === 0 ? -1 : 1;
         const grassX = xSide * (pathWidth + 1 + seededRandom(z * (1616 + side)) * 8);
