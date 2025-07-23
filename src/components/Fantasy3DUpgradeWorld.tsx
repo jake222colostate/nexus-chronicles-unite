@@ -98,18 +98,18 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         {isCanvasReady && assetsLoaded && (
           <Canvas
             key="fantasy-canvas"
-            dpr={[1, 1]} // Reduced quality for performance
+            dpr={[1, 1]}
             camera={{ 
               position: [0, 5, 12], 
               fov: 50,
               near: 0.1,
-              far: 300 // Reduced far plane for performance
+              far: 1200
             }}
-            shadows={false} // Disabled shadows for performance
+            shadows
             gl={{ 
-              antialias: false, // Disabled for performance
+              antialias: true, 
               alpha: true,
-              powerPreference: "default" // Changed from high-performance for CPU relief
+              powerPreference: "high-performance"
             }}
             onCreated={(state) => {
               state.camera.updateProjectionMatrix();
