@@ -68,15 +68,7 @@ export const EnvironmentComponents: React.FC<EnvironmentComponentsProps> = ({
         />
       ))}
       
-      {/* Trees - scattered vegetation */}
-      {positions.trees.map((pos, index) => (
-        <TreeComponent
-          key={`tree-${tileIndex}-${index}`}
-          position={pos}
-          scale={[0.8 + Math.sin(tileIndex + index + 10) * 0.3, 1, 0.8 + Math.cos(tileIndex + index + 10) * 0.3]}
-          rotation={[0, Math.random() * Math.PI * 2, 0]}
-        />
-      ))}
+      {/* Trees removed for performance */}
     </group>
   );
 };

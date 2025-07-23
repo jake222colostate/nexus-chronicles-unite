@@ -77,24 +77,7 @@ const GlowTree: React.FC<{ position: [number, number, number]; scale: number }> 
 };
 
 export const GradientGlowTrees: React.FC = () => {
-  const trees = [];
-  
-  for (let i = 0; i < 30; i++) {
-    const x = (Math.random() - 0.5) * 80;
-    const z = -Math.random() * 150 - 10;
-    const scale = 0.7 + Math.random() * 0.6;
-    
-    // Avoid placing trees on the path
-    if (Math.abs(x) > 6) {
-      trees.push(
-        <GlowTree 
-          key={i}
-          position={[x, 0, z]}
-          scale={scale}
-        />
-      );
-    }
-  }
-  
-  return <>{trees}</>;
+  // DISABLED FOR PERFORMANCE - Trees removed
+  console.log('GradientGlowTrees: Disabled for performance');
+  return null;
 };

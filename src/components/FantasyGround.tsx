@@ -100,69 +100,15 @@ export const FantasyGround: React.FC = () => {
     return stones;
   }, []);
 
-  // Generate trees on both sides exactly like reference
-  const trees = useMemo(() => {
-    const treeList = [];
-    for (let i = 0; i < 25; i++) {
-      const z = -i * 8 - 5;
-      
-      // Left side trees
-      const leftX = -8 - Math.random() * 6;
-      const leftScale = 0.8 + Math.random() * 0.4;
-      treeList.push(
-        <FantasyTree
-          key={`tree-left-${i}`}
-          position={[leftX, -1, z]}
-          scale={leftScale}
-        />
-      );
-      
-      // Right side trees
-      const rightX = 8 + Math.random() * 6;
-      const rightScale = 0.8 + Math.random() * 0.4;
-      treeList.push(
-        <FantasyTree
-          key={`tree-right-${i}`}
-          position={[rightX, -1, z]}
-          scale={rightScale}
-        />
-      );
-      
-      // Additional background trees for depth
-      if (i % 2 === 0) {
-        const backLeftX = -15 - Math.random() * 8;
-        const backRightX = 15 + Math.random() * 8;
-        const backScale = 0.6 + Math.random() * 0.3;
-        
-        treeList.push(
-          <FantasyTree
-            key={`tree-back-left-${i}`}
-            position={[backLeftX, -1, z - 5]}
-            scale={backScale}
-          />
-        );
-        
-        treeList.push(
-          <FantasyTree
-            key={`tree-back-right-${i}`}
-            position={[backRightX, -1, z - 5]}
-            scale={backScale}
-          />
-        );
-      }
-    }
-    return treeList;
-  }, []);
+  // DISABLED FOR PERFORMANCE - Trees removed
+  const trees = [];
 
-  // Ground plane with grass texture
+  // Ground plane with grass texture - simplified for performance
   const groundPlane = useMemo(() => {
     return (
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, -100]} receiveShadow>
         <planeGeometry args={[200, 400]} />
-        <meshStandardMaterial 
-          color="#2E7D32"
-          roughness={0.8}
-        />
+        <meshBasicMaterial color="#2E7D32" />
       </mesh>
     );
   }, []);
@@ -172,8 +118,9 @@ export const FantasyGround: React.FC = () => {
       {/* Ground plane */}
       {groundPlane}
       
-      {/* Trees on both sides */}
-      {trees}
+      {/* Trees removed for performance */}
+      
+      {/* Winding stepping stone path */}
       
       {/* Winding stepping stone path */}
       {steppingStones}

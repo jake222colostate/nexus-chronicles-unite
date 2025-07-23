@@ -91,32 +91,7 @@ const SharpMountainCluster: React.FC<{
         );
       })}
       
-      {/* Fewer rock formations for performance */}
-      {Array.from({ length: 4 + Math.floor(seededRandom(seed + 100) * 3) }, (_, i) => { // Reduced from 8-14 to 4-7
-        const rockSeed = seed + i * 73 + 1000;
-        const rockX = (seededRandom(rockSeed) - 0.5) * 12;
-        const rockY = -2 + seededRandom(rockSeed + 1) * 3;
-        const rockZ = (seededRandom(rockSeed + 2) - 0.5) * 15;
-        const rockScale = 0.8 + seededRandom(rockSeed + 3) * 1.2;
-        
-        return (
-          <mesh
-            key={`rock-${i}`}
-            position={[rockX, rockY, rockZ]}
-            rotation={[
-              (seededRandom(rockSeed + 4) - 0.5) * 0.3,
-              seededRandom(rockSeed + 5) * Math.PI * 2,
-              (seededRandom(rockSeed + 6) - 0.5) * 0.2
-            ]}
-            scale={[rockScale, rockScale * 1.2, rockScale]}
-            castShadow
-            receiveShadow
-          >
-            <octahedronGeometry args={[1.5]} />
-            <meshLambertMaterial color="#3A3A3A" />
-          </mesh>
-        );
-      })}
+      {/* Rock formations removed for performance */}
       
       {/* Invisible collision barriers */}
       <mesh
@@ -140,54 +115,7 @@ export const BoundaryMountainSystem: React.FC<BoundaryMountainSystemProps> = ({
     return null;
   }
 
-  const mountainClusters = useMemo(() => {
-    const clusters = [];
-    
-    chunks.forEach(chunk => {
-      const { worldZ, seed } = chunk;
-      
-      // Fewer mountain clusters for performance
-      const leftClusterCount = 1 + Math.floor(seededRandom(seed + 100) * 1); // Reduced from 2-4 to 1-2
-      for (let i = 0; i < leftClusterCount; i++) {
-        const clusterSeed = seed + i * 89 + 1000;
-        const x = -22 - seededRandom(clusterSeed) * 6;
-        const z = worldZ - (i * 30) - seededRandom(clusterSeed + 1) * 20; // Increased spacing
-        const scale = 1.4 + seededRandom(clusterSeed + 2) * 1.0;
-        
-        clusters.push({
-          x, y: 0, z, scale, seed: clusterSeed,
-          chunkId: chunk.id, side: 'left' as const, index: i
-        });
-      }
-      
-      const rightClusterCount = 1 + Math.floor(seededRandom(seed + 200) * 1); // Reduced
-      for (let i = 0; i < rightClusterCount; i++) {
-        const clusterSeed = seed + i * 89 + 2000;
-        const x = 22 + seededRandom(clusterSeed) * 6;
-        const z = worldZ - (i * 30) - seededRandom(clusterSeed + 1) * 20; // Increased spacing
-        const scale = 1.4 + seededRandom(clusterSeed + 2) * 1.0;
-        
-        clusters.push({
-          x, y: 0, z, scale, seed: clusterSeed,
-          chunkId: chunk.id, side: 'right' as const, index: i
-        });
-      }
-    });
-    
-    return clusters;
-  }, [chunks, chunkSize]);
-
-  return (
-    <group>
-      {mountainClusters.map((cluster) => (
-        <SharpMountainCluster
-          key={`sharp_mountain_${cluster.chunkId}_${cluster.side}_${cluster.index}`}
-          position={[cluster.x, cluster.y, cluster.z]}
-          seed={cluster.seed}
-          scale={cluster.scale}
-          side={cluster.side}
-        />
-      ))}
-    </group>
-  );
+  // DISABLED FOR PERFORMANCE - Contains rock formations
+  console.log('BoundaryMountainSystem: Disabled for performance');
+  return null;
 };
