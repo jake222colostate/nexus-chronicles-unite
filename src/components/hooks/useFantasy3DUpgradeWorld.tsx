@@ -105,7 +105,7 @@ export const useFantasy3DUpgradeWorld = ({
       manaPerSecond: template.manaPerSecond * Math.pow(1.3, Math.floor(index / 5)), // Scale power by section  
       description: template.description,
       modelType,
-      position: [lane, modelType === 'obelisk' ? 10 : 0.5, -30 - index * UPGRADE_SPACING], // Obelisks at y=10
+      position: [lane, modelType === 'obelisk' ? 20 : 0.5, -30 - index * UPGRADE_SPACING], // Obelisks at y=20
       tier: templateIndex,
       unlocked: index === 0 || maxUnlockedUpgrade >= index - 1
     };

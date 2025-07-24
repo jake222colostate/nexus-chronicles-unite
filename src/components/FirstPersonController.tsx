@@ -57,13 +57,7 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
         moveSpeed.current = 7; // Increased speed from 5 to 7
         moveDirection.current = -1;
       }
-      // Look up/down controls
-      if (event.key === 'a' || event.key === 'A') {
-        pitchAngle.current = Math.max(-Math.PI/3, pitchAngle.current - 0.05);
-      }
-      if (event.key === 'd' || event.key === 'D') {
-        pitchAngle.current = Math.min(Math.PI/3, pitchAngle.current + 0.05);
-      }
+      // A and D keys do nothing now
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
