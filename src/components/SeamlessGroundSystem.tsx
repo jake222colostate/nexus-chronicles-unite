@@ -41,10 +41,9 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
     chunks.forEach((chunk) => {
       const { worldX, worldZ, fogOpacity, id, distanceToPlayer } = chunk;
       
-      // Main ground tile for this chunk
       tiles.push({
         key: `ground_${id}`,
-        position: [worldX, -1.8, worldZ],
+        position: [worldX, -1.8, worldZ], // Consistent ground level
         size: chunkSize,
         opacity: fogOpacity,
         distanceToPlayer,
@@ -58,7 +57,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
         
         tiles.push({
           key: `ground_overlap_x_${id}`,
-          position: [worldX + chunkSize * 0.5, -1.85, worldZ],
+          position: [worldX + chunkSize * 0.5, -1.8, worldZ], // Same level as main tiles
           size: overlapSize,
           opacity: fogOpacity * 0.8,
           distanceToPlayer,
@@ -67,7 +66,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
         
         tiles.push({
           key: `ground_overlap_z_${id}`,
-          position: [worldX, -1.85, worldZ + chunkSize * 0.5],
+          position: [worldX, -1.8, worldZ + chunkSize * 0.5], // Same level as main tiles
           size: overlapSize,
           opacity: fogOpacity * 0.8,
           distanceToPlayer,
