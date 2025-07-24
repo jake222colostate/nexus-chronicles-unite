@@ -192,7 +192,7 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
         newEnemies.push({
           id: `${chunk.x}_${chunk.z}_${type}_${i}`,
           type,
-          position: new Vector3(finalX, -1.8, finalZ), // Position on top of recessed path
+          position: new Vector3(finalX, -1.1, finalZ), // Position on top of raised path tiles
           health,
           maxHealth: health,
           alive: true,

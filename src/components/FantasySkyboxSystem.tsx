@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SimpleSkybox } from './SimpleSkybox';
+import { PolishedFantasySkybox } from './PolishedFantasySkybox';
 
 interface FantasySkyboxSystemProps {
   realm: 'fantasy' | 'scifi';
@@ -17,5 +17,5 @@ export const FantasySkyboxSystem: React.FC<FantasySkyboxSystemProps> = ({
     return null;
   }
 
-  return <SimpleSkybox realm={realm} />;
+  return <PolishedFantasySkybox />;
 };
