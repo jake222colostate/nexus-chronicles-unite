@@ -9,8 +9,8 @@ interface ValleyFantasyEnvironmentProps {
 const CHUNK_SIZE = 20;
 const RENDER_DISTANCE = 15; // Increased to load chunks much further ahead
 
-// Angular geometric mountain component matching the reference
-const GeometricMountain: React.FC<{ 
+// Blocky geometric mountain component for trapped valley feeling
+const BlockyMountain: React.FC<{ 
   position: [number, number, number], 
   scale: [number, number, number],
   color: string,
@@ -23,7 +23,7 @@ const GeometricMountain: React.FC<{
       castShadow 
       receiveShadow
     >
-      <coneGeometry args={[1, 1, 6]} />
+      <boxGeometry args={[1, 1, 1]} />
       <meshLambertMaterial 
         color={color} 
         transparent={opacity < 1}
@@ -35,28 +35,36 @@ const GeometricMountain: React.FC<{
 
 // Single chunk component with layered realistic mountains
 const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
-  // Generate sparse, distant mountains like reference - much fewer and farther away
+  // Generate close blocky mountains for trapped valley feeling
   const mountainData = React.useMemo(() => {
     const mountains = [];
     
-    // Only a few distant mountains forming valley walls
-    // Left side valley wall
-    mountains.push(
-      { side: -1, layer: 1, baseHeight: 12, width: 8, xOffset: 0, zOffset: -8 },
-      { side: -1, layer: 1, baseHeight: 10, width: 6, xOffset: 0, zOffset: 0 },
-      { side: -1, layer: 1, baseHeight: 14, width: 7, xOffset: 0, zOffset: 8 },
-      { side: -1, layer: 2, baseHeight: 16, width: 10, xOffset: 0, zOffset: -4 },
-      { side: -1, layer: 2, baseHeight: 18, width: 12, xOffset: 0, zOffset: 4 }
-    );
+    // Close valley walls - very close to path for trapped feeling
+    // Left side wall
+    for (let i = 0; i < 8; i++) {
+      mountains.push({
+        side: -1,
+        layer: 1,
+        baseHeight: 12 + (Math.random() * 6),
+        width: 6 + (Math.random() * 4),
+        depth: 8,
+        xOffset: 0,
+        zOffset: (i * 2.5) - 10
+      });
+    }
     
-    // Right side valley wall
-    mountains.push(
-      { side: 1, layer: 1, baseHeight: 11, width: 7, xOffset: 0, zOffset: -6 },
-      { side: 1, layer: 1, baseHeight: 13, width: 8, xOffset: 0, zOffset: 2 },
-      { side: 1, layer: 1, baseHeight: 9, width: 6, xOffset: 0, zOffset: 10 },
-      { side: 1, layer: 2, baseHeight: 15, width: 9, xOffset: 0, zOffset: -2 },
-      { side: 1, layer: 2, baseHeight: 17, width: 11, xOffset: 0, zOffset: 6 }
-    );
+    // Right side wall  
+    for (let i = 0; i < 8; i++) {
+      mountains.push({
+        side: 1,
+        layer: 1,
+        baseHeight: 12 + (Math.random() * 6),
+        width: 6 + (Math.random() * 4),
+        depth: 8,
+        xOffset: 0,
+        zOffset: (i * 2.5) - 10
+      });
+    }
     
     return mountains;
   }, [offsetZ]);
@@ -122,27 +130,24 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         <meshStandardMaterial color="#6A4C93" />
       </mesh>
 
-      {/* Sparse distant mountains forming valley walls like reference */}
+      {/* Close blocky mountains creating trapped valley feeling */}
       {mountainData.map((mountain, index) => {
-        const { side, layer, baseHeight, width, xOffset, zOffset } = mountain;
+        const { side, baseHeight, width, depth, xOffset, zOffset } = mountain;
         
-        // Mountains much further away to create open valley feel
-        const baseX = side * (35 + layer * 15) + xOffset; // 35, 50 units from center - much farther
+        // Mountains very close to path for claustrophobic feel
+        const baseX = side * 18 + xOffset; // Only 18 units from center - very close
         const y = baseHeight / 2;
         const z = zOffset;
         
-        // Subtle blue-grey colors for distant mountains
-        const colors = {
-          1: "#4A5A6A", // Closer layer
-          2: "#5A6A7A"  // Distant layer
-        };
+        // Dark mountain colors for enclosed feeling
+        const color = "#2D3D4D";
         
         return (
-          <GeometricMountain
+          <BlockyMountain
             key={`mountain-${index}`}
             position={[baseX, y, z]}
-            scale={[width, baseHeight, width]}
-            color={colors[layer as keyof typeof colors]}
+            scale={[width, baseHeight, depth]}
+            color={color}
             opacity={1}
           />
         );
