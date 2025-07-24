@@ -9,8 +9,8 @@ interface ValleyFantasyEnvironmentProps {
 const CHUNK_SIZE = 20;
 const RENDER_DISTANCE = 15; // Increased to load chunks much further ahead
 
-// Blocky geometric mountain component for trapped valley feeling
-const BlockyMountain: React.FC<{ 
+// Triangular mountain component for proper valley formation
+const TriangularMountain: React.FC<{ 
   position: [number, number, number], 
   scale: [number, number, number],
   color: string,
@@ -23,7 +23,7 @@ const BlockyMountain: React.FC<{
       castShadow 
       receiveShadow
     >
-      <boxGeometry args={[1, 1, 1]} />
+      <coneGeometry args={[1, 1, 5]} />
       <meshLambertMaterial 
         color={color} 
         transparent={opacity < 1}
@@ -35,110 +35,99 @@ const BlockyMountain: React.FC<{
 
 // Single chunk component with layered realistic mountains
 const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
-  // Generate close blocky mountains for trapped valley feeling
+  // Generate proper valley mountains - distant and triangular like reference
   const mountainData = React.useMemo(() => {
     const mountains = [];
     
-    // Close valley walls - very close to path for trapped feeling
-    // Left side wall
-    for (let i = 0; i < 8; i++) {
-      mountains.push({
-        side: -1,
-        layer: 1,
-        baseHeight: 12 + (Math.random() * 6),
-        width: 6 + (Math.random() * 4),
-        depth: 8,
-        xOffset: 0,
-        zOffset: (i * 2.5) - 10
-      });
-    }
+    // Left valley wall - fewer mountains, properly spaced
+    mountains.push(
+      { side: -1, baseHeight: 10, width: 6, xOffset: 0, zOffset: -8 },
+      { side: -1, baseHeight: 12, width: 7, xOffset: 0, zOffset: 0 },
+      { side: -1, baseHeight: 9, width: 5, xOffset: 0, zOffset: 8 },
+      { side: -1, baseHeight: 14, width: 8, xOffset: 0, zOffset: 16 }
+    );
     
-    // Right side wall  
-    for (let i = 0; i < 8; i++) {
-      mountains.push({
-        side: 1,
-        layer: 1,
-        baseHeight: 12 + (Math.random() * 6),
-        width: 6 + (Math.random() * 4),
-        depth: 8,
-        xOffset: 0,
-        zOffset: (i * 2.5) - 10
-      });
-    }
+    // Right valley wall
+    mountains.push(
+      { side: 1, baseHeight: 11, width: 6, xOffset: 0, zOffset: -6 },
+      { side: 1, baseHeight: 13, width: 7, xOffset: 0, zOffset: 2 },
+      { side: 1, baseHeight: 10, width: 6, xOffset: 0, zOffset: 10 },
+      { side: 1, baseHeight: 15, width: 8, xOffset: 0, zOffset: 18 }
+    );
     
     return mountains;
   }, [offsetZ]);
 
   return (
     <group position={[0, 0, offsetZ]}>
-      {/* Purple base terrain (full width) */}
+      {/* Wide purple base terrain */}
       <mesh
         position={[0, 0.02, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[30, CHUNK_SIZE]} />
+        <planeGeometry args={[40, CHUNK_SIZE]} />
         <meshStandardMaterial color="#6A4C93" />
       </mesh>
 
-      {/* Narrow green grass strips immediately beside path (like reference) */}
+      {/* Very thin green grass strips right next to path */}
       <mesh
-        position={[-4, 0.08, 0]}
+        position={[-2.5, 0.08, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[2, CHUNK_SIZE]} />
+        <planeGeometry args={[1, CHUNK_SIZE]} />
         <meshStandardMaterial color="#2E7D32" />
       </mesh>
       <mesh
-        position={[4, 0.08, 0]}
+        position={[2.5, 0.08, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[2, CHUNK_SIZE]} />
+        <planeGeometry args={[1, CHUNK_SIZE]} />
         <meshStandardMaterial color="#2E7D32" />
       </mesh>
 
-      {/* Purple center path area (shows between segments) */}
+      {/* Narrow purple center path area */}
       <mesh
         position={[0, 0.06, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[6, CHUNK_SIZE]} />
+        <planeGeometry args={[4, CHUNK_SIZE]} />
         <meshStandardMaterial color="#6A4C93" />
       </mesh>
 
-      {/* Raised brown path segments with clear gaps */}
-      {Array.from({ length: 4 }, (_, i) => (
+      {/* Narrow brown path segments like reference */}
+      {Array.from({ length: 5 }, (_, i) => (
         <mesh
           key={`path-segment-${i}`}
-          position={[0, 0.2, (i * 5) - 7.5]}
+          position={[0, 0.15, (i * 4) - 8]}
           receiveShadow
           castShadow
         >
-          <boxGeometry args={[5.5, 0.4, 2.5]} />
+          <boxGeometry args={[3.5, 0.3, 2]} />
           <meshStandardMaterial color="#8B4513" />
         </mesh>
       ))}
 
-      {/* Close blocky mountains creating trapped valley feeling */}
+      {/* Proper valley mountains - distant and triangular */}
       {mountainData.map((mountain, index) => {
-        const { side, baseHeight, width, depth, xOffset, zOffset } = mountain;
+        const { side, baseHeight, width, xOffset, zOffset } = mountain;
         
-        // Mountains very close to path for claustrophobic feel
-        const baseX = side * 18 + xOffset; // Only 18 units from center - very close
+        // Mountains positioned to form a proper valley (not tunnel)
+        const baseX = side * 25 + xOffset; // 25 units from center - proper valley distance
         const y = baseHeight / 2;
         const z = zOffset;
         
-        // Dark mountain colors for enclosed feeling
-        const color = "#2D3D4D";
+        // Blue-grey mountain colors like reference
+        const color = "#4A5A6A";
         
         return (
-          <BlockyMountain
+          <TriangularMountain
             key={`mountain-${index}`}
             position={[baseX, y, z]}
-            scale={[width, baseHeight, depth]}
+            scale={[width, baseHeight, width]}
             color={color}
             opacity={1}
           />
