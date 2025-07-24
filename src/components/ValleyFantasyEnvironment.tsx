@@ -7,7 +7,7 @@ interface ValleyFantasyEnvironmentProps {
 }
 
 const CHUNK_SIZE = 20;
-const RENDER_DISTANCE = 8; // Number of chunks ahead to render
+const RENDER_DISTANCE = 15; // Increased to load chunks much further ahead
 
 // Single chunk component
 const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
@@ -103,9 +103,9 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
   const [activeChunks, setActiveChunks] = useState<number[]>([]);
   const lastPlayerChunk = useRef(0);
 
-  // Setup valley atmosphere with enhanced fog
+  // Setup valley atmosphere with enhanced fog that covers chunk loading
   useEffect(() => {
-    scene.fog = new THREE.Fog(0x87CEEB, 25, 80);
+    scene.fog = new THREE.Fog(0x87CEEB, 40, 250); // Extended fog to cover all chunk loading
     scene.background = new THREE.Color(0x87CEEB);
   }, [scene]);
 
@@ -116,9 +116,9 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
     if (currentPlayerChunk !== lastPlayerChunk.current) {
       lastPlayerChunk.current = currentPlayerChunk;
       
-      // Generate chunks ahead of player
+      // Generate chunks much further ahead of player, within fog
       const newChunks: number[] = [];
-      for (let i = currentPlayerChunk - 2; i <= currentPlayerChunk + RENDER_DISTANCE; i++) {
+      for (let i = currentPlayerChunk - 3; i <= currentPlayerChunk + RENDER_DISTANCE; i++) {
         newChunks.push(i);
       }
       
@@ -126,10 +126,10 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
     }
   });
 
-  // Initialize with starting chunks
+  // Initialize with starting chunks that extend into fog
   useEffect(() => {
     const initialChunks: number[] = [];
-    for (let i = -2; i <= RENDER_DISTANCE; i++) {
+    for (let i = -3; i <= RENDER_DISTANCE; i++) {
       initialChunks.push(i);
     }
     setActiveChunks(initialChunks);
@@ -152,11 +152,11 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-far={150}
-        shadow-camera-left={-50}
-        shadow-camera-right={50}
-        shadow-camera-top={40}
-        shadow-camera-bottom={-40}
+        shadow-camera-far={300} // Extended shadow distance to match fog
+        shadow-camera-left={-60}
+        shadow-camera-right={60}
+        shadow-camera-top={50}
+        shadow-camera-bottom={-50}
       />
       
       <ambientLight intensity={0.3} />
