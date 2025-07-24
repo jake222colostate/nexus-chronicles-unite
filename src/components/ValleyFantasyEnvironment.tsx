@@ -35,48 +35,28 @@ const GeometricMountain: React.FC<{
 
 // Single chunk component with layered realistic mountains
 const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
-  // Generate layered mountains exactly like reference image
+  // Generate sparse, distant mountains like reference - much fewer and farther away
   const mountainData = React.useMemo(() => {
     const mountains = [];
     
-    // Layer 1: Immediate valley walls (darkest, closest)
-    const layer1Heights = [8, 10, 12, 9, 11];
-    for (let i = 0; i < 5; i++) {
-      mountains.push({
-        side: i % 2 === 0 ? -1 : 1,
-        layer: 1,
-        baseHeight: layer1Heights[i],
-        width: 4,
-        xOffset: 0,
-        zOffset: (i * 4) - 8
-      });
-    }
+    // Only a few distant mountains forming valley walls
+    // Left side valley wall
+    mountains.push(
+      { side: -1, layer: 1, baseHeight: 12, width: 8, xOffset: 0, zOffset: -8 },
+      { side: -1, layer: 1, baseHeight: 10, width: 6, xOffset: 0, zOffset: 0 },
+      { side: -1, layer: 1, baseHeight: 14, width: 7, xOffset: 0, zOffset: 8 },
+      { side: -1, layer: 2, baseHeight: 16, width: 10, xOffset: 0, zOffset: -4 },
+      { side: -1, layer: 2, baseHeight: 18, width: 12, xOffset: 0, zOffset: 4 }
+    );
     
-    // Layer 2: Mid-distance mountains
-    const layer2Heights = [12, 15, 14, 16, 13];
-    for (let i = 0; i < 5; i++) {
-      mountains.push({
-        side: i % 2 === 0 ? -1 : 1,
-        layer: 2,
-        baseHeight: layer2Heights[i],
-        width: 6,
-        xOffset: 0,
-        zOffset: (i * 4) - 8
-      });
-    }
-    
-    // Layer 3: Far background mountains (lightest)
-    const layer3Heights = [18, 20, 22, 19, 21];
-    for (let i = 0; i < 5; i++) {
-      mountains.push({
-        side: i % 2 === 0 ? -1 : 1,
-        layer: 3,
-        baseHeight: layer3Heights[i],
-        width: 8,
-        xOffset: 0,
-        zOffset: (i * 4) - 8
-      });
-    }
+    // Right side valley wall
+    mountains.push(
+      { side: 1, layer: 1, baseHeight: 11, width: 7, xOffset: 0, zOffset: -6 },
+      { side: 1, layer: 1, baseHeight: 13, width: 8, xOffset: 0, zOffset: 2 },
+      { side: 1, layer: 1, baseHeight: 9, width: 6, xOffset: 0, zOffset: 10 },
+      { side: 1, layer: 2, baseHeight: 15, width: 9, xOffset: 0, zOffset: -2 },
+      { side: 1, layer: 2, baseHeight: 17, width: 11, xOffset: 0, zOffset: 6 }
+    );
     
     return mountains;
   }, [offsetZ]);
@@ -142,20 +122,19 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         <meshStandardMaterial color="#6A4C93" />
       </mesh>
 
-      {/* Layered geometric mountains matching reference exactly */}
+      {/* Sparse distant mountains forming valley walls like reference */}
       {mountainData.map((mountain, index) => {
         const { side, layer, baseHeight, width, xOffset, zOffset } = mountain;
         
-        // Position mountains at exact distances to create layered valley effect
-        const baseX = side * (16 + layer * 8) + xOffset; // 16, 24, 32 units from center
+        // Mountains much further away to create open valley feel
+        const baseX = side * (35 + layer * 15) + xOffset; // 35, 50 units from center - much farther
         const y = baseHeight / 2;
         const z = zOffset;
         
-        // Dark to light blue-grey colors with clear contrast like reference
+        // Subtle blue-grey colors for distant mountains
         const colors = {
-          1: "#2D3B4B", // Front layer - darkest
-          2: "#3D4B5B", // Mid layer
-          3: "#4D5B6B"  // Back layer - lightest
+          1: "#4A5A6A", // Closer layer
+          2: "#5A6A7A"  // Distant layer
         };
         
         return (
