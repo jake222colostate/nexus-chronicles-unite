@@ -1,7 +1,8 @@
 import React, { Suspense, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sparkles } from '@react-three/drei';
+import { OrbitControls, Sparkles, useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
+import { assetUrl } from '@/lib/utils';
 
 // Movement controller component
 function MovementController() {
@@ -18,7 +19,7 @@ function MovementController() {
   );
 }
 
-// Crystal obelisk with geometric fallbacks
+// Crystal obelisk using actual GLB file
 function CrystalObelisk() {
   const crystalRef = useRef<THREE.Group>(null);
   
@@ -28,6 +29,9 @@ function CrystalObelisk() {
     }
   });
 
+  // Load the actual obelisk GLB file
+  const { scene } = useGLTF(assetUrl('assets/upgrades/LargeObelisk.glb'));
+
   return (
     <group>
       {/* Foundation base - much larger */}
@@ -36,12 +40,9 @@ function CrystalObelisk() {
         <meshStandardMaterial color="#666666" roughness={0.8} />
       </mesh>
       
-      {/* Crystal obelisk - 10x bigger and grounded */}
-      <group ref={crystalRef} position={[0, 15, 0]}>
-        <mesh>
-          <boxGeometry args={[10, 20, 10]} />
-          <meshStandardMaterial color="#88e5ff" transparent opacity={0.8} />
-        </mesh>
+      {/* Crystal obelisk GLB - 10x bigger and grounded */}
+      <group ref={crystalRef} position={[0, 0, 0]} scale={[10, 10, 10]}>
+        <primitive object={scene.clone()} />
         <Sparkles count={300} scale={30} size={30} color="#88e5ff" />
         <pointLight position={[0, 20, 0]} intensity={30} color="#88e5ff" distance={80} />
       </group>
