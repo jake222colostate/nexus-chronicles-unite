@@ -114,7 +114,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
         >
           <planeGeometry args={[tile.size, tile.size, 2, 2]} />
           <meshStandardMaterial
-            color="#2d4a2d"
+            color="#3d5a3d"
             roughness={0.9}
             metalness={0.1}
             transparent
@@ -134,7 +134,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
       >
         <planeGeometry args={[800, 800]} />
         <meshStandardMaterial 
-          color="#1a2a1b"
+          color="#2d4a2d"
           roughness={1.0}
           metalness={0.0}
           transparent
@@ -152,7 +152,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
       >
         <planeGeometry args={[1200, 1200]} />
         <meshStandardMaterial 
-          color="#0f1a10"
+          color="#1a2a1b"
           roughness={1.0}
           metalness={0.0}
           transparent

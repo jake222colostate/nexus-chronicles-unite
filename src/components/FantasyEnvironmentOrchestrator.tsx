@@ -3,6 +3,8 @@ import React from 'react';
 import { FogChunkData } from './FogBasedChunkSystem';
 import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistribution';
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
+import { SimpleSkybox } from './SimpleSkybox';
+import { ContinuousMountainSystem } from './ContinuousMountainSystem';
 import { Vector3 } from 'three';
 
 interface FantasyEnvironmentOrchestratorProps {
@@ -31,6 +33,17 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
 
   return (
     <group>
+      {/* Bright blue sky background */}
+      <SimpleSkybox realm={realm} />
+      
+      {/* Mountain corridor system */}
+      <ContinuousMountainSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+        playerPosition={playerPosition}
+      />
+      
       {/* Seamless fog-based ground system */}
       <SeamlessGroundSystem
         chunks={chunks}
@@ -47,11 +60,8 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
         realm={realm}
       />
       
-      {/* Background color for fantasy dusk */}
-      <color attach="background" args={['#1a0f2e']} />
-      
-      {/* Enhanced atmospheric fog with longer range */}
-      <fog attach="fog" args={['#2d1b4e', 50, 300]} />
+      {/* Light atmospheric fog for depth */}
+      <fog attach="fog" args={['#87CEEB', 80, 200]} />
     </group>
   );
 };
