@@ -25,8 +25,10 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
   
   // Camera rotation state
   const yawAngle = useRef(0);
+  const pitchAngle = useRef(0);
   const isMouseDown = useRef(false);
   const lastMouseX = useRef(0);
+  const lastMouseY = useRef(0);
 
   const handleJoystickMove = (dx: number, dy: number) => {
     if (Math.abs(dy) > 0.1) {
@@ -55,12 +57,12 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
         moveSpeed.current = 7; // Increased speed from 5 to 7
         moveDirection.current = -1;
       }
-      // Look controls - allow full 360 degree rotation
-      if (event.key === 'a' || event.key === 'A' || event.key === 'ArrowLeft') {
-        yawAngle.current -= 0.05; // Remove limits for full rotation
+      // Look up/down controls
+      if (event.key === 'a' || event.key === 'A') {
+        pitchAngle.current = Math.max(-Math.PI/3, pitchAngle.current - 0.05);
       }
-      if (event.key === 'd' || event.key === 'D' || event.key === 'ArrowRight') {
-        yawAngle.current += 0.05; // Remove limits for full rotation
+      if (event.key === 'd' || event.key === 'D') {
+        pitchAngle.current = Math.min(Math.PI/3, pitchAngle.current + 0.05);
       }
     };
 
@@ -87,15 +89,19 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
       if (event.button === 0) {
         isMouseDown.current = true;
         lastMouseX.current = event.clientX;
+        lastMouseY.current = event.clientY;
       }
     };
 
     const handleMouseMove = (event: MouseEvent) => {
       if (isMouseDown.current) {
         const deltaX = event.clientX - lastMouseX.current;
+        const deltaY = event.clientY - lastMouseY.current;
         lastMouseX.current = event.clientX;
+        lastMouseY.current = event.clientY;
         
-        yawAngle.current += deltaX * 0.003; // Remove limits for full 360 rotation
+        yawAngle.current += deltaX * 0.003; // Horizontal look
+        pitchAngle.current = Math.max(-Math.PI/3, Math.min(Math.PI/3, pitchAngle.current - deltaY * 0.003)); // Vertical look with limits
       }
     };
 
@@ -128,14 +134,18 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
       if (event.touches.length === 1) {
         isMouseDown.current = true;
         lastMouseX.current = event.touches[0].clientX;
+        lastMouseY.current = event.touches[0].clientY;
       }
     };
 
     const handleTouchMove = (event: TouchEvent) => {
       if (!isMouseDown.current || event.touches.length !== 1) return;
       const deltaX = event.touches[0].clientX - lastMouseX.current;
+      const deltaY = event.touches[0].clientY - lastMouseY.current;
       lastMouseX.current = event.touches[0].clientX;
+      lastMouseY.current = event.touches[0].clientY;
       yawAngle.current += deltaX * 0.003;
+      pitchAngle.current = Math.max(-Math.PI/3, Math.min(Math.PI/3, pitchAngle.current - deltaY * 0.003));
     };
 
     const handleTouchEnd = () => {
@@ -184,12 +194,12 @@ export const FirstPersonController: React.FC<FirstPersonControllerProps> = ({
     camera.position.x = targetPosition.current.x + Math.sin(swayTime.current * 1.8) * swayAmount;
     camera.position.y = targetPosition.current.y + Math.sin(swayTime.current * 2.2) * swayAmount * 0.5;
     
-    // Apply yaw rotation
+    // Apply yaw and pitch rotation
     const lookDistance = 5;
     const lookTarget = new Vector3(
-      camera.position.x + Math.sin(yawAngle.current) * lookDistance,
-      camera.position.y,
-      camera.position.z - Math.cos(yawAngle.current) * lookDistance
+      camera.position.x + Math.sin(yawAngle.current) * lookDistance * Math.cos(pitchAngle.current),
+      camera.position.y + Math.sin(pitchAngle.current) * lookDistance,
+      camera.position.z - Math.cos(yawAngle.current) * lookDistance * Math.cos(pitchAngle.current)
     );
     
     camera.lookAt(lookTarget);

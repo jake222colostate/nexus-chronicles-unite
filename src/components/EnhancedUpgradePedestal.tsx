@@ -50,11 +50,8 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         } else if (isUnlocked) {
           meshRef.current.rotation.y += 0.02;
         }
-      } else {
-        // Obelisks stay grounded with no floating or rotation
-        meshRef.current.position.y = 0;
-        meshRef.current.rotation.y = 0;
       }
+      // Obelisks: no position override, let them use their spawn position
     }
     
     if (glowRef.current && isUnlocked) {
