@@ -8,8 +8,6 @@ import { OptimizedFantasyEnvironment } from './OptimizedFantasyEnvironment';
 import { CasualFog } from './CasualFog';
 import { Sun } from './Sun';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
-import { LinearForestCorridor } from './LinearForestCorridor';
-import { InfinitePathSystem } from './InfinitePathSystem';
 import { StartingForestBarrier } from './StartingForestBarrier';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
@@ -104,17 +102,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         {/* Dense forest barrier behind starting point for direction clarity */}
         <StartingForestBarrier playerPosition={safeCameraPosition} />
-
-        {/* Infinite Path System - The walking surface */}
-        <InfinitePathSystem
-          playerPosition={safeCameraPosition}
-          chunksAhead={8}
-          chunksBehind={2}
-          renderDistance={renderDistance}
-        />
-
-        {/* Linear Forest Corridor along valley path */}
-        <LinearForestCorridor playerPosition={safeCameraPosition} />
 
         <FogBasedChunkSystem
           playerPosition={safeCameraPosition}

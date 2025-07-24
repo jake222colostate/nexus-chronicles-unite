@@ -6,6 +6,7 @@ import { EnhancedTreeDistribution } from '../environment/EnhancedTreeDistributio
 import { SeamlessGroundSystem } from './SeamlessGroundSystem';
 import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
 import { SkeletonEnemySystem } from './SkeletonEnemySystem';
+import { ChunkBasedPathSystem } from './ChunkBasedPathSystem';
 
 interface OptimizedFantasyEnvironmentProps {
   chunks: FogChunkData[];
@@ -46,6 +47,14 @@ export const OptimizedFantasyEnvironment: React.FC<OptimizedFantasyEnvironmentPr
         realm={realm}
         playerPosition={playerPosition}
         fogDistance={fogDistance}
+      />
+      
+      {/* Coordinated path system using chunk data */}
+      <ChunkBasedPathSystem
+        chunks={chunks}
+        chunkSize={chunkSize}
+        realm={realm}
+        playerPosition={playerPosition}
       />
       
       {/* Tree system positioned within valley bounds */}
