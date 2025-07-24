@@ -9,21 +9,26 @@ interface ValleyFantasyEnvironmentProps {
 const CHUNK_SIZE = 20;
 const RENDER_DISTANCE = 15; // Increased to load chunks much further ahead
 
-// Realistic mountain component with varied heights and shapes
-const RealisticMountain: React.FC<{ 
+// Realistic rolling hill/mountain component with softer shapes
+const RollingMountain: React.FC<{ 
   position: [number, number, number], 
   scale: [number, number, number],
   color: string,
   opacity?: number 
 }> = ({ position, scale, color, opacity = 1 }) => {
   const mountainGeometry = React.useMemo(() => {
-    const geometry = new THREE.ConeGeometry(1, 1, 8);
-    // Randomize vertices for more natural look
+    // Use sphere geometry for softer, rolling hills
+    const geometry = new THREE.SphereGeometry(1, 12, 8);
+    // Flatten the bottom and create rolling hill shape
     const positions = geometry.attributes.position.array as Float32Array;
     for (let i = 0; i < positions.length; i += 3) {
-      if (positions[i + 1] > 0) { // Only modify upper vertices
-        positions[i] += (Math.random() - 0.5) * 0.3;
-        positions[i + 2] += (Math.random() - 0.5) * 0.3;
+      const y = positions[i + 1];
+      if (y < 0) {
+        // Flatten bottom part
+        positions[i + 1] = Math.max(y, -0.2);
+      } else {
+        // Create gentler slopes on top
+        positions[i + 1] = y * 0.8;
       }
     }
     geometry.attributes.position.needsUpdate = true;
@@ -49,40 +54,40 @@ const RealisticMountain: React.FC<{
 
 // Single chunk component with layered realistic mountains
 const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
-  // Generate varied mountain heights and positions for this chunk
+  // Generate softer, rolling hills for this chunk
   const mountainData = React.useMemo(() => {
     const mountains = [];
     
-    // Layer 1: Close mountains (darkest)
-    for (let i = 0; i < 3; i++) {
+    // Layer 1: Close rolling hills (darkest)
+    for (let i = 0; i < 4; i++) {
       mountains.push({
         side: i % 2 === 0 ? -1 : 1,
         layer: 1,
-        baseHeight: 12 + Math.random() * 8,
-        width: 6 + Math.random() * 4,
-        xOffset: (Math.random() - 0.5) * 4,
+        baseHeight: 3 + Math.random() * 2, // Much lower heights
+        width: 8 + Math.random() * 4,
+        xOffset: (Math.random() - 0.5) * 6,
         zOffset: (Math.random() - 0.5) * CHUNK_SIZE * 0.8
       });
     }
     
-    // Layer 2: Mid-distance mountains
-    for (let i = 0; i < 4; i++) {
+    // Layer 2: Mid-distance hills
+    for (let i = 0; i < 3; i++) {
       mountains.push({
         side: i % 2 === 0 ? -1 : 1,
         layer: 2,
-        baseHeight: 16 + Math.random() * 10,
-        width: 8 + Math.random() * 6,
+        baseHeight: 4 + Math.random() * 3, // Still low and rolling
+        width: 10 + Math.random() * 6,
         xOffset: (Math.random() - 0.5) * 8,
         zOffset: (Math.random() - 0.5) * CHUNK_SIZE * 0.6
       });
     }
     
-    // Layer 3: Distant mountains (lightest)
+    // Layer 3: Distant hills (lightest)
     for (let i = 0; i < 2; i++) {
       mountains.push({
         side: i % 2 === 0 ? -1 : 1,
         layer: 3,
-        baseHeight: 20 + Math.random() * 12,
+        baseHeight: 5 + Math.random() * 4, // Gentle background hills
         width: 12 + Math.random() * 8,
         xOffset: (Math.random() - 0.5) * 12,
         zOffset: (Math.random() - 0.5) * CHUNK_SIZE * 0.4
@@ -124,30 +129,30 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         <meshStandardMaterial color="#6A4C93" />
       </mesh>
 
-      {/* Layered realistic mountains */}
+      {/* Layered rolling hills/mountains */}
       {mountainData.map((mountain, index) => {
         const { side, layer, baseHeight, width, xOffset, zOffset } = mountain;
         
-        // Calculate position based on layer
-        const baseX = side * (18 + layer * 12) + xOffset;
+        // Calculate position based on layer - closer to path for rolling hills
+        const baseX = side * (15 + layer * 8) + xOffset;
         const y = baseHeight / 2;
         const z = zOffset;
         
-        // Color based on distance (atmospheric perspective)
+        // Softer colors for rolling hills (more blue-grey like reference)
         const colors = {
-          1: "#3A4A5C", // Closest - darkest
-          2: "#4A5A6C", // Mid - medium
-          3: "#6A7A8C"  // Farthest - lightest
+          1: "#4A5A6A", // Closest hills
+          2: "#5A6A7A", // Mid hills  
+          3: "#6A7A8A"  // Distant hills
         };
         
         // Opacity based on distance
-        const opacity = layer === 3 ? 0.8 : 1;
+        const opacity = layer === 3 ? 0.9 : 1;
         
         return (
-          <RealisticMountain
+          <RollingMountain
             key={`mountain-${index}`}
             position={[baseX, y, z]}
-            scale={[width, baseHeight, width * 0.8]}
+            scale={[width, baseHeight, width * 1.2]} // Wider and flatter
             color={colors[layer as keyof typeof colors]}
             opacity={opacity}
           />
