@@ -34,21 +34,18 @@ function CrystalObelisk() {
 
   return (
     <group>
-      {/* Foundation base - much larger */}
-      <mesh position={[0, 1.5, 0]}>
-        <cylinderGeometry args={[45, 45, 3, 16]} />
-        <meshStandardMaterial color="#666666" roughness={0.8} />
-      </mesh>
-      
       {/* Crystal obelisk GLB - 10x bigger and grounded */}
-      <group ref={crystalRef} position={[0, 0, 0]} scale={[10, 10, 10]}>
+      <group ref={crystalRef} position={[0, 0, 0]} scale={[15, 15, 15]}>
         <primitive object={scene.clone()} />
-        <Sparkles count={300} scale={30} size={30} color="#88e5ff" />
-        <pointLight position={[0, 20, 0]} intensity={30} color="#88e5ff" distance={80} />
+        <Sparkles count={500} scale={50} size={50} color="#88e5ff" />
+        <pointLight position={[0, 30, 0]} intensity={50} color="#88e5ff" distance={100} />
       </group>
     </group>
   );
 }
+
+// Preload the obelisk GLB
+useGLTF.preload(assetUrl('assets/upgrades/LargeObelisk.glb'));
 
 // Vendor stall with geometric shapes
 function VendorStall({ position, canopyColor, item }: { position: [number, number, number]; canopyColor: string; item: 'coin' | 'gems'; }) {
