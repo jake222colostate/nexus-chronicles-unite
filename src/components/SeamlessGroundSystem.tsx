@@ -43,7 +43,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
       
       tiles.push({
         key: `ground_${id}`,
-        position: [worldX, -1.8, worldZ], // Consistent ground level
+        position: [worldX, -2.0, worldZ], // Lower ground level, below path (-1.7)
         size: chunkSize,
         opacity: fogOpacity,
         distanceToPlayer,
@@ -57,7 +57,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
         
         tiles.push({
           key: `ground_overlap_x_${id}`,
-          position: [worldX + chunkSize * 0.5, -1.8, worldZ], // Same level as main tiles
+          position: [worldX + chunkSize * 0.5, -2.0, worldZ], // Same level as main tiles
           size: overlapSize,
           opacity: fogOpacity * 0.8,
           distanceToPlayer,
@@ -66,7 +66,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
         
         tiles.push({
           key: `ground_overlap_z_${id}`,
-          position: [worldX, -1.8, worldZ + chunkSize * 0.5], // Same level as main tiles
+          position: [worldX, -2.0, worldZ + chunkSize * 0.5], // Same level as main tiles
           size: overlapSize,
           opacity: fogOpacity * 0.8,
           distanceToPlayer,
@@ -127,7 +127,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
       
       {/* Base foundation layer with fog-aware opacity */}
       <mesh 
-        position={[0, -2.5, playerPosition.z]} 
+        position={[0, -2.8, playerPosition.z]} 
         rotation={[-Math.PI / 2, 0, 0]} 
         receiveShadow
         frustumCulled={false}
@@ -145,7 +145,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
       
       {/* Far background layer for depth */}
       <mesh 
-        position={[0, -3.0, playerPosition.z - fogDistance * 0.5]} 
+        position={[0, -3.2, playerPosition.z - fogDistance * 0.5]} 
         rotation={[-Math.PI / 2, 0, 0]} 
         receiveShadow
         frustumCulled={false}
