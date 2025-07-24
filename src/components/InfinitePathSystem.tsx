@@ -31,7 +31,7 @@ const PathSegment: React.FC<PathSegmentProps> = ({
 
   const position: [number, number, number] = useMemo(() => [
     0, // Centered on X
-    -1.4, // Match ground level (ground is at -1.5)
+    -1, // Adjusted to -1 as requested
     -index * pathLength // NEGATIVE Z for forward movement (player moves in -Z direction)
   ], [index, pathLength]);
 
