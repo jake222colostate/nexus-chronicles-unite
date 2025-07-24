@@ -82,23 +82,7 @@ export const NewFantasyEnvironment: React.FC<NewFantasyEnvironmentProps> = ({
               {/* Brown dirt path down the valley */}
               <BrownDirtPath chunks={chunks} chunkSize={chunkSize} />
               
-              {/* Enemy system positioned on path */}
-              <SkeletonEnemySystem
-                chunks={chunks.map(chunk => ({
-                  x: chunk.x,
-                  z: chunk.z,
-                  worldX: chunk.worldX,
-                  worldZ: chunk.worldZ,
-                  id: chunk.id,
-                  seed: chunk.seed
-                }))}
-                chunkSize={chunkSize}
-                playerPosition={playerPosition}
-                onEnemyCountChange={onEnemyCountChange}
-                onEnemyKilled={onEnemyKilled}
-                weaponDamage={weaponDamage}
-                realm={realm}
-              />
+              {/* Enemy system temporarily removed */}
             </>
           )}
         </NewFantasyChunkSystem>
