@@ -71,9 +71,37 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
 
   return (
     <group position={[0, 0, offsetZ]}>
-      {/* Purple base terrain (shows between path segments) */}
+      {/* Purple base terrain (full width) */}
       <mesh
-        position={[0, 0.05, 0]}
+        position={[0, 0.02, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[30, CHUNK_SIZE]} />
+        <meshStandardMaterial color="#6A4C93" />
+      </mesh>
+
+      {/* Narrow green grass strips immediately beside path (like reference) */}
+      <mesh
+        position={[-4, 0.08, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[2, CHUNK_SIZE]} />
+        <meshStandardMaterial color="#2E7D32" />
+      </mesh>
+      <mesh
+        position={[4, 0.08, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[2, CHUNK_SIZE]} />
+        <meshStandardMaterial color="#2E7D32" />
+      </mesh>
+
+      {/* Purple center path area (shows between segments) */}
+      <mesh
+        position={[0, 0.06, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
@@ -81,54 +109,18 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         <meshStandardMaterial color="#6A4C93" />
       </mesh>
 
-      {/* Segmented brown dirt path like in reference */}
+      {/* Raised brown path segments with clear gaps */}
       {Array.from({ length: 4 }, (_, i) => (
         <mesh
           key={`path-segment-${i}`}
-          position={[0, 0.15, (i * 5) - 7.5]} // 4 segments spaced 5 units apart
+          position={[0, 0.2, (i * 5) - 7.5]}
           receiveShadow
           castShadow
         >
-          <boxGeometry args={[6, 0.3, 3]} /> {/* Raised brown segments */}
+          <boxGeometry args={[5.5, 0.4, 2.5]} />
           <meshStandardMaterial color="#8B4513" />
         </mesh>
       ))}
-
-      {/* Green grass strips on immediate sides of path (like in reference) */}
-      <mesh
-        position={[-4.5, 0.06, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[3, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#2E7D32" />
-      </mesh>
-      <mesh
-        position={[4.5, 0.06, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[3, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#2E7D32" />
-      </mesh>
-
-      {/* Purple terrain on outer sides */}
-      <mesh
-        position={[-10, 0.05, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[8, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#6A4C93" />
-      </mesh>
-      <mesh
-        position={[10, 0.05, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        receiveShadow
-      >
-        <planeGeometry args={[8, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#6A4C93" />
-      </mesh>
 
       {/* Close blocky mountains creating trapped valley feeling */}
       {mountainData.map((mountain, index) => {
