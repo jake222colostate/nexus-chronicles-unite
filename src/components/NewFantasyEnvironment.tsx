@@ -1,13 +1,11 @@
 import React, { Suspense } from 'react';
 import { Vector3 } from 'three';
 import { NewFantasyChunkSystem, FantasyChunkData } from './NewFantasyChunkSystem';
-import { RaisedPathTiles } from './RaisedPathTiles';
-import { BrightGreenTerrain } from './BrightGreenTerrain';
-import { BackgroundMountains } from './BackgroundMountains';
-import { StylizedTrees } from './StylizedTrees';
-import { PolishedFantasySkybox } from './PolishedFantasySkybox';
+import { BrownDirtPath } from './BrownDirtPath';
+import { ValleyTerrain } from './ValleyTerrain';
+import { ValleyMountains } from './ValleyMountains';
+import { ValleyFantasySkybox } from './ValleyFantasySkybox';
 import { SkeletonEnemySystem } from './SkeletonEnemySystem';
-import { ForestEnvironmentSystem } from './ForestEnvironmentSystem';
 
 interface NewFantasyEnvironmentProps {
   playerPosition: Vector3;
@@ -39,36 +37,36 @@ export const NewFantasyEnvironment: React.FC<NewFantasyEnvironmentProps> = ({
   return (
     <Suspense fallback={null}>
       <group name="NewFantasyEnvironment">
-        {/* Bright daylight skybox */}
-        <PolishedFantasySkybox />
+        {/* Valley-appropriate skybox */}
+        <ValleyFantasySkybox />
         
-        {/* Bright daylight lighting system */}
-        <ambientLight intensity={0.6} color="#FFFFFF" />
+        {/* Valley lighting system - softer, more atmospheric */}
+        <ambientLight intensity={0.5} color="#B0BEC5" />
         <directionalLight
-          position={[50, 80, 30]}
-          intensity={1.8}
-          color="#FFFFFF"
+          position={[30, 50, 20]}
+          intensity={1.2}
+          color="#CFD8DC"
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
-          shadow-camera-far={300}
-          shadow-camera-left={-100}
-          shadow-camera-right={100}
-          shadow-camera-top={100}
-          shadow-camera-bottom={-100}
+          shadow-camera-far={200}
+          shadow-camera-left={-60}
+          shadow-camera-right={60}
+          shadow-camera-top={60}
+          shadow-camera-bottom={-60}
           shadow-bias={-0.0001}
         />
         
-        {/* Fill light for even illumination */}
+        {/* Valley rim light for atmosphere */}
         <directionalLight
-          position={[-30, 60, 20]}
-          intensity={0.8}
-          color="#E3F2FD"
+          position={[-20, 40, 10]}
+          intensity={0.6}
+          color="#90A4AE"
           castShadow={false}
         />
         
-        {/* Background mountains (static) */}
-        <BackgroundMountains playerPosition={playerPosition} />
+        {/* Close valley mountains */}
+        <ValleyMountains playerPosition={playerPosition} />
         
         {/* Dynamic chunk-based environment */}
         <NewFantasyChunkSystem
@@ -78,16 +76,13 @@ export const NewFantasyEnvironment: React.FC<NewFantasyEnvironmentProps> = ({
         >
           {(chunks: FantasyChunkData[]) => (
             <>
-              {/* Bright green terrain base */}
-              <BrightGreenTerrain chunks={chunks} chunkSize={chunkSize} />
+              {/* Purple valley terrain sides */}
+              <ValleyTerrain chunks={chunks} chunkSize={chunkSize} />
               
-              {/* Raised 3-lane path tiles */}
-              <RaisedPathTiles chunks={chunks} chunkSize={chunkSize} />
+              {/* Brown dirt path down the valley */}
+              <BrownDirtPath chunks={chunks} chunkSize={chunkSize} />
               
-              {/* Sparse stylized trees */}
-              <StylizedTrees chunks={chunks} chunkSize={chunkSize} />
-              
-              {/* Enemy system using chunks */}
+              {/* Enemy system positioned on path */}
               <SkeletonEnemySystem
                 chunks={chunks.map(chunk => ({
                   x: chunk.x,
@@ -104,27 +99,12 @@ export const NewFantasyEnvironment: React.FC<NewFantasyEnvironmentProps> = ({
                 weaponDamage={weaponDamage}
                 realm={realm}
               />
-              
-              {/* Forest environment assets (if needed) */}
-              <ForestEnvironmentSystem
-                chunks={chunks.map(chunk => ({
-                  x: chunk.x,
-                  z: chunk.z,
-                  worldX: chunk.worldX,
-                  worldZ: chunk.worldZ,
-                  id: chunk.id,
-                  seed: chunk.seed
-                }))}
-                chunkSize={chunkSize}
-                realm={realm}
-                playerPosition={playerPosition}
-              />
             </>
           )}
         </NewFantasyChunkSystem>
         
-        {/* Depth fog for atmosphere */}
-        <fog attach="fog" args={['#B0E0E6', 100, 250]} />
+        {/* Valley fog for atmospheric depth */}
+        <fog attach="fog" args={['#CFD8DC', 80, 200]} />
       </group>
     </Suspense>
   );
