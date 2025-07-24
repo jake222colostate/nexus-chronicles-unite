@@ -109,18 +109,28 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         <meshStandardMaterial color="#6A4C93" />
       </mesh>
 
-      {/* Raised brown path segments with clear gaps */}
-      {Array.from({ length: 4 }, (_, i) => (
-        <mesh
-          key={`path-segment-${i}`}
-          position={[0, 0.2, (i * 5) - 7.5]}
-          receiveShadow
-          castShadow
-        >
-          <boxGeometry args={[5.5, 0.4, 2.5]} />
-          <meshStandardMaterial color="#8B4513" />
-        </mesh>
-      ))}
+      {/* Natural stone path segments with variation */}
+      {Array.from({ length: 4 }, (_, i) => {
+        const width = 4.8 + (Math.random() * 1.4); // 4.8-6.2
+        const depth = 1.8 + (Math.random() * 1.4); // 1.8-3.2
+        const height = 0.12 + (Math.random() * 0.08); // 0.12-0.2
+        const xOffset = (Math.random() - 0.5) * 1.2; // -0.6 to 0.6
+        const rotationY = (Math.random() - 0.5) * 0.3; // slight rotation
+        const spacing = 4.5 + (Math.random() * 1); // varied spacing
+        
+        return (
+          <mesh
+            key={`path-segment-${i}`}
+            position={[xOffset, 0.1 + height/2, (i * spacing) - 7]}
+            rotation={[0, rotationY, 0]}
+            receiveShadow
+            castShadow
+          >
+            <boxGeometry args={[width, height, depth]} />
+            <meshStandardMaterial color="#8B4513" />
+          </mesh>
+        );
+      })}
 
       {/* Close blocky mountains creating trapped valley feeling */}
       {mountainData.map((mountain, index) => {
