@@ -51,9 +51,9 @@ export const ChunkBasedPathSystem: React.FC<ChunkBasedPathSystemProps> = ({
         
         segments.push({
           key: `path_${id}_${i}`,
-          position: [0, -1.7, segmentZ], // Slightly above ground (-1.8)
+          position: [0, -1.65, segmentZ], // Slightly above ground for clear definition
           rotation: [0, rotation, 0],
-          scale: [2.5, 1, 2],
+          scale: [2.8, 1, 2.2], // Wider for 3-lane path
           opacity: fogOpacity
         });
       }
@@ -73,13 +73,54 @@ export const ChunkBasedPathSystem: React.FC<ChunkBasedPathSystemProps> = ({
           scale={segment.scale}
         >
           <mesh castShadow receiveShadow>
-            <boxGeometry args={[4, 0.2, 10]} />
+            {/* Main path surface */}
+            <boxGeometry args={[5, 0.15, 10]} />
             <meshStandardMaterial 
-              color="#D2B48C" 
+              color="#8B6914" 
               transparent 
               opacity={segment.opacity}
-              roughness={0.8}
-              metalness={0.1}
+              roughness={0.95}
+              metalness={0.0}
+            />
+          </mesh>
+          
+          {/* Left lane divider */}
+          <mesh position={[-1.2, 0.08, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.1, 0.02, 10]} />
+            <meshStandardMaterial 
+              color="#5D4412" 
+              transparent 
+              opacity={segment.opacity}
+            />
+          </mesh>
+          
+          {/* Right lane divider */}
+          <mesh position={[1.2, 0.08, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.1, 0.02, 10]} />
+            <meshStandardMaterial 
+              color="#5D4412" 
+              transparent 
+              opacity={segment.opacity}
+            />
+          </mesh>
+          
+          {/* Path edge borders - left */}
+          <mesh position={[-2.5, 0.08, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.2, 0.03, 10]} />
+            <meshStandardMaterial 
+              color="#4A3010" 
+              transparent 
+              opacity={segment.opacity}
+            />
+          </mesh>
+          
+          {/* Path edge borders - right */}
+          <mesh position={[2.5, 0.08, 0]} castShadow receiveShadow>
+            <boxGeometry args={[0.2, 0.03, 10]} />
+            <meshStandardMaterial 
+              color="#4A3010" 
+              transparent 
+              opacity={segment.opacity}
             />
           </mesh>
         </group>

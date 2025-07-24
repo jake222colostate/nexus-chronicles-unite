@@ -219,18 +219,21 @@ const GLBTree: React.FC<{
         matrixAutoUpdate={true}
         renderOrder={1}
       >
-        <mesh position={[0, 0.5, 0]} castShadow receiveShadow frustumCulled={false}>
-          <cylinderGeometry args={[0.1, 0.15, 1]} />
+        {/* Brown cylindrical trunk */}
+        <mesh position={[0, 0.6, 0]} castShadow receiveShadow frustumCulled={false}>
+          <cylinderGeometry args={[0.08, 0.12, 1.2, 8]} />
           <meshLambertMaterial 
             color="#8B4513" 
             side={THREE.DoubleSide} 
             transparent={false}
           />
         </mesh>
-        <mesh position={[0, 1.2, 0]} castShadow receiveShadow frustumCulled={false}>
-          <coneGeometry args={[0.6, 1.5, 8]} />
+        
+        {/* Bright green spherical canopy */}
+        <mesh position={[0, 1.6, 0]} castShadow receiveShadow frustumCulled={false}>
+          <sphereGeometry args={[0.8, 8, 6]} />
           <meshLambertMaterial 
-            color={treeType === 'pine218' ? "#013220" : "#228B22"} 
+            color="#32CD32" 
             side={THREE.DoubleSide} 
             transparent={false}
           />
@@ -265,12 +268,12 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
 
     console.log('EnhancedTreeDistribution: Generating properly grounded trees');
     const trees = [];
-    const minDistance = 8; // Increased spacing for performance
-    const maxAttempts = 20; // Reduced attempts for performance
+    const minDistance = 12; // Increased for sparse placement
+    const maxAttempts = 15; // Reduced attempts
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      const treeCount = 3 + Math.floor(seededRandom(seed + 99) * 2); // Reduced from 8-14 to 3-5
+      const treeCount = 2 + Math.floor(seededRandom(seed + 99) * 2); // Reduced to 2-4 trees per chunk for sparse placement
       const allPositions = [];
       
       for (let i = 0; i < treeCount; i++) {

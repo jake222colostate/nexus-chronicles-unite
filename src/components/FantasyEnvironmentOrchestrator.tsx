@@ -36,6 +36,23 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
       {/* Bright blue sky background */}
       <SimpleSkybox realm={realm} />
       
+      {/* Daylight lighting system */}
+      <ambientLight intensity={0.4} color="#FFFFFF" />
+      <directionalLight
+        position={[50, 80, 30]}
+        intensity={1.2}
+        color="#FFFFFF"
+        castShadow
+        shadow-mapSize-width={2048}
+        shadow-mapSize-height={2048}
+        shadow-camera-far={200}
+        shadow-camera-left={-50}
+        shadow-camera-right={50}
+        shadow-camera-top={50}
+        shadow-camera-bottom={-50}
+        shadow-bias={-0.0005}
+      />
+      
       {/* Mountain corridor system */}
       <ContinuousMountainSystem
         chunks={chunks}
@@ -61,7 +78,7 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
       />
       
       {/* Light atmospheric fog for depth */}
-      <fog attach="fog" args={['#87CEEB', 80, 200]} />
+      <fog attach="fog" args={['#B0E0E6', 100, 250]} />
     </group>
   );
 };

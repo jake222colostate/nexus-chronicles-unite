@@ -41,9 +41,12 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
     chunks.forEach((chunk) => {
       const { worldX, worldZ, fogOpacity, id, distanceToPlayer } = chunk;
       
+      // Create subtle height variation for terrain depth
+      const heightVariation = (Math.sin(worldX * 0.1) + Math.cos(worldZ * 0.08)) * 0.15;
+      
       tiles.push({
         key: `ground_${id}`,
-        position: [worldX, -2.0, worldZ], // Lower ground level, below path (-1.7)
+        position: [worldX, -2.0 + heightVariation, worldZ], // Subtle height variation
         size: chunkSize,
         opacity: fogOpacity,
         distanceToPlayer,
@@ -112,11 +115,11 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
           receiveShadow
           frustumCulled={false} // Disable for seamless transitions
         >
-          <planeGeometry args={[tile.size, tile.size, 2, 2]} />
+          <planeGeometry args={[tile.size, tile.size, 4, 4]} />
           <meshStandardMaterial
-            color="#3d5a3d"
-            roughness={0.9}
-            metalness={0.1}
+            color="#4CAF50"
+            roughness={0.7}
+            metalness={0.0}
             transparent
             opacity={tile.opacity}
             alphaTest={0.1}
@@ -134,8 +137,8 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
       >
         <planeGeometry args={[800, 800]} />
         <meshStandardMaterial 
-          color="#2d4a2d"
-          roughness={1.0}
+          color="#388E3C"
+          roughness={0.8}
           metalness={0.0}
           transparent
           opacity={0.8}

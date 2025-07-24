@@ -21,66 +21,54 @@ const MountainSegment: React.FC<{
   seed: number;
   side: 'left' | 'right';
 }> = ({ position, seed, side }) => {
-  const peakHeight = 5 + seededRandom(seed) * 3;
-  const baseWidth = 2 + seededRandom(seed + 1) * 1;
-  const segments = 8;
+  const peakHeight = 8 + seededRandom(seed) * 4; // Taller peaks
+  const baseWidth = 3 + seededRandom(seed + 1) * 2; // Wider base
+  const segments = 6; // Low-poly geometry
+  
+  // Determine mountain layer depth for atmospheric perspective
+  const depthFactor = Math.abs(position[0]) / 20; // 0 to 1 based on distance from center
+  const layerColor = depthFactor > 0.7 ? "#5A6B7A" : depthFactor > 0.4 ? "#6B7A8A" : "#7A8A9A";
   
   return (
     <group position={position} rotation={[0, side === 'left' ? Math.PI * 0.05 : -Math.PI * 0.05, 0]}>
-      {/* Main mountain peak - REPOSITIONED further from path */}
-      <mesh position={[0, peakHeight / 2 - 1, 0]} castShadow receiveShadow>
+      {/* Main mountain peak - sharp geometric style */}
+      <mesh position={[0, peakHeight / 2, 0]} castShadow receiveShadow>
         <coneGeometry args={[baseWidth, peakHeight, segments]} />
-        <meshLambertMaterial color="#6B5B73" />
+        <meshLambertMaterial color={layerColor} />
       </mesh>
       
-      {/* Large base foundation - EXTENDED underground to prevent holes */}
-      <mesh position={[0, -4, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[baseWidth + 3, baseWidth + 4, 8, segments]} />
-        <meshLambertMaterial color="#4A3A53" />
+      {/* Secondary peaks for layered silhouette */}
+      <mesh position={[baseWidth * 0.8, peakHeight * 0.3, -1]} castShadow receiveShadow>
+        <coneGeometry args={[baseWidth * 0.6, peakHeight * 0.7, segments]} />
+        <meshLambertMaterial color={layerColor} />
       </mesh>
       
-      {/* Additional underground foundation to fill terrain holes */}
-      <mesh position={[0, -8, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[baseWidth + 4, baseWidth + 5, 8, segments]} />
-        <meshLambertMaterial color="#3A2A43" />
+      <mesh position={[-baseWidth * 0.7, peakHeight * 0.4, 1.5]} castShadow receiveShadow>
+        <coneGeometry args={[baseWidth * 0.5, peakHeight * 0.6, segments]} />
+        <meshLambertMaterial color={layerColor} />
       </mesh>
       
-      {/* Deep underground foundation to completely prevent clipping */}
-      <mesh position={[0, -12, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[baseWidth + 5, baseWidth + 6, 8, segments]} />
-        <meshLambertMaterial color="#2A1A33" />
+      {/* Background layer mountain - more desaturated */}
+      <mesh position={[0, peakHeight * 0.2, -3]} castShadow receiveShadow>
+        <coneGeometry args={[baseWidth * 1.2, peakHeight * 0.8, segments]} />
+        <meshLambertMaterial color="#4A5B6A" />
       </mesh>
       
-      {/* Forward ridge - repositioned */}
+      {/* Large base foundation */}
+      <mesh position={[0, -2, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[baseWidth + 2, baseWidth + 3, 4, segments]} />
+        <meshLambertMaterial color="#3A4B5A" />
+      </mesh>
+      
+      {/* Side ridges for geometric variety */}
       <mesh 
-        position={[0, -0.5, 2.5]} 
-        rotation={[0, seededRandom(seed + 2) * Math.PI * 0.15, 0]}
+        position={[side === 'left' ? -1.5 : 1.5, peakHeight * 0.3, 0]} 
+        rotation={[0, seededRandom(seed + 2) * Math.PI * 0.1, 0]}
         castShadow 
         receiveShadow
       >
-        <coneGeometry args={[1.2, 3.5, 5]} />
-        <meshLambertMaterial color="#7A6B7D" />
-      </mesh>
-      
-      {/* Backward ridge - repositioned */}
-      <mesh 
-        position={[0, -1, -2.5]} 
-        rotation={[0, seededRandom(seed + 3) * Math.PI * 0.15, 0]}
-        castShadow 
-        receiveShadow
-      >
-        <coneGeometry args={[1, 2.5, 5]} />
-        <meshLambertMaterial color="#7A6B7D" />
-      </mesh>
-      
-      {/* Side support ridges to prevent gaps */}
-      <mesh 
-        position={[side === 'left' ? -1.5 : 1.5, -2, 0]} 
-        castShadow 
-        receiveShadow
-      >
-        <coneGeometry args={[1.5, 4, 6]} />
-        <meshLambertMaterial color="#5A4A63" />
+        <coneGeometry args={[baseWidth * 0.4, peakHeight * 0.5, segments]} />
+        <meshLambertMaterial color={layerColor} />
       </mesh>
     </group>
   );
@@ -99,10 +87,10 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
   const mountainSegments = useMemo(() => {
     const segments = [];
     
-    const segmentSpacing = 5; // Tighter spacing for seamless coverage
-    const leftMountainX = -15;  // MOVED FURTHER from path (was -6)
-    const rightMountainX = 15;  // MOVED FURTHER from path (was 6)
-    const MOUNTAIN_Y = -6; // LOWERED from -1.8 to -6 to prevent clipping
+    const segmentSpacing = 8; // Wider spacing for cleaner silhouette
+    const leftMountainX = -20;  // Further from path for better framing
+    const rightMountainX = 20;  // Further from path for better framing
+    const MOUNTAIN_Y = -3; // Raised for better visibility
     
     chunks.forEach((chunk) => {
       const segmentsPerChunk = Math.ceil(chunkSize / segmentSpacing) + 6;
