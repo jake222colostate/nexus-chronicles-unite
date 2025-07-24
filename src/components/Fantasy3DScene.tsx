@@ -3,9 +3,7 @@ import React, { Suspense, useMemo, useState, useEffect, useRef } from 'react';
 import { Vector3 } from 'three';
 import { ContactShadows } from '@react-three/drei';
 import { FirstPersonController } from './FirstPersonController';
-import { FogBasedChunkSystem, FogChunkData } from './FogBasedChunkSystem';
-import { NewFantasyEnvironment } from './NewFantasyEnvironment';
-import { CasualFog } from './CasualFog';
+import { RebuiltFantasyRealm } from './RebuiltFantasyRealm';
 import { Sun } from './Sun';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { StartingForestBarrier } from './StartingForestBarrier';
@@ -79,8 +77,6 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
 
         <color attach="background" args={['#2d1b4e']} />
 
-        <CasualFog />
-
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1, 0]} receiveShadow>
           <planeGeometry args={[100, 100]} />
           <meshStandardMaterial color="#2d4a2d" />
@@ -103,14 +99,7 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
         {/* Dense forest barrier behind starting point for direction clarity */}
         <StartingForestBarrier playerPosition={safeCameraPosition} />
 
-        <NewFantasyEnvironment
-          playerPosition={safeCameraPosition}
-          realm={realm}
-          onEnemyCountChange={onEnemyCountChange}
-          onEnemyKilled={onEnemyKilled}
-          weaponDamage={weaponDamage}
-          upgradesPurchased={upgradesPurchased}
-        />
+        <RebuiltFantasyRealm playerPosition={safeCameraPosition} />
 
         <ContactShadows 
           position={[0, -1.4, safeCameraPosition.z]} 
