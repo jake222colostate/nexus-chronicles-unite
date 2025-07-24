@@ -35,43 +35,46 @@ const GeometricMountain: React.FC<{
 
 // Single chunk component with layered realistic mountains
 const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
-  // Generate angular mountains like in reference image
+  // Generate layered mountains exactly like reference image
   const mountainData = React.useMemo(() => {
     const mountains = [];
     
-    // Close mountains forming valley walls - much closer to path
-    for (let i = 0; i < 6; i++) {
+    // Layer 1: Immediate valley walls (darkest, closest)
+    const layer1Heights = [8, 10, 12, 9, 11];
+    for (let i = 0; i < 5; i++) {
       mountains.push({
         side: i % 2 === 0 ? -1 : 1,
         layer: 1,
-        baseHeight: 8 + Math.random() * 4, // Moderate height
-        width: 4 + Math.random() * 3,
-        xOffset: (Math.random() - 0.5) * 2,
-        zOffset: (i * 4) - 10 // Evenly spaced along chunk
+        baseHeight: layer1Heights[i],
+        width: 4,
+        xOffset: 0,
+        zOffset: (i * 4) - 8
       });
     }
     
-    // Mid-distance mountains
-    for (let i = 0; i < 4; i++) {
+    // Layer 2: Mid-distance mountains
+    const layer2Heights = [12, 15, 14, 16, 13];
+    for (let i = 0; i < 5; i++) {
       mountains.push({
         side: i % 2 === 0 ? -1 : 1,
         layer: 2,
-        baseHeight: 10 + Math.random() * 6,
-        width: 6 + Math.random() * 4,
-        xOffset: (Math.random() - 0.5) * 4,
-        zOffset: (i * 6) - 8
+        baseHeight: layer2Heights[i],
+        width: 6,
+        xOffset: 0,
+        zOffset: (i * 4) - 8
       });
     }
     
-    // Background mountains
-    for (let i = 0; i < 3; i++) {
+    // Layer 3: Far background mountains (lightest)
+    const layer3Heights = [18, 20, 22, 19, 21];
+    for (let i = 0; i < 5; i++) {
       mountains.push({
         side: i % 2 === 0 ? -1 : 1,
         layer: 3,
-        baseHeight: 12 + Math.random() * 8,
-        width: 8 + Math.random() * 6,
-        xOffset: (Math.random() - 0.5) * 6,
-        zOffset: (i * 8) - 6
+        baseHeight: layer3Heights[i],
+        width: 8,
+        xOffset: 0,
+        zOffset: (i * 4) - 8
       });
     }
     
@@ -80,6 +83,16 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
 
   return (
     <group position={[0, 0, offsetZ]}>
+      {/* Purple base terrain (shows between path segments) */}
+      <mesh
+        position={[0, 0.05, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[6, CHUNK_SIZE]} />
+        <meshStandardMaterial color="#6A4C93" />
+      </mesh>
+
       {/* Segmented brown dirt path like in reference */}
       {Array.from({ length: 4 }, (_, i) => (
         <mesh
@@ -93,57 +106,63 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         </mesh>
       ))}
 
-      {/* Purple terrain in center path area to show between segments */}
+      {/* Green grass strips on immediate sides of path (like in reference) */}
       <mesh
-        position={[0, 0.05, 0]}
+        position={[-4.5, 0.06, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[6, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#6A4C93" />
+        <planeGeometry args={[3, CHUNK_SIZE]} />
+        <meshStandardMaterial color="#2E7D32" />
       </mesh>
-
-      {/* Purple terrain on left side */}
       <mesh
-        position={[-8, 0.05, 0]}
+        position={[4.5, 0.06, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[10, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#6A4C93" />
+        <planeGeometry args={[3, CHUNK_SIZE]} />
+        <meshStandardMaterial color="#2E7D32" />
       </mesh>
 
-      {/* Purple terrain on right side */}
+      {/* Purple terrain on outer sides */}
       <mesh
-        position={[8, 0.05, 0]}
+        position={[-10, 0.05, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
-        <planeGeometry args={[10, CHUNK_SIZE]} />
+        <planeGeometry args={[8, CHUNK_SIZE]} />
+        <meshStandardMaterial color="#6A4C93" />
+      </mesh>
+      <mesh
+        position={[10, 0.05, 0]}
+        rotation={[-Math.PI / 2, 0, 0]}
+        receiveShadow
+      >
+        <planeGeometry args={[8, CHUNK_SIZE]} />
         <meshStandardMaterial color="#6A4C93" />
       </mesh>
 
-      {/* Angular geometric mountains forming valley walls */}
+      {/* Layered geometric mountains matching reference exactly */}
       {mountainData.map((mountain, index) => {
         const { side, layer, baseHeight, width, xOffset, zOffset } = mountain;
         
-        // Position mountains much closer to create valley effect like reference
-        const baseX = side * (12 + layer * 6) + xOffset; // Much closer to path
+        // Position mountains at exact distances to create layered valley effect
+        const baseX = side * (16 + layer * 8) + xOffset; // 16, 24, 32 units from center
         const y = baseHeight / 2;
         const z = zOffset;
         
-        // Blue-grey colors matching reference with proper layering
+        // Dark to light blue-grey colors with clear contrast like reference
         const colors = {
-          1: "#3D4C5C", // Front mountains - darker
-          2: "#4D5C6C", // Mid mountains
-          3: "#5D6C7C"  // Back mountains - lighter
+          1: "#2D3B4B", // Front layer - darkest
+          2: "#3D4B5B", // Mid layer
+          3: "#4D5B6B"  // Back layer - lightest
         };
         
         return (
           <GeometricMountain
             key={`mountain-${index}`}
             position={[baseX, y, z]}
-            scale={[width, baseHeight, width]} // Proper cone proportions
+            scale={[width, baseHeight, width]}
             color={colors[layer as keyof typeof colors]}
             opacity={1}
           />
