@@ -11,13 +11,13 @@ interface SeamlessGroundSystemProps {
   fogDistance: number;
 }
 
-interface GroundTile {
+interface GroundElement {
   key: string;
+  type: 'grass' | 'path';
   position: [number, number, number];
-  size: number;
+  size: [number, number];
+  color: string;
   opacity: number;
-  distanceToPlayer: number;
-  chunkId: string;
 }
 
 export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
@@ -35,19 +35,19 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
   }
 
   const groundElements = useMemo(() => {
-    const elements: any[] = [];
+    const elements: GroundElement[] = [];
     
     // Create bright green grass areas and dirt path like in reference image
     chunks.forEach((chunk) => {
-      const { worldX, worldZ, fogOpacity, id, distanceToPlayer } = chunk;
+      const { worldX, worldZ, fogOpacity, id } = chunk;
       
       // Left grass area (bright green like reference)
       elements.push({
         key: `grass_left_${id}`,
         type: 'grass',
-        position: [-6, -2.01, worldZ], // Slightly above ground to prevent z-fighting
-        size: [10, chunkSize], // Width x Length
-        color: '#4CAF50', // Bright green like reference
+        position: [-6, -2.01, worldZ],
+        size: [10, chunkSize],
+        color: '#4CAF50',
         opacity: fogOpacity
       });
       
@@ -55,9 +55,9 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
       elements.push({
         key: `grass_right_${id}`,
         type: 'grass', 
-        position: [6, -2.01, worldZ], // Slightly above ground to prevent z-fighting
-        size: [10, chunkSize], // Width x Length
-        color: '#4CAF50', // Bright green like reference
+        position: [6, -2.01, worldZ],
+        size: [10, chunkSize],
+        color: '#4CAF50',
         opacity: fogOpacity
       });
       
@@ -65,9 +65,9 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
       elements.push({
         key: `path_${id}`,
         type: 'path',
-        position: [0, -2.0, worldZ], // Ground level
-        size: [8, chunkSize], // 3-lane width
-        color: '#8D6E63', // Brown dirt color like reference
+        position: [0, -2.0, worldZ],
+        size: [8, chunkSize],
+        color: '#8D6E63',
         opacity: fogOpacity
       });
     });
@@ -81,13 +81,12 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
     groundElements.forEach((element) => {
       const mesh = meshRefs.current[element.key];
       if (mesh && mesh.material) {
-        // Smooth opacity transition
         const targetOpacity = element.opacity;
         const currentOpacity = mesh.material.opacity;
         const delta = targetOpacity - currentOpacity;
         
         if (Math.abs(delta) > 0.01) {
-          mesh.material.opacity = currentOpacity + delta * 0.1; // Smooth interpolation
+          mesh.material.opacity = currentOpacity + delta * 0.1;
         }
       }
     });
@@ -95,7 +94,6 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
 
   return (
     <group name="SeamlessGroundSystem">
-      {/* Render grass and path elements like in reference image */}
       {groundElements.map((element) => (
         <mesh
           key={element.key}
@@ -110,7 +108,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
           <planeGeometry args={element.size} />
           <meshStandardMaterial
             color={element.color}
-            roughness={element.type === 'grass' ? 0.9 : 0.8} // Grass more matte, path slightly shinier
+            roughness={element.type === 'grass' ? 0.9 : 0.8}
             metalness={0.0}
             transparent
             opacity={element.opacity}
@@ -129,7 +127,7 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
       >
         <planeGeometry args={[40, 800]} />
         <meshStandardMaterial 
-          color="#2E7D32" // Dark green base
+          color="#2E7D32"
           roughness={1.0}
           metalness={0.0}
           fog={true}
