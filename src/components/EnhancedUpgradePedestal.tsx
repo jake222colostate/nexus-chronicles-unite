@@ -39,14 +39,21 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   
   useFrame((state) => {
     if (meshRef.current) {
-      // Gentle floating animation - now starting from ground level
-      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
-      
-      // Rotation
-      if (isPurchased) {
-        meshRef.current.rotation.y += 0.01;
-      } else if (isUnlocked) {
-        meshRef.current.rotation.y += 0.02;
+      // Only apply floating animation to podiums, not obelisks
+      if (modelType !== 'obelisk') {
+        // Gentle floating animation - now starting from ground level
+        meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 2) * 0.1;
+        
+        // Rotation
+        if (isPurchased) {
+          meshRef.current.rotation.y += 0.01;
+        } else if (isUnlocked) {
+          meshRef.current.rotation.y += 0.02;
+        }
+      } else {
+        // Obelisks stay grounded with no floating or rotation
+        meshRef.current.position.y = 0;
+        meshRef.current.rotation.y = 0;
       }
     }
     

@@ -88,11 +88,15 @@ export const useFantasy3DUpgradeWorld = ({
   const createUpgrade = (index: number): UpgradeData => {
     const templateIndex = index % upgradeTemplates.length;
     const template = upgradeTemplates[templateIndex];
-    const lane = index % 2 === 0 ? -12 : 12;
     
     // Determine model type: first 4 use podium, 5th uses obelisk, then repeat
     const cyclePosition = index % 5;
     const modelType = cyclePosition === 4 ? 'obelisk' : 'podium';
+    
+    // Obelisks go closer to path center, podiums stay in lanes
+    const lane = modelType === 'obelisk' ? 
+      (index % 2 === 0 ? -6 : 6) :  // Obelisks closer to path
+      (index % 2 === 0 ? -12 : 12); // Podiums in outer lanes
     
     return {
       id: index,
@@ -101,7 +105,7 @@ export const useFantasy3DUpgradeWorld = ({
       manaPerSecond: template.manaPerSecond * Math.pow(1.3, Math.floor(index / 5)), // Scale power by section  
       description: template.description,
       modelType,
-      position: [lane, 0.5, -30 - index * UPGRADE_SPACING],
+      position: [lane, modelType === 'obelisk' ? 0 : 0.5, -30 - index * UPGRADE_SPACING], // Obelisks at ground level
       tier: templateIndex,
       unlocked: index === 0 || maxUnlockedUpgrade >= index - 1
     };
