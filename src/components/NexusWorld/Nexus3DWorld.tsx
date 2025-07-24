@@ -30,20 +30,20 @@ function CrystalObelisk() {
 
   return (
     <group>
-      {/* Foundation base */}
-      <mesh position={[0, 0.15, 0]}>
-        <cylinderGeometry args={[4.5, 4.5, 0.3, 16]} />
+      {/* Foundation base - much larger */}
+      <mesh position={[0, 1.5, 0]}>
+        <cylinderGeometry args={[45, 45, 3, 16]} />
         <meshStandardMaterial color="#666666" roughness={0.8} />
       </mesh>
       
-      {/* Crystal obelisk */}
-      <group ref={crystalRef} position={[0, 1.5, 0]}>
+      {/* Crystal obelisk - 10x bigger and grounded */}
+      <group ref={crystalRef} position={[0, 15, 0]}>
         <mesh>
-          <boxGeometry args={[1, 2, 1]} />
+          <boxGeometry args={[10, 20, 10]} />
           <meshStandardMaterial color="#88e5ff" transparent opacity={0.8} />
         </mesh>
-        <Sparkles count={30} scale={3} size={3} color="#88e5ff" />
-        <pointLight position={[0, 2, 0]} intensity={3} color="#88e5ff" distance={8} />
+        <Sparkles count={300} scale={30} size={30} color="#88e5ff" />
+        <pointLight position={[0, 20, 0]} intensity={30} color="#88e5ff" distance={80} />
       </group>
     </group>
   );
