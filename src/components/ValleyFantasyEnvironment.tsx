@@ -80,14 +80,27 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
 
   return (
     <group position={[0, 0, offsetZ]}>
-      {/* Brown dirt path */}
+      {/* Segmented brown dirt path like in reference */}
+      {Array.from({ length: 4 }, (_, i) => (
+        <mesh
+          key={`path-segment-${i}`}
+          position={[0, 0.15, (i * 5) - 7.5]} // 4 segments spaced 5 units apart
+          receiveShadow
+          castShadow
+        >
+          <boxGeometry args={[6, 0.3, 3]} /> {/* Raised brown segments */}
+          <meshStandardMaterial color="#8B4513" />
+        </mesh>
+      ))}
+
+      {/* Purple terrain in center path area to show between segments */}
       <mesh
-        position={[0, 0.1, 0]}
+        position={[0, 0.05, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
         <planeGeometry args={[6, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#8B4513" />
+        <meshStandardMaterial color="#6A4C93" />
       </mesh>
 
       {/* Purple terrain on left side */}
