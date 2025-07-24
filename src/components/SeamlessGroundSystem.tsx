@@ -37,42 +37,42 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
   const groundElements = useMemo(() => {
     const elements: GroundElement[] = [];
     
-    // Create bright green grass areas and dirt path like in reference image
+    // Create bright green grass areas and recessed dirt path like in reference image
     chunks.forEach((chunk) => {
       const { worldX, worldZ, fogOpacity, id } = chunk;
       
-      // Left grass area (bright green like reference)
+      // Left grass area (bright green like reference) - higher level
       elements.push({
         key: `grass_left_${id}`,
         type: 'grass',
-        position: [-6, -2.01, worldZ],
+        position: [-6, -2.0, worldZ], // Grass at ground level
         size: [10, chunkSize],
         color: '#4CAF50',
         opacity: fogOpacity
       });
       
-      // Right grass area (bright green like reference)
+      // Right grass area (bright green like reference) - higher level  
       elements.push({
         key: `grass_right_${id}`,
         type: 'grass', 
-        position: [6, -2.01, worldZ],
+        position: [6, -2.0, worldZ], // Grass at ground level
         size: [10, chunkSize],
         color: '#4CAF50',
         opacity: fogOpacity
       });
       
-      // Central dirt path (3 lanes like reference)
+      // Central dirt path (recessed/lower than grass like reference)
       elements.push({
         key: `path_${id}`,
         type: 'path',
-        position: [0, -2.0, worldZ],
+        position: [0, -2.3, worldZ], // Path LOWER than grass
         size: [8, chunkSize],
         color: '#8D6E63',
         opacity: fogOpacity
       });
     });
     
-    console.log(`SeamlessGroundSystem: Generated ${elements.length} ground elements`);
+    console.log(`SeamlessGroundSystem: Generated ${elements.length} ground elements with recessed path`);
     return elements;
   }, [chunks, chunkSize]);
 
@@ -117,22 +117,6 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
           />
         </mesh>
       ))}
-      
-      {/* Base dark ground foundation */}
-      <mesh 
-        position={[0, -2.1, playerPosition.z]} 
-        rotation={[-Math.PI / 2, 0, 0]} 
-        receiveShadow
-        frustumCulled={false}
-      >
-        <planeGeometry args={[40, 800]} />
-        <meshStandardMaterial 
-          color="#2E7D32"
-          roughness={1.0}
-          metalness={0.0}
-          fog={true}
-        />
-      </mesh>
     </group>
   );
 };

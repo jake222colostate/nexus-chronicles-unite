@@ -54,10 +54,10 @@ const SkeletonModel: React.FC<{
 
   useFrame((state) => {
     if (meshRef.current && enemy.alive) {
-      // Simple idle animation
+      // Simple idle animation relative to enemy's actual position
       const time = state.clock.getElapsedTime();
       meshRef.current.rotation.y = Math.sin(time * 0.5) * 0.1;
-      meshRef.current.position.y = -0.8 + Math.sin(time * 2) * 0.05;
+      meshRef.current.position.y = enemy.position.y + Math.sin(time * 2) * 0.05;
     }
   });
 
@@ -192,7 +192,7 @@ export const SkeletonEnemySystem: React.FC<SkeletonEnemySystemProps> = ({
         newEnemies.push({
           id: `${chunk.x}_${chunk.z}_${type}_${i}`,
           type,
-          position: new Vector3(finalX, -0.8, finalZ),
+          position: new Vector3(finalX, -1.8, finalZ), // Position on top of recessed path
           health,
           maxHealth: health,
           alive: true,
