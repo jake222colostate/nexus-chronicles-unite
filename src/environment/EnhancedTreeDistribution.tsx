@@ -112,94 +112,16 @@ const getTreeScale = (treeType: 'realistic' | 'stylized' | 'pine218', seed: numb
   return scaleConfig[treeType].min + (random * (scaleConfig[treeType].max - scaleConfig[treeType].min));
 };
 
-// ENHANCED Tree component with proper ground connection
-const GLBTree: React.FC<{
+// Simple stylized tree like in reference image
+const SimpleStylizedTree: React.FC<{
   position: [number, number, number];
   scale: number;
   rotation: number;
-  treeType: 'realistic' | 'stylized' | 'pine218';
-}> = ({ position, scale, rotation, treeType }) => {
-  // Create procedural tree geometry
-  const treeModel = useMemo(() => {
-    const group = new THREE.Group();
-    // Simple procedural tree
-    const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.2, 0.3, 2, 8),
-      new THREE.MeshStandardMaterial({ color: '#8b4513' })
-    );
-    const foliage = new THREE.Mesh(
-      new THREE.SphereGeometry(1.2, 8, 6),
-      new THREE.MeshStandardMaterial({ color: '#32cd32' })
-    );
-    foliage.position.y = 1.5;
-    group.add(trunk, foliage);
-    return group;
-  }, [treeType]);
-
-  const optimizedModel = useMemo(() => {
-    if (!treeModel) return null;
-
-    const model = treeModel.clone();
-    
-    // Apply optimization settings but ALLOW fog
-    const applyOptimizationRecursive = (object: THREE.Object3D) => {
-      object.frustumCulled = false;
-      object.matrixAutoUpdate = true;
-      object.matrixWorldNeedsUpdate = true;
-      object.visible = true;
-      
-      if (object instanceof THREE.Mesh) {
-        // Expand bounding boxes for better visibility
-        if (object.geometry) {
-          object.geometry.computeBoundingBox();
-          object.geometry.computeBoundingSphere();
-          
-          if (object.geometry.boundingBox) {
-            object.geometry.boundingBox.expandByScalar(2.0);
-          }
-          if (object.geometry.boundingSphere) {
-            object.geometry.boundingSphere.radius += 2.0;
-          }
-        }
-        
-        // Configure materials to work with fog
-        if (object.material) {
-          const materials = Array.isArray(object.material) ? object.material : [object.material];
-          materials.forEach(mat => {
-            mat.side = THREE.DoubleSide;
-            mat.transparent = false;
-            mat.opacity = 1.0;
-            mat.visible = true;
-            mat.depthTest = true;
-            mat.depthWrite = true;
-            mat.needsUpdate = true;
-          });
-        }
-        
-        object.castShadow = true;
-        object.receiveShadow = true;
-        object.renderOrder = 0;
-      }
-      
-      // Apply to all children recursively
-      object.children.forEach(child => applyOptimizationRecursive(child));
-
-      object.updateMatrixWorld(true);
-    };
-
-    applyOptimizationRecursive(model);
-    model.updateMatrixWorld(true);
-    return model;
-  }, [treeModel]);
-
-  // ENHANCED: Proper ground connection with mountain slope calculation
-  const groundHeight = getMountainSlopeHeight(position[0], position[2]);
-  const treeOffsets = { realistic: 0, stylized: 0, pine218: 0 };
-  const adjustedY = groundHeight + treeOffsets[treeType] - 1.8; // Offset for proper grounding
-
+}> = ({ position, scale, rotation }) => {
+  // Simple ground positioning - trees sit on grass level
   const adjustedPosition: [number, number, number] = [
     position[0],
-    adjustedY,
+    -2.0 + 1.0, // Sit on grass level with trunk base at ground
     position[2]
   ];
 
@@ -209,49 +131,23 @@ const GLBTree: React.FC<{
     scale
   );
 
-  if (!optimizedModel) {
-    return (
-      <group 
-        position={adjustedPosition} 
-        scale={[scale, scale, scale]} 
-        rotation={[0, rotation, 0]}
-        frustumCulled={false}
-        matrixAutoUpdate={true}
-        renderOrder={1}
-      >
-        {/* Brown cylindrical trunk */}
-        <mesh position={[0, 0.6, 0]} castShadow receiveShadow frustumCulled={false}>
-          <cylinderGeometry args={[0.08, 0.12, 1.2, 8]} />
-          <meshLambertMaterial 
-            color="#8B4513" 
-            side={THREE.DoubleSide} 
-            transparent={false}
-          />
-        </mesh>
-        
-        {/* Bright green spherical canopy */}
-        <mesh position={[0, 1.6, 0]} castShadow receiveShadow frustumCulled={false}>
-          <sphereGeometry args={[0.8, 8, 6]} />
-          <meshLambertMaterial 
-            color="#32CD32" 
-            side={THREE.DoubleSide} 
-            transparent={false}
-          />
-        </mesh>
-      </group>
-    );
-  }
-
   return (
     <group 
       position={adjustedPosition} 
       scale={[scale, scale, scale]} 
       rotation={[0, rotation, 0]}
-      frustumCulled={false}
-      matrixAutoUpdate={true}
-      renderOrder={1}
     >
-      <primitive object={optimizedModel} frustumCulled={false} />
+      {/* Brown cylindrical trunk - simple and clean */}
+      <mesh position={[0, 0.4, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.12, 0.15, 0.8, 8]} />
+        <meshLambertMaterial color="#8B4513" />
+      </mesh>
+      
+      {/* Bright green spherical canopy - matches reference exactly */}
+      <mesh position={[0, 1.0, 0]} castShadow receiveShadow>
+        <sphereGeometry args={[0.6, 8, 6]} />
+        <meshLambertMaterial color="#4CAF50" />
+      </mesh>
     </group>
   );
 };
@@ -266,69 +162,36 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
       return [];
     }
 
-    console.log('EnhancedTreeDistribution: Generating properly grounded trees');
+    console.log('EnhancedTreeDistribution: Generating simple stylized trees like reference image');
     const trees = [];
-    const minDistance = 12; // Increased for sparse placement
-    const maxAttempts = 15; // Reduced attempts
 
     chunks.forEach(chunk => {
       const { worldX, worldZ, seed } = chunk;
-      const treeCount = 2 + Math.floor(seededRandom(seed + 99) * 2); // Reduced to 2-4 trees per chunk for sparse placement
-      const allPositions = [];
+      const treeCount = 3; // Fixed count for consistent sparse placement
       
       for (let i = 0; i < treeCount; i++) {
-        let attempts = 0;
-        let validPosition = false;
-        let x, z, terrainHeight, treeType, scale, rotation, finalY;
-        
-        while (!validPosition && attempts < maxAttempts) {
-          const treeSeed = seed + i * 157 + chunk.x * 1000 + chunk.z * 100;
+        const treeSeed = seed + i * 157;
 
-          x = (seededRandom(treeSeed) - 0.5) * 300;
-          z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.8;
-          
-          // ENHANCED: Use proper mountain slope height for validation
-          terrainHeight = getMountainSlopeHeight(x, z);
-          
-          if (!isValidTreePosition(x, z)) {
-            attempts++;
-            continue;
-          }
-          
-          // Prefer pine trees on mountain sides
-          const distanceFromCenter = Math.abs(x);
-          if (distanceFromCenter > 80) {
-            treeType = seededRandom(treeSeed + 2) < 0.8 ? 'pine218' : 'stylized';
-          } else {
-            treeType = getTreeType(treeSeed + 2);
-          }
-          
-          scale = getTreeScale(treeType, treeSeed + 3);
-          rotation = seededRandom(treeSeed + 4) * Math.PI * 2;
-          
-          // ENHANCED: Calculate proper ground-connected Y position
-          const treeOffsets = { realistic: 0, stylized: 0, pine218: 0 };
-          finalY = terrainHeight + treeOffsets[treeType] - 1.8;
-          
-          validPosition = allPositions.every(pos => {
-            const distance = Math.sqrt(
-              Math.pow(x - pos.x, 2) + Math.pow(z - pos.z, 2)
-            );
-            return distance >= minDistance;
-          });
-          
-          attempts++;
-        }
+        // Position trees on the grass areas (left and right of path)
+        const side = i % 2 === 0 ? -1 : 1; // Alternate left and right
+        const x = side * (8 + seededRandom(treeSeed) * 6); // Position on grass areas
+        const z = worldZ + (seededRandom(treeSeed + 1) - 0.5) * chunkSize * 0.6;
         
-        if (validPosition) {
-          const position = { x, y: finalY, z, scale, rotation, treeType };
-          allPositions.push(position);
-          trees.push(position);
+        // Simple scale variation
+        const scale = 0.8 + seededRandom(treeSeed + 2) * 0.4; // 0.8 to 1.2 scale
+        const rotation = seededRandom(treeSeed + 3) * Math.PI * 2;
+        
+        // Only add if not too close to path center and not too close to player start
+        const distanceToPath = Math.abs(x);
+        const distanceToPlayerStart = Math.sqrt(x * x + (z + 10) * (z + 10));
+        
+        if (distanceToPath > 6 && distanceToPlayerStart > 8) {
+          trees.push({ x, y: -2.0, z, scale, rotation });
         }
       }
     });
     
-    console.log(`EnhancedTreeDistribution: Generated ${trees.length} properly grounded trees`);
+    console.log(`EnhancedTreeDistribution: Generated ${trees.length} stylized trees`);
     return trees;
   }, [chunks.map(c => `${c.id}-${c.x}-${c.z}`).join(','), chunkSize, realm]);
 
@@ -340,12 +203,11 @@ export const EnhancedTreeDistribution: React.FC<EnhancedTreeDistributionProps> =
     <Suspense fallback={null}>
       <group>
         {treePositions.map((tree, index) => (
-          <GLBTree
+          <SimpleStylizedTree
             key={`tree-${index}`}
             position={[tree.x, tree.y, tree.z]}
             scale={tree.scale}
             rotation={tree.rotation}
-            treeType={tree.treeType}
           />
         ))}
       </group>

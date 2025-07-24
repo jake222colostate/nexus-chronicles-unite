@@ -36,21 +36,29 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
       {/* Bright blue sky background */}
       <SimpleSkybox realm={realm} />
       
-      {/* Daylight lighting system */}
-      <ambientLight intensity={0.4} color="#FFFFFF" />
+      {/* Bright daylight lighting system like reference image */}
+      <ambientLight intensity={0.8} color="#FFFFFF" />
       <directionalLight
-        position={[50, 80, 30]}
-        intensity={1.2}
+        position={[50, 100, 30]}
+        intensity={2.0}
         color="#FFFFFF"
         castShadow
         shadow-mapSize-width={2048}
         shadow-mapSize-height={2048}
-        shadow-camera-far={200}
-        shadow-camera-left={-50}
-        shadow-camera-right={50}
-        shadow-camera-top={50}
-        shadow-camera-bottom={-50}
-        shadow-bias={-0.0005}
+        shadow-camera-far={300}
+        shadow-camera-left={-100}
+        shadow-camera-right={100}
+        shadow-camera-top={100}
+        shadow-camera-bottom={-100}
+        shadow-bias={-0.0001}
+      />
+      
+      {/* Additional fill light for bright cheerful atmosphere */}
+      <directionalLight
+        position={[-30, 60, 20]}
+        intensity={0.8}
+        color="#E3F2FD"
+        castShadow={false}
       />
       
       {/* Mountain corridor system */}
@@ -77,8 +85,8 @@ export const FantasyEnvironmentOrchestrator: React.FC<FantasyEnvironmentOrchestr
         realm={realm}
       />
       
-      {/* Light atmospheric fog for depth */}
-      <fog attach="fog" args={['#B0E0E6', 100, 250]} />
+      {/* Very light atmospheric fog for depth - matches bright reference image */}
+      <fog attach="fog" args={['#E6F3FF', 200, 400]} />
     </group>
   );
 };

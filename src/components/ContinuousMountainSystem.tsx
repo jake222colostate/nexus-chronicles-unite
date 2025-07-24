@@ -21,54 +21,51 @@ const MountainSegment: React.FC<{
   seed: number;
   side: 'left' | 'right';
 }> = ({ position, seed, side }) => {
-  const peakHeight = 8 + seededRandom(seed) * 4; // Taller peaks
-  const baseWidth = 3 + seededRandom(seed + 1) * 2; // Wider base
-  const segments = 6; // Low-poly geometry
+  // Create dramatic valley walls like in reference image
+  const baseHeight = 15 + seededRandom(seed) * 8; // Much taller for valley effect
+  const baseWidth = 8 + seededRandom(seed + 1) * 4; // Wider base
+  const segments = 8; // Low-poly but smooth enough
   
-  // Determine mountain layer depth for atmospheric perspective
-  const depthFactor = Math.abs(position[0]) / 20; // 0 to 1 based on distance from center
-  const layerColor = depthFactor > 0.7 ? "#5A6B7A" : depthFactor > 0.4 ? "#6B7A8A" : "#7A8A9A";
+  // Dark mountain silhouette colors like in reference
+  const primaryColor = "#2C3E50"; // Dark blue-gray
+  const secondaryColor = "#34495E"; // Slightly lighter
+  const shadowColor = "#1A252F"; // Very dark for depth
   
   return (
-    <group position={position} rotation={[0, side === 'left' ? Math.PI * 0.05 : -Math.PI * 0.05, 0]}>
-      {/* Main mountain peak - sharp geometric style */}
-      <mesh position={[0, peakHeight / 2, 0]} castShadow receiveShadow>
-        <coneGeometry args={[baseWidth, peakHeight, segments]} />
-        <meshLambertMaterial color={layerColor} />
+    <group position={position}>
+      {/* Main mountain wall - tall and imposing */}
+      <mesh position={[0, baseHeight / 2, 0]}>
+        <coneGeometry args={[baseWidth, baseHeight, segments]} />
+        <meshLambertMaterial color={primaryColor} />
       </mesh>
       
-      {/* Secondary peaks for layered silhouette */}
-      <mesh position={[baseWidth * 0.8, peakHeight * 0.3, -1]} castShadow receiveShadow>
-        <coneGeometry args={[baseWidth * 0.6, peakHeight * 0.7, segments]} />
-        <meshLambertMaterial color={layerColor} />
+      {/* Layered mountain effect - multiple overlapping peaks */}
+      <mesh position={[baseWidth * 0.6, baseHeight * 0.7, -2]}>
+        <coneGeometry args={[baseWidth * 0.8, baseHeight * 0.9, segments]} />
+        <meshLambertMaterial color={secondaryColor} />
       </mesh>
       
-      <mesh position={[-baseWidth * 0.7, peakHeight * 0.4, 1.5]} castShadow receiveShadow>
-        <coneGeometry args={[baseWidth * 0.5, peakHeight * 0.6, segments]} />
-        <meshLambertMaterial color={layerColor} />
+      <mesh position={[-baseWidth * 0.5, baseHeight * 0.6, -1]}>
+        <coneGeometry args={[baseWidth * 0.7, baseHeight * 0.8, segments]} />
+        <meshLambertMaterial color={secondaryColor} />
       </mesh>
       
-      {/* Background layer mountain - more desaturated */}
-      <mesh position={[0, peakHeight * 0.2, -3]} castShadow receiveShadow>
-        <coneGeometry args={[baseWidth * 1.2, peakHeight * 0.8, segments]} />
-        <meshLambertMaterial color="#4A5B6A" />
+      {/* Background mountain layer for atmospheric depth */}
+      <mesh position={[0, baseHeight * 0.4, -4]}>
+        <coneGeometry args={[baseWidth * 1.5, baseHeight * 1.2, segments]} />
+        <meshLambertMaterial color={shadowColor} />
       </mesh>
       
-      {/* Large base foundation */}
-      <mesh position={[0, -2, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[baseWidth + 2, baseWidth + 3, 4, segments]} />
-        <meshLambertMaterial color="#3A4B5A" />
+      {/* Wide base to fill the valley walls completely */}
+      <mesh position={[0, -1, 0]}>
+        <cylinderGeometry args={[baseWidth + 4, baseWidth + 6, 6, segments]} />
+        <meshLambertMaterial color={shadowColor} />
       </mesh>
       
-      {/* Side ridges for geometric variety */}
-      <mesh 
-        position={[side === 'left' ? -1.5 : 1.5, peakHeight * 0.3, 0]} 
-        rotation={[0, seededRandom(seed + 2) * Math.PI * 0.1, 0]}
-        castShadow 
-        receiveShadow
-      >
-        <coneGeometry args={[baseWidth * 0.4, peakHeight * 0.5, segments]} />
-        <meshLambertMaterial color={layerColor} />
+      {/* Additional peaks for jagged silhouette */}
+      <mesh position={[side === 'left' ? -2 : 2, baseHeight * 0.8, 1]}>
+        <coneGeometry args={[baseWidth * 0.5, baseHeight * 0.7, segments]} />
+        <meshLambertMaterial color={primaryColor} />
       </mesh>
     </group>
   );
@@ -87,10 +84,10 @@ export const ContinuousMountainSystem: React.FC<ContinuousMountainSystemProps> =
   const mountainSegments = useMemo(() => {
     const segments = [];
     
-    const segmentSpacing = 8; // Wider spacing for cleaner silhouette
-    const leftMountainX = -20;  // Further from path for better framing
-    const rightMountainX = 20;  // Further from path for better framing
-    const MOUNTAIN_Y = -3; // Raised for better visibility
+    const segmentSpacing = 6; // Closer spacing for continuous walls
+    const leftMountainX = -12;  // Closer to create valley corridor like reference
+    const rightMountainX = 12;  // Closer to create valley corridor like reference
+    const MOUNTAIN_Y = -2; // Ground level for proper valley walls
     
     chunks.forEach((chunk) => {
       const segmentsPerChunk = Math.ceil(chunkSize / segmentSpacing) + 6;

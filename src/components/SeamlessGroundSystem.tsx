@@ -34,64 +34,55 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
     return null;
   }
 
-  const groundTiles = useMemo(() => {
-    const tiles: GroundTile[] = [];
+  const groundElements = useMemo(() => {
+    const elements: any[] = [];
     
-    // Create seamless ground tiles based on fog-aware chunks
+    // Create bright green grass areas and dirt path like in reference image
     chunks.forEach((chunk) => {
       const { worldX, worldZ, fogOpacity, id, distanceToPlayer } = chunk;
       
-      // Create subtle height variation for terrain depth
-      const heightVariation = (Math.sin(worldX * 0.1) + Math.cos(worldZ * 0.08)) * 0.15;
-      
-      tiles.push({
-        key: `ground_${id}`,
-        position: [worldX, -2.0 + heightVariation, worldZ], // Subtle height variation
-        size: chunkSize,
-        opacity: fogOpacity,
-        distanceToPlayer,
-        chunkId: id
+      // Left grass area (bright green like reference)
+      elements.push({
+        key: `grass_left_${id}`,
+        type: 'grass',
+        position: [-6, -2.01, worldZ], // Slightly above ground to prevent z-fighting
+        size: [10, chunkSize], // Width x Length
+        color: '#4CAF50', // Bright green like reference
+        opacity: fogOpacity
       });
       
-      // Add overlap tiles at chunk boundaries for seamless transitions
-      if (fogOpacity > 0.5) {
-        // Overlap tiles to prevent gaps during transitions
-        const overlapSize = chunkSize * 0.1;
-        
-        tiles.push({
-          key: `ground_overlap_x_${id}`,
-          position: [worldX + chunkSize * 0.5, -2.0, worldZ], // Same level as main tiles
-          size: overlapSize,
-          opacity: fogOpacity * 0.8,
-          distanceToPlayer,
-          chunkId: `${id}_overlap_x`
-        });
-        
-        tiles.push({
-          key: `ground_overlap_z_${id}`,
-          position: [worldX, -2.0, worldZ + chunkSize * 0.5], // Same level as main tiles
-          size: overlapSize,
-          opacity: fogOpacity * 0.8,
-          distanceToPlayer,
-          chunkId: `${id}_overlap_z`
-        });
-      }
+      // Right grass area (bright green like reference)
+      elements.push({
+        key: `grass_right_${id}`,
+        type: 'grass', 
+        position: [6, -2.01, worldZ], // Slightly above ground to prevent z-fighting
+        size: [10, chunkSize], // Width x Length
+        color: '#4CAF50', // Bright green like reference
+        opacity: fogOpacity
+      });
+      
+      // Central dirt path (3 lanes like reference)
+      elements.push({
+        key: `path_${id}`,
+        type: 'path',
+        position: [0, -2.0, worldZ], // Ground level
+        size: [8, chunkSize], // 3-lane width
+        color: '#8D6E63', // Brown dirt color like reference
+        opacity: fogOpacity
+      });
     });
     
-    // Sort by distance for proper rendering order
-    tiles.sort((a, b) => b.distanceToPlayer - a.distanceToPlayer);
-    
-    console.log(`SeamlessGroundSystem: Generated ${tiles.length} seamless ground tiles`);
-    return tiles;
+    console.log(`SeamlessGroundSystem: Generated ${elements.length} ground elements`);
+    return elements;
   }, [chunks, chunkSize]);
 
   // Animate opacity transitions for smooth loading/unloading
   useFrame(() => {
-    groundTiles.forEach((tile) => {
-      const mesh = meshRefs.current[tile.key];
+    groundElements.forEach((element) => {
+      const mesh = meshRefs.current[element.key];
       if (mesh && mesh.material) {
         // Smooth opacity transition
-        const targetOpacity = tile.opacity;
+        const targetOpacity = element.opacity;
         const currentOpacity = mesh.material.opacity;
         const delta = targetOpacity - currentOpacity;
         
@@ -104,62 +95,43 @@ export const SeamlessGroundSystem: React.FC<SeamlessGroundSystemProps> = ({
 
   return (
     <group name="SeamlessGroundSystem">
-      {groundTiles.map((tile) => (
+      {/* Render grass and path elements like in reference image */}
+      {groundElements.map((element) => (
         <mesh
-          key={tile.key}
+          key={element.key}
           ref={(ref) => {
-            if (ref) meshRefs.current[tile.key] = ref;
+            if (ref) meshRefs.current[element.key] = ref;
           }}
-          position={tile.position}
+          position={element.position}
           rotation={[-Math.PI / 2, 0, 0]}
           receiveShadow
-          frustumCulled={false} // Disable for seamless transitions
+          frustumCulled={false}
         >
-          <planeGeometry args={[tile.size, tile.size, 4, 4]} />
+          <planeGeometry args={element.size} />
           <meshStandardMaterial
-            color="#4CAF50"
-            roughness={0.7}
+            color={element.color}
+            roughness={element.type === 'grass' ? 0.9 : 0.8} // Grass more matte, path slightly shinier
             metalness={0.0}
             transparent
-            opacity={tile.opacity}
+            opacity={element.opacity}
             alphaTest={0.1}
-            fog={true} // Enable fog interaction
+            fog={true}
           />
         </mesh>
       ))}
       
-      {/* Base foundation layer with fog-aware opacity */}
+      {/* Base dark ground foundation */}
       <mesh 
-        position={[0, -2.8, playerPosition.z]} 
+        position={[0, -2.1, playerPosition.z]} 
         rotation={[-Math.PI / 2, 0, 0]} 
         receiveShadow
         frustumCulled={false}
       >
-        <planeGeometry args={[800, 800]} />
+        <planeGeometry args={[40, 800]} />
         <meshStandardMaterial 
-          color="#388E3C"
-          roughness={0.8}
-          metalness={0.0}
-          transparent
-          opacity={0.8}
-          fog={true}
-        />
-      </mesh>
-      
-      {/* Far background layer for depth */}
-      <mesh 
-        position={[0, -3.2, playerPosition.z - fogDistance * 0.5]} 
-        rotation={[-Math.PI / 2, 0, 0]} 
-        receiveShadow
-        frustumCulled={false}
-      >
-        <planeGeometry args={[1200, 1200]} />
-        <meshStandardMaterial 
-          color="#1a2a1b"
+          color="#2E7D32" // Dark green base
           roughness={1.0}
           metalness={0.0}
-          transparent
-          opacity={0.4}
           fog={true}
         />
       </mesh>
