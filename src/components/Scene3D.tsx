@@ -6,8 +6,7 @@ import { UpgradeNode3D } from './UpgradeNode3D';
 import { TapEffect3D } from './TapEffect3D';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { Enhanced360Controller } from './Enhanced360Controller';
-import { FogBasedChunkSystem } from './FogBasedChunkSystem';
-import { NewFantasyEnvironment } from './NewFantasyEnvironment';
+import { RebuiltFantasyRealm } from './RebuiltFantasyRealm';
 import { Sun } from './Sun';
 import { enhancedHybridUpgrades } from '../data/EnhancedHybridUpgrades';
 import { Vector3 } from 'three';
@@ -220,14 +219,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
 
           {/* Fantasy environment */}
           {realm === 'fantasy' && (
-            <NewFantasyEnvironment
-              playerPosition={playerPosition}
-              realm={realm}
-              onEnemyCountChange={(count) => setEnemyPositions(new Array(count).fill(null).map(() => new Vector3()))}
-              onEnemyKilled={() => console.log('Enemy killed in Scene3D')}
-              weaponDamage={10 + (gameState.weaponUpgradeLevel || 0) * 5}
-              upgradesPurchased={gameState.purchasedUpgrades?.length || 0}
-            />
+            <RebuiltFantasyRealm playerPosition={playerPosition} />
           )}
 
           {/* Show upgrade nodes in both realms */}
