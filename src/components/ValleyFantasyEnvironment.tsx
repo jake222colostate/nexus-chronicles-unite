@@ -71,24 +71,24 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
 
   return (
     <group position={[0, 0, offsetZ]}>
-      {/* Purple base terrain (full width) */}
+      {/* Brown earthy terrain (full width) */}
       <mesh
         position={[0, 0.02, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
         <planeGeometry args={[30, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#6A4C93" />
+        <meshStandardMaterial color="#8B7355" />
       </mesh>
 
-      {/* Narrow green grass strips immediately beside path (like reference) */}
+      {/* Bright green grass strips immediately beside path */}
       <mesh
         position={[-4, 0.08, 0]}
         rotation={[-Math.PI / 2, 0, 0]}
         receiveShadow
       >
         <planeGeometry args={[2, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#2E7D32" />
+        <meshStandardMaterial color="#4CAF50" />
       </mesh>
       <mesh
         position={[4, 0.08, 0]}
@@ -96,7 +96,7 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         receiveShadow
       >
         <planeGeometry args={[2, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#2E7D32" />
+        <meshStandardMaterial color="#4CAF50" />
       </mesh>
 
       {/* Purple center path area (shows between segments) */}
