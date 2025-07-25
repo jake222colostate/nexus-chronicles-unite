@@ -112,8 +112,8 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
           onClick={handleClick}
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
-          scale={modelType === 'obelisk' ? [8, 8, 8] : (hovered ? 1.05 : 1.0)}
-          position={modelType === 'obelisk' ? [0, 5, 0] : [0, 0, 0]} // Raise obelisk model up by 5 units
+          scale={modelType === 'obelisk' ? [5.33, 5.33, 5.33] : (hovered ? 1.05 : 1.0)}
+          position={modelType === 'obelisk' ? [0, 15, 0] : [0, 0, 0]} // Raise obelisk model up by 15 units
         >
           <primitive object={scene.clone()} />
 
