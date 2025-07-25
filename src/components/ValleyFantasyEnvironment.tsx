@@ -6,8 +6,14 @@ interface ValleyFantasyEnvironmentProps {
   playerPosition: THREE.Vector3;
 }
 
+// Seeded random number generator for consistent chunk generation
+const seededRandom = (seed: number) => {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+};
+
 const CHUNK_SIZE = 20;
-const RENDER_DISTANCE = 15; // Increased to load chunks much further ahead
+const RENDER_DISTANCE = 18; // Increased to load chunks much further ahead
 
 // Blocky geometric mountain component for trapped valley feeling
 const BlockyMountain: React.FC<{ 
@@ -35,6 +41,9 @@ const BlockyMountain: React.FC<{
 
 // Single chunk component with layered realistic mountains
 const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
+  // Use offsetZ as seed for consistent generation
+  const chunkSeed = Math.abs(offsetZ * 1000);
+  
   // Generate close blocky mountains for trapped valley feeling
   const mountainData = React.useMemo(() => {
     const mountains = [];
@@ -42,11 +51,12 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
     // Close valley walls - very close to path for trapped feeling
     // Left side wall
     for (let i = 0; i < 8; i++) {
+      const mountainSeed = chunkSeed + i * 123;
       mountains.push({
         side: -1,
         layer: 1,
-        baseHeight: 12 + (Math.random() * 6),
-        width: 6 + (Math.random() * 4),
+        baseHeight: 12 + (seededRandom(mountainSeed) * 6),
+        width: 6 + (seededRandom(mountainSeed + 1) * 4),
         depth: 8,
         xOffset: 0,
         zOffset: (i * 2.5) - 10
@@ -55,11 +65,12 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
     
     // Right side wall  
     for (let i = 0; i < 8; i++) {
+      const mountainSeed = chunkSeed + i * 124 + 1000;
       mountains.push({
         side: 1,
         layer: 1,
-        baseHeight: 12 + (Math.random() * 6),
-        width: 6 + (Math.random() * 4),
+        baseHeight: 12 + (seededRandom(mountainSeed) * 6),
+        width: 6 + (seededRandom(mountainSeed + 1) * 4),
         depth: 8,
         xOffset: 0,
         zOffset: (i * 2.5) - 10
@@ -67,7 +78,7 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
     }
     
     return mountains;
-  }, [offsetZ]);
+  }, [chunkSeed]);
 
   return (
     <group position={[0, 0, offsetZ]}>
@@ -111,12 +122,13 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
 
       {/* Natural stone path segments with variation */}
       {Array.from({ length: 4 }, (_, i) => {
-        const width = 4.8 + (Math.random() * 1.4); // 4.8-6.2
-        const depth = 1.8 + (Math.random() * 1.4); // 1.8-3.2
-        const height = 0.12 + (Math.random() * 0.08); // 0.12-0.2
-        const xOffset = (Math.random() - 0.5) * 1.2; // -0.6 to 0.6
-        const rotationY = (Math.random() - 0.5) * 0.3; // slight rotation
-        const spacing = 4.5 + (Math.random() * 1); // varied spacing
+        const pathSeed = chunkSeed + i * 200;
+        const width = 4.8 + (seededRandom(pathSeed) * 1.4); // 4.8-6.2
+        const depth = 1.8 + (seededRandom(pathSeed + 1) * 1.4); // 1.8-3.2
+        const height = 0.12 + (seededRandom(pathSeed + 2) * 0.08); // 0.12-0.2
+        const xOffset = (seededRandom(pathSeed + 3) - 0.5) * 1.2; // -0.6 to 0.6
+        const rotationY = (seededRandom(pathSeed + 4) - 0.5) * 0.3; // slight rotation
+        const spacing = 4.5 + (seededRandom(pathSeed + 5) * 1); // varied spacing
         
         return (
           <mesh
@@ -155,9 +167,13 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         );
       })}
 
-      {/* Occasional trees */}
-      {Math.random() > 0.7 && (
-        <group position={[Math.random() > 0.5 ? -12 : 12, 0, Math.random() * CHUNK_SIZE - CHUNK_SIZE/2]}>
+      {/* Consistent trees using seeded random */}
+      {seededRandom(chunkSeed + 500) > 0.7 && (
+        <group position={[
+          seededRandom(chunkSeed + 501) > 0.5 ? -12 : 12, 
+          0, 
+          (seededRandom(chunkSeed + 502) * CHUNK_SIZE) - CHUNK_SIZE/2
+        ]}>
           <mesh position={[0, 1, 0]} castShadow>
             <cylinderGeometry args={[0.3, 0.3, 2]} />
             <meshStandardMaterial color="#8B4513" />
@@ -179,7 +195,7 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
 
   // Setup valley atmosphere with enhanced fog that covers chunk loading
   useEffect(() => {
-    scene.fog = new THREE.Fog(0x87CEEB, 40, 250); // Extended fog to cover all chunk loading
+    scene.fog = new THREE.Fog(0x87CEEB, 30, 400); // Increased far distance from 250 to 400 for smoother transitions
     scene.background = new THREE.Color(0x87CEEB);
   }, [scene]);
 
@@ -192,7 +208,7 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
       
       // Generate chunks much further ahead of player, within fog
       const newChunks: number[] = [];
-      for (let i = currentPlayerChunk - 3; i <= currentPlayerChunk + RENDER_DISTANCE; i++) {
+      for (let i = currentPlayerChunk - 4; i <= currentPlayerChunk + RENDER_DISTANCE; i++) {
         newChunks.push(i);
       }
       
@@ -203,7 +219,7 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
   // Initialize with starting chunks that extend into fog
   useEffect(() => {
     const initialChunks: number[] = [];
-    for (let i = -3; i <= RENDER_DISTANCE; i++) {
+    for (let i = -4; i <= RENDER_DISTANCE; i++) {
       initialChunks.push(i);
     }
     setActiveChunks(initialChunks);
