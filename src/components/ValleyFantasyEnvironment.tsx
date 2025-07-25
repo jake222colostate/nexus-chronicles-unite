@@ -45,18 +45,8 @@ const ValleyChunk: React.FC<{ offsetZ: number; distanceFromPlayer: number }> = (
   // Use offsetZ as seed for consistent generation
   const chunkSeed = Math.abs(offsetZ * 1000);
   
-  // Calculate opacity based on distance for smooth fog transitions
-  const chunkOpacity = React.useMemo(() => {
-    const distance = Math.abs(distanceFromPlayer);
-    if (distance < FOG_TRANSITION_DISTANCE) {
-      return 1.0; // Fully visible
-    } else {
-      // Gradual fade based on distance
-      const fadeDistance = distance - FOG_TRANSITION_DISTANCE;
-      const maxFadeDistance = 10; // Maximum distance for fade
-      return Math.max(0.1, 1.0 - (fadeDistance / maxFadeDistance));
-    }
-  }, [distanceFromPlayer]);
+  // Let Three.js fog handle all distance-based fading naturally
+  const chunkOpacity = 1.0; // Always fully opaque - fog will handle visibility
   
   // Generate close blocky mountains for trapped valley feeling
   const mountainData = React.useMemo(() => {
@@ -235,11 +225,11 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
   const [activeChunks, setActiveChunks] = useState<number[]>([]);
   const lastPlayerChunk = useRef(0);
 
-  // Setup valley atmosphere with smooth linear fog matching reference image
+  // Setup valley atmosphere with natural fog that matches environment colors
   useEffect(() => {
-    // Use linear fog for smooth, natural transitions like in reference image
-    scene.fog = new THREE.Fog(0x87CEEB, 15, 80); // Light blue fog with smooth linear falloff
-    scene.background = new THREE.Color(0x87CEEB); // Match fog color - light sky blue
+    // Use warm, earthy fog that complements the brown terrain and dark mountains
+    scene.fog = new THREE.Fog(0x8B7D6B, 25, 120); // Warm brown-gray fog matching terrain
+    scene.background = new THREE.Color(0x9B8B7A); // Slightly lighter background
   }, [scene]);
 
   // Infinite chunk generation
