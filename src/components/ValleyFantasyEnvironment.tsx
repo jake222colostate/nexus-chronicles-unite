@@ -13,7 +13,7 @@ function seededRandom(seed: number): number {
 }
 
 const CHUNK_SIZE = 20;
-const RENDER_DISTANCE = 25; // Further increased for smoother transitions
+const RENDER_DISTANCE = 50; // Much higher for smoother transitions within fog
 const FOG_TRANSITION_DISTANCE = 15; // Distance where chunks start fading in
 
 // Blocky geometric mountain component for trapped valley feeling
@@ -239,9 +239,9 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
     if (currentPlayerChunk !== lastPlayerChunk.current) {
       lastPlayerChunk.current = currentPlayerChunk;
       
-      // Generate chunks much further ahead of player, well within fog
+      // Generate many more chunks both behind and ahead for seamless experience
       const newChunks: number[] = [];
-      for (let i = currentPlayerChunk - 5; i <= currentPlayerChunk + RENDER_DISTANCE; i++) {
+      for (let i = currentPlayerChunk - 15; i <= currentPlayerChunk + RENDER_DISTANCE; i++) {
         newChunks.push(i);
       }
       
@@ -252,7 +252,7 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
   // Initialize with starting chunks that extend well into fog
   useEffect(() => {
     const initialChunks: number[] = [];
-    for (let i = -5; i <= RENDER_DISTANCE; i++) {
+    for (let i = -15; i <= RENDER_DISTANCE; i++) {
       initialChunks.push(i);
     }
     setActiveChunks(initialChunks);
