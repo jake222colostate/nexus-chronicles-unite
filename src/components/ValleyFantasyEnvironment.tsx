@@ -7,10 +7,10 @@ interface ValleyFantasyEnvironmentProps {
 }
 
 // Seeded random number generator for consistent chunk generation
-const seededRandom = (seed: number) => {
+function seededRandom(seed: number): number {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
-};
+}
 
 const CHUNK_SIZE = 20;
 const RENDER_DISTANCE = 18; // Increased to load chunks much further ahead
