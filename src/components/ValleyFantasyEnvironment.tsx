@@ -13,7 +13,8 @@ function seededRandom(seed: number): number {
 }
 
 const CHUNK_SIZE = 20;
-const RENDER_DISTANCE = 18; // Increased to load chunks much further ahead
+const RENDER_DISTANCE = 25; // Further increased for smoother transitions
+const FOG_TRANSITION_DISTANCE = 15; // Distance where chunks start fading in
 
 // Blocky geometric mountain component for trapped valley feeling
 const BlockyMountain: React.FC<{ 
@@ -40,9 +41,22 @@ const BlockyMountain: React.FC<{
 };
 
 // Single chunk component with layered realistic mountains
-const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
+const ValleyChunk: React.FC<{ offsetZ: number; distanceFromPlayer: number }> = ({ offsetZ, distanceFromPlayer }) => {
   // Use offsetZ as seed for consistent generation
   const chunkSeed = Math.abs(offsetZ * 1000);
+  
+  // Calculate opacity based on distance for smooth fog transitions
+  const chunkOpacity = React.useMemo(() => {
+    const distance = Math.abs(distanceFromPlayer);
+    if (distance < FOG_TRANSITION_DISTANCE) {
+      return 1.0; // Fully visible
+    } else {
+      // Gradual fade based on distance
+      const fadeDistance = distance - FOG_TRANSITION_DISTANCE;
+      const maxFadeDistance = 10; // Maximum distance for fade
+      return Math.max(0.1, 1.0 - (fadeDistance / maxFadeDistance));
+    }
+  }, [distanceFromPlayer]);
   
   // Generate close blocky mountains for trapped valley feeling
   const mountainData = React.useMemo(() => {
@@ -89,7 +103,11 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         receiveShadow
       >
         <planeGeometry args={[30, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#8B7355" />
+        <meshStandardMaterial 
+          color="#8B7355" 
+          transparent={chunkOpacity < 1}
+          opacity={chunkOpacity}
+        />
       </mesh>
 
       {/* Bright green grass strips immediately beside path */}
@@ -99,7 +117,11 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         receiveShadow
       >
         <planeGeometry args={[2, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#4CAF50" />
+        <meshStandardMaterial 
+          color="#4CAF50" 
+          transparent={chunkOpacity < 1}
+          opacity={chunkOpacity}
+        />
       </mesh>
       <mesh
         position={[4, 0.08, 0]}
@@ -107,7 +129,11 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         receiveShadow
       >
         <planeGeometry args={[2, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#4CAF50" />
+        <meshStandardMaterial 
+          color="#4CAF50" 
+          transparent={chunkOpacity < 1}
+          opacity={chunkOpacity}
+        />
       </mesh>
 
       {/* Purple center path area (shows between segments) */}
@@ -117,7 +143,11 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         receiveShadow
       >
         <planeGeometry args={[6, CHUNK_SIZE]} />
-        <meshStandardMaterial color="#6A4C93" />
+        <meshStandardMaterial 
+          color="#6A4C93" 
+          transparent={chunkOpacity < 1}
+          opacity={chunkOpacity}
+        />
       </mesh>
 
       {/* Natural stone path segments with variation */}
@@ -139,7 +169,11 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
             castShadow
           >
             <boxGeometry args={[width, height, depth]} />
-            <meshStandardMaterial color="#8B4513" />
+            <meshStandardMaterial 
+              color="#8B4513" 
+              transparent={chunkOpacity < 1}
+              opacity={chunkOpacity}
+            />
           </mesh>
         );
       })}
@@ -157,13 +191,13 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         const color = "#2D3D4D";
         
         return (
-          <BlockyMountain
-            key={`mountain-${index}`}
-            position={[baseX, y, z]}
-            scale={[width, baseHeight, depth]}
-            color={color}
-            opacity={1}
-          />
+            <BlockyMountain
+              key={`mountain-${index}`}
+              position={[baseX, y, z]}
+              scale={[width, baseHeight, depth]}
+              color={color}
+              opacity={chunkOpacity}
+            />
         );
       })}
 
@@ -176,11 +210,19 @@ const ValleyChunk: React.FC<{ offsetZ: number }> = ({ offsetZ }) => {
         ]}>
           <mesh position={[0, 1, 0]} castShadow>
             <cylinderGeometry args={[0.3, 0.3, 2]} />
-            <meshStandardMaterial color="#8B4513" />
+            <meshStandardMaterial 
+              color="#8B4513" 
+              transparent={chunkOpacity < 1}
+              opacity={chunkOpacity}
+            />
           </mesh>
           <mesh position={[0, 2.5, 0]} castShadow>
             <sphereGeometry args={[1.2, 8, 8]} />
-            <meshStandardMaterial color="#2E7D32" />
+            <meshStandardMaterial 
+              color="#2E7D32" 
+              transparent={chunkOpacity < 1}
+              opacity={chunkOpacity}
+            />
           </mesh>
         </group>
       )}
@@ -193,10 +235,11 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
   const [activeChunks, setActiveChunks] = useState<number[]>([]);
   const lastPlayerChunk = useRef(0);
 
-  // Setup valley atmosphere with enhanced fog that covers chunk loading
+  // Setup valley atmosphere with enhanced exponential fog for natural transitions
   useEffect(() => {
-    scene.fog = new THREE.Fog(0x87CEEB, 30, 400); // Increased far distance from 250 to 400 for smoother transitions
-    scene.background = new THREE.Color(0x87CEEB);
+    // Use exponential fog for more natural falloff
+    scene.fog = new THREE.FogExp2(0x6a7c9e, 0.0015); // Darker blue-gray fog with exponential falloff
+    scene.background = new THREE.Color(0x6a7c9e); // Match fog color
   }, [scene]);
 
   // Infinite chunk generation
@@ -206,9 +249,9 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
     if (currentPlayerChunk !== lastPlayerChunk.current) {
       lastPlayerChunk.current = currentPlayerChunk;
       
-      // Generate chunks much further ahead of player, within fog
+      // Generate chunks much further ahead of player, well within fog
       const newChunks: number[] = [];
-      for (let i = currentPlayerChunk - 4; i <= currentPlayerChunk + RENDER_DISTANCE; i++) {
+      for (let i = currentPlayerChunk - 5; i <= currentPlayerChunk + RENDER_DISTANCE; i++) {
         newChunks.push(i);
       }
       
@@ -216,10 +259,10 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
     }
   });
 
-  // Initialize with starting chunks that extend into fog
+  // Initialize with starting chunks that extend well into fog
   useEffect(() => {
     const initialChunks: number[] = [];
-    for (let i = -4; i <= RENDER_DISTANCE; i++) {
+    for (let i = -5; i <= RENDER_DISTANCE; i++) {
       initialChunks.push(i);
     }
     setActiveChunks(initialChunks);
@@ -227,13 +270,19 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
 
   return (
     <group name="ValleyFantasyEnvironment">
-      {/* Render active chunks */}
-      {activeChunks.map((chunkIndex) => (
-        <ValleyChunk 
-          key={chunkIndex} 
-          offsetZ={chunkIndex * CHUNK_SIZE} 
-        />
-      ))}
+      {/* Render active chunks with distance-based opacity */}
+      {activeChunks.map((chunkIndex) => {
+        const chunkWorldZ = chunkIndex * CHUNK_SIZE;
+        const distanceFromPlayer = chunkWorldZ - playerPosition.z;
+        
+        return (
+          <ValleyChunk 
+            key={chunkIndex} 
+            offsetZ={chunkWorldZ} 
+            distanceFromPlayer={distanceFromPlayer}
+          />
+        );
+      })}
 
       {/* Enhanced valley lighting */}
       <directionalLight
