@@ -225,11 +225,11 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
   const [activeChunks, setActiveChunks] = useState<number[]>([]);
   const lastPlayerChunk = useRef(0);
 
-  // Setup valley atmosphere with natural fog that matches environment colors
+  // Setup valley atmosphere with light blue skybox and fog
   useEffect(() => {
-    // Use warm, earthy fog that complements the brown terrain and dark mountains
-    scene.fog = new THREE.Fog(0x8B7D6B, 25, 120); // Warm brown-gray fog matching terrain
-    scene.background = new THREE.Color(0x9B8B7A); // Slightly lighter background
+    // Light blue fog and background for bright daylight atmosphere
+    scene.fog = new THREE.Fog(0x87CEEB, 25, 120); // Light blue fog
+    scene.background = new THREE.Color(0x87CEEB); // Light blue background
   }, [scene]);
 
   // Infinite chunk generation
