@@ -13,12 +13,12 @@ const seededRandom = (seed: number) => {
 };
 
 const isWithinValley = (x: number, z: number) => {
-  // Much more restrictive valley boundaries to prevent mountain clipping
+  // Very restrictive boundaries - only spawn on grass areas between path and mountains
   const distanceFromCenter = Math.abs(x);
-  const isOnPath = distanceFromCenter < 10; // Expanded path clearance
-  const isWithinMountains = distanceFromCenter < 20; // Further reduced from 25 to 20
+  const isOnPath = distanceFromCenter < 12; // Expanded path clearance to avoid path entirely
+  const isWithinGrassArea = distanceFromCenter >= 12 && distanceFromCenter <= 16; // Narrow grass strip only
   
-  return isWithinMountains && !isOnPath;
+  return isWithinGrassArea;
 };
 
 export const DiverseValleyForest: React.FC<DiverseValleyForestProps> = ({
