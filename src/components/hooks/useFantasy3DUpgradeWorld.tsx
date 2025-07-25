@@ -165,7 +165,7 @@ export const useFantasy3DUpgradeWorld = ({
     const distance = cameraPosition.distanceTo(new Vector3(...upgrade.position));
     console.log(`Distance to ${upgrade.name}: ${distance.toFixed(2)}`);
     
-    if (distance > 15) {
+    if (distance > 25) {
       console.log("Move closer to interact with this upgrade!");
       return;
     }
