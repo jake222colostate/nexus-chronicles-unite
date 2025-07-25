@@ -13,10 +13,10 @@ const seededRandom = (seed: number) => {
 };
 
 const isWithinValley = (x: number, z: number) => {
-  // Valley boundaries: stay within ±30 units from center, avoid path (±8 units)
+  // Valley boundaries: stay within ±25 units from center (inner mountain boundary), avoid path (±8 units)
   const distanceFromCenter = Math.abs(x);
   const isOnPath = distanceFromCenter < 8;
-  const isWithinMountains = distanceFromCenter < 30;
+  const isWithinMountains = distanceFromCenter < 25; // Reduced from 30 to 25 to stay well inside mountains
   
   return isWithinMountains && !isOnPath;
 };
@@ -31,9 +31,9 @@ export const DiverseValleyForest: React.FC<DiverseValleyForestProps> = ({
     const chunkX = Math.floor(playerPosition.x / chunkSize);
     const chunkZ = Math.floor(playerPosition.z / chunkSize);
     
-    // Generate chunks around player
-    for (let cx = chunkX - 2; cx <= chunkX + 2; cx++) {
-      for (let cz = chunkZ - 2; cz <= chunkZ + 2; cz++) {
+    // Generate chunks around player - increased range for smoother loading
+    for (let cx = chunkX - 3; cx <= chunkX + 3; cx++) {
+      for (let cz = chunkZ - 3; cz <= chunkZ + 3; cz++) {
         const worldX = cx * chunkSize;
         const worldZ = cz * chunkSize;
         const seed = cx * 1000 + cz;
