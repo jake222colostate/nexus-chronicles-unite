@@ -13,12 +13,12 @@ const seededRandom = (seed: number) => {
 };
 
 const isWithinValley = (x: number, z: number) => {
-  // Very restrictive boundaries - only spawn on grass areas between path and mountains
+  // Ultra-restrictive boundaries - only spawn in very narrow grass strips
   const distanceFromCenter = Math.abs(x);
-  const isOnPath = distanceFromCenter < 12; // Expanded path clearance to avoid path entirely
-  const isWithinGrassArea = distanceFromCenter >= 12 && distanceFromCenter <= 16; // Narrow grass strip only
+  const isOnPath = distanceFromCenter < 10; // Clear the path completely
+  const isInSafeGrassZone = distanceFromCenter >= 10 && distanceFromCenter <= 12; // Very narrow safe zone
   
-  return isWithinGrassArea;
+  return isInSafeGrassZone;
 };
 
 export const DiverseValleyForest: React.FC<DiverseValleyForestProps> = ({
