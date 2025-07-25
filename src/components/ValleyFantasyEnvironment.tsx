@@ -235,11 +235,11 @@ export const ValleyFantasyEnvironment: React.FC<ValleyFantasyEnvironmentProps> =
   const [activeChunks, setActiveChunks] = useState<number[]>([]);
   const lastPlayerChunk = useRef(0);
 
-  // Setup valley atmosphere with enhanced exponential fog for natural transitions
+  // Setup valley atmosphere with smooth linear fog matching reference image
   useEffect(() => {
-    // Use exponential fog for more natural falloff
-    scene.fog = new THREE.FogExp2(0x6a7c9e, 0.0015); // Darker blue-gray fog with exponential falloff
-    scene.background = new THREE.Color(0x6a7c9e); // Match fog color
+    // Use linear fog for smooth, natural transitions like in reference image
+    scene.fog = new THREE.Fog(0x87CEEB, 15, 80); // Light blue fog with smooth linear falloff
+    scene.background = new THREE.Color(0x87CEEB); // Match fog color - light sky blue
   }, [scene]);
 
   // Infinite chunk generation
