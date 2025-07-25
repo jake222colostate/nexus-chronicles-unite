@@ -38,25 +38,16 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   );
   
   useFrame((state) => {
-    if (meshRef.current) {
-      // Only apply floating animation to podiums, not obelisks
-      if (modelType !== 'obelisk') {
-        // Gentle floating animation - additive to maintain ground level
-        meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
-        
-        // Rotation
-        if (isPurchased) {
-          meshRef.current.rotation.y += 0.01;
-        } else if (isUnlocked) {
-          meshRef.current.rotation.y += 0.02;
-        }
-      }
-      // Obelisks: no position override, let them use their spawn position
+    // Static positioning - no movement animations for podiums
+    if (meshRef.current && modelType !== 'obelisk') {
+      // Keep podiums at their original spawn position without movement
+      meshRef.current.position.y = position[1];
+      meshRef.current.rotation.y = 0; // No rotation
     }
     
     if (glowRef.current && isUnlocked) {
-      // Pulsing glow
-      const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.3 + 0.7;
+      // Gentle pulsing glow only
+      const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.1 + 0.9;
       glowRef.current.scale.setScalar(pulse);
     }
   });
