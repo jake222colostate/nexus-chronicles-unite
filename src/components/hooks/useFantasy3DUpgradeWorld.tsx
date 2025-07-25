@@ -95,7 +95,7 @@ export const useFantasy3DUpgradeWorld = ({
     
     // Obelisks go closer to path center, podiums stay in lanes
     const lane = modelType === 'obelisk' ? 
-      (index % 2 === 0 ? -1.5 : 1.5) :  // Obelisks very close to path center
+      (index % 2 === 0 ? -0.5 : 0.5) :  // Obelisks moved inward by 1 unit
       (index % 2 === 0 ? -12 : 12); // Podiums in outer lanes
     
     return {
