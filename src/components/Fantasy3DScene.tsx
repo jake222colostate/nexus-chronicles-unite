@@ -7,6 +7,7 @@ import { RebuiltFantasyRealm } from './RebuiltFantasyRealm';
 import { Sun } from './Sun';
 import { MagicStaffWeaponSystem } from './MagicStaffWeaponSystem';
 import { StartingForestBarrier } from './StartingForestBarrier';
+import { DiverseLowPolyForest } from './DiverseLowPolyForest';
 import { CollisionProvider } from '@/lib/CollisionContext';
 
 interface Fantasy3DSceneProps {
@@ -96,10 +97,11 @@ export const Fantasy3DScene: React.FC<Fantasy3DSceneProps> = React.memo(({
           damage={weaponDamage}
         />
 
+        {/* Diverse low-poly forest environment */}
+        <DiverseLowPolyForest playerPosition={safeCameraPosition} />
+
         {/* Dense forest barrier behind starting point for direction clarity */}
         <StartingForestBarrier playerPosition={safeCameraPosition} />
-
-        <RebuiltFantasyRealm playerPosition={safeCameraPosition} />
 
         <ContactShadows 
           position={[0, -1.4, safeCameraPosition.z]} 
