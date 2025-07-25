@@ -13,10 +13,10 @@ const seededRandom = (seed: number) => {
 };
 
 const isWithinValley = (x: number, z: number) => {
-  // Valley boundaries: stay within ±25 units from center (inner mountain boundary), avoid path (±8 units)
+  // Much more restrictive valley boundaries to prevent mountain clipping
   const distanceFromCenter = Math.abs(x);
-  const isOnPath = distanceFromCenter < 8;
-  const isWithinMountains = distanceFromCenter < 25; // Reduced from 30 to 25 to stay well inside mountains
+  const isOnPath = distanceFromCenter < 10; // Expanded path clearance
+  const isWithinMountains = distanceFromCenter < 20; // Further reduced from 25 to 20
   
   return isWithinMountains && !isOnPath;
 };
