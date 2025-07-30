@@ -26,13 +26,9 @@ export const ScifiUpgradeOrb: React.FC<ScifiUpgradeOrbProps> = ({
 
   useFrame((state) => {
     if (group.current) {
-      // Floating animation
+      // Static positioning - no movement or rotation
       group.current.position.copy(position);
-      group.current.position.y += Math.sin(state.clock.elapsedTime * 2 + position.x) * 0.1;
-      
-      // Rotation animation
-      group.current.rotation.x += 0.01;
-      group.current.rotation.y += 0.015;
+      // Removed floating and rotation animations to make them static
     }
   });
 
