@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useGameStateStore } from '@/stores/useGameStateStore';
-import { InteractiveNexusWorld } from './InteractiveNexusWorld';
+
 import { MinecraftHotbar } from './MinecraftHotbar';
 import { Button } from '@/components/ui/button';
 import { MapSkillTreeView } from './MapSkillTreeView';
@@ -306,12 +306,8 @@ const GameEngine: React.FC = () => {
     }));
   }, [setGameState]);
 
-  // Check if we should render the Nexus World
-  const isNexusWorld = location.pathname === '/' && location.hash === '#/nexus-world';
-  
-  if (isNexusWorld) {
-    return <InteractiveNexusWorld />;
-  }
+  // GameEngine handles the main game, InteractiveNexusWorld is separate
+  // This component should only render when on the main game route
 
   return (
     <CollisionProvider>
