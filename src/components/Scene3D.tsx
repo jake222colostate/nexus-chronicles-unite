@@ -23,6 +23,7 @@ import { ScifiLayerHUD } from './ScifiLayerHUD';
 import { ScifiLayerEffects } from './ScifiLayerEffects';
 import { useScifiLayerStore } from '@/stores/useScifiLayerStore';
 import { CameraAltitudeTracker } from './CameraAltitudeTracker';
+import { ScifiLayerEnvironments } from './ScifiLayerEnvironments';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -221,6 +222,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 onMeteorSpeedScale={(scale) => setLayerScaling(prev => ({ ...prev, meteorSpeed: scale }))}
                 onLootDropScale={(scale) => setLayerScaling(prev => ({ ...prev, lootDrop: scale }))}
               />
+              
+              {/* NEW: Layer-specific 3D environments */}
+              <ScifiLayerEnvironments />
             </>
           )}
 
