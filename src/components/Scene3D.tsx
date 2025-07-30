@@ -244,21 +244,17 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 onUpgradeClick={onUpgradeClick}
                 checkUpgradeUnlocked={checkUpgradeUnlocked}
               />
+              <FloatingUpgradeSystem
+                energyCredits={gameState.energyCredits || 0}
+                onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
+                purchasedUpgrades={gameState.purchasedUpgrades || []}
+              />
               <CannonPlatformSystem
                 cannonCount={gameState.cannonCount || 1}
                 targets={enemyPositions}
                 gameState={gameState}
                 platformPosition={new Vector3(0, -3, -2)}
               />
-              {(
-                <ScifiDefenseSystem 
-                  onMeteorDestroyed={handleMeteorDestroyed}
-                  onEnergyGained={onEnergyGained}
-                  onUpgradeClick={setSelectedUpgrade}
-                  purchasedUpgrades={gameState.purchasedUpgrades || []}
-                  onMeteorPositionUpdate={handleEnemyPositionUpdate}
-                />
-              )}
             </>
           )}
 
