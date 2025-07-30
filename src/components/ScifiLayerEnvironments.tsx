@@ -184,6 +184,160 @@ export const ScifiLayerEnvironments: React.FC = () => {
           );
         }
         break;
+
+      case 9: // Temporal Rift Zone - Time crystal formations
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          const timeWarp = Math.sin(timeRef.current * 0.5 + i) * 0.8;
+          decorations.push(
+            <mesh key={`time-crystal-${i}`} position={[
+              Math.cos(angle) * (7 + timeWarp),
+              1.5 + timeWarp * 0.5,
+              Math.sin(angle) * (7 + timeWarp)
+            ]} rotation={[timeRef.current * 0.4, angle, timeRef.current * 0.2]}>
+              <dodecahedronGeometry args={[0.6]} />
+              <meshBasicMaterial color="#67e8f9" transparent opacity={0.8} />
+            </mesh>
+          );
+        }
+        break;
+
+      case 10: // Hyperdimensional Gate - Dimensional anchors
+        for (let i = 0; i < 5; i++) {
+          const angle = (i / 5) * Math.PI * 2;
+          const dimShift = Math.cos(timeRef.current * 0.3 + i * 0.5) * 0.5;
+          decorations.push(
+            <group key={`dim-anchor-${i}`} position={[
+              Math.cos(angle) * 8,
+              1.8,
+              Math.sin(angle) * 8
+            ]} rotation={[0, angle + timeRef.current * 0.1, 0]}>
+              <mesh position={[0, dimShift, 0]}>
+                <cylinderGeometry args={[0.2, 0.4, 2]} />
+                <meshBasicMaterial color="#c084fc" />
+              </mesh>
+              <mesh position={[0, dimShift + 1.5, 0]}>
+                <dodecahedronGeometry args={[0.3]} />
+                <meshBasicMaterial color="#a855f7" wireframe />
+              </mesh>
+            </group>
+          );
+        }
+        break;
+
+      case 11: // Stellar Forge - Fusion reactors
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          const fusionPulse = Math.sin(timeRef.current * 0.8 + i) * 0.3 + 0.7;
+          decorations.push(
+            <group key={`fusion-reactor-${i}`} position={[
+              Math.cos(angle) * 7.5,
+              1.2,
+              Math.sin(angle) * 7.5
+            ]}>
+              <mesh scale={[fusionPulse, fusionPulse, fusionPulse]}>
+                <sphereGeometry args={[0.8]} />
+                <meshBasicMaterial color="#fb923c" transparent opacity={0.6} />
+              </mesh>
+              <mesh>
+                <torusGeometry args={[1.2, 0.2]} />
+                <meshBasicMaterial color="#f97316" />
+              </mesh>
+            </group>
+          );
+        }
+        break;
+
+      case 12: // Galactic Nexus - Spiral galaxy arms
+        for (let i = 0; i < 8; i++) {
+          const spiralAngle = (i / 8) * Math.PI * 4 + timeRef.current * 0.1;
+          const radius = 4 + (i * 0.5);
+          decorations.push(
+            <mesh key={`galaxy-arm-${i}`} position={[
+              Math.cos(spiralAngle) * radius,
+              0.5 + Math.sin(timeRef.current + i) * 0.2,
+              Math.sin(spiralAngle) * radius
+            ]}>
+              <sphereGeometry args={[0.3]} />
+              <meshBasicMaterial color="#facc15" transparent opacity={0.9} />
+            </mesh>
+          );
+        }
+        break;
+
+      case 13: // Cosmic Web Node - Web filaments
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2;
+          const webExtension = 6 + Math.sin(timeRef.current * 0.2 + i) * 2;
+          decorations.push(
+            <mesh key={`web-filament-${i}`} position={[
+              Math.cos(angle) * webExtension * 0.5,
+              1,
+              Math.sin(angle) * webExtension * 0.5
+            ]} rotation={[0, angle, 0]}>
+              <cylinderGeometry args={[0.05, 0.05, webExtension]} />
+              <meshBasicMaterial color="#5eead4" transparent opacity={0.7} />
+            </mesh>
+          );
+        }
+        // Central web node
+        decorations.push(
+          <mesh key="web-center" position={[0, 1, 0]}>
+            <icosahedronGeometry args={[1]} />
+            <meshBasicMaterial color="#14b8a6" wireframe />
+          </mesh>
+        );
+        break;
+
+      case 14: // Universal Threshold - Reality fragments
+        for (let i = 0; i < 7; i++) {
+          const angle = (i / 7) * Math.PI * 2;
+          const universalShift = Math.sin(timeRef.current * 0.6 + i) * 0.8;
+          decorations.push(
+            <group key={`reality-fragment-${i}`} position={[
+              Math.cos(angle) * 6,
+              2 + universalShift,
+              Math.sin(angle) * 6
+            ]} rotation={[timeRef.current * 0.1, angle, timeRef.current * 0.15]}>
+              <mesh>
+                <octahedronGeometry args={[0.7]} />
+                <meshBasicMaterial color="#fb7185" transparent opacity={0.8} />
+              </mesh>
+              <mesh scale={[1.5, 0.1, 1.5]}>
+                <cylinderGeometry args={[0.8, 0.8, 0.1]} />
+                <meshBasicMaterial color="#e11d48" transparent opacity={0.5} />
+              </mesh>
+            </group>
+          );
+        }
+        break;
+
+      case 15: // Infinity Engine - Infinite recursion patterns
+        for (let level = 0; level < 3; level++) {
+          for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * Math.PI * 2 + level * 0.5;
+            const radius = 5 + level * 2;
+            const infinityPhase = timeRef.current * (0.2 + level * 0.1);
+            decorations.push(
+              <mesh key={`infinity-${level}-${i}`} position={[
+                Math.cos(angle + infinityPhase) * radius,
+                1.5 + level * 0.8,
+                Math.sin(angle + infinityPhase) * radius
+              ]} rotation={[infinityPhase, angle, infinityPhase * 0.5]} scale={[1 - level * 0.2, 1 - level * 0.2, 1 - level * 0.2]}>
+                <dodecahedronGeometry args={[0.4]} />
+                <meshBasicMaterial color="#a78bfa" wireframe />
+              </mesh>
+            );
+          }
+        }
+        // Central infinity core
+        decorations.push(
+          <mesh key="infinity-core" position={[0, 2.5, 0]} rotation={[timeRef.current * 0.2, timeRef.current * 0.3, timeRef.current * 0.1]}>
+            <icosahedronGeometry args={[1.2]} />
+            <meshBasicMaterial color="#7c3aed" transparent opacity={0.9} />
+          </mesh>
+        );
+        break;
     }
 
     return decorations;
