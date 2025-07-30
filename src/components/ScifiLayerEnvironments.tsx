@@ -555,42 +555,9 @@ export const ScifiLayerEnvironments: React.FC = () => {
       </group>
     );
 
-    let layerGeometry;
-    switch (layerId) {
-      case 1:
-        layerGeometry = [];
-        break;
-      case 2:
-        layerGeometry = renderCleanCrystalFormation(baseAltitude);
-        break;
-      case 3:
-        layerGeometry = renderSimpleFloatingRings(baseAltitude);
-        break;
-      case 4:
-        layerGeometry = renderMinimalGridPattern(baseAltitude);
-        break;
-      case 5:
-        layerGeometry = renderCleanPillarFormation(baseAltitude);
-        break;
-      case 6:
-        layerGeometry = renderSimpleOrbitalSpheres(baseAltitude);
-        break;
-      case 7:
-        layerGeometry = renderElegantCrossPattern(baseAltitude);
-        break;
-      case 8:
-        layerGeometry = renderMinimalFloatingCubes(baseAltitude);
-        break;
-      case 9:
-        layerGeometry = renderSimpleTetrahedronRing(baseAltitude);
-        break;
-      case 10:
-        layerGeometry = renderCentralObelisk(baseAltitude);
-        break;
-      default:
-        layerGeometry = [];
-    }
-
+    // COMPLETELY DISABLE ALL LAYER GEOMETRY TO STOP SPINNING
+    let layerGeometry = []; // Empty - no geometry rendered
+    
     return [basePlatform, ...layerGeometry];
   };
 
