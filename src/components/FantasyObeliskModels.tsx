@@ -29,26 +29,27 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
     return null;
   }
 
-  // Cycle through the 4 new models based on upgrade ID
+  // Cycle through the 5 obelisk models based on upgrade ID
   const getModelPath = (id: number) => {
-    const modelIndex = Math.floor((id - 1) / 5) % 4; // Which cycle of 5 we're in, mod 4
+    const modelIndex = Math.floor((id - 1) / 5) % 5; // Which cycle of 5 we're in, mod 5
     const models = [
-      'assets/upgrades/Lotus.glb',
-      'assets/upgrades/Meltingtower.glb', 
-      'assets/upgrades/Phoenix.glb',
-      'assets/upgrades/Spiral.glb'
+      'assets/upgrades/LargeObelisk.glb',  // First obelisk (upgrade 5)
+      'assets/upgrades/Lotus.glb',         // Second obelisk (upgrade 10)
+      'assets/upgrades/Meltingtower.glb',  // Third obelisk (upgrade 15)
+      'assets/upgrades/Phoenix.glb',       // Fourth obelisk (upgrade 20)
+      'assets/upgrades/Spiral.glb'         // Fifth obelisk (upgrade 25)
     ];
     
     // Validate modelIndex
     if (modelIndex < 0 || modelIndex >= models.length) {
       console.warn('FantasyObeliskModels: Invalid modelIndex:', modelIndex, 'for upgradeId:', id);
-      return assetUrl('assets/upgrades/Lotus.glb'); // Fallback to first model
+      return assetUrl('assets/upgrades/LargeObelisk.glb'); // Fallback to first model
     }
     
     const modelPath = models[modelIndex];
     if (!modelPath) {
       console.warn('FantasyObeliskModels: Model path is undefined for index:', modelIndex);
-      return assetUrl('assets/upgrades/Lotus.glb'); // Fallback
+      return assetUrl('assets/upgrades/LargeObelisk.glb'); // Fallback
     }
     
     return assetUrl(modelPath);
@@ -56,21 +57,23 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
 
   // Get scale based on model type
   const getModelScale = (id: number): [number, number, number] => {
-    const modelIndex = Math.floor((id - 1) / 5) % 4;
+    const modelIndex = Math.floor((id - 1) / 5) % 5;
     const scales: [number, number, number][] = [
-      [3, 3, 3],     // Lotus
-      [4, 4, 4],     // Meltingtower
-      [3.5, 3.5, 3.5], // Phoenix
-      [3, 3, 3]      // Spiral
+      [5.33, 5.33, 5.33], // LargeObelisk - original scale
+      [3, 3, 3],          // Lotus
+      [4, 4, 4],          // Meltingtower
+      [3.5, 3.5, 3.5],    // Phoenix
+      [3, 3, 3]           // Spiral
     ];
     return scales[Math.max(0, Math.min(modelIndex, scales.length - 1))];
   };
 
   // Get vertical position offset for proper grounding
   const getPositionOffset = (id: number): [number, number, number] => {
-    const modelIndex = Math.floor((id - 1) / 5) % 4;
+    const modelIndex = Math.floor((id - 1) / 5) % 5;
     const offsets: [number, number, number][] = [
-      [0, 0, 0],     // Lotus - already grounded
+      [0, 5, 0],     // LargeObelisk - lifted position like before
+      [0, 0, 0],     // Lotus - grounded
       [0, 2, 0],     // Meltingtower - lift slightly
       [0, 1, 0],     // Phoenix - slight lift
       [0, 0.5, 0]    // Spiral - minimal lift
@@ -85,9 +88,9 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
   // Add gentle rotation for some models
   useFrame((state) => {
     if (meshRef.current && isUnlocked) {
-      const modelIndex = Math.floor((upgradeId - 1) / 5) % 4;
-      // Only rotate Lotus and Spiral models
-      if (modelIndex === 0 || modelIndex === 3) {
+      const modelIndex = Math.floor((upgradeId - 1) / 5) % 5;
+      // Only rotate Lotus and Spiral models (indices 1 and 4)
+      if (modelIndex === 1 || modelIndex === 4) {
         meshRef.current.rotation.y += 0.005;
       }
     }
@@ -146,7 +149,8 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
   }
 };
 
-// Preload all the new obelisk models
+// Preload all the obelisk models
+useGLTF.preload(assetUrl('assets/upgrades/LargeObelisk.glb'));
 useGLTF.preload(assetUrl('assets/upgrades/Lotus.glb'));
 useGLTF.preload(assetUrl('assets/upgrades/Meltingtower.glb'));
 useGLTF.preload(assetUrl('assets/upgrades/Phoenix.glb'));
