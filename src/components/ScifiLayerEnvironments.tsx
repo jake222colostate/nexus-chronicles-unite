@@ -315,7 +315,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
         for (let i = 0; i < 5; i++) {
           const angle = Math.random() * Math.PI * 2;
           const radius = 25 + Math.random() * 10;
-          const height = Math.sin(timeRef.current * 0.3 + i) * 2;
+          const height = Math.random() * 4 - 2;
           backgroundElements.push(
             <mesh key={`crystal-bg-${i}`} 
                   position={[
