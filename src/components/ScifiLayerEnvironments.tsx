@@ -759,17 +759,15 @@ export const ScifiLayerEnvironments: React.FC = () => {
   const renderLayer = (layerId: number) => {
     if (layerId < 1 || layerId > 10) return null;
 
-    // Space layers vertically but keep geometry centered
-    const baseAltitude = layerId * 30;
-    const platformElements = renderLayerPlatform(layerId, 0); // Platform geometry at Y=0
+    // Space layers 1000 units apart as requested
+    const baseAltitude = layerId * 1000;
+    const platformElements = renderLayerPlatform(layerId, baseAltitude);
     const backgroundElements = renderLayerBackground(layerId, baseAltitude);
 
     return (
       <group key={`layer-${layerId}`} position={[0, baseAltitude, 0]}>
-        {/* Platform elements centered at Y=0 within this group */}
-        <group position={[0, -baseAltitude, 0]}>
-          {platformElements}
-        </group>
+        {/* Platform elements at this layer's altitude */}
+        {platformElements}
         
         {/* Background elements at layer altitude */}
         {backgroundElements}
