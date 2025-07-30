@@ -1,10 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
 import { useScifiLayerStore } from '@/stores/useScifiLayerStore';
 import { SCIFI_LAYERS } from '@/data/SciFiUpgradeSystem';
 import { Vector3 } from 'three';
 
 export const ScifiLayerEnvironments: React.FC = () => {
   const { currentLayer } = useScifiLayerStore();
+  const timeRef = useRef(0);
+
+  // Smooth time progression for animations
+  useFrame((state, delta) => {
+    timeRef.current += delta * 0.3; // Much slower animation speed
+  });
 
   // Generate layer-specific environmental elements
   const getLayerEnvironment = (layerNum: number) => {
@@ -15,8 +22,8 @@ export const ScifiLayerEnvironments: React.FC = () => {
     const elements = [];
 
     switch (layerNum) {
-      case 1: // Lower Orbit - Simple atmospheric stations
-        for (let i = 0; i < 8; i++) {
+      case 1: // Lower Orbit - Simple atmospheric stations (reduced count)
+        for (let i = 0; i < 6; i++) { // Reduced from 8
           const angle = (i / 8) * Math.PI * 2;
           elements.push(
             <group key={`layer1-${i}`} position={[
@@ -34,8 +41,8 @@ export const ScifiLayerEnvironments: React.FC = () => {
         }
         break;
 
-      case 2: // Debris Field - Scattered debris and wreckage
-        for (let i = 0; i < 15; i++) {
+      case 2: // Debris Field - Scattered debris and wreckage (reduced count)
+        for (let i = 0; i < 10; i++) { // Reduced from 15
           elements.push(
             <group key={`layer2-${i}`} position={[
               (Math.random() - 0.5) * 50,
@@ -75,8 +82,8 @@ export const ScifiLayerEnvironments: React.FC = () => {
         }
         break;
 
-      case 4: // Gravity Warped Zone - Distorted structures
-        for (let i = 0; i < 12; i++) {
+      case 4: // Gravity Warped Zone - Distorted structures (reduced count)
+        for (let i = 0; i < 8; i++) { // Reduced from 12
           elements.push(
             <group key={`layer4-${i}`} position={[
               (Math.random() - 0.5) * 40,
@@ -93,13 +100,13 @@ export const ScifiLayerEnvironments: React.FC = () => {
         }
         break;
 
-      case 5: // Cosmic Radiation Belt - Glowing energy fields
-        for (let i = 0; i < 10; i++) {
+      case 5: // Cosmic Radiation Belt - Glowing energy fields (reduced count)
+        for (let i = 0; i < 6; i++) { // Reduced from 10
           const angle = (i / 10) * Math.PI * 2;
           elements.push(
             <group key={`layer5-${i}`} position={[
               Math.cos(angle) * 30 + (Math.random() - 0.5) * 10,
-              baseAltitude + Math.sin(Date.now() * 0.001 + i) * 2,
+              baseAltitude + Math.sin(timeRef.current * 0.5 + i) * 1, // Slower, controlled animation
               Math.sin(angle) * 30 + (Math.random() - 0.5) * 10
             ]}>
               <mesh>
@@ -135,8 +142,8 @@ export const ScifiLayerEnvironments: React.FC = () => {
         }
         break;
 
-      case 7: // Dark Matter Field - Ominous dark structures
-        for (let i = 0; i < 8; i++) {
+      case 7: // Dark Matter Field - Ominous dark structures (reduced count)
+        for (let i = 0; i < 6; i++) { // Reduced from 8
           elements.push(
             <group key={`layer7-${i}`} position={[
               (Math.random() - 0.5) * 60,
@@ -157,17 +164,17 @@ export const ScifiLayerEnvironments: React.FC = () => {
         }
         break;
 
-      case 8: // Quantum Anomaly Zone - Shifting geometric patterns
-        for (let i = 0; i < 16; i++) {
-          const phase = Date.now() * 0.001 + i;
+      case 8: // Quantum Anomaly Zone - Shifting geometric patterns (reduced count)
+        for (let i = 0; i < 12; i++) { // Reduced from 16
+          const phase = timeRef.current * 0.2 + i * 0.3; // Much slower quantum animations
           elements.push(
             <group key={`layer8-${i}`} position={[
               Math.cos(phase) * (15 + i * 2),
-              baseAltitude + Math.sin(phase * 1.3) * 8,
+              baseAltitude + Math.sin(phase * 1.3) * 3,
               Math.sin(phase) * (15 + i * 2)
-            ]} rotation={[phase, phase * 1.2, phase * 0.8]}>
+            ]} rotation={[phase * 0.1, phase * 0.15, phase * 0.08]}> {/* Slower rotation */}
               <mesh>
-                <octahedronGeometry args={[0.8 + Math.sin(phase) * 0.3]} />
+                <octahedronGeometry args={[0.8 + Math.sin(phase) * 0.2]} />
                 <meshBasicMaterial color="#ec4899" wireframe />
               </mesh>
               <pointLight color="#f472b6" intensity={0.5} distance={12} />
@@ -193,13 +200,9 @@ export const ScifiLayerEnvironments: React.FC = () => {
     );
   };
 
-  // Render current layer and adjacent layers for smooth transitions
+  // Only render current layer for better performance
   const layersToRender = useMemo(() => {
-    const layers = [];
-    for (let i = Math.max(1, currentLayer - 1); i <= Math.min(8, currentLayer + 1); i++) {
-      layers.push(i);
-    }
-    return layers;
+    return [currentLayer]; // Only current layer to improve performance
   }, [currentLayer]);
 
   return (
