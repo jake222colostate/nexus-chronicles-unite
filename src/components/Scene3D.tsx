@@ -272,8 +272,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             <RebuiltFantasyRealm playerPosition={playerPosition} />
           )}
 
-          {/* Show upgrade nodes only in sci-fi realm */}
-          {realm === 'scifi' && upgradeNodes}
+          {/* UpgradeNode3D removed - unused */}
 
           {/* Tap effect */}
           {showTapEffect && onTapEffectComplete && (
