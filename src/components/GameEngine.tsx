@@ -33,6 +33,7 @@ import { CollisionProvider } from '@/lib/CollisionContext';
 import { SystemSynchronizer } from './SystemSynchronizer';
 
 const GameEngine: React.FC = () => {
+  console.log('🎮 GameEngine: Component starting to render');
   const location = useLocation();
   
   const globalGameState = useGameStateStore();
@@ -309,6 +310,8 @@ const GameEngine: React.FC = () => {
   // GameEngine handles the main game, InteractiveNexusWorld is separate
   // This component should only render when on the main game route
 
+  console.log('🎮 GameEngine: About to render JSX');
+  
   return (
     <CollisionProvider>
       {/* System Synchronizer - ensures all mechanics work together */}
