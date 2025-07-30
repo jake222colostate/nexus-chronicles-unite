@@ -304,9 +304,9 @@ export const ScifiLayerEnvironments: React.FC = () => {
                     Math.sin(angle) * radius
                   ]}
                   rotation={[
-                    timeRef.current * 0.1 + i,
-                    timeRef.current * 0.15 + i,
-                    timeRef.current * 0.05 + i
+                    timeRef.current * 0.02 + i,
+                    timeRef.current * 0.03 + i,
+                    timeRef.current * 0.01 + i
                   ]}>
               <boxGeometry args={[0.8, 0.8, 0.8]} />
               <meshStandardMaterial color="#666666" />
