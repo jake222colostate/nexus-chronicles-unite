@@ -139,29 +139,49 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
         get().checkCannonUnlocks();
       },
 
-      // Check unlock conditions
+      // Enhanced unlock conditions for new layers
       checkLayerUnlocks: (layerNumber: number) => {
         const { unlockUpgrade } = get();
         
+        // Layer-based unlocks
         if (layerNumber >= 2) {
-          unlockUpgrade('meteorRefractor');
+          unlockUpgrade('meteorRefractor'); // Ionosphere access
+        }
+        if (layerNumber >= 5) {
+          unlockUpgrade('naniteBloom'); // Cosmic Radiation survival
+        }
+        if (layerNumber >= 7) {
+          unlockUpgrade('warpConduitRelay'); // Dark Matter navigation
         }
       },
 
       checkMeteorUnlocks: () => {
         const { meteorsDestroyed, unlockUpgrade } = get();
         
-        if (meteorsDestroyed >= 500) {
-          unlockUpgrade('ionStabilizerCore');
+        // Progressive meteor-based unlocks
+        if (meteorsDestroyed >= 100) {
+          unlockUpgrade('ionStabilizerCore'); // Basic platform stability
+        }
+        if (meteorsDestroyed >= 750) {
+          unlockUpgrade('quantumCapacitor'); // Advanced energy systems
+        }
+        if (meteorsDestroyed >= 1500) {
+          unlockUpgrade('arcLensProjector'); // Precision targeting
         }
       },
 
       checkTimeBasedUnlocks: () => {
         const { currentLayer, timeInCurrentLayer, unlockUpgrade } = get();
         
-        // Gravity Anchor Array - Survive 2 minutes in Layer 3
-        if (currentLayer >= 3 && timeInCurrentLayer >= 120000) { // 2 minutes
+        // Time-based survival unlocks
+        if (currentLayer >= 3 && timeInCurrentLayer >= 90000) { // 1.5 minutes in Solar Wind
           unlockUpgrade('gravityAnchorArray');
+        }
+        if (currentLayer >= 6 && timeInCurrentLayer >= 120000) { // 2 minutes in Void Nexus
+          unlockUpgrade('warpConduitRelay');
+        }
+        if (currentLayer >= 8 && timeInCurrentLayer >= 180000) { // 3 minutes in Quantum Anomaly
+          unlockUpgrade('naniteBloom');
         }
       },
 
@@ -169,9 +189,13 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
         const { cannonProgress, unlockUpgrade } = get();
         const cannons = Object.values(cannonProgress);
         
-        // Quantum Capacitor - Upgrade 3 different cannons
-        if (cannons.length >= 3) {
-          unlockUpgrade('quantumCapacitor');
+        // Platform weapon mastery unlocks
+        if (cannons.length >= 2) {
+          unlockUpgrade('ionStabilizerCore'); // Basic multi-cannon operation
+        }
+        
+        if (cannons.length >= 4) {
+          unlockUpgrade('quantumCapacitor'); // Advanced energy distribution
         }
         
         // Arc Lens Projector - Fully upgrade a long-range cannon
@@ -180,7 +204,7 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
           unlockUpgrade('arcLensProjector');
         }
         
-        // Nanite Bloom - Max out any cannon's ability tree
+        // Advanced cannon coordination
         const hasMaxAbilities = cannons.some(cannon => cannon.abilities.length >= 5);
         if (hasMaxAbilities) {
           unlockUpgrade('naniteBloom');

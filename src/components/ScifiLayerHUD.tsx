@@ -27,6 +27,22 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
     return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
   };
 
+  const getLayerName = (layer: number) => {
+    const names = {
+      1: 'Atmospheric Entry',
+      2: 'Ionosphere', 
+      3: 'Solar Wind Zone',
+      4: 'Magnetic Storm',
+      5: 'Cosmic Radiation',
+      6: 'Void Nexus',
+      7: 'Dark Matter Field',
+      8: 'Quantum Anomaly',
+      9: 'Stellar Core Proximity',
+      10: 'Singularity Edge'
+    };
+    return names[layer as keyof typeof names] || `Beyond Layer ${layer}`;
+  };
+
   const getNextLayerProgress = () => {
     const currentLayerBase = (currentLayer - 1) * 1000;
     const progressInLayer = altitude - currentLayerBase;
@@ -40,7 +56,12 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
         <CardContent className="p-4">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-cyan-400 font-bold">Layer {currentLayer}</span>
+              <div className="text-cyan-400 font-bold">
+                <div>Layer {currentLayer}</div>
+                <div className="text-xs text-cyan-300 font-normal">
+                  {getLayerName(currentLayer)}
+                </div>
+              </div>
               <Badge variant="outline" className="text-yellow-400 border-yellow-400">
                 Max: {highestLayer}
               </Badge>
