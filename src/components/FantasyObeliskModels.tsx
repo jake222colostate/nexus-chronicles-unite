@@ -23,6 +23,12 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
 }) => {
   const meshRef = useRef<Group>(null);
 
+  // Validate upgradeId
+  if (!upgradeId || upgradeId < 1) {
+    console.warn('FantasyObeliskModels: Invalid upgradeId:', upgradeId);
+    return null;
+  }
+
   // Cycle through the 4 new models based on upgrade ID
   const getModelPath = (id: number) => {
     const modelIndex = Math.floor((id - 1) / 5) % 4; // Which cycle of 5 we're in, mod 4
@@ -32,7 +38,20 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
       'assets/upgrades/Phoenix.glb',
       'assets/upgrades/Spiral.glb'
     ];
-    return assetUrl(models[modelIndex]);
+    
+    // Validate modelIndex
+    if (modelIndex < 0 || modelIndex >= models.length) {
+      console.warn('FantasyObeliskModels: Invalid modelIndex:', modelIndex, 'for upgradeId:', id);
+      return assetUrl('assets/upgrades/Lotus.glb'); // Fallback to first model
+    }
+    
+    const modelPath = models[modelIndex];
+    if (!modelPath) {
+      console.warn('FantasyObeliskModels: Model path is undefined for index:', modelIndex);
+      return assetUrl('assets/upgrades/Lotus.glb'); // Fallback
+    }
+    
+    return assetUrl(modelPath);
   };
 
   // Get scale based on model type
@@ -44,7 +63,7 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
       [3.5, 3.5, 3.5], // Phoenix
       [3, 3, 3]      // Spiral
     ];
-    return scales[modelIndex];
+    return scales[Math.max(0, Math.min(modelIndex, scales.length - 1))];
   };
 
   // Get vertical position offset for proper grounding
@@ -56,7 +75,7 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
       [0, 1, 0],     // Phoenix - slight lift
       [0, 0.5, 0]    // Spiral - minimal lift
     ];
-    return offsets[modelIndex];
+    return offsets[Math.max(0, Math.min(modelIndex, offsets.length - 1))];
   };
 
   const modelPath = getModelPath(upgradeId);
