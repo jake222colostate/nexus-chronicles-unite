@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useScifiLayerStore } from '@/stores/useScifiLayerStore';
+import { SCIFI_LAYERS } from '@/data/SciFiUpgradeSystem';
 
 interface ScifiLayerEffectsProps {
   onDifficultyScale?: (scale: number) => void;
@@ -81,99 +82,25 @@ export const ScifiLayerEffects: React.FC<ScifiLayerEffectsProps> = ({
     onLootDropScale?.(layerScaling.lootDropChance);
   }, [layerScaling.lootDropChance, onLootDropScale]);
 
-  // Enhanced layer themes with unique characteristics
+  // Enhanced layer themes using the new system
   const getLayerTheme = () => {
-    switch (currentLayer) {
-      case 1: // Atmospheric Entry
-        return { 
-          color: '#3b82f6', 
-          intensity: 0.8, 
-          fogColor: '#1e40af',
-          particleColor: '#60a5fa',
-          name: 'Atmospheric Entry'
-        };
-      case 2: // Ionosphere
-        return { 
-          color: '#8b5cf6', 
-          intensity: 0.9, 
-          fogColor: '#7c3aed',
-          particleColor: '#a78bfa',
-          name: 'Ionosphere'
-        };
-      case 3: // Solar Wind Zone
-        return { 
-          color: '#f59e0b', 
-          intensity: 1.0, 
-          fogColor: '#d97706',
-          particleColor: '#fbbf24',
-          name: 'Solar Wind Zone'
-        };
-      case 4: // Magnetic Storm
-        return { 
-          color: '#ef4444', 
-          intensity: 1.1, 
-          fogColor: '#dc2626',
-          particleColor: '#f87171',
-          name: 'Magnetic Storm'
-        };
-      case 5: // Cosmic Radiation
-        return { 
-          color: '#10b981', 
-          intensity: 1.2, 
-          fogColor: '#059669',
-          particleColor: '#34d399',
-          name: 'Cosmic Radiation'
-        };
-      case 6: // Void Nexus
-        return { 
-          color: '#6366f1', 
-          intensity: 1.3, 
-          fogColor: '#4f46e5',
-          particleColor: '#818cf8',
-          name: 'Void Nexus'
-        };
-      case 7: // Dark Matter Field
-        return { 
-          color: '#8b5a3c', 
-          intensity: 1.4, 
-          fogColor: '#78350f',
-          particleColor: '#a16207',
-          name: 'Dark Matter Field'
-        };
-      case 8: // Quantum Anomaly
-        return { 
-          color: '#ec4899', 
-          intensity: 1.5, 
-          fogColor: '#db2777',
-          particleColor: '#f472b6',
-          name: 'Quantum Anomaly'
-        };
-      case 9: // Stellar Core Proximity
-        return { 
-          color: '#f97316', 
-          intensity: 1.6, 
-          fogColor: '#ea580c',
-          particleColor: '#fb923c',
-          name: 'Stellar Core Proximity'
-        };
-      case 10: // Singularity Edge
-        return { 
-          color: '#0f172a', 
-          intensity: 1.8, 
-          fogColor: '#1e293b',
-          particleColor: '#475569',
-          name: 'Singularity Edge'
-        };
-      default: // Beyond Known Space
-        const layerDiff = currentLayer - 10;
-        return { 
-          color: '#dc2626', 
-          intensity: 1.8 + layerDiff * 0.1,
-          fogColor: '#991b1b',
-          particleColor: '#ef4444',
-          name: `Beyond Layer ${currentLayer}`
-        };
+    const layerData = SCIFI_LAYERS[currentLayer];
+    if (layerData) {
+      return {
+        ...layerData.visual,
+        name: layerData.name,
+        intensity: 0.8 + (currentLayer - 1) * 0.1
+      };
     }
+    
+    // Fallback for layers beyond defined range
+    return {
+      color: '#dc2626',
+      fogColor: '#991b1b', 
+      particleColor: '#ef4444',
+      name: `Beyond Layer ${currentLayer}`,
+      intensity: 1.8 + (currentLayer - 8) * 0.1
+    };
   };
 
   const theme = getLayerTheme();

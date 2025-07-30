@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useScifiLayerStore } from '@/stores/useScifiLayerStore';
+import { SCIFI_LAYERS } from '@/data/SciFiUpgradeSystem';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { SciFiUpgradeManager } from './SciFiUpgradeManager';
 
 interface ScifiLayerHUDProps {
   showDebug?: boolean;
@@ -16,10 +18,16 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
     timeInCurrentLayer,
     meteorsDestroyed,
     unlockedUpgrades,
+    nexusInventory,
+    defeatedBosses,
+    debugMode,
     teleportToLayer,
     resetProgress,
-    unlockAllUpgrades
+    unlockAllUpgrades,
+    toggleDebugMode
   } = useScifiLayerStore();
+
+  const [showUpgradeManager, setShowUpgradeManager] = useState(false);
 
   const formatTime = (milliseconds: number) => {
     const seconds = Math.floor(milliseconds / 1000);
@@ -27,53 +35,49 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
     return `${minutes}:${(seconds % 60).toString().padStart(2, '0')}`;
   };
 
-  const getLayerName = (layer: number) => {
-    const names = {
-      1: 'Atmospheric Entry',
-      2: 'Ionosphere', 
-      3: 'Solar Wind Zone',
-      4: 'Magnetic Storm',
-      5: 'Cosmic Radiation',
-      6: 'Void Nexus',
-      7: 'Dark Matter Field',
-      8: 'Quantum Anomaly',
-      9: 'Stellar Core Proximity',
-      10: 'Singularity Edge'
+  const getLayerData = () => {
+    return SCIFI_LAYERS[currentLayer] || {
+      name: `Beyond Layer ${currentLayer}`,
+      visual: { theme: 'unknown', color: '#dc2626' }
     };
-    return names[layer as keyof typeof names] || `Beyond Layer ${layer}`;
   };
 
   const getNextLayerProgress = () => {
-    const LAYER_THRESHOLD = 300; // Match the store threshold
-    const currentLayerBase = (currentLayer - 1) * LAYER_THRESHOLD;
-    const progressInLayer = altitude - currentLayerBase;
-    return Math.min(progressInLayer / LAYER_THRESHOLD, 1) * 100;
+    const nextLayerData = SCIFI_LAYERS[currentLayer + 1];
+    if (!nextLayerData) return 100; // Max layer reached
+    
+    const currentLayerThreshold = SCIFI_LAYERS[currentLayer]?.altitudeThreshold || 0;
+    const nextLayerThreshold = nextLayerData.altitudeThreshold;
+    const progressInLayer = altitude - currentLayerThreshold;
+    const layerHeight = nextLayerThreshold - currentLayerThreshold;
+    
+    return Math.min((progressInLayer / layerHeight) * 100, 100);
   };
 
+  const layerData = getLayerData();
+
   return (
-    <div className="fixed top-4 right-4 z-20 space-y-2">
-      {/* Main Layer Info */}
-      <Card className="bg-slate-900/90 backdrop-blur-sm border-cyan-500/30">
-        <CardContent className="p-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="text-cyan-400 font-bold">
-                <div>Layer {currentLayer}</div>
-                <div className="text-xs text-cyan-300 font-normal">
-                  {getLayerName(currentLayer)}
+    <>
+      <div className="fixed top-4 right-4 z-20 space-y-2">
+        {/* Main Layer Info */}
+        <Card className="bg-slate-900/90 backdrop-blur-sm border-cyan-500/30">
+          <CardContent className="p-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-cyan-400 font-bold">
+                  <div>Layer {currentLayer}</div>
+                  <div className="text-xs text-cyan-300 font-normal">
+                    {layerData.name}
+                  </div>
                 </div>
-              </div>
-              <Badge variant="outline" className="text-yellow-400 border-yellow-400">
-                Max: {highestLayer}
-              </Badge>
+                <Badge variant="outline" className="text-yellow-400 border-yellow-400">
+                  Max: {highestLayer}
+                </Badge>
             </div>
             
-            <div className="text-xs text-slate-300">
-              Altitude: {Math.floor(altitude)}m
-            </div>
-            
-            <div className="text-xs text-slate-300">
-              Time in Layer: {formatTime(timeInCurrentLayer)}
+            {/* Visual theme indicator */}
+            <div className="text-xs text-slate-400">
+              Theme: {layerData.visual?.theme || 'unknown'}
             </div>
 
             {/* Progress to next layer */}
@@ -90,7 +94,7 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
         </CardContent>
       </Card>
 
-      {/* Stats Card */}
+      {/* Enhanced Stats Card */}
       <Card className="bg-slate-900/90 backdrop-blur-sm border-orange-500/30">
         <CardContent className="p-3">
           <div className="space-y-1 text-xs">
@@ -99,45 +103,64 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
               <span className="text-orange-400">{meteorsDestroyed}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-300">Unlocks:</span>
-              <span className="text-green-400">{unlockedUpgrades.length}/7</span>
+              <span className="text-slate-300">Upgrades:</span>
+              <span className="text-green-400">{unlockedUpgrades.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-300">Nexus Relics:</span>
+              <span className="text-purple-400">{nexusInventory.length}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-300">Bosses:</span>
+              <span className="text-red-400">{defeatedBosses.length}</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Debug Panel */}
-      {showDebug && (
+      {/* Upgrade Manager Button */}
+      <Card className="bg-slate-900/90 backdrop-blur-sm border-green-500/30">
+        <CardContent className="p-3">
+          <Button
+            onClick={() => setShowUpgradeManager(true)}
+            className="w-full text-xs bg-green-600/20 hover:bg-green-600/30 border-green-500"
+            variant="outline"
+          >
+            🔧 Upgrade Manager
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Enhanced Debug Panel */}
+      {(showDebug || debugMode) && (
         <Card className="bg-red-900/90 backdrop-blur-sm border-red-500/30">
           <CardContent className="p-3">
             <div className="space-y-2">
-              <div className="text-xs text-red-400 font-bold mb-2">DEBUG</div>
+              <div className="text-xs text-red-400 font-bold mb-2">
+                🔧 DEV TOOLS
+              </div>
               
-              <div className="flex gap-1">
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-xs p-1 h-6"
-                  onClick={() => teleportToLayer(2)}
-                >
-                  L2
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-xs p-1 h-6"
-                  onClick={() => teleportToLayer(3)}
-                >
-                  L3
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-xs p-1 h-6"
-                  onClick={() => teleportToLayer(5)}
-                >
-                  L5
-                </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="text-xs w-full h-6"
+                onClick={toggleDebugMode}
+              >
+                {debugMode ? 'Disable' : 'Enable'} Debug
+              </Button>
+              
+              <div className="grid grid-cols-3 gap-1">
+                {[2, 3, 4, 5, 6, 7, 8].map(layer => (
+                  <Button 
+                    key={layer}
+                    size="sm" 
+                    variant="outline"
+                    className="text-xs p-1 h-6"
+                    onClick={() => teleportToLayer(layer)}
+                  >
+                    L{layer}
+                  </Button>
+                ))}
               </div>
               
               <Button 
@@ -146,7 +169,7 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
                 className="text-xs w-full h-6"
                 onClick={unlockAllUpgrades}
               >
-                Unlock All
+                🎯 Unlock All
               </Button>
               
               <Button 
@@ -155,12 +178,28 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
                 className="text-xs w-full h-6"
                 onClick={resetProgress}
               >
-                Reset
+                🔄 Reset All
               </Button>
+              
+              {/* Live debug info */}
+              {debugMode && (
+                <div className="text-xs text-yellow-400 space-y-1 border-t border-red-500/30 pt-2">
+                  <div>Alt: {Math.floor(altitude)}m</div>
+                  <div>Time: {formatTime(timeInCurrentLayer)}</div>
+                  <div>Theme: {layerData.visual?.theme}</div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       )}
     </div>
+
+    {/* Upgrade Manager Modal */}
+    <SciFiUpgradeManager 
+      isOpen={showUpgradeManager}
+      onClose={() => setShowUpgradeManager(false)}
+    />
+    </>
   );
 };

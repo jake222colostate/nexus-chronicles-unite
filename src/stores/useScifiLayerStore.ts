@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { SCIFI_LAYERS, SCIFI_UPGRADES, SciFiUpgrade, checkUnlockCondition, getLayerByAltitude } from '@/data/SciFiUpgradeSystem';
 
 interface ScifiLayerState {
   // Core layer tracking
@@ -8,45 +9,50 @@ interface ScifiLayerState {
   highestLayer: number;
   timeInCurrentLayer: number;
   
-  // Progress tracking
+  // Enhanced progress tracking
   meteorsDestroyed: number;
   unlockedUpgrades: string[];
   cannonProgress: Record<string, { tier: number; abilities: string[] }>;
+  defeatedBosses: string[];
+  nexusInventory: string[]; // Relic IDs available in Nexus
   
   // Layer enter timestamps
   layerEnterTime: number;
+  
+  // Upgrade system
+  availableUpgrades: Record<string, SciFiUpgrade>;
   
   // Actions
   updateAltitude: (newAltitude: number) => void;
   enterLayer: (layerNumber: number) => void;
   updateTimeInLayer: (deltaTime: number) => void;
   destroyMeteor: () => void;
+  defeatBoss: (bossId: string) => void;
   unlockUpgrade: (upgradeId: string) => void;
   updateCannonProgress: (cannonId: string, tier: number, abilities: string[]) => void;
   
-  // Internal unlock checking methods
+  // Enhanced unlock checking methods
+  checkAllUnlocks: () => void;
   checkLayerUnlocks: (layerNumber: number) => void;
   checkMeteorUnlocks: () => void;
   checkTimeBasedUnlocks: () => void;
   checkCannonUnlocks: () => void;
+  checkBossUnlocks: () => void;
   
-  // Debug utilities
+  // Relic management
+  addRelicToNexus: (relicId: string) => void;
+  getUnlockedRelics: () => SciFiUpgrade[];
+  
+  // Dev utilities
   teleportToLayer: (layerNumber: number) => void;
   resetProgress: () => void;
   unlockAllUpgrades: () => void;
+  placeRelicTest: (relicId: string) => void;
+  toggleDebugMode: () => void;
+  debugMode: boolean;
 }
 
-const LAYER_ALTITUDE_THRESHOLD = 300; // Each layer = 300 altitude units (reduced from 1000)
-
-const defaultUpgrades = [
-  'ionStabilizerCore',
-  'quantumCapacitor', 
-  'meteorRefractor',
-  'gravityAnchorArray',
-  'arcLensProjector',
-  'naniteBloom',
-  'warpConduitRelay'
-];
+const LAYER_ALTITUDE_THRESHOLD = 200; // Each layer = 200 altitude units
 
 export const useScifiLayerStore = create<ScifiLayerState>()(
   persist(
@@ -59,22 +65,27 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
       meteorsDestroyed: 0,
       unlockedUpgrades: [],
       cannonProgress: {},
+      defeatedBosses: [],
+      nexusInventory: [],
       layerEnterTime: Date.now(),
+      availableUpgrades: SCIFI_UPGRADES,
+      debugMode: false,
 
-      // Update altitude and check for layer transitions
+      // Enhanced altitude tracking with layer system
       updateAltitude: (newAltitude: number) => {
-        const currentLayer = Math.floor(newAltitude / LAYER_ALTITUDE_THRESHOLD) + 1;
+        const layerData = getLayerByAltitude(newAltitude);
+        const newLayerNum = layerData.id;
         const state = get();
         
         set({ altitude: newAltitude });
         
         // Check if we've entered a new layer
-        if (currentLayer > state.currentLayer) {
-          get().enterLayer(currentLayer);
+        if (newLayerNum > state.currentLayer) {
+          get().enterLayer(newLayerNum);
         }
       },
 
-      // Handle entering a new layer
+      // Enhanced layer entry with unlock checking
       enterLayer: (layerNumber: number) => {
         const state = get();
         const now = Date.now();
@@ -86,14 +97,16 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
           layerEnterTime: now
         });
 
-        // Fire layer enter event
-        console.log(`🌌 Entered Layer ${layerNumber}!`);
+        // Enhanced layer entry logging
+        const layerData = SCIFI_LAYERS[layerNumber];
+        console.log(`🌌 Entered ${layerData?.name || `Layer ${layerNumber}`}!`);
         
-        // Check unlock conditions based on layer
+        // Check all unlock conditions
         get().checkLayerUnlocks(layerNumber);
+        get().checkAllUnlocks();
       },
 
-      // Update time spent in current layer
+      // Enhanced time tracking
       updateTimeInLayer: (deltaTime: number) => {
         set((state) => ({
           timeInCurrentLayer: state.timeInCurrentLayer + deltaTime
@@ -103,7 +116,7 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
         get().checkTimeBasedUnlocks();
       },
 
-      // Track meteor destruction
+      // Enhanced meteor destruction tracking
       destroyMeteor: () => {
         set((state) => ({
           meteorsDestroyed: state.meteorsDestroyed + 1
@@ -111,22 +124,47 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
         
         // Check meteor-based unlocks
         get().checkMeteorUnlocks();
+        get().checkAllUnlocks();
       },
 
-      // Unlock upgrade
-      unlockUpgrade: (upgradeId: string) => {
+      // Boss defeat tracking
+      defeatBoss: (bossId: string) => {
         set((state) => {
-          if (!state.unlockedUpgrades.includes(upgradeId)) {
-            console.log(`🔓 Unlocked upgrade: ${upgradeId}`);
+          if (!state.defeatedBosses.includes(bossId)) {
+            console.log(`🏆 Defeated boss: ${bossId}`);
             return {
-              unlockedUpgrades: [...state.unlockedUpgrades, upgradeId]
+              defeatedBosses: [...state.defeatedBosses, bossId]
             };
           }
           return state;
         });
+        
+        get().checkBossUnlocks();
+        get().checkAllUnlocks();
       },
 
-      // Update cannon progress
+      // Enhanced upgrade unlocking with relic support
+      unlockUpgrade: (upgradeId: string) => {
+        const state = get();
+        const upgrade = SCIFI_UPGRADES[upgradeId];
+        
+        if (!upgrade || state.unlockedUpgrades.includes(upgradeId)) {
+          return;
+        }
+
+        console.log(`🔓 Unlocked upgrade: ${upgrade.name}`);
+        
+        set((prevState) => ({
+          unlockedUpgrades: [...prevState.unlockedUpgrades, upgradeId]
+        }));
+
+        // If it's a relic, add to Nexus inventory
+        if (upgrade.type === 'relic') {
+          get().addRelicToNexus(upgradeId);
+        }
+      },
+
+      // Enhanced cannon progress tracking
       updateCannonProgress: (cannonId: string, tier: number, abilities: string[]) => {
         set((state) => ({
           cannonProgress: {
@@ -137,83 +175,115 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
         
         // Check cannon-based unlocks
         get().checkCannonUnlocks();
+        get().checkAllUnlocks();
       },
 
-      // Enhanced unlock conditions for new layers
+      // Comprehensive unlock checking
+      checkAllUnlocks: () => {
+        const state = get();
+        const gameState = {
+          meteorsDestroyed: state.meteorsDestroyed,
+          currentLayer: state.currentLayer,
+          timeInCurrentLayer: state.timeInCurrentLayer,
+          cannonProgress: state.cannonProgress,
+          defeatedBosses: state.defeatedBosses
+        };
+
+        // Check all upgrades for unlock conditions
+        Object.values(SCIFI_UPGRADES).forEach(upgrade => {
+          if (!state.unlockedUpgrades.includes(upgrade.id) && 
+              checkUnlockCondition(upgrade, gameState)) {
+            get().unlockUpgrade(upgrade.id);
+          }
+        });
+      },
+
+      // Layer-specific unlocks
       checkLayerUnlocks: (layerNumber: number) => {
-        const { unlockUpgrade } = get();
-        
-        // Layer-based unlocks
-        if (layerNumber >= 2) {
-          unlockUpgrade('meteorRefractor'); // Ionosphere access
-        }
-        if (layerNumber >= 5) {
-          unlockUpgrade('naniteBloom'); // Cosmic Radiation survival
-        }
-        if (layerNumber >= 7) {
-          unlockUpgrade('warpConduitRelay'); // Dark Matter navigation
+        const layerData = SCIFI_LAYERS[layerNumber];
+        if (layerData?.unlocks) {
+          layerData.unlocks.forEach(upgradeId => {
+            get().unlockUpgrade(upgradeId);
+          });
         }
       },
 
+      // Meteor-based unlocks
       checkMeteorUnlocks: () => {
-        const { meteorsDestroyed, unlockUpgrade } = get();
+        const { meteorsDestroyed } = get();
         
-        // Progressive meteor-based unlocks
         if (meteorsDestroyed >= 100) {
-          unlockUpgrade('ionStabilizerCore'); // Basic platform stability
+          get().unlockUpgrade('ionStabilizerCore');
         }
-        if (meteorsDestroyed >= 750) {
-          unlockUpgrade('quantumCapacitor'); // Advanced energy systems
-        }
-        if (meteorsDestroyed >= 1500) {
-          unlockUpgrade('arcLensProjector'); // Precision targeting
+        if (meteorsDestroyed >= 500) {
+          get().unlockUpgrade('quantumCapacitor');
         }
       },
 
+      // Time-based unlocks
       checkTimeBasedUnlocks: () => {
-        const { currentLayer, timeInCurrentLayer, unlockUpgrade } = get();
+        const { currentLayer, timeInCurrentLayer } = get();
         
-        // Time-based survival unlocks
-        if (currentLayer >= 3 && timeInCurrentLayer >= 90000) { // 1.5 minutes in Solar Wind
-          unlockUpgrade('gravityAnchorArray');
-        }
-        if (currentLayer >= 6 && timeInCurrentLayer >= 120000) { // 2 minutes in Void Nexus
-          unlockUpgrade('warpConduitRelay');
-        }
-        if (currentLayer >= 8 && timeInCurrentLayer >= 180000) { // 3 minutes in Quantum Anomaly
-          unlockUpgrade('naniteBloom');
+        // Gravity Anchor Array - Survive 2 minutes in Solar Wind Zone
+        if (currentLayer >= 3 && timeInCurrentLayer >= 120000) {
+          get().unlockUpgrade('gravityAnchorArray');
         }
       },
 
+      // Cannon-based unlocks
       checkCannonUnlocks: () => {
-        const { cannonProgress, unlockUpgrade } = get();
+        const { cannonProgress } = get();
         const cannons = Object.values(cannonProgress);
         
-        // Platform weapon mastery unlocks
-        if (cannons.length >= 2) {
-          unlockUpgrade('ionStabilizerCore'); // Basic multi-cannon operation
-        }
-        
-        if (cannons.length >= 4) {
-          unlockUpgrade('quantumCapacitor'); // Advanced energy distribution
-        }
-        
-        // Arc Lens Projector - Fully upgrade a long-range cannon
+        // Arc Lens Projector - Fully upgrade any cannon
         const hasFullyUpgradedCannon = cannons.some(cannon => cannon.tier >= 5);
         if (hasFullyUpgradedCannon) {
-          unlockUpgrade('arcLensProjector');
+          get().unlockUpgrade('arcLensProjector');
         }
         
-        // Advanced cannon coordination
+        // Nanite Bloom - Max out any cannon's ability tree
         const hasMaxAbilities = cannons.some(cannon => cannon.abilities.length >= 5);
         if (hasMaxAbilities) {
-          unlockUpgrade('naniteBloom');
+          get().unlockUpgrade('naniteBloom');
         }
       },
 
-      // Debug utilities
+      // Boss-based unlocks
+      checkBossUnlocks: () => {
+        const { defeatedBosses } = get();
+        
+        if (defeatedBosses.includes('gravity_nexus')) {
+          get().unlockUpgrade('warpConduitRelay');
+        }
+      },
+
+      // Relic management for Nexus integration
+      addRelicToNexus: (relicId: string) => {
+        const upgrade = SCIFI_UPGRADES[relicId];
+        if (upgrade?.type === 'relic') {
+          set((state) => {
+            if (!state.nexusInventory.includes(relicId)) {
+              console.log(`✨ Relic "${upgrade.name}" added to Nexus inventory!`);
+              return {
+                nexusInventory: [...state.nexusInventory, relicId]
+              };
+            }
+            return state;
+          });
+        }
+      },
+
+      getUnlockedRelics: () => {
+        const state = get();
+        return state.nexusInventory.map(id => SCIFI_UPGRADES[id]).filter(Boolean);
+      },
+
+      // Enhanced dev utilities
       teleportToLayer: (layerNumber: number) => {
-        const newAltitude = (layerNumber - 1) * LAYER_ALTITUDE_THRESHOLD;
+        const layerData = SCIFI_LAYERS[layerNumber];
+        if (!layerData) return;
+        
+        const newAltitude = layerData.altitudeThreshold;
         set({
           altitude: newAltitude,
           currentLayer: layerNumber,
@@ -221,7 +291,7 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
           timeInCurrentLayer: 0,
           layerEnterTime: Date.now()
         });
-        console.log(`🚀 Teleported to Layer ${layerNumber}`);
+        console.log(`🚀 Teleported to ${layerData.name} (Layer ${layerNumber})`);
       },
 
       resetProgress: () => {
@@ -233,19 +303,38 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
           meteorsDestroyed: 0,
           unlockedUpgrades: [],
           cannonProgress: {},
+          defeatedBosses: [],
+          nexusInventory: [],
           layerEnterTime: Date.now()
         });
-        console.log('🔄 Sci-Fi progress reset');
+        console.log('🔄 All Sci-Fi progress reset');
       },
 
       unlockAllUpgrades: () => {
-        set({ unlockedUpgrades: [...defaultUpgrades] });
+        const allUpgradeIds = Object.keys(SCIFI_UPGRADES);
+        set({ 
+          unlockedUpgrades: allUpgradeIds,
+          nexusInventory: allUpgradeIds.filter(id => SCIFI_UPGRADES[id].type === 'relic')
+        });
         console.log('🎯 All Sci-Fi upgrades unlocked');
+      },
+
+      placeRelicTest: (relicId: string) => {
+        const upgrade = SCIFI_UPGRADES[relicId];
+        if (upgrade?.type === 'relic') {
+          get().unlockUpgrade(relicId);
+          console.log(`🧪 Test placed relic: ${upgrade.name}`);
+        }
+      },
+
+      toggleDebugMode: () => {
+        set((state) => ({ debugMode: !state.debugMode }));
+        console.log(`🔧 Debug mode: ${!get().debugMode ? 'ON' : 'OFF'}`);
       }
     }),
     {
       name: 'scifi-layer-storage',
-      version: 1
+      version: 2 // Increased version for major changes
     }
   )
 );
