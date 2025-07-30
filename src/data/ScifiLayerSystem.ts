@@ -81,7 +81,7 @@ export const SCIFI_LAYER_THEMES: Record<number, LayerThemeConfig> = {
   2: {
     id: 2,
     name: "Debris Field",
-    altitudeThreshold: 30,
+    altitudeThreshold: 1000,
     visual: {
       theme: "debris",
       primaryColor: "#8b5cf6",
@@ -127,7 +127,7 @@ export const SCIFI_LAYER_THEMES: Record<number, LayerThemeConfig> = {
   3: {
     id: 3,
     name: "Crystal Belt",
-    altitudeThreshold: 60,
+    altitudeThreshold: 2000,
     visual: {
       theme: "crystal",
       primaryColor: "#a855f7",
@@ -174,7 +174,7 @@ export const SCIFI_LAYER_THEMES: Record<number, LayerThemeConfig> = {
   4: {
     id: 4,
     name: "Graviton Ring",
-    altitudeThreshold: 90,
+    altitudeThreshold: 3000,
     visual: {
       theme: "gravity",
       primaryColor: "#ef4444",
@@ -220,7 +220,7 @@ export const SCIFI_LAYER_THEMES: Record<number, LayerThemeConfig> = {
   5: {
     id: 5,
     name: "Blackhole Verge",
-    altitudeThreshold: 120,
+    altitudeThreshold: 4000,
     visual: {
       theme: "blackhole",
       primaryColor: "#1f2937",
@@ -273,7 +273,7 @@ export const SCIFI_LAYER_THEMES: Record<number, LayerThemeConfig> = {
   6: {
     id: 6,
     name: "Radiant Grid",
-    altitudeThreshold: 150,
+    altitudeThreshold: 5000,
     visual: {
       theme: "grid",
       primaryColor: "#06b6d4",
@@ -329,7 +329,7 @@ export const SCIFI_LAYER_THEMES: Record<number, LayerThemeConfig> = {
   7: {
     id: 7,
     name: "Bio-Tech Bloom",
-    altitudeThreshold: 180,
+    altitudeThreshold: 6000,
     visual: {
       theme: "biotech",
       primaryColor: "#22c55e",
@@ -386,7 +386,7 @@ export const SCIFI_LAYER_THEMES: Record<number, LayerThemeConfig> = {
   8: {
     id: 8,
     name: "Quantum Anomaly Zone",
-    altitudeThreshold: 210,
+    altitudeThreshold: 7000,
     visual: {
       theme: "quantum",
       primaryColor: "#ec4899",
@@ -432,7 +432,7 @@ export const SCIFI_LAYER_THEMES: Record<number, LayerThemeConfig> = {
   9: {
     id: 9,
     name: "Nebula Forge",
-    altitudeThreshold: 240,
+    altitudeThreshold: 8000,
     visual: {
       theme: "nebula",
       primaryColor: "#f59e0b",
@@ -489,7 +489,7 @@ export const SCIFI_LAYER_THEMES: Record<number, LayerThemeConfig> = {
   10: {
     id: 10,
     name: "Singularity Core",
-    altitudeThreshold: 270,
+    altitudeThreshold: 9000,
     visual: {
       theme: "singularity",
       primaryColor: "#7c3aed",
