@@ -302,10 +302,16 @@ export const ScifiLayerEnvironments: React.FC = () => {
 
     return (
       <group key={`layer-${layerId}`} position={[0, baseAltitude, 0]}>
-        {/* Layer base platform */}
+        {/* Layer base platform - more visible */}
         <mesh position={[0, 0, 0]}>
           <cylinderGeometry args={[12, 12, 1]} />
-          <meshBasicMaterial color={layerConfig.visual.primaryColor} transparent opacity={0.3} />
+          <meshBasicMaterial color={layerConfig.visual.primaryColor} transparent opacity={0.8} />
+        </mesh>
+        
+        {/* Layer ring indicator */}
+        <mesh position={[0, 0.5, 0]}>
+          <torusGeometry args={[13, 0.5]} />
+          <meshBasicMaterial color={layerConfig.visual.primaryColor} />
         </mesh>
         
         {/* Layer decorations */}
