@@ -499,7 +499,8 @@ export const ScifiLayerEnvironments: React.FC = () => {
   const renderLayer = (layerId: number) => {
     if (layerId < 1 || layerId > 10) return null;
 
-    const baseAltitude = layerId * 25; // Increased spacing for visibility
+    // All layers at the same Y position
+    const baseAltitude = 0;
     const platformElements = renderLayerPlatform(layerId, baseAltitude);
 
     return (
@@ -519,10 +520,10 @@ export const ScifiLayerEnvironments: React.FC = () => {
     );
   };
 
-  // Render all layers for visibility
+  // Only render current layer based on altitude
   const layersToRender = useMemo(() => {
-    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-  }, []);
+    return [currentLayer];
+  }, [currentLayer]);
 
   return (
     <group>
