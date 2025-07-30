@@ -255,6 +255,15 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 gameState={gameState}
                 platformPosition={new Vector3(0, -3, -2)}
               />
+              {(
+                <ScifiDefenseSystem 
+                  onMeteorDestroyed={handleMeteorDestroyed}
+                  onEnergyGained={onEnergyGained}
+                  onUpgradeClick={setSelectedUpgrade}
+                  purchasedUpgrades={gameState.purchasedUpgrades || []}
+                  onMeteorPositionUpdate={handleEnemyPositionUpdate}
+                />
+              )}
             </>
           )}
 
@@ -263,6 +272,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             <RebuiltFantasyRealm playerPosition={playerPosition} />
           )}
 
+          {/* Show upgrade nodes in both realms */}
+          {upgradeNodes}
 
           {/* Tap effect */}
           {showTapEffect && onTapEffectComplete && (
