@@ -303,11 +303,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
                     height,
                     Math.sin(angle) * radius
                   ]}
-                  rotation={[
-                    timeRef.current * 0.001 + i,
-                    timeRef.current * 0.001 + i,
-                    timeRef.current * 0.0005 + i
-                  ]}>
+                  rotation={[0, timeRef.current * 0.0002 + i, 0]}>
               <boxGeometry args={[0.8, 0.8, 0.8]} />
               <meshStandardMaterial color="#666666" />
             </mesh>
@@ -375,7 +371,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
                     height,
                     Math.sin(angle) * radius
                   ]}
-                  rotation={[Math.random(), Math.random(), Math.random()]}>
+                  rotation={[0, timeRef.current * 0.0001 + i, 0]}>
               <octahedronGeometry args={[0.8]} />
               <meshStandardMaterial 
                 color="#9370db" 
@@ -422,7 +418,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
                     height,
                     Math.sin(angle) * radius
                   ]}
-                  rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
+                  rotation={[0, 0, 0]}>
               <coneGeometry args={[0.4, 0.1, 3]} />
               <meshStandardMaterial 
                 color="#ff1493" 
@@ -471,7 +467,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
                     height,
                     Math.sin(angle) * radius
                   ]}
-                  rotation={[Math.random() * Math.PI, Math.random() * Math.PI, 0]}>
+                  rotation={[0, 0, 0]}>
               <tetrahedronGeometry args={[0.7]} />
               <meshStandardMaterial 
                 color="#32cd32" 
@@ -495,11 +491,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
                     height,
                     Math.sin(angle) * radius
                   ]}
-                  rotation={[
-                    timeRef.current * 0.0005 + i,
-                    timeRef.current * 0.0008 + i,
-                    timeRef.current * 0.0003 + i
-                  ]}>
+                  rotation={[0, 0, 0]}>
               <boxGeometry args={[1.2, 0.3, 0.8]} />
               <meshStandardMaterial 
                 color="#8b0000" 
