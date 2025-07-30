@@ -237,13 +237,6 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         </>
       )}
       
-      {/* Interaction indicator */}
-      {hovered && isUnlocked && (
-        <mesh position={[0, 3, 0]}>
-          <planeGeometry args={[2, 0.5]} />
-          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.8} />
-        </mesh>
-      )}
     </group>
   );
 };
