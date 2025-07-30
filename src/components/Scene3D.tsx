@@ -244,12 +244,11 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 onUpgradeClick={onUpgradeClick}
                 checkUpgradeUnlocked={checkUpgradeUnlocked}
               />
-              {/* Removed FloatingUpgradeSystem - was creating gray polygons */}
-              {/* <FloatingUpgradeSystem
+              <FloatingUpgradeSystem
                 energyCredits={gameState.energyCredits || 0}
                 onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
                 purchasedUpgrades={gameState.purchasedUpgrades || []}
-              /> */}
+              />
               <CannonPlatformSystem
                 cannonCount={gameState.cannonCount || 1}
                 targets={enemyPositions}
