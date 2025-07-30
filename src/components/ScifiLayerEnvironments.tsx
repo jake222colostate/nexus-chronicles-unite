@@ -8,7 +8,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
   const timeRef = useRef(0);
 
   useFrame((_, delta) => {
-    timeRef.current += delta;
+    // timeRef.current += delta; // DISABLED to stop all animations
   });
 
   // Layer 2 - Clean Crystal Formation
