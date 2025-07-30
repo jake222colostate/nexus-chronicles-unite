@@ -36,7 +36,7 @@ const Crystal: React.FC<{
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.y += 0.01;
+      // meshRef.current.rotation.y += 0.01; // DISABLED - static rotation
       meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
     }
   });

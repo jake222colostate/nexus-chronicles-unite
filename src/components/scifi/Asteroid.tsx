@@ -77,17 +77,17 @@ export const Asteroid: React.FC<AsteroidProps> = ({
       
       if (isUpgrade) {
         // Special animations for upgrades
-        group.current.rotation.x += 0.02;
-        group.current.rotation.y += 0.03;
-        group.current.rotation.z += 0.01;
+        // group.current.rotation.x += 0.02; // DISABLED - static rotation
+        // group.current.rotation.y += 0.03; // DISABLED - static rotation  
+        // group.current.rotation.z += 0.01; // DISABLED - static rotation
         
         // Pulsing effect for upgrades
         const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.1 + 1;
         group.current.scale.setScalar(pulse);
       } else {
         // Regular asteroid rotation
-        group.current.rotation.x += 0.01;
-        group.current.rotation.y += 0.005;
+        // group.current.rotation.x += 0.01; // DISABLED - static rotation
+        // group.current.rotation.y += 0.005; // DISABLED - static rotation
       }
 
       if (group.current.position.z >= 0) {
