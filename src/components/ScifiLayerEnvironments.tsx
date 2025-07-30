@@ -16,7 +16,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
     const crystals = [];
     
     for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2;
+      const angle = (i / 6) * Math.PI * 2 + timeRef.current * 0.05; // Much slower rotation
       const radius = 8;
       
       crystals.push(
@@ -340,8 +340,179 @@ export const ScifiLayerEnvironments: React.FC = () => {
         }
         break;
 
+      case 4: // Floating orange cubes
+        for (let i = 0; i < 10; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 18 + Math.random() * 15;
+          const height = Math.random() * 8 - 4;
+          backgroundElements.push(
+            <mesh key={`cube-bg-${i}`} 
+                  position={[
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                  ]}>
+              <boxGeometry args={[0.6, 0.6, 0.6]} />
+              <meshStandardMaterial 
+                color="#ff8800" 
+                emissive="#ff8800" 
+                emissiveIntensity={0.2}
+              />
+            </mesh>
+          );
+        }
+        break;
+
+      case 5: // Purple diamond scatter
+        for (let i = 0; i < 12; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 20 + Math.random() * 12;
+          const height = Math.random() * 6 - 3;
+          backgroundElements.push(
+            <mesh key={`diamond-bg-${i}`} 
+                  position={[
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                  ]}
+                  rotation={[Math.random(), Math.random(), Math.random()]}>
+              <octahedronGeometry args={[0.8]} />
+              <meshStandardMaterial 
+                color="#9370db" 
+                emissive="#9370db" 
+                emissiveIntensity={0.3}
+              />
+            </mesh>
+          );
+        }
+        break;
+
+      case 6: // Cyan floating spheres
+        for (let i = 0; i < 8; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 22 + Math.random() * 10;
+          const height = Math.random() * 4 - 2;
+          backgroundElements.push(
+            <mesh key={`sphere-bg-${i}`} 
+                  position={[
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                  ]}>
+              <sphereGeometry args={[0.5]} />
+              <meshStandardMaterial 
+                color="#00ffff" 
+                emissive="#00ffff" 
+                emissiveIntensity={0.4}
+              />
+            </mesh>
+          );
+        }
+        break;
+
+      case 7: // Pink scattered triangles
+        for (let i = 0; i < 15; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 16 + Math.random() * 18;
+          const height = Math.random() * 10 - 5;
+          backgroundElements.push(
+            <mesh key={`tri-bg-${i}`} 
+                  position={[
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                  ]}
+                  rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
+              <coneGeometry args={[0.4, 0.1, 3]} />
+              <meshStandardMaterial 
+                color="#ff1493" 
+                emissive="#ff1493" 
+                emissiveIntensity={0.3}
+              />
+            </mesh>
+          );
+        }
+        break;
+
+      case 8: // Multi-colored geometric mix
+        for (let i = 0; i < 14; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 19 + Math.random() * 14;
+          const height = Math.random() * 7 - 3.5;
+          const colors = ['#ff69b4', '#00ff88', '#ffaa00', '#40e0d0'];
+          const color = colors[i % 4];
+          backgroundElements.push(
+            <mesh key={`mix-bg-${i}`} 
+                  position={[
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                  ]}>
+              <dodecahedronGeometry args={[0.6]} />
+              <meshStandardMaterial 
+                color={color} 
+                emissive={color} 
+                emissiveIntensity={0.2}
+              />
+            </mesh>
+          );
+        }
+        break;
+
+      case 9: // Green tetrahedron field
+        for (let i = 0; i < 11; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 17 + Math.random() * 16;
+          const height = Math.random() * 9 - 4.5;
+          backgroundElements.push(
+            <mesh key={`tetra-bg-${i}`} 
+                  position={[
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                  ]}
+                  rotation={[Math.random() * Math.PI, Math.random() * Math.PI, 0]}>
+              <tetrahedronGeometry args={[0.7]} />
+              <meshStandardMaterial 
+                color="#32cd32" 
+                emissive="#32cd32" 
+                emissiveIntensity={0.35}
+              />
+            </mesh>
+          );
+        }
+        break;
+
+      case 10: // Dark red/orange fragments
+        for (let i = 0; i < 9; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 21 + Math.random() * 12;
+          const height = Math.random() * 5 - 2.5;
+          backgroundElements.push(
+            <mesh key={`frag-bg-${i}`} 
+                  position={[
+                    Math.cos(angle) * radius,
+                    height,
+                    Math.sin(angle) * radius
+                  ]}
+                  rotation={[
+                    timeRef.current * 0.01 + i,
+                    timeRef.current * 0.015 + i,
+                    timeRef.current * 0.008 + i
+                  ]}>
+              <boxGeometry args={[1.2, 0.3, 0.8]} />
+              <meshStandardMaterial 
+                color="#8b0000" 
+                emissive="#ff4500" 
+                emissiveIntensity={0.25}
+              />
+            </mesh>
+          );
+        }
+        break;
+
       default:
-        // No background elements for other layers to keep them clean
+        // No background elements for layer 1 and 3
         break;
     }
 
@@ -353,9 +524,9 @@ export const ScifiLayerEnvironments: React.FC = () => {
     // Base platform with teal color matching the screenshot
     const basePlatform = (
       <group key="base-platform">
-        {/* Main platform surface */}
+        {/* Main hexagonal platform surface */}
         <mesh position={[0, baseAltitude - 1, 0]}>
-          <cylinderGeometry args={[15, 15, 0.8]} />
+          <cylinderGeometry args={[15, 15, 0.8, 6]} />
           <meshStandardMaterial 
             color="#4fd1c7" 
             emissive="#4fd1c7" 
@@ -363,9 +534,9 @@ export const ScifiLayerEnvironments: React.FC = () => {
           />
         </mesh>
         
-        {/* Platform rim */}
+        {/* Hexagonal platform rim */}
         <mesh position={[0, baseAltitude - 0.6, 0]}>
-          <cylinderGeometry args={[15.2, 14.8, 0.2]} />
+          <cylinderGeometry args={[15.2, 14.8, 0.2, 6]} />
           <meshStandardMaterial 
             color="#2a9d8f" 
             emissive="#2a9d8f" 
