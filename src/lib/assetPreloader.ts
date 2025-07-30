@@ -5,7 +5,10 @@ import { assetUrl } from '@/lib/utils';
 const CRITICAL_ASSETS = [
   assetUrl('assets/Path.glb'), // Main walking surface
   assetUrl('assets/upgrades/Podiums.glb'),
-  assetUrl('assets/upgrades/LargeObelisk.glb'),
+  assetUrl('assets/upgrades/Lotus.glb'),
+  assetUrl('assets/upgrades/Meltingtower.glb'),
+  assetUrl('assets/upgrades/Phoenix.glb'),
+  assetUrl('assets/upgrades/Spiral.glb'),
 ];
 
 // Fantasy realm assets - only using existing files
