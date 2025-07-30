@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SCIFI_LAYERS, SCIFI_UPGRADES, SciFiUpgrade, checkUnlockCondition, getLayerByAltitude } from '@/data/SciFiUpgradeSystem';
+import { SCIFI_LAYER_THEMES, getLayerByAltitude, getLayerNotification } from '@/data/ScifiLayerSystem';
+import { SCIFI_UPGRADES, SciFiUpgrade, checkUnlockCondition } from '@/data/SciFiUpgradeSystem';
 
 interface ScifiLayerState {
   // Core layer tracking
@@ -99,9 +100,10 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
           layerEnterTime: now
         });
 
-        // Enhanced layer entry logging
-        const layerData = SCIFI_LAYERS[layerNumber];
-        console.log(`🌌 Entered ${layerData?.name || `Layer ${layerNumber}`}!`);
+        // Enhanced layer entry logging with notification
+        const layerData = SCIFI_LAYER_THEMES[layerNumber];
+        const notification = getLayerNotification(layerNumber);
+        console.log(notification);
         
         // Check all unlock conditions
         get().checkLayerUnlocks(layerNumber);
@@ -202,9 +204,9 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
 
       // Layer-specific unlocks
       checkLayerUnlocks: (layerNumber: number) => {
-        const layerData = SCIFI_LAYERS[layerNumber];
-        if (layerData?.unlocks) {
-          layerData.unlocks.forEach(upgradeId => {
+        const layerData = SCIFI_LAYER_THEMES[layerNumber];
+        if (layerData?.progression.unlocks) {
+          layerData.progression.unlocks.forEach(upgradeId => {
             get().unlockUpgrade(upgradeId);
           });
         }
@@ -282,7 +284,7 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
 
       // Enhanced dev utilities
       teleportToLayer: (layerNumber: number) => {
-        const layerData = SCIFI_LAYERS[layerNumber];
+        const layerData = SCIFI_LAYER_THEMES[layerNumber];
         if (!layerData) return;
         
         const newAltitude = layerData.altitudeThreshold;
