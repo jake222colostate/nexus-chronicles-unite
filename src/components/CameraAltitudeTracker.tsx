@@ -14,13 +14,13 @@ export const CameraAltitudeTracker: React.FC<CameraAltitudeTrackerProps> = ({
 
   useFrame(() => {
     if (enabled && camera) {
-      // Convert camera Y position to altitude (multiply by 10 for better scaling)
-      const altitude = Math.max(0, camera.position.y * 10);
+      // Convert camera Y position to altitude (multiply by 30 for easier layer progression)
+      const altitude = Math.max(0, camera.position.y * 30);
       onAltitudeChange(altitude);
       
-      // Debug logging every 60 frames (~1 second)
-      if (Math.floor(Date.now() / 1000) % 2 === 0) {
-        console.log(`📍 Camera Y: ${camera.position.y.toFixed(1)}, Altitude: ${altitude.toFixed(1)}`);
+      // More frequent debug logging
+      if (Math.floor(Date.now() / 100) % 10 === 0) {
+        console.log(`📍 Camera Y: ${camera.position.y.toFixed(2)}, Altitude: ${altitude.toFixed(1)}`);
       }
     }
   });

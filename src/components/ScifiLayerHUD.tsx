@@ -69,6 +69,9 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
                   <div className="text-xs text-cyan-300 font-normal">
                     {layerData.name}
                   </div>
+                  <div className="text-xs text-yellow-300 font-normal">
+                    Altitude: {altitude.toFixed(1)}
+                  </div>
                 </div>
                 <Badge variant="outline" className="text-yellow-400 border-yellow-400">
                   Max: {highestLayer}
