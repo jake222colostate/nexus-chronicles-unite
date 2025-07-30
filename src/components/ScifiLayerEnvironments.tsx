@@ -16,7 +16,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
     const crystals = [];
     
     for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 + timeRef.current * 0.05; // Much slower rotation
+      const angle = (i / 6) * Math.PI * 2; // Static positioning
       const radius = 8;
       
       crystals.push(
@@ -56,7 +56,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
                 baseAltitude + 1,
                 Math.sin(angle) * radius
               ]}
-              rotation={[0, timeRef.current * 0.05, 0]}>
+              rotation={[0, 0, 0]}>
           <torusGeometry args={[2, 0.3, 8, 32]} />
           <meshStandardMaterial 
             color="#00ff88" 
@@ -128,7 +128,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
     const spheres = [];
     
     for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 + timeRef.current * 0.1;
+      const angle = (i / 6) * Math.PI * 2;
       const radius = 8;
       
       spheres.push(
@@ -194,7 +194,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
     for (let i = 0; i < 9; i++) {
       const x = ((i % 3) - 1) * 5;
       const z = (Math.floor(i / 3) - 1) * 5;
-      const bobHeight = Math.sin(timeRef.current * 0.1 + i) * 0.3;
+      const bobHeight = 0; // Static positioning
       
       if (x !== 0 || z !== 0) { // Skip center
         cubes.push(
@@ -231,7 +231,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
                 baseAltitude + 1,
                 Math.sin(angle) * radius
               ]}
-              rotation={[timeRef.current * 0.03, angle, 0]}>
+              rotation={[0, angle, 0]}>
           <tetrahedronGeometry args={[1]} />
           <meshStandardMaterial 
             color="#32cd32" 
@@ -263,7 +263,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
     
     // Orbiting satellites
     for (let i = 0; i < 4; i++) {
-      const angle = (i / 4) * Math.PI * 2 + timeRef.current * 0.08;
+      const angle = (i / 4) * Math.PI * 2;
       const radius = 5;
       
       elements.push(
