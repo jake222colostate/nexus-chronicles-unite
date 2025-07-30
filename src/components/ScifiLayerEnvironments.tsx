@@ -13,171 +13,241 @@ export const ScifiLayerEnvironments: React.FC = () => {
     timeRef.current += delta * 0.3; // Much slower animation speed
   });
 
-  // Generate layer-specific environmental elements
+  // Generate layer-specific platform bases with unique characteristics
+  const getLayerBase = (layerNum: number) => {
+    const layerData = SCIFI_LAYERS[layerNum];
+    if (!layerData) return null;
+
+    const baseAltitude = layerData.altitudeThreshold / 10;
+    
+    return (
+      <group key={`base-${layerNum}`} position={[0, baseAltitude - 3, -2]}>
+        {/* Main platform base - same structure as FloatingIsland but layer-themed */}
+        <mesh position={[0, 0, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[8, 7, 1.5, 8]} />
+          <meshLambertMaterial
+            color={layerData.visual.color}
+            transparent
+            opacity={0.8}
+          />
+        </mesh>
+
+        {/* Decorative rings with layer-specific styling */}
+        <mesh position={[0, 0.8, 0]}>
+          <ringGeometry args={[7.5, 8.5, 16]} />
+          <meshBasicMaterial
+            color={layerData.visual.particleColor}
+            transparent
+            opacity={0.4}
+          />
+        </mesh>
+
+        {/* Glowing core with layer theme */}
+        <mesh position={[0, 0.2, 0]}>
+          <sphereGeometry args={[0.5, 16, 16]} />
+          <meshBasicMaterial
+            color={layerData.visual.particleColor}
+            transparent
+            opacity={0.8}
+          />
+        </mesh>
+
+        {/* Layer-specific base decorations */}
+        {getLayerBaseDecorations(layerNum, baseAltitude)}
+      </group>
+    );
+  };
+
+  // Add unique decorations to each layer's base
+  const getLayerBaseDecorations = (layerNum: number, baseAltitude: number) => {
+    const decorations = [];
+
+    switch (layerNum) {
+      case 1: // Lower Orbit - Simple antenna array
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`antenna-${i}`} position={[
+              Math.cos(angle) * 6,
+              1.5,
+              Math.sin(angle) * 6
+            ]}>
+              <cylinderGeometry args={[0.1, 0.1, 3]} />
+              <meshBasicMaterial color="#60a5fa" />
+            </mesh>
+          );
+        }
+        break;
+
+      case 2: // Debris Field - Damaged sections
+        for (let i = 0; i < 3; i++) {
+          const angle = (i / 3) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`damage-${i}`} position={[
+              Math.cos(angle) * 7,
+              0.5,
+              Math.sin(angle) * 7
+            ]} rotation={[Math.random() * 0.5, angle, Math.random() * 0.3]}>
+              <boxGeometry args={[0.8, 0.3, 1.2]} />
+              <meshBasicMaterial color="#8b5cf6" wireframe />
+            </mesh>
+          );
+        }
+        break;
+
+      case 3: // Solar Wind Zone - Solar panel array
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`solar-${i}`} position={[
+              Math.cos(angle) * 7.5,
+              1,
+              Math.sin(angle) * 7.5
+            ]} rotation={[0, angle, 0]}>
+              <boxGeometry args={[1.5, 0.1, 0.8]} />
+              <meshBasicMaterial color="#fbbf24" transparent opacity={0.7} />
+            </mesh>
+          );
+        }
+        break;
+
+      case 4: // Gravity Warped Zone - Distorted stabilizers
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`stabilizer-${i}`} position={[
+              Math.cos(angle) * 6.5,
+              1.2,
+              Math.sin(angle) * 6.5
+            ]} rotation={[Math.sin(timeRef.current + i) * 0.3, angle, 0]}>
+              <octahedronGeometry args={[0.8]} />
+              <meshBasicMaterial color="#f87171" wireframe />
+            </mesh>
+          );
+        }
+        break;
+
+      case 5: // Cosmic Radiation Belt - Energy collectors
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`collector-${i}`} position={[
+              Math.cos(angle) * 7,
+              1 + Math.sin(timeRef.current + i) * 0.3,
+              Math.sin(angle) * 7
+            ]}>
+              <sphereGeometry args={[0.4]} />
+              <meshBasicMaterial color="#34d399" transparent opacity={0.8} />
+            </mesh>
+          );
+        }
+        break;
+
+      case 6: // Void Nexus - Portal rings
+        decorations.push(
+          <mesh key="portal-ring" position={[0, 2, 0]} rotation={[0, timeRef.current * 0.1, 0]}>
+            <torusGeometry args={[6, 0.3]} />
+            <meshBasicMaterial color="#818cf8" wireframe />
+          </mesh>
+        );
+        break;
+
+      case 7: // Dark Matter Field - Dark energy cores
+        for (let i = 0; i < 3; i++) {
+          const angle = (i / 3) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`dark-core-${i}`} position={[
+              Math.cos(angle) * 5,
+              1.5,
+              Math.sin(angle) * 5
+            ]}>
+              <octahedronGeometry args={[0.6]} />
+              <meshBasicMaterial color="#a16207" transparent opacity={0.9} />
+            </mesh>
+          );
+        }
+        break;
+
+      case 8: // Quantum Anomaly Zone - Quantum field generators
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          const phase = timeRef.current * 0.3 + i;
+          decorations.push(
+            <mesh key={`quantum-${i}`} position={[
+              Math.cos(angle) * 6,
+              1 + Math.sin(phase) * 0.5,
+              Math.sin(angle) * 6
+            ]} rotation={[phase * 0.2, phase * 0.3, phase * 0.1]}>
+              <octahedronGeometry args={[0.5]} />
+              <meshBasicMaterial color="#f472b6" wireframe />
+            </mesh>
+          );
+        }
+        break;
+    }
+
+    return decorations;
+  };
+
+  // Generate simplified environmental elements around the base
   const getLayerEnvironment = (layerNum: number) => {
     const layerData = SCIFI_LAYERS[layerNum];
     if (!layerData) return null;
 
-    const baseAltitude = layerData.altitudeThreshold / 10; // Convert to camera space
+    const baseAltitude = layerData.altitudeThreshold / 10;
     const elements = [];
 
     switch (layerNum) {
-      case 1: // Lower Orbit - Simple atmospheric stations (reduced count)
-        for (let i = 0; i < 6; i++) { // Reduced from 8
-          const angle = (i / 8) * Math.PI * 2;
-          elements.push(
-            <group key={`layer1-${i}`} position={[
-              Math.cos(angle) * 25, 
-              baseAltitude + Math.random() * 3, 
-              Math.sin(angle) * 25
-            ]}>
-              <mesh>
-                <boxGeometry args={[2, 1, 4]} />
-                <meshBasicMaterial color="#3b82f6" wireframe />
-              </mesh>
-              <pointLight color="#60a5fa" intensity={0.3} distance={15} />
-            </group>
-          );
-        }
-        break;
-
-      case 2: // Debris Field - Scattered debris and wreckage (reduced count)
-        for (let i = 0; i < 10; i++) { // Reduced from 15
-          elements.push(
-            <group key={`layer2-${i}`} position={[
-              (Math.random() - 0.5) * 50,
-              baseAltitude + (Math.random() - 0.5) * 8,
-              (Math.random() - 0.5) * 50
-            ]} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-              <mesh>
-                <octahedronGeometry args={[0.5 + Math.random() * 2]} />
-                <meshBasicMaterial color="#8b5cf6" wireframe />
-              </mesh>
-              {Math.random() > 0.7 && <pointLight color="#a78bfa" intensity={0.2} distance={10} />}
-            </group>
-          );
-        }
-        break;
-
-      case 3: // Solar Wind Zone - Solar collectors and energy streams
-        for (let i = 0; i < 6; i++) {
-          const angle = (i / 6) * Math.PI * 2;
-          elements.push(
-            <group key={`layer3-${i}`} position={[
-              Math.cos(angle) * 20,
-              baseAltitude + 2,
-              Math.sin(angle) * 20
-            ]}>
-              <mesh>
-                <cylinderGeometry args={[0.5, 2, 6]} />
-                <meshBasicMaterial color="#f59e0b" wireframe />
-              </mesh>
-              <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 3, 0]}>
-                <torusGeometry args={[3, 0.3]} />
-                <meshBasicMaterial color="#fbbf24" wireframe />
-              </mesh>
-              <pointLight color="#fbbf24" intensity={0.8} distance={20} />
-            </group>
-          );
-        }
-        break;
-
-      case 4: // Gravity Warped Zone - Distorted structures (reduced count)
-        for (let i = 0; i < 8; i++) { // Reduced from 12
-          elements.push(
-            <group key={`layer4-${i}`} position={[
-              (Math.random() - 0.5) * 40,
-              baseAltitude + (Math.random() - 0.5) * 10,
-              (Math.random() - 0.5) * 40
-            ]}>
-              <mesh rotation={[Math.random() * 0.5, Math.random() * Math.PI, Math.random() * 0.5]}>
-                <boxGeometry args={[1 + Math.random(), 3 + Math.random() * 2, 1 + Math.random()]} />
-                <meshBasicMaterial color="#ef4444" wireframe />
-              </mesh>
-              <spotLight color="#f87171" intensity={0.5} distance={15} angle={0.6} />
-            </group>
-          );
-        }
-        break;
-
-      case 5: // Cosmic Radiation Belt - Glowing energy fields (reduced count)
-        for (let i = 0; i < 6; i++) { // Reduced from 10
-          const angle = (i / 10) * Math.PI * 2;
-          elements.push(
-            <group key={`layer5-${i}`} position={[
-              Math.cos(angle) * 30 + (Math.random() - 0.5) * 10,
-              baseAltitude + Math.sin(timeRef.current * 0.5 + i) * 1, // Slower, controlled animation
-              Math.sin(angle) * 30 + (Math.random() - 0.5) * 10
-            ]}>
-              <mesh>
-                <sphereGeometry args={[1.5 + Math.random()]} />
-                <meshBasicMaterial color="#10b981" transparent opacity={0.6} />
-              </mesh>
-              <pointLight color="#34d399" intensity={0.7} distance={25} />
-            </group>
-          );
-        }
-        break;
-
-      case 6: // Void Nexus - Portal-like structures
+      case 1: // Lower Orbit - Simple atmospheric beacons
         for (let i = 0; i < 4; i++) {
           const angle = (i / 4) * Math.PI * 2;
           elements.push(
-            <group key={`layer6-${i}`} position={[
-              Math.cos(angle) * 35,
-              baseAltitude + 5,
-              Math.sin(angle) * 35
-            ]} rotation={[0, angle, 0]}>
-              <mesh>
-                <torusGeometry args={[4, 0.5]} />
-                <meshBasicMaterial color="#6366f1" wireframe />
-              </mesh>
-              <mesh rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[2, 0.3]} />
-                <meshBasicMaterial color="#818cf8" wireframe />
-              </mesh>
-              <pointLight color="#818cf8" intensity={1} distance={30} />
-            </group>
-          );
-        }
-        break;
-
-      case 7: // Dark Matter Field - Ominous dark structures (reduced count)
-        for (let i = 0; i < 6; i++) { // Reduced from 8
-          elements.push(
-            <group key={`layer7-${i}`} position={[
-              (Math.random() - 0.5) * 60,
-              baseAltitude + (Math.random() - 0.5) * 15,
-              (Math.random() - 0.5) * 60
+            <group key={`beacon-${i}`} position={[
+              Math.cos(angle) * 15, 
+              baseAltitude + 2, 
+              Math.sin(angle) * 15
             ]}>
               <mesh>
-                <octahedronGeometry args={[2 + Math.random() * 2]} />
-                <meshBasicMaterial color="#8b5a3c" wireframe />
+                <cylinderGeometry args={[0.5, 0.5, 4]} />
+                <meshBasicMaterial color="#3b82f6" />
               </mesh>
-              <mesh position={[0, 0, 0]}>
-                <sphereGeometry args={[0.5]} />
-                <meshBasicMaterial color="#a16207" />
-              </mesh>
-              <pointLight color="#a16207" intensity={0.4} distance={20} />
+              <pointLight color="#60a5fa" intensity={0.3} distance={10} />
             </group>
           );
         }
         break;
 
-      case 8: // Quantum Anomaly Zone - Shifting geometric patterns (reduced count)
-        for (let i = 0; i < 12; i++) { // Reduced from 16
-          const phase = timeRef.current * 0.2 + i * 0.3; // Much slower quantum animations
+      case 2: // Debris Field - Floating debris
+        for (let i = 0; i < 6; i++) {
           elements.push(
-            <group key={`layer8-${i}`} position={[
-              Math.cos(phase) * (15 + i * 2),
-              baseAltitude + Math.sin(phase * 1.3) * 3,
-              Math.sin(phase) * (15 + i * 2)
-            ]} rotation={[phase * 0.1, phase * 0.15, phase * 0.08]}> {/* Slower rotation */}
+            <group key={`debris-${i}`} position={[
+              (Math.random() - 0.5) * 30,
+              baseAltitude + (Math.random() - 0.5) * 5,
+              (Math.random() - 0.5) * 30
+            ]} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
               <mesh>
-                <octahedronGeometry args={[0.8 + Math.sin(phase) * 0.2]} />
-                <meshBasicMaterial color="#ec4899" wireframe />
+                <boxGeometry args={[1 + Math.random(), 0.5 + Math.random(), 1 + Math.random()]} />
+                <meshBasicMaterial color="#8b5cf6" wireframe />
               </mesh>
-              <pointLight color="#f472b6" intensity={0.5} distance={12} />
+            </group>
+          );
+        }
+        break;
+
+      case 3: // Solar Wind Zone - Energy streams
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          elements.push(
+            <group key={`stream-${i}`} position={[
+              Math.cos(angle) * 20,
+              baseAltitude + 4,
+              Math.sin(angle) * 20
+            ]}>
+              <mesh>
+                <cylinderGeometry args={[0.2, 0.8, 8]} />
+                <meshBasicMaterial color="#fbbf24" transparent opacity={0.7} />
+              </mesh>
+              <pointLight color="#fbbf24" intensity={0.6} distance={15} />
             </group>
           );
         }
@@ -186,37 +256,23 @@ export const ScifiLayerEnvironments: React.FC = () => {
 
     return (
       <group key={`layer-${layerNum}`}>
-        {elements}
+        {/* Layer base (always present) */}
+        {getLayerBase(layerNum)}
         
-        {/* Layer identification marker */}
-        <group position={[0, baseAltitude + 10, 0]}>
-          <mesh>
-            <boxGeometry args={[8, 0.5, 8]} />
-            <meshBasicMaterial color={layerData.visual.color} transparent opacity={0.3} />
-          </mesh>
-          <pointLight color={layerData.visual.particleColor} intensity={0.8} distance={50} />
-        </group>
+        {/* Environmental elements */}
+        {elements}
       </group>
     );
   };
 
   // Only render current layer for better performance
   const layersToRender = useMemo(() => {
-    return [currentLayer]; // Only current layer to improve performance
+    return [currentLayer];
   }, [currentLayer]);
 
   return (
     <group>
       {layersToRender.map(layerNum => getLayerEnvironment(layerNum))}
-      
-      {/* Debug: Current layer indicator */}
-      <group position={[15, (SCIFI_LAYERS[currentLayer]?.altitudeThreshold || 0) / 10, 0]}>
-        <mesh>
-          <boxGeometry args={[2, 1, 2]} />
-          <meshBasicMaterial color="#00ff00" />
-        </mesh>
-        <pointLight color="#00ff00" intensity={1} distance={20} />
-      </group>
     </group>
   );
 };
