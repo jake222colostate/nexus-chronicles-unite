@@ -26,11 +26,25 @@ export interface GameState {
     upgradeType: string;
     realm: 'fantasy' | 'scifi';
   }>;
+  
+  // Nexus Module System
+  placedModules: Array<{
+    id: string;
+    moduleId: string;
+    position: [number, number, number];
+    moduleType: string;
+    realm: 'fantasy' | 'scifi' | 'nexus';
+  }>;
+  
+  // Fantasy and Sci-Fi progression levels
+  fantasyLevel: number;
+  scifiLevel: number;
+  completedQuests: string[];
 }
 
 export const initialGameState: GameState = {
-  mana: 0,
-  energyCredits: 0,
+  mana: 500, // Start with some mana for testing
+  energyCredits: 300, // Start with some energy for testing
   nexusShards: 25,
   manaPerSecond: 0,
   energyPerSecond: 0,
@@ -38,5 +52,9 @@ export const initialGameState: GameState = {
   convergenceProgress: 0,
   lastSaveTime: Date.now(),
   unlockedUpgrades: [],
-  placedUpgrades: []
+  placedUpgrades: [],
+  placedModules: [],
+  fantasyLevel: 0,
+  scifiLevel: 0,
+  completedQuests: []
 };

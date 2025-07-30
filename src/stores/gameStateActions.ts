@@ -16,6 +16,10 @@ export interface GameStateActions {
   placeUpgrade: (upgrade: { id: string; x: number; z: number; upgradeType: string; realm: 'fantasy' | 'scifi' }) => void;
   removeUpgrade: (x: number, z: number) => void;
   
+  // Module placement actions
+  placeModule: (moduleId: string, position: [number, number, number], moduleType: string, realm: 'fantasy' | 'scifi' | 'nexus') => string;
+  removeModule: (placedModuleId: string) => void;
+  
   // Rate Management
   setManaPerSecond: (rate: number) => void;
   setEnergyPerSecond: (rate: number) => void;
@@ -111,6 +115,29 @@ export const createGameStateActions = (set: any, get: any): GameStateActions => 
       placedUpgrades: state.placedUpgrades.filter(
         (upgrade: any) => !(upgrade.x === x && upgrade.z === z)
       )
+    })),
+
+  // Module placement actions
+  placeModule: (moduleId, position, moduleType, realm) => {
+    const placedModuleId = `placed_${moduleId}_${Date.now()}`;
+    const newModule = {
+      id: placedModuleId,
+      moduleId,
+      position,
+      moduleType,
+      realm
+    };
+    
+    set((state: any) => ({
+      placedModules: [...(state.placedModules || []), newModule]
+    }));
+    
+    return placedModuleId;
+  },
+
+  removeModule: (placedModuleId) =>
+    set((state: any) => ({
+      placedModules: (state.placedModules || []).filter((m: any) => m.id !== placedModuleId)
     })),
 
   // Rate Management
