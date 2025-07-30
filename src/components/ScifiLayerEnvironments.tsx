@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { useScifiLayerStore } from '@/stores/useScifiLayerStore';
 import { SCIFI_LAYERS } from '@/data/SciFiUpgradeSystem';
-import { Sphere, Box, Cylinder, Torus, Octahedron } from '@react-three/drei';
 import { Vector3 } from 'three';
 
 export const ScifiLayerEnvironments: React.FC = () => {
@@ -25,7 +24,10 @@ export const ScifiLayerEnvironments: React.FC = () => {
               baseAltitude + Math.random() * 3, 
               Math.sin(angle) * 25
             ]}>
-              <Box args={[2, 1, 4]} material-color="#3b82f6" material-wireframe />
+              <mesh>
+                <boxGeometry args={[2, 1, 4]} />
+                <meshBasicMaterial color="#3b82f6" wireframe />
+              </mesh>
               <pointLight color="#60a5fa" intensity={0.3} distance={15} />
             </group>
           );
@@ -40,7 +42,10 @@ export const ScifiLayerEnvironments: React.FC = () => {
               baseAltitude + (Math.random() - 0.5) * 8,
               (Math.random() - 0.5) * 50
             ]} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
-              <Octahedron args={[0.5 + Math.random() * 2]} material-color="#8b5cf6" material-wireframe />
+              <mesh>
+                <octahedronGeometry args={[0.5 + Math.random() * 2]} />
+                <meshBasicMaterial color="#8b5cf6" wireframe />
+              </mesh>
               {Math.random() > 0.7 && <pointLight color="#a78bfa" intensity={0.2} distance={10} />}
             </group>
           );
@@ -56,9 +61,14 @@ export const ScifiLayerEnvironments: React.FC = () => {
               baseAltitude + 2,
               Math.sin(angle) * 20
             ]}>
-              <Cylinder args={[0.5, 2, 6]} material-color="#f59e0b" material-wireframe />
-              <Torus args={[3, 0.3]} material-color="#fbbf24" material-wireframe 
-                     rotation={[Math.PI / 2, 0, 0]} position={[0, 3, 0]} />
+              <mesh>
+                <cylinderGeometry args={[0.5, 2, 6]} />
+                <meshBasicMaterial color="#f59e0b" wireframe />
+              </mesh>
+              <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 3, 0]}>
+                <torusGeometry args={[3, 0.3]} />
+                <meshBasicMaterial color="#fbbf24" wireframe />
+              </mesh>
               <pointLight color="#fbbf24" intensity={0.8} distance={20} />
             </group>
           );
@@ -73,9 +83,10 @@ export const ScifiLayerEnvironments: React.FC = () => {
               baseAltitude + (Math.random() - 0.5) * 10,
               (Math.random() - 0.5) * 40
             ]}>
-              <Box args={[1 + Math.random(), 3 + Math.random() * 2, 1 + Math.random()]} 
-                   material-color="#ef4444" material-wireframe 
-                   rotation={[Math.random() * 0.5, Math.random() * Math.PI, Math.random() * 0.5]} />
+              <mesh rotation={[Math.random() * 0.5, Math.random() * Math.PI, Math.random() * 0.5]}>
+                <boxGeometry args={[1 + Math.random(), 3 + Math.random() * 2, 1 + Math.random()]} />
+                <meshBasicMaterial color="#ef4444" wireframe />
+              </mesh>
               <spotLight color="#f87171" intensity={0.5} distance={15} angle={0.6} />
             </group>
           );
@@ -91,8 +102,10 @@ export const ScifiLayerEnvironments: React.FC = () => {
               baseAltitude + Math.sin(Date.now() * 0.001 + i) * 2,
               Math.sin(angle) * 30 + (Math.random() - 0.5) * 10
             ]}>
-              <Sphere args={[1.5 + Math.random()]} material-color="#10b981" 
-                      material-transparent material-opacity={0.6} />
+              <mesh>
+                <sphereGeometry args={[1.5 + Math.random()]} />
+                <meshBasicMaterial color="#10b981" transparent opacity={0.6} />
+              </mesh>
               <pointLight color="#34d399" intensity={0.7} distance={25} />
             </group>
           );
@@ -108,9 +121,14 @@ export const ScifiLayerEnvironments: React.FC = () => {
               baseAltitude + 5,
               Math.sin(angle) * 35
             ]} rotation={[0, angle, 0]}>
-              <Torus args={[4, 0.5]} material-color="#6366f1" material-wireframe />
-              <Torus args={[2, 0.3]} material-color="#818cf8" material-wireframe 
-                     rotation={[Math.PI / 2, 0, 0]} />
+              <mesh>
+                <torusGeometry args={[4, 0.5]} />
+                <meshBasicMaterial color="#6366f1" wireframe />
+              </mesh>
+              <mesh rotation={[Math.PI / 2, 0, 0]}>
+                <torusGeometry args={[2, 0.3]} />
+                <meshBasicMaterial color="#818cf8" wireframe />
+              </mesh>
               <pointLight color="#818cf8" intensity={1} distance={30} />
             </group>
           );
@@ -125,9 +143,14 @@ export const ScifiLayerEnvironments: React.FC = () => {
               baseAltitude + (Math.random() - 0.5) * 15,
               (Math.random() - 0.5) * 60
             ]}>
-              <Octahedron args={[2 + Math.random() * 2]} material-color="#8b5a3c" 
-                          material-wireframe />
-              <Sphere args={[0.5]} material-color="#a16207" position={[0, 0, 0]} />
+              <mesh>
+                <octahedronGeometry args={[2 + Math.random() * 2]} />
+                <meshBasicMaterial color="#8b5a3c" wireframe />
+              </mesh>
+              <mesh position={[0, 0, 0]}>
+                <sphereGeometry args={[0.5]} />
+                <meshBasicMaterial color="#a16207" />
+              </mesh>
               <pointLight color="#a16207" intensity={0.4} distance={20} />
             </group>
           );
@@ -143,8 +166,10 @@ export const ScifiLayerEnvironments: React.FC = () => {
               baseAltitude + Math.sin(phase * 1.3) * 8,
               Math.sin(phase) * (15 + i * 2)
             ]} rotation={[phase, phase * 1.2, phase * 0.8]}>
-              <Octahedron args={[0.8 + Math.sin(phase) * 0.3]} 
-                          material-color="#ec4899" material-wireframe />
+              <mesh>
+                <octahedronGeometry args={[0.8 + Math.sin(phase) * 0.3]} />
+                <meshBasicMaterial color="#ec4899" wireframe />
+              </mesh>
               <pointLight color="#f472b6" intensity={0.5} distance={12} />
             </group>
           );
@@ -158,8 +183,10 @@ export const ScifiLayerEnvironments: React.FC = () => {
         
         {/* Layer identification marker */}
         <group position={[0, baseAltitude + 10, 0]}>
-          <Box args={[8, 0.5, 8]} material-color={layerData.visual.color} 
-               material-transparent material-opacity={0.3} />
+          <mesh>
+            <boxGeometry args={[8, 0.5, 8]} />
+            <meshBasicMaterial color={layerData.visual.color} transparent opacity={0.3} />
+          </mesh>
           <pointLight color={layerData.visual.particleColor} intensity={0.8} distance={50} />
         </group>
       </group>
@@ -181,7 +208,10 @@ export const ScifiLayerEnvironments: React.FC = () => {
       
       {/* Debug: Current layer indicator */}
       <group position={[15, (SCIFI_LAYERS[currentLayer]?.altitudeThreshold || 0) / 10, 0]}>
-        <Box args={[2, 1, 2]} material-color="#00ff00" />
+        <mesh>
+          <boxGeometry args={[2, 1, 2]} />
+          <meshBasicMaterial color="#00ff00" />
+        </mesh>
         <pointLight color="#00ff00" intensity={1} distance={20} />
       </group>
     </group>
