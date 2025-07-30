@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Text, Html } from '@react-three/drei';
+import { Text, Html } from '@react-three/drei';
+import PlayerControls from './NexusWorld/PlayerControls';
 import { Mesh, Vector3 } from 'three';
 import { useGameStateStore } from '@/stores/useGameStateStore';
 import { NexusVendorShops } from './NexusVendorShops';
@@ -286,7 +287,7 @@ export const NexusWorldGrid: React.FC = () => {
 
         {/* 3D Scene */}
         <Canvas
-          camera={{ position: [0, 15, 12], fov: 60 }}
+          camera={{ position: [0, 2, 8], fov: 75 }}
           style={{ height: '100%', width: '100%' }}
           shadows
         >
@@ -338,16 +339,8 @@ export const NexusWorldGrid: React.FC = () => {
             onClick={() => handleVendorClick('mystic')}
           />
 
-          {/* Camera Controls */}
-          <OrbitControls
-            enablePan={false}
-            enableZoom={true}
-            enableRotate={true}
-            minDistance={8}
-            maxDistance={25}
-            minPolarAngle={Math.PI / 6}
-            maxPolarAngle={Math.PI / 2.5}
-          />
+          {/* First Person Controls */}
+          <PlayerControls />
         </Canvas>
       </div>
 
