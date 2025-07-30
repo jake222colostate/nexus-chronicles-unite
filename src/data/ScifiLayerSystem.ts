@@ -547,12 +547,19 @@ export const getLayerByAltitude = (altitude: number): LayerThemeConfig => {
   const layers = Object.values(SCIFI_LAYER_THEMES);
   let currentLayer = layers[0];
   
+  console.log(`🔍 Checking altitude ${altitude} against ${layers.length} layers`);
+  
   for (const layer of layers) {
+    console.log(`  Layer ${layer.id}: threshold ${layer.altitudeThreshold}, name: ${layer.name}`);
     if (altitude >= layer.altitudeThreshold) {
       currentLayer = layer;
+      console.log(`  ✅ Qualifies for Layer ${layer.id}`);
+    } else {
+      console.log(`  ❌ Does not qualify for Layer ${layer.id}`);
     }
   }
   
+  console.log(`🎯 Final layer: ${currentLayer.id} - ${currentLayer.name}`);
   return currentLayer;
 };
 
