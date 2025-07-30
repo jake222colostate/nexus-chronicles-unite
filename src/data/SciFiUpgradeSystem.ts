@@ -729,11 +729,11 @@ export const getLayerByAltitude = (altitude: number): LayerDefinition => {
   const layers = Object.values(SCIFI_LAYERS);
   let currentLayer = layers[0];
   
+  // Find the highest layer that the altitude qualifies for
   for (const layer of layers) {
     if (altitude >= layer.altitudeThreshold) {
       currentLayer = layer;
-    } else {
-      break;
+      // Continue checking - don't break! We want the highest qualifying layer
     }
   }
   
