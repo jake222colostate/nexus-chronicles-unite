@@ -18,6 +18,10 @@ import { ScifiScrollUpgradeSystem } from './scifi/ScifiScrollUpgradeSystem';
 import { ScifiUpgradeModal } from './scifi/ScifiUpgradeModal';
 import { ScifiUpgradeGLBSystem } from './scifi/ScifiUpgradeGLBSystem';
 import { CannonPlatformSystem } from './scifi/CannonPlatformSystem';
+import { ScifiLayerManager } from './ScifiLayerManager';
+import { ScifiLayerHUD } from './ScifiLayerHUD';
+import { ScifiLayerEffects } from './ScifiLayerEffects';
+import { useScifiLayerStore } from '@/stores/useScifiLayerStore';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -74,6 +78,14 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   const cameraRef = useRef();
   const [enemyPositions, setEnemyPositions] = useState<Vector3[]>([]);
   const [selectedUpgrade, setSelectedUpgrade] = useState<string | null>(null);
+  const [playerAltitude, setPlayerAltitude] = useState(0);
+  const [layerScaling, setLayerScaling] = useState({
+    difficulty: 1,
+    meteorSpeed: 1,
+    lootDrop: 1
+  });
+  
+  const { destroyMeteor } = useScifiLayerStore();
   
 
   // Stable player position for chunk system - centered in the mountain valley
@@ -89,6 +101,19 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
     console.log(`Enemy ${index} hit for ${damage} damage`);
     // This would typically trigger enemy damage/death logic
   }, []);
+
+  // Handle meteor destruction with layer system integration
+  const handleMeteorDestroyed = useCallback(() => {
+    destroyMeteor(); // Update layer store
+    onMeteorDestroyed?.(); // Call original callback
+  }, [destroyMeteor, onMeteorDestroyed]);
+
+  // Handle camera position updates for altitude tracking
+  const handleCameraPositionUpdate = useCallback((position: Vector3) => {
+    if (realm === 'scifi') {
+      setPlayerAltitude(Math.max(0, position.y * 10)); // Convert camera Y to altitude
+    }
+  }, [realm]);
 
   // Memoize upgrade unlock checking to prevent recalculation
   const checkUpgradeUnlocked = useCallback((upgrade: any): boolean => {
@@ -178,6 +203,22 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             />
           )}
 
+          {/* Layer system components - only in sci-fi realm */}
+          {realm === 'scifi' && (
+            <>
+              <ScifiLayerManager 
+                playerAltitude={playerAltitude}
+                onLayerChange={(layer) => console.log(`🌌 Entered Layer ${layer}`)}
+                onUnlockUpgrade={(upgrade) => console.log(`🔓 Unlocked: ${upgrade}`)}
+              />
+              <ScifiLayerEffects
+                onDifficultyScale={(scale) => setLayerScaling(prev => ({ ...prev, difficulty: scale }))}
+                onMeteorSpeedScale={(scale) => setLayerScaling(prev => ({ ...prev, meteorSpeed: scale }))}
+                onLootDropScale={(scale) => setLayerScaling(prev => ({ ...prev, lootDrop: scale }))}
+              />
+            </>
+          )}
+
           {/* ENHANCED: Lighting */}
           <ImprovedFantasyLighting />
 
@@ -207,7 +248,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               />
               {(
                 <ScifiDefenseSystem 
-                  onMeteorDestroyed={onMeteorDestroyed}
+                  onMeteorDestroyed={handleMeteorDestroyed}
                   onEnergyGained={onEnergyGained}
                   onUpgradeClick={setSelectedUpgrade}
                   purchasedUpgrades={gameState.purchasedUpgrades || []}
@@ -253,6 +294,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           onClose={() => setSelectedUpgrade(null)}
         />
       )}
+      
+      {/* Layer HUD - only in sci-fi realm */}
+      {realm === 'scifi' && <ScifiLayerHUD showDebug={true} />}
     </div>
   );
 });
