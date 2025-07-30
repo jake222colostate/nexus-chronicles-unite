@@ -3,7 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Text, Html } from '@react-three/drei';
 import { Mesh, Vector3 } from 'three';
 import { useGameStateStore } from '@/stores/useGameStateStore';
-import { NexusVendorShops } from './NexusShops';
+import { NexusVendorShops } from './NexusVendorShops';
 import { NexusInventoryPanel } from './NexusInventoryPanel';
 
 interface GridTile {
