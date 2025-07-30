@@ -33,13 +33,13 @@ const Nexus3DWorld: React.FC<Nexus3DWorldProps> = ({
   // Use global game state store
   const globalGameState = useGameStateStore();
   
-  // Merge provided gameState with global state (global state takes precedence)
+  // Sync resources with global state for accurate cross-realm visibility
   const safeGameState = {
-    mana: 0,
-    energyCredits: 0,
-    nexusShards: 0,
-    manaPerSecond: 0,
-    energyPerSecond: 0,
+    mana: globalGameState.mana,
+    energyCredits: globalGameState.energyCredits,
+    nexusShards: globalGameState.nexusShards,
+    manaPerSecond: globalGameState.manaPerSecond,
+    energyPerSecond: globalGameState.energyPerSecond,
     ...gameState,
     ...globalGameState // Global state overrides local state
   };

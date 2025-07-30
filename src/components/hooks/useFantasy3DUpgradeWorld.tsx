@@ -14,6 +14,16 @@ export const useFantasy3DUpgradeWorld = ({
 }: UseFantasy3DUpgradeWorldProps) => {
   const globalGameState = useGameStateStore();
   
+  // Use global state as primary source of truth
+  const effectiveGameState = {
+    ...gameState,
+    mana: globalGameState.mana,
+    energyCredits: globalGameState.energyCredits,
+    nexusShards: globalGameState.nexusShards,
+    manaPerSecond: globalGameState.manaPerSecond,
+    energyPerSecond: globalGameState.energyPerSecond
+  };
+  
   // Initialize state with stable references
   const [cameraPosition, setCameraPosition] = useState(() => new Vector3(0, 1.6, 0));
   const [selectedUpgrade, setSelectedUpgrade] = useState<any>(null);

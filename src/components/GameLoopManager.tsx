@@ -27,17 +27,18 @@ export const useGameLoopManager = ({
   const purchasedUpgradesCount = stablePurchasedUpgrades.length;
   
 
-  // Game loop - now includes auto mana generation
+  // Game loop - unified resource generation
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       setGameState(prev => {
         const deltaTime = 0.1; // 100ms intervals
-        const autoManaGain = prev.autoManaRate * deltaTime;
         
+        // All resource generation is handled by the auto systems and building production
+        // The game loop just saves the state periodically
         const newState = {
           ...prev,
-          mana: prev.mana + (prev.manaPerSecond * deltaTime) + autoManaGain,
-          energyCredits: prev.energyCredits + prev.energyPerSecond * deltaTime,
+          mana: prev.mana + (prev.manaPerSecond * deltaTime),
+          energyCredits: prev.energyCredits + (prev.energyPerSecond * deltaTime),
           lastSaveTime: Date.now(),
         };
         

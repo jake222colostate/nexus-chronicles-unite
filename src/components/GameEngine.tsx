@@ -29,6 +29,7 @@ import { ScifiAutoClickerUpgradeSystem } from './ScifiAutoClickerUpgradeSystem';
 import { useAutoManaStore } from '@/stores/useAutoManaStore';
 import { useAutoEnergyStore } from '@/stores/useAutoEnergyStore';
 import { CollisionProvider } from '@/lib/CollisionContext';
+import { SystemSynchronizer } from './SystemSynchronizer';
 
 const GameEngine: React.FC = () => {
   const location = useLocation();
@@ -72,10 +73,14 @@ const GameEngine: React.FC = () => {
 
   // Sync auto generation rates and calculate offline progress
   useEffect(() => {
+    // Calculate total production including buildings and auto systems
+    const totalManaPerSecond = (gameState.manaPerSecond || 0) + autoManaStore.manaPerSecond;
+    const totalEnergyPerSecond = (gameState.energyPerSecond || 0) + autoEnergyStore.energyPerSecond;
+    
     // Update rates in global store
-    globalGameState.setManaPerSecond(autoManaStore.manaPerSecond);
-    globalGameState.setEnergyPerSecond(autoEnergyStore.energyPerSecond);
-  }, [autoManaStore.manaPerSecond, autoEnergyStore.energyPerSecond]);
+    globalGameState.setManaPerSecond(totalManaPerSecond);
+    globalGameState.setEnergyPerSecond(totalEnergyPerSecond);
+  }, [gameState.manaPerSecond, gameState.energyPerSecond, autoManaStore.manaPerSecond, autoEnergyStore.energyPerSecond]);
 
   // Calculate offline progress once on mount
   useEffect(() => {
@@ -262,7 +267,7 @@ const GameEngine: React.FC = () => {
     }));
     // Also update the global state store for cross-realm visibility
     globalGameState.addMana(amount);
-  }, [setGameState, globalGameState.addMana]);
+  }, [setGameState, globalGameState]);
 
   useAutoManaSystem({ onAddMana: handleAutoManaGeneration });
 
@@ -281,7 +286,7 @@ const GameEngine: React.FC = () => {
     }));
     // Also update the global state store for cross-realm visibility
     globalGameState.addEnergy(amount);
-  }, [setGameState, globalGameState.addEnergy]);
+  }, [setGameState, globalGameState]);
 
   useAutoEnergySystem({ onAddEnergy: handleAutoEnergyGeneration });
 
@@ -302,6 +307,12 @@ const GameEngine: React.FC = () => {
 
   return (
     <CollisionProvider>
+      {/* System Synchronizer - ensures all mechanics work together */}
+      <SystemSynchronizer 
+        gameState={stableGameState}
+        setGameState={setGameState}
+      />
+      
       <div className="h-full w-full relative overflow-hidden bg-black">
         {/* Enhanced background with better layering */}
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-cyan-900/20 pointer-events-none" />
