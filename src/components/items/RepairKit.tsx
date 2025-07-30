@@ -15,7 +15,7 @@ export const RepairKit: React.FC<RepairKitProps> = ({ position, onPickup, realm 
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 2) * 0.1;
-      meshRef.current.rotation.y += 0.02;
+      // meshRef.current.rotation.y += 0.02; // DISABLED - static rotation
     }
   });
 
