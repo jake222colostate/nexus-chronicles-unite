@@ -8,29 +8,34 @@ export const ScifiLayerEnvironments: React.FC = () => {
   const timeRef = useRef(0);
 
   useFrame((_, delta) => {
-    // timeRef.current += delta; // DISABLED to stop all animations
+    timeRef.current += delta;
   });
 
-  // Layer 2 - Clean Crystal Formation
-  const renderCleanCrystalFormation = (baseAltitude: number) => {
-    const crystals = [];
+  // Layer 2 - Fragmented Plates
+  const renderFragmentedPlates = (baseAltitude: number) => {
+    const fragments = [];
     
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2; // Static positioning
-      const radius = 8;
+    for (let i = 0; i < 12; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 5 + Math.random() * 8;
+      const hoverOffset = Math.sin(timeRef.current * 0.8 + i) * 0.5;
+      const tiltX = Math.sin(timeRef.current * 0.3 + i) * 0.2;
+      const tiltZ = Math.cos(timeRef.current * 0.4 + i) * 0.2;
       
-      crystals.push(
-        <mesh key={`crystal-${i}`} 
+      fragments.push(
+        <mesh key={`fragment-${i}`} 
               position={[
                 Math.cos(angle) * radius,
-                baseAltitude + 1,
+                baseAltitude + hoverOffset + Math.random() * 2,
                 Math.sin(angle) * radius
-              ]}>
-          <octahedronGeometry args={[1.5]} />
+              ]}
+              rotation={[tiltX, angle, tiltZ]}>
+          {/* Irregular polygon using dodecahedron as base */}
+          <dodecahedronGeometry args={[1.5 + Math.random()]} />
           <meshStandardMaterial 
-            color="#40e0d0" 
-            emissive="#40e0d0" 
-            emissiveIntensity={0.2}
+            color="#4a4a4a" 
+            emissive="#ff6666" 
+            emissiveIntensity={0.1}
             transparent 
             opacity={0.8} 
           />
@@ -38,53 +43,99 @@ export const ScifiLayerEnvironments: React.FC = () => {
       );
     }
     
-    return crystals;
+    return fragments;
   };
 
-  // Layer 3 - Simple Floating Rings
-  const renderSimpleFloatingRings = (baseAltitude: number) => {
-    const rings = [];
+  // Layer 3 - Crystal Cross Array
+  const renderCrystalCrossArray = (baseAltitude: number) => {
+    const crosses = [];
     
-    for (let i = 0; i < 4; i++) {
-      const angle = (i / 4) * Math.PI * 2;
-      const radius = 6;
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2;
+      const radius = 6 + Math.random() * 4;
       
-      rings.push(
-        <mesh key={`ring-${i}`} 
-              position={[
-                Math.cos(angle) * radius,
-                baseAltitude + 1,
-                Math.sin(angle) * radius
-              ]}
-              rotation={[0, 0, 0]}>
-          <torusGeometry args={[2, 0.3, 8, 32]} />
-          <meshStandardMaterial 
-            color="#00ff88" 
-            emissive="#00ff88" 
-            emissiveIntensity={0.3}
-          />
-        </mesh>
+      crosses.push(
+        <group key={`crystal-cross-${i}`} 
+               position={[
+                 Math.cos(angle) * radius,
+                 baseAltitude + 2,
+                 Math.sin(angle) * radius
+               ]}
+               rotation={[0, angle, 0]}>
+          {/* X-shaped crystal structure */}
+          <mesh position={[0, 0, 0]} rotation={[0, 0, Math.PI/4]}>
+            <boxGeometry args={[4, 0.5, 0.5]} />
+            <meshStandardMaterial 
+              color="#87ceeb" 
+              transparent 
+              opacity={0.7}
+              emissive="#ffffff"
+              emissiveIntensity={0.2}
+            />
+          </mesh>
+          <mesh position={[0, 0, 0]} rotation={[Math.PI/4, 0, 0]}>
+            <boxGeometry args={[0.5, 4, 0.5]} />
+            <meshStandardMaterial 
+              color="#87ceeb" 
+              transparent 
+              opacity={0.7}
+              emissive="#ffffff"
+              emissiveIntensity={0.2}
+            />
+          </mesh>
+          <mesh position={[0, 0, 0]} rotation={[0, Math.PI/4, 0]}>
+            <boxGeometry args={[0.5, 0.5, 4]} />
+            <meshStandardMaterial 
+              color="#87ceeb" 
+              transparent 
+              opacity={0.7}
+              emissive="#ffffff"
+              emissiveIntensity={0.2}
+            />
+          </mesh>
+          {/* Crystal light scattering */}
+          <pointLight color="#ffffff" intensity={0.5} distance={15} />
+        </group>
       );
     }
     
-    return rings;
+    return crosses;
   };
 
-  // Layer 4 - Minimal Grid Pattern
-  const renderMinimalGridPattern = (baseAltitude: number) => {
+  // Layer 4 - Grid Circuit Sink
+  const renderGridCircuitSink = (baseAltitude: number) => {
     const gridElements = [];
+    const gridSize = 8;
+    const cellSize = 2;
     
-    for (let x = -6; x <= 6; x += 3) {
-      for (let z = -6; z <= 6; z += 3) {
-        if (x !== 0 || z !== 0) { // Skip center
+    for (let x = -gridSize; x <= gridSize; x += cellSize) {
+      for (let z = -gridSize; z <= gridSize; z += cellSize) {
+        if (Math.random() > 0.3) { // Create gaps
+          const glowIntensity = Math.sin(timeRef.current * 2 + x + z) * 0.3 + 0.7;
+          
           gridElements.push(
             <mesh key={`grid-${x}-${z}`} 
-                  position={[x, baseAltitude, z]}>
-              <boxGeometry args={[1.5, 0.2, 1.5]} />
+                  position={[x, baseAltitude - 0.5, z]}>
+              <boxGeometry args={[cellSize * 0.8, 0.2, cellSize * 0.8]} />
               <meshStandardMaterial 
                 color="#ffaa00" 
                 emissive="#ffaa00" 
-                emissiveIntensity={0.4}
+                emissiveIntensity={glowIntensity * 0.4}
+              />
+            </mesh>
+          );
+          
+          // Glowing underlines
+          gridElements.push(
+            <mesh key={`glow-${x}-${z}`} 
+                  position={[x, baseAltitude - 0.8, z]}>
+              <boxGeometry args={[cellSize, 0.1, cellSize]} />
+              <meshStandardMaterial 
+                color="#ffffff" 
+                emissive="#ffaa00" 
+                emissiveIntensity={glowIntensity * 0.6}
+                transparent
+                opacity={0.8}
               />
             </mesh>
           );
@@ -95,195 +146,304 @@ export const ScifiLayerEnvironments: React.FC = () => {
     return gridElements;
   };
 
-  // Layer 5 - Clean Pillar Formation
-  const renderCleanPillarFormation = (baseAltitude: number) => {
+  // Layer 5 - Concentric Ring Fins
+  const renderConcentricRingFins = (baseAltitude: number) => {
+    const rings = [];
+    const ringCount = 4;
+    
+    for (let i = 0; i < ringCount; i++) {
+      const radius = 4 + i * 2;
+      const rotationSpeed = 0.2 + i * 0.1;
+      const rotation = timeRef.current * rotationSpeed;
+      
+      rings.push(
+        <mesh key={`ring-${i}`} 
+              position={[0, baseAltitude + i * 0.5, 0]}
+              rotation={[0, rotation, 0]}>
+          <torusGeometry args={[radius, 0.3, 8, 32]} />
+          <meshStandardMaterial 
+            color="#00ff88" 
+            emissive="#00ff88" 
+            emissiveIntensity={0.3}
+          />
+        </mesh>
+      );
+      
+      // Particle burst on middle ring
+      if (i === 2 && Math.sin(timeRef.current * 2) > 0.8) {
+        for (let p = 0; p < 8; p++) {
+          const particleAngle = (p / 8) * Math.PI * 2;
+          rings.push(
+            <mesh key={`particle-${p}`} 
+                  position={[
+                    Math.cos(particleAngle) * radius,
+                    baseAltitude + i * 0.5,
+                    Math.sin(particleAngle) * radius
+                  ]}>
+              <sphereGeometry args={[0.1]} />
+              <meshStandardMaterial 
+                color="#ffffff" 
+                emissive="#ffffff" 
+                emissiveIntensity={0.8}
+              />
+            </mesh>
+          );
+        }
+      }
+    }
+    
+    return rings;
+  };
+
+  // Layer 6 - Tri-Pillar Field
+  const renderTriPillarField = (baseAltitude: number) => {
     const pillars = [];
     
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const radius = 7;
+    for (let i = 0; i < 20; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 12;
+      const heightCycle = Math.sin(timeRef.current * 0.5 + i) * 2 + 3;
+      const glowIntensity = Math.sin(timeRef.current * 0.5 + i) * 0.3 + 0.7;
       
       pillars.push(
         <mesh key={`pillar-${i}`} 
               position={[
                 Math.cos(angle) * radius,
-                baseAltitude + 2,
+                baseAltitude + heightCycle,
                 Math.sin(angle) * radius
               ]}>
-          <cylinderGeometry args={[0.4, 0.4, 4]} />
+          {/* Triangular prism */}
+          <cylinderGeometry args={[0, 0.5, heightCycle * 2, 3]} />
           <meshStandardMaterial 
             color="#9370db" 
             emissive="#9370db" 
-            emissiveIntensity={0.3}
+            emissiveIntensity={glowIntensity * 0.4}
           />
         </mesh>
+      );
+      
+      // Spotlight from above
+      pillars.push(
+        <spotLight key={`spot-${i}`} 
+                   position={[
+                     Math.cos(angle) * radius,
+                     baseAltitude + heightCycle + 5,
+                     Math.sin(angle) * radius
+                   ]}
+                   target-position={[
+                     Math.cos(angle) * radius,
+                     baseAltitude,
+                     Math.sin(angle) * radius
+                   ]}
+                   color="#ffffff"
+                   intensity={0.3}
+                   distance={10}
+                   angle={Math.PI / 6} />
       );
     }
     
     return pillars;
   };
 
-  // Layer 6 - Simple Orbital Spheres
-  const renderSimpleOrbitalSpheres = (baseAltitude: number) => {
-    const spheres = [];
+  // Layer 7 - Spiral Circuit Core
+  const renderSpiralCircuitCore = (baseAltitude: number) => {
+    const spiralElements = [];
+    const spiralTurns = 4;
+    const spiralRadius = 8;
     
-    for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2;
-      const radius = 8;
+    // Create spiral path
+    for (let i = 0; i < spiralTurns * 20; i++) {
+      const t = i / (spiralTurns * 20);
+      const angle = t * spiralTurns * Math.PI * 2;
+      const radius = spiralRadius * (1 - t * 0.5);
+      const height = t * 6;
       
-      spheres.push(
-        <mesh key={`sphere-${i}`} 
+      spiralElements.push(
+        <mesh key={`spiral-${i}`} 
+              position={[
+                Math.cos(angle) * radius,
+                baseAltitude + height,
+                Math.sin(angle) * radius
+              ]}>
+          <sphereGeometry args={[0.2]} />
+          <meshStandardMaterial 
+            color="#00ffff" 
+            emissive="#00ffff" 
+            emissiveIntensity={0.8}
+          />
+        </mesh>
+      );
+    }
+    
+    // Moving electron
+    const electronT = (timeRef.current * 0.2) % 1;
+    const electronAngle = electronT * spiralTurns * Math.PI * 2;
+    const electronRadius = spiralRadius * (1 - electronT * 0.5);
+    const electronHeight = electronT * 6;
+    
+    spiralElements.push(
+      <mesh key="electron" 
+            position={[
+              Math.cos(electronAngle) * electronRadius,
+              baseAltitude + electronHeight,
+              Math.sin(electronAngle) * electronRadius
+            ]}>
+        <sphereGeometry args={[0.3]} />
+        <meshStandardMaterial 
+          color="#ffffff" 
+          emissive="#ffffff" 
+          emissiveIntensity={1.0}
+        />
+      </mesh>
+    );
+    
+    return spiralElements;
+  };
+
+  // Layer 8 - Rhombus Nexus Web
+  const renderRhombusNexusWeb = (baseAltitude: number) => {
+    const webElements = [];
+    const rhombusCount = 8;
+    
+    // Create rhombus panels
+    for (let i = 0; i < rhombusCount; i++) {
+      const angle = (i / rhombusCount) * Math.PI * 2;
+      const radius = 6;
+      
+      webElements.push(
+        <mesh key={`rhombus-${i}`} 
               position={[
                 Math.cos(angle) * radius,
                 baseAltitude + 1,
                 Math.sin(angle) * radius
-              ]}>
-          <sphereGeometry args={[0.8]} />
+              ]}
+              rotation={[0, angle, Math.PI / 4]}>
+          <boxGeometry args={[2, 2, 0.1]} />
           <meshStandardMaterial 
-            color="#00ffff" 
-            emissive="#00ffff" 
+            color="#ff1493" 
+            emissive="#ff1493" 
+            emissiveIntensity={0.3}
+            transparent
+            opacity={0.8}
+          />
+        </mesh>
+      );
+      
+      // Connecting beams to center
+      const beamLength = radius;
+      webElements.push(
+        <mesh key={`beam-${i}`} 
+              position={[
+                Math.cos(angle) * radius * 0.5,
+                baseAltitude + 1,
+                Math.sin(angle) * radius * 0.5
+              ]}
+              rotation={[0, angle, 0]}>
+          <cylinderGeometry args={[0.05, 0.05, beamLength]} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            emissive="#ff1493" 
             emissiveIntensity={0.5}
           />
         </mesh>
       );
     }
     
-    return spheres;
+    return webElements;
   };
 
-  // Layer 7 - Elegant Cross Pattern
-  const renderElegantCrossPattern = (baseAltitude: number) => {
-    const crosses = [];
+  // Layer 9 - Quantum Fracture
+  const renderQuantumFracture = (baseAltitude: number) => {
+    const fractures = [];
     
-    // Create cross formation
-    for (let i = 0; i < 5; i++) {
-      const offset = (i - 2) * 3;
+    for (let i = 0; i < 15; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = Math.random() * 10;
+      const jitterX = Math.sin(timeRef.current * 3 + i) * 0.3;
+      const jitterY = Math.cos(timeRef.current * 2.5 + i) * 0.3;
+      const jitterZ = Math.sin(timeRef.current * 2.8 + i) * 0.3;
+      const fade = Math.sin(timeRef.current * 1.5 + i) * 0.3 + 0.7;
       
-      // Horizontal bar
-      crosses.push(
-        <mesh key={`h-${i}`} position={[offset, baseAltitude + 1, 0]}>
-          <boxGeometry args={[2.5, 0.3, 0.3]} />
-          <meshStandardMaterial 
-            color="#ff1493" 
-            emissive="#ff1493" 
-            emissiveIntensity={0.4}
-          />
-        </mesh>
-      );
-      
-      // Vertical bar
-      crosses.push(
-        <mesh key={`v-${i}`} position={[0, baseAltitude + 1, offset]}>
-          <boxGeometry args={[0.3, 0.3, 2.5]} />
-          <meshStandardMaterial 
-            color="#ff1493" 
-            emissive="#ff1493" 
-            emissiveIntensity={0.4}
-          />
-        </mesh>
-      );
-    }
-    
-    return crosses;
-  };
-
-  // Layer 8 - Minimal Floating Cubes
-  const renderMinimalFloatingCubes = (baseAltitude: number) => {
-    const cubes = [];
-    
-    for (let i = 0; i < 9; i++) {
-      const x = ((i % 3) - 1) * 5;
-      const z = (Math.floor(i / 3) - 1) * 5;
-      const bobHeight = 0; // Static positioning
-      
-      if (x !== 0 || z !== 0) { // Skip center
-        cubes.push(
-          <mesh key={`cube-${i}`} 
-                position={[x, baseAltitude + 1 + bobHeight, z]}>
-            <boxGeometry args={[1.2, 1.2, 1.2]} />
-            <meshStandardMaterial 
-              color="#ff69b4" 
-              emissive="#ff69b4" 
-              emissiveIntensity={0.3}
-              transparent 
-              opacity={0.8}
-            />
-          </mesh>
-        );
-      }
-    }
-    
-    return cubes;
-  };
-
-  // Layer 9 - Simple Tetrahedron Ring
-  const renderSimpleTetrahedronRing = (baseAltitude: number) => {
-    const tetrahedrons = [];
-    
-    for (let i = 0; i < 7; i++) {
-      const angle = (i / 7) * Math.PI * 2;
-      const radius = 6;
-      
-      tetrahedrons.push(
-        <mesh key={`tetra-${i}`} 
+      fractures.push(
+        <mesh key={`fracture-${i}`} 
               position={[
-                Math.cos(angle) * radius,
-                baseAltitude + 1,
-                Math.sin(angle) * radius
+                Math.cos(angle) * radius + jitterX,
+                baseAltitude + 1 + jitterY,
+                Math.sin(angle) * radius + jitterZ
               ]}
-              rotation={[0, angle, 0]}>
-          <tetrahedronGeometry args={[1]} />
+              rotation={[
+                timeRef.current * 0.1 + i,
+                timeRef.current * 0.15 + i,
+                timeRef.current * 0.05 + i
+              ]}>
+          <octahedronGeometry args={[0.8]} />
           <meshStandardMaterial 
-            color="#32cd32" 
-            emissive="#32cd32" 
-            emissiveIntensity={0.4}
+            color="#ff69b4" 
+            transparent 
+            opacity={fade * 0.6}
+            emissive="#ff69b4"
+            emissiveIntensity={0.2}
           />
         </mesh>
       );
     }
     
-    return tetrahedrons;
+    return fractures;
   };
 
-  // Layer 10 - Central Obelisk
-  const renderCentralObelisk = (baseAltitude: number) => {
-    const elements = [];
+  // Layer 10 - Collapse Spiral Core
+  const renderCollapseSpiralCore = (baseAltitude: number) => {
+    const coreElements = [];
+    const collapseScale = Math.sin(timeRef.current * 0.5) * 0.3 + 0.7;
     
-    // Central obelisk
-    elements.push(
-      <mesh key="obelisk" position={[0, baseAltitude + 3, 0]}>
-        <cylinderGeometry args={[0.5, 1, 6, 4]} />
+    // Central black torus
+    coreElements.push(
+      <mesh key="central-torus" 
+            position={[0, baseAltitude + 2, 0]}
+            scale={[collapseScale, collapseScale, collapseScale]}>
+        <torusGeometry args={[3, 1, 8, 32]} />
         <meshStandardMaterial 
-          color="#8b0000" 
-          emissive="#ff4500" 
-          emissiveIntensity={0.5}
+          color="#000000" 
+          emissive="#8b0000" 
+          emissiveIntensity={0.8}
         />
       </mesh>
     );
     
-    // Orbiting satellites
-    for (let i = 0; i < 4; i++) {
-      const angle = (i / 4) * Math.PI * 2;
-      const radius = 5;
+    // Rotating panels being drawn inward
+    for (let i = 0; i < 8; i++) {
+      const angle = (i / 8) * Math.PI * 2 + timeRef.current * 0.3;
+      const radius = 8 - Math.sin(timeRef.current * 0.5) * 2;
+      const inwardPull = Math.sin(timeRef.current * 0.8) * 0.5;
       
-      elements.push(
-        <mesh key={`satellite-${i}`} 
+      coreElements.push(
+        <mesh key={`panel-${i}`} 
               position={[
-                Math.cos(angle) * radius,
+                Math.cos(angle) * (radius - inwardPull),
                 baseAltitude + 2,
-                Math.sin(angle) * radius
-              ]}>
-          <octahedronGeometry args={[0.5]} />
+                Math.sin(angle) * (radius - inwardPull)
+              ]}
+              rotation={[0, angle, Math.sin(timeRef.current) * 0.2]}>
+          <boxGeometry args={[1.5, 0.1, 3]} />
           <meshStandardMaterial 
-            color="#ffa500" 
-            emissive="#ffa500" 
+            color="#8b0000" 
+            emissive="#ff4500" 
             emissiveIntensity={0.6}
           />
         </mesh>
       );
     }
     
-    return elements;
+    // Central red-orange glow
+    coreElements.push(
+      <pointLight key="core-light" 
+                  position={[0, baseAltitude + 2, 0]}
+                  color="#ff4500"
+                  intensity={2}
+                  distance={20} />
+    );
+    
+    return coreElements;
   };
 
   // Background geometry renderer for each layer
@@ -291,11 +451,11 @@ export const ScifiLayerEnvironments: React.FC = () => {
     const backgroundElements: JSX.Element[] = [];
 
     switch (layerId) {
-      case 2: // Simple floating debris
-        for (let i = 0; i < 8; i++) {
+      case 2: // Debris Field - Floating metal cubes and broken panels
+        for (let i = 0; i < 12; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const radius = 20 + Math.random() * 10;
-          const height = Math.random() * 5 - 2.5;
+          const radius = 20 + Math.random() * 15;
+          const height = Math.random() * 10 - 5;
           backgroundElements.push(
             <mesh key={`debris-bg-${i}`} 
                   position={[
@@ -303,126 +463,199 @@ export const ScifiLayerEnvironments: React.FC = () => {
                     height,
                     Math.sin(angle) * radius
                   ]}
-                  rotation={[0, 0, 0]}>
-              <boxGeometry args={[0.8, 0.8, 0.8]} />
-              <meshStandardMaterial color="#666666" />
-            </mesh>
-          );
-        }
-        break;
-
-      case 3: // Distant crystals
-        for (let i = 0; i < 5; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const radius = 25 + Math.random() * 10;
-          const height = Math.random() * 4 - 2;
-          backgroundElements.push(
-            <mesh key={`crystal-bg-${i}`} 
-                  position={[
-                    Math.cos(angle) * radius,
-                    height,
-                    Math.sin(angle) * radius
+                  rotation={[
+                    timeRef.current * 0.1 + i,
+                    timeRef.current * 0.15 + i,
+                    timeRef.current * 0.05 + i
                   ]}>
-              <octahedronGeometry args={[1]} />
-              <meshStandardMaterial 
-                color="#a855f7" 
-                transparent 
-                opacity={0.6}
-                emissive="#c084fc"
-                emissiveIntensity={0.2}
-              />
+              <boxGeometry args={[1 + Math.random(), 0.5 + Math.random(), 2 + Math.random()]} />
+              <meshStandardMaterial color="#666666" wireframe={Math.random() > 0.5} />
             </mesh>
           );
         }
         break;
 
-      case 4: // Floating orange cubes
-        for (let i = 0; i < 10; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const radius = 18 + Math.random() * 15;
-          const height = Math.random() * 8 - 4;
-          backgroundElements.push(
-            <mesh key={`cube-bg-${i}`} 
-                  position={[
-                    Math.cos(angle) * radius,
-                    height,
-                    Math.sin(angle) * radius
-                  ]}>
-              <boxGeometry args={[0.6, 0.6, 0.6]} />
-              <meshStandardMaterial 
-                color="#ff8800" 
-                emissive="#ff8800" 
-                emissiveIntensity={0.2}
-              />
-            </mesh>
-          );
-        }
-        break;
-
-      case 5: // Purple diamond scatter
-        for (let i = 0; i < 12; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const radius = 20 + Math.random() * 12;
-          const height = Math.random() * 6 - 3;
-          backgroundElements.push(
-            <mesh key={`diamond-bg-${i}`} 
-                  position={[
-                    Math.cos(angle) * radius,
-                    height,
-                    Math.sin(angle) * radius
-                  ]}
-                  rotation={[0, 0, 0]}>
-              <octahedronGeometry args={[0.8]} />
-              <meshStandardMaterial 
-                color="#9370db" 
-                emissive="#9370db" 
-                emissiveIntensity={0.3}
-              />
-            </mesh>
-          );
-        }
-        break;
-
-      case 6: // Cyan floating spheres
+      case 3: // Crystal Drift - Large faceted crystal shards
         for (let i = 0; i < 8; i++) {
           const angle = Math.random() * Math.PI * 2;
-          const radius = 22 + Math.random() * 10;
-          const height = Math.random() * 4 - 2;
+          const radius = 25 + Math.random() * 10;
+          const height = Math.sin(timeRef.current * 0.3 + i) * 3;
           backgroundElements.push(
-            <mesh key={`sphere-bg-${i}`} 
-                  position={[
-                    Math.cos(angle) * radius,
-                    height,
-                    Math.sin(angle) * radius
-                  ]}>
-              <sphereGeometry args={[0.5]} />
-              <meshStandardMaterial 
-                color="#00ffff" 
-                emissive="#00ffff" 
-                emissiveIntensity={0.4}
-              />
-            </mesh>
+            <group key={`crystal-bg-${i}`} 
+                   position={[
+                     Math.cos(angle) * radius,
+                     height,
+                     Math.sin(angle) * radius
+                   ]}
+                   rotation={[0, timeRef.current * 0.1 + i, 0]}>
+              <mesh>
+                <octahedronGeometry args={[2 + Math.random() * 2]} />
+                <meshStandardMaterial 
+                  color="#a855f7" 
+                  transparent 
+                  opacity={0.6}
+                  emissive="#c084fc"
+                  emissiveIntensity={0.2}
+                />
+              </mesh>
+              {/* Orbiting glow sphere */}
+              <mesh position={[4, 0, 0]} rotation={[0, timeRef.current * 0.5, 0]}>
+                <sphereGeometry args={[0.3]} />
+                <meshStandardMaterial 
+                  color="#ffffff" 
+                  emissive="#ffffff" 
+                  emissiveIntensity={0.8}
+                />
+              </mesh>
+            </group>
           );
         }
         break;
 
-      case 7: // Pink scattered triangles
-        for (let i = 0; i < 15; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const radius = 16 + Math.random() * 18;
-          const height = Math.random() * 10 - 5;
+      case 4: // Arc Conduits - Floating U and L-shaped tubes
+        for (let i = 0; i < 10; i++) {
+          const drift = timeRef.current * 0.2 + i;
+          const x = Math.sin(drift) * 30;
+          const z = (i - 5) * 8;
+          const glowFlicker = Math.sin(timeRef.current * 4 + i) * 0.3 + 0.7;
           backgroundElements.push(
-            <mesh key={`tri-bg-${i}`} 
+            <group key={`conduit-bg-${i}`} position={[x, Math.sin(drift) * 2, z]}>
+              {/* L-shaped conduit */}
+              <mesh position={[0, 0, 0]}>
+                <cylinderGeometry args={[0.3, 0.3, 4]} />
+                <meshStandardMaterial color="#333333" />
+              </mesh>
+              <mesh position={[2, 0, 0]} rotation={[0, 0, Math.PI/2]}>
+                <cylinderGeometry args={[0.3, 0.3, 4]} />
+                <meshStandardMaterial color="#333333" />
+              </mesh>
+              {/* Inner glow */}
+              <mesh position={[0, 0, 0]}>
+                <cylinderGeometry args={[0.2, 0.2, 4.2]} />
+                <meshStandardMaterial 
+                  color="#00aaff" 
+                  emissive="#00aaff" 
+                  emissiveIntensity={glowFlicker}
+                />
+              </mesh>
+            </group>
+          );
+        }
+        break;
+
+      case 5: // Reactor Bones - Ribcage-like arc structures
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          const breathe = Math.sin(timeRef.current * 0.8) * 0.2 + 1;
+          backgroundElements.push(
+            <group key={`rib-bg-${i}`} 
+                   position={[
+                     Math.cos(angle) * 25,
+                     0,
+                     Math.sin(angle) * 25
+                   ]}
+                   scale={[breathe, breathe, breathe]}
+                   rotation={[0, angle, 0]}>
+              {/* Curved rib structure */}
+              <mesh position={[0, 3, 0]} rotation={[0, 0, Math.PI/4]}>
+                <torusGeometry args={[4, 0.3, 8, 16]} />
+                <meshStandardMaterial color="#8b0000" />
+              </mesh>
+              <mesh position={[0, -3, 0]} rotation={[0, 0, -Math.PI/4]}>
+                <torusGeometry args={[4, 0.3, 8, 16]} />
+                <meshStandardMaterial color="#2f2f2f" />
+              </mesh>
+            </group>
+          );
+        }
+        break;
+
+      case 6: // Grid Rain - Falling pixel squares
+        for (let stream = 0; stream < 15; stream++) {
+          const x = (stream - 7) * 4;
+          const z = Math.random() * 40 - 20;
+          for (let drop = 0; drop < 8; drop++) {
+            const fallSpeed = 0.5 + Math.random() * 0.3;
+            const y = ((timeRef.current * fallSpeed + drop * 3) % 20) - 10;
+            backgroundElements.push(
+              <mesh key={`rain-${stream}-${drop}`} 
+                    position={[x, y, z]}>
+                <boxGeometry args={[0.3, 0.3, 0.3]} />
+                <meshStandardMaterial 
+                  color="#00ff00" 
+                  emissive="#00ff00" 
+                  emissiveIntensity={0.6}
+                />
+              </mesh>
+            );
+          }
+        }
+        break;
+
+      case 7: // Bio-Tendril Space - Curving root tubes
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const waveOffset = Math.sin(timeRef.current * 0.5 + i) * 2;
+          backgroundElements.push(
+            <group key={`tendril-bg-${i}`} 
+                   position={[
+                     Math.cos(angle) * 20,
+                     waveOffset,
+                     Math.sin(angle) * 20
+                   ]}>
+              {/* Root tube segments */}
+              {Array.from({length: 6}).map((_, segment) => {
+                const segmentWave = Math.sin(timeRef.current * 0.3 + i + segment) * 1;
+                return (
+                  <mesh key={segment} 
+                        position={[0, segment * 2 + segmentWave, 0]}>
+                    <cylinderGeometry args={[0.4 - segment * 0.05, 0.4 - (segment + 1) * 0.05, 2]} />
+                    <meshStandardMaterial 
+                      color="#00ffaa" 
+                      emissive="#004d40" 
+                      emissiveIntensity={0.2}
+                    />
+                  </mesh>
+                );
+              })}
+              {/* Node bulb at end */}
+              <mesh position={[0, 12 + waveOffset, 0]}>
+                <sphereGeometry args={[0.8]} />
+                <meshStandardMaterial 
+                  color="#40e0d0" 
+                  emissive="#40e0d0" 
+                  emissiveIntensity={0.4}
+                />
+              </mesh>
+            </group>
+          );
+        }
+        break;
+
+      case 9: // Shatter Fracture - Irregular floating triangles
+        for (let i = 0; i < 20; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = 15 + Math.random() * 20;
+          const jitter = Math.sin(timeRef.current * 2 + i) * 0.3;
+          const flicker = Math.sin(timeRef.current * 3 + i) > 0 ? 0.8 : 0.3;
+          backgroundElements.push(
+            <mesh key={`shatter-bg-${i}`} 
                   position={[
-                    Math.cos(angle) * radius,
-                    height,
-                    Math.sin(angle) * radius
+                    Math.cos(angle) * radius + jitter,
+                    Math.random() * 10 - 5,
+                    Math.sin(angle) * radius + jitter
                   ]}
-                  rotation={[0, 0, 0]}>
-              <coneGeometry args={[0.4, 0.1, 3]} />
+                  rotation={[
+                    timeRef.current * 0.2 + i,
+                    timeRef.current * 0.3 + i,
+                    timeRef.current * 0.1 + i
+                  ]}>
+              <coneGeometry args={[1, 0.1, 3]} />
               <meshStandardMaterial 
                 color="#ff1493" 
-                emissive="#ff1493" 
+                transparent 
+                opacity={flicker}
+                emissive="#ff69b4"
                 emissiveIntensity={0.3}
               />
             </mesh>
@@ -430,81 +663,43 @@ export const ScifiLayerEnvironments: React.FC = () => {
         }
         break;
 
-      case 8: // Multi-colored geometric mix
-        for (let i = 0; i < 14; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const radius = 19 + Math.random() * 14;
-          const height = Math.random() * 7 - 3.5;
-          const colors = ['#ff69b4', '#00ff88', '#ffaa00', '#40e0d0'];
-          const color = colors[i % 4];
+      case 10: // Collapse Core - Angular slabs spiraling inward
+        for (let i = 0; i < 12; i++) {
+          const spiralAngle = (i / 12) * Math.PI * 2 + timeRef.current * 0.1;
+          const spiralRadius = 30 - Math.sin(timeRef.current * 0.3) * 5;
+          const inwardPull = Math.sin(timeRef.current * 0.2) * 2;
           backgroundElements.push(
-            <mesh key={`mix-bg-${i}`} 
+            <mesh key={`collapse-bg-${i}`} 
                   position={[
-                    Math.cos(angle) * radius,
-                    height,
-                    Math.sin(angle) * radius
-                  ]}>
-              <dodecahedronGeometry args={[0.6]} />
+                    Math.cos(spiralAngle) * (spiralRadius - inwardPull),
+                    Math.sin(timeRef.current * 0.1 + i) * 3,
+                    Math.sin(spiralAngle) * (spiralRadius - inwardPull)
+                  ]}
+                  rotation={[0, spiralAngle, Math.sin(timeRef.current + i) * 0.2]}>
+              <boxGeometry args={[2, 0.5, 4]} />
               <meshStandardMaterial 
-                color={color} 
-                emissive={color} 
+                color="#1a1a1a" 
+                emissive="#ff4500" 
                 emissiveIntensity={0.2}
               />
             </mesh>
           );
         }
+        // Central singularity orb
+        backgroundElements.push(
+          <mesh key="singularity-orb" position={[0, 0, 0]}>
+            <sphereGeometry args={[1]} />
+            <meshStandardMaterial 
+              color="#000000" 
+              emissive="#ff4500" 
+              emissiveIntensity={0.8}
+            />
+          </mesh>
+        );
         break;
-
-      case 9: // Green tetrahedron field
-        for (let i = 0; i < 11; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const radius = 17 + Math.random() * 16;
-          const height = Math.random() * 9 - 4.5;
-          backgroundElements.push(
-            <mesh key={`tetra-bg-${i}`} 
-                  position={[
-                    Math.cos(angle) * radius,
-                    height,
-                    Math.sin(angle) * radius
-                  ]}
-                  rotation={[0, 0, 0]}>
-              <tetrahedronGeometry args={[0.7]} />
-              <meshStandardMaterial 
-                color="#32cd32" 
-                emissive="#32cd32" 
-                emissiveIntensity={0.35}
-              />
-            </mesh>
-          );
-        }
-        break;
-
-      case 10: // Dark red/orange fragments
-        for (let i = 0; i < 9; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const radius = 21 + Math.random() * 12;
-          const height = Math.random() * 5 - 2.5;
-          backgroundElements.push(
-            <mesh key={`frag-bg-${i}`} 
-                  position={[
-                    Math.cos(angle) * radius,
-                    height,
-                    Math.sin(angle) * radius
-                  ]}
-                  rotation={[0, 0, 0]}>
-              <boxGeometry args={[1.2, 0.3, 0.8]} />
-              <meshStandardMaterial 
-                color="#8b0000" 
-                emissive="#ff4500" 
-                emissiveIntensity={0.25}
-              />
-            </mesh>
-          );
-        }
-        break;
-
+      
       default:
-        // No background elements for layer 1 and 3
+        // No background elements for other layers
         break;
     }
 
@@ -513,51 +708,50 @@ export const ScifiLayerEnvironments: React.FC = () => {
 
   // Main platform renderer
   const renderLayerPlatform = (layerId: number, baseAltitude: number) => {
-    // Base platform with teal color matching the screenshot
+    // Base platform for cannon mounting
     const basePlatform = (
-      <group key="base-platform">
-        {/* Main hexagonal platform surface */}
-        <mesh position={[0, baseAltitude - 1, 0]}>
-          <cylinderGeometry args={[15, 15, 0.8, 6]} />
-          <meshStandardMaterial 
-            color="#4fd1c7" 
-            emissive="#4fd1c7" 
-            emissiveIntensity={0.1}
-          />
-        </mesh>
-        
-        {/* Hexagonal platform rim */}
-        <mesh position={[0, baseAltitude - 0.6, 0]}>
-          <cylinderGeometry args={[15.2, 14.8, 0.2, 6]} />
-          <meshStandardMaterial 
-            color="#2a9d8f" 
-            emissive="#2a9d8f" 
-            emissiveIntensity={0.05}
-          />
-        </mesh>
-        
-        {/* Dark cannon mount points */}
-        {Array.from({length: 8}).map((_, i) => {
-          const angle = (i / 8) * Math.PI * 2;
-          const radius = 10;
-          return (
-            <mesh key={`mount-${i}`} 
-                  position={[
-                    Math.cos(angle) * radius,
-                    baseAltitude - 0.3,
-                    Math.sin(angle) * radius
-                  ]}>
-              <cylinderGeometry args={[1.5, 1.5, 0.4]} />
-              <meshStandardMaterial color="#2c3e50" />
-            </mesh>
-          );
-        })}
-      </group>
+      <mesh key="base-platform" position={[0, baseAltitude - 1, 0]}>
+        <cylinderGeometry args={[15, 15, 0.5]} />
+        <meshStandardMaterial color="#333333" transparent opacity={0.3} />
+      </mesh>
     );
 
-    // COMPLETELY DISABLE ALL LAYER GEOMETRY TO STOP SPINNING
-    let layerGeometry = []; // Empty - no geometry rendered
-    
+    let layerGeometry;
+    switch (layerId) {
+      case 1:
+        layerGeometry = [];
+        break;
+      case 2:
+        layerGeometry = renderFragmentedPlates(baseAltitude);
+        break;
+      case 3:
+        layerGeometry = renderCrystalCrossArray(baseAltitude);
+        break;
+      case 4:
+        layerGeometry = renderGridCircuitSink(baseAltitude);
+        break;
+      case 5:
+        layerGeometry = renderConcentricRingFins(baseAltitude);
+        break;
+      case 6:
+        layerGeometry = renderTriPillarField(baseAltitude);
+        break;
+      case 7:
+        layerGeometry = renderSpiralCircuitCore(baseAltitude);
+        break;
+      case 8:
+        layerGeometry = renderRhombusNexusWeb(baseAltitude);
+        break;
+      case 9:
+        layerGeometry = renderQuantumFracture(baseAltitude);
+        break;
+      case 10:
+        layerGeometry = renderCollapseSpiralCore(baseAltitude);
+        break;
+      default:
+        layerGeometry = [];
+    }
+
     return [basePlatform, ...layerGeometry];
   };
 
@@ -565,8 +759,8 @@ export const ScifiLayerEnvironments: React.FC = () => {
   const renderLayer = (layerId: number) => {
     if (layerId < 1 || layerId > 10) return null;
 
-    // Space layers 20 units apart starting from layer 1 at Y=20
-    const baseAltitude = layerId * 20;
+    // Space layers 50 units apart for easy navigation
+    const baseAltitude = layerId * 50;
     const platformElements = renderLayerPlatform(layerId, baseAltitude);
     const backgroundElements = renderLayerBackground(layerId, baseAltitude);
 

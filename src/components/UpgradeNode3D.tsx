@@ -65,9 +65,9 @@ export const UpgradeNode3D: React.FC<UpgradeNode3DProps> = React.memo(({
       
       // Rotation based on state - reduced speed
       if (isPurchased) {
-        // meshRef.current.rotation.y += 0.005; // DISABLED - static rotation
+        meshRef.current.rotation.y += 0.005;
       } else if (isUnlocked && canAfford) {
-        // meshRef.current.rotation.y += 0.01; // DISABLED - static rotation
+        meshRef.current.rotation.y += 0.01;
       }
     }
 
