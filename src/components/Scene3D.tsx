@@ -239,10 +239,10 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
               {/* Enhanced fog for atmospheric depth and distant object fadeout */}
               <fog attach="fog" args={['#0a0a1a', 30, 200]} />
               
-              <FloatingUpgradeSystem
-                energyCredits={gameState.energyCredits || 0}
-                onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
-                purchasedUpgrades={gameState.purchasedUpgrades || []}
+              <ScifiUpgradeGLBSystem
+                gameState={gameState}
+                onUpgradeClick={onUpgradeClick}
+                checkUpgradeUnlocked={checkUpgradeUnlocked}
               />
               <CannonPlatformSystem
                 cannonCount={gameState.cannonCount || 1}
