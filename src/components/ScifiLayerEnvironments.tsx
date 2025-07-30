@@ -759,8 +759,8 @@ export const ScifiLayerEnvironments: React.FC = () => {
   const renderLayer = (layerId: number) => {
     if (layerId < 1 || layerId > 10) return null;
 
-    // Space layers 1000 units apart as requested
-    const baseAltitude = layerId * 1000;
+    // Space layers 200 units apart for easier navigation
+    const baseAltitude = layerId * 200;
     const platformElements = renderLayerPlatform(layerId, baseAltitude);
     const backgroundElements = renderLayerBackground(layerId, baseAltitude);
 
