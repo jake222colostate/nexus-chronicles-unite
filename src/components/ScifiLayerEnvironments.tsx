@@ -194,7 +194,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
     for (let i = 0; i < 9; i++) {
       const x = ((i % 3) - 1) * 5;
       const z = (Math.floor(i / 3) - 1) * 5;
-      const bobHeight = Math.sin(timeRef.current * 0.5 + i) * 0.5;
+      const bobHeight = Math.sin(timeRef.current * 0.1 + i) * 0.3;
       
       if (x !== 0 || z !== 0) { // Skip center
         cubes.push(
@@ -350,12 +350,46 @@ export const ScifiLayerEnvironments: React.FC = () => {
 
   // Main platform renderer
   const renderLayerPlatform = (layerId: number, baseAltitude: number) => {
-    // Base platform for cannon mounting
+    // Base platform with teal color matching the screenshot
     const basePlatform = (
-      <mesh key="base-platform" position={[0, baseAltitude - 1, 0]}>
-        <cylinderGeometry args={[15, 15, 0.5]} />
-        <meshStandardMaterial color="#333333" transparent opacity={0.3} />
-      </mesh>
+      <group key="base-platform">
+        {/* Main platform surface */}
+        <mesh position={[0, baseAltitude - 1, 0]}>
+          <cylinderGeometry args={[15, 15, 0.8]} />
+          <meshStandardMaterial 
+            color="#4fd1c7" 
+            emissive="#4fd1c7" 
+            emissiveIntensity={0.1}
+          />
+        </mesh>
+        
+        {/* Platform rim */}
+        <mesh position={[0, baseAltitude - 0.6, 0]}>
+          <cylinderGeometry args={[15.2, 14.8, 0.2]} />
+          <meshStandardMaterial 
+            color="#2a9d8f" 
+            emissive="#2a9d8f" 
+            emissiveIntensity={0.05}
+          />
+        </mesh>
+        
+        {/* Dark cannon mount points */}
+        {Array.from({length: 8}).map((_, i) => {
+          const angle = (i / 8) * Math.PI * 2;
+          const radius = 10;
+          return (
+            <mesh key={`mount-${i}`} 
+                  position={[
+                    Math.cos(angle) * radius,
+                    baseAltitude - 0.3,
+                    Math.sin(angle) * radius
+                  ]}>
+              <cylinderGeometry args={[1.5, 1.5, 0.4]} />
+              <meshStandardMaterial color="#2c3e50" />
+            </mesh>
+          );
+        })}
+      </group>
     );
 
     let layerGeometry;
