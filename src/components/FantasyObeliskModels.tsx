@@ -23,15 +23,15 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
 }) => {
   const meshRef = useRef<Group>(null);
 
-  // Validate upgradeId
-  if (!upgradeId || upgradeId < 1) {
+  // Validate upgradeId (can be 0 since IDs are 0-based)
+  if (upgradeId < 0) {
     console.warn('FantasyObeliskModels: Invalid upgradeId:', upgradeId);
     return null;
   }
 
-  // Cycle through the 5 obelisk models based on upgrade ID
+  // Cycle through the 5 obelisk models based on upgrade ID (0-based)
   const getModelPath = (id: number) => {
-    const modelIndex = Math.floor((id - 1) / 5) % 5; // Which cycle of 5 we're in, mod 5
+    const modelIndex = Math.floor(id / 5) % 5; // Which cycle of 5 we're in, mod 5
     const models = [
       'assets/upgrades/LargeObelisk.glb',  // First obelisk (upgrade 5)
       'assets/upgrades/Lotus.glb',         // Second obelisk (upgrade 10)
@@ -57,7 +57,7 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
 
   // Get scale based on model type
   const getModelScale = (id: number): [number, number, number] => {
-    const modelIndex = Math.floor((id - 1) / 5) % 5;
+    const modelIndex = Math.floor(id / 5) % 5;
     const scales: [number, number, number][] = [
       [5.33, 5.33, 5.33], // LargeObelisk - original scale
       [3, 3, 3],          // Lotus
@@ -70,7 +70,7 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
 
   // Get vertical position offset for proper grounding
   const getPositionOffset = (id: number): [number, number, number] => {
-    const modelIndex = Math.floor((id - 1) / 5) % 5;
+    const modelIndex = Math.floor(id / 5) % 5;
     const offsets: [number, number, number][] = [
       [0, 5, 0],     // LargeObelisk - lifted position like before
       [0, 0, 0],     // Lotus - grounded
@@ -88,7 +88,7 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
   // Add gentle rotation for some models
   useFrame((state) => {
     if (meshRef.current && isUnlocked) {
-      const modelIndex = Math.floor((upgradeId - 1) / 5) % 5;
+      const modelIndex = Math.floor(upgradeId / 5) % 5;
       // Only rotate Lotus and Spiral models (indices 1 and 4)
       if (modelIndex === 1 || modelIndex === 4) {
         meshRef.current.rotation.y += 0.005;
