@@ -697,6 +697,10 @@ export const ScifiLayerEnvironments: React.FC = () => {
           </mesh>
         );
         break;
+      
+      default:
+        // No background elements for other layers
+        break;
     }
 
     return backgroundElements;
