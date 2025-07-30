@@ -56,7 +56,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
                 baseAltitude + 1,
                 Math.sin(angle) * radius
               ]}
-              rotation={[0, timeRef.current * 0.2, 0]}>
+              rotation={[0, timeRef.current * 0.05, 0]}>
           <torusGeometry args={[2, 0.3, 8, 32]} />
           <meshStandardMaterial 
             color="#00ff88" 
@@ -128,7 +128,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
     const spheres = [];
     
     for (let i = 0; i < 6; i++) {
-      const angle = (i / 6) * Math.PI * 2 + timeRef.current * 0.3;
+      const angle = (i / 6) * Math.PI * 2 + timeRef.current * 0.1;
       const radius = 8;
       
       spheres.push(
@@ -231,7 +231,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
                 baseAltitude + 1,
                 Math.sin(angle) * radius
               ]}
-              rotation={[timeRef.current * 0.1, angle, 0]}>
+              rotation={[timeRef.current * 0.03, angle, 0]}>
           <tetrahedronGeometry args={[1]} />
           <meshStandardMaterial 
             color="#32cd32" 
@@ -263,7 +263,7 @@ export const ScifiLayerEnvironments: React.FC = () => {
     
     // Orbiting satellites
     for (let i = 0; i < 4; i++) {
-      const angle = (i / 4) * Math.PI * 2 + timeRef.current * 0.2;
+      const angle = (i / 4) * Math.PI * 2 + timeRef.current * 0.08;
       const radius = 5;
       
       elements.push(
