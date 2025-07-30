@@ -51,7 +51,7 @@ export interface LayerDefinition {
   };
 }
 
-// Enhanced Layer System - Closer layers (every 200 units)
+// Ultra-close Layer System - Layers stacked right above each other (every 30 units)
 export const SCIFI_LAYERS: Record<number, LayerDefinition> = {
   1: {
     id: 1,
@@ -75,7 +75,7 @@ export const SCIFI_LAYERS: Record<number, LayerDefinition> = {
   2: {
     id: 2,
     name: "Debris Field",
-    altitudeThreshold: 200,
+    altitudeThreshold: 30, // Just 30 units up
     visual: {
       theme: "debris",
       color: "#8b5cf6",
@@ -94,7 +94,7 @@ export const SCIFI_LAYERS: Record<number, LayerDefinition> = {
   3: {
     id: 3,
     name: "Solar Wind Zone", 
-    altitudeThreshold: 400,
+    altitudeThreshold: 60, // Another 30 units
     visual: {
       theme: "solar",
       color: "#f59e0b",
@@ -114,7 +114,7 @@ export const SCIFI_LAYERS: Record<number, LayerDefinition> = {
   4: {
     id: 4,
     name: "Gravity Warped Zone",
-    altitudeThreshold: 600,
+    altitudeThreshold: 90, // Another 30 units
     visual: {
       theme: "gravity",
       color: "#ef4444",
@@ -139,7 +139,7 @@ export const SCIFI_LAYERS: Record<number, LayerDefinition> = {
   5: {
     id: 5,
     name: "Cosmic Radiation Belt",
-    altitudeThreshold: 800,
+    altitudeThreshold: 120, // Another 30 units
     visual: {
       theme: "radiation",
       color: "#10b981",
@@ -160,7 +160,7 @@ export const SCIFI_LAYERS: Record<number, LayerDefinition> = {
   6: {
     id: 6,
     name: "Void Nexus",
-    altitudeThreshold: 1000,
+    altitudeThreshold: 150, // Another 30 units
     visual: {
       theme: "void",
       color: "#6366f1",
@@ -181,7 +181,7 @@ export const SCIFI_LAYERS: Record<number, LayerDefinition> = {
   7: {
     id: 7,
     name: "Dark Matter Field",
-    altitudeThreshold: 1200,
+    altitudeThreshold: 180, // Another 30 units
     visual: {
       theme: "dark_matter",
       color: "#8b5a3c",
@@ -202,7 +202,7 @@ export const SCIFI_LAYERS: Record<number, LayerDefinition> = {
   8: {
     id: 8,
     name: "Quantum Anomaly Zone",
-    altitudeThreshold: 1400,
+    altitudeThreshold: 210, // Another 30 units
     visual: {
       theme: "quantum",
       color: "#ec4899",

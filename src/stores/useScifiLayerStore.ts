@@ -52,7 +52,7 @@ interface ScifiLayerState {
   debugMode: boolean;
 }
 
-const LAYER_ALTITUDE_THRESHOLD = 200; // Each layer = 200 altitude units
+const LAYER_ALTITUDE_THRESHOLD = 30; // Each layer = 30 altitude units (very close!)
 
 export const useScifiLayerStore = create<ScifiLayerState>()(
   persist(

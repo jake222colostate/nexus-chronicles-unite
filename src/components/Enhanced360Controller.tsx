@@ -156,16 +156,18 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       isDragging.current = false;
     };
 
-    // Enhanced scroll wheel for sci-fi realm with vertical movement
+    // Super fast scroll wheel for close layers
     const handleWheel = (event: WheelEvent) => {
       if (realm === 'scifi') {
         event.preventDefault();
         
-        // Vertical movement (altitude) with faster scrolling
-        const altitudeSpeed = 0.05; // Increased for faster movement 
+        // Much faster vertical movement for close layers
+        const altitudeSpeed = 0.3; // Increased for rapid layer transitions
         const altitudeDelta = -event.deltaY * altitudeSpeed; // Negative for intuitive scrolling
         
         targetY.current = Math.max(minY, Math.min(maxY, targetY.current + altitudeDelta));
+        
+        console.log(`🚀 Scroll: targetY=${targetY.current.toFixed(1)}, deltaY=${event.deltaY}`);
         
         // Optional: Also allow zoom with Ctrl/Cmd held
         if (event.ctrlKey || event.metaKey) {
