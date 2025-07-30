@@ -22,6 +22,7 @@ import { ScifiLayerManager } from './ScifiLayerManager';
 import { ScifiLayerHUD } from './ScifiLayerHUD';
 import { ScifiLayerEffects } from './ScifiLayerEffects';
 import { useScifiLayerStore } from '@/stores/useScifiLayerStore';
+import { CameraAltitudeTracker } from './CameraAltitudeTracker';
 
 interface Scene3DProps {
   realm: 'fantasy' | 'scifi';
@@ -206,6 +207,10 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
           {/* Layer system components - only in sci-fi realm */}
           {realm === 'scifi' && (
             <>
+              <CameraAltitudeTracker 
+                onAltitudeChange={setPlayerAltitude}
+                enabled={true}
+              />
               <ScifiLayerManager 
                 playerAltitude={playerAltitude}
                 onLayerChange={(layer) => console.log(`🌌 Entered Layer ${layer}`)}
