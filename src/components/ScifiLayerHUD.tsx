@@ -44,9 +44,10 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
   };
 
   const getNextLayerProgress = () => {
-    const currentLayerBase = (currentLayer - 1) * 1000;
+    const LAYER_THRESHOLD = 300; // Match the store threshold
+    const currentLayerBase = (currentLayer - 1) * LAYER_THRESHOLD;
     const progressInLayer = altitude - currentLayerBase;
-    return Math.min(progressInLayer / 1000, 1) * 100;
+    return Math.min(progressInLayer / LAYER_THRESHOLD, 1) * 100;
   };
 
   return (

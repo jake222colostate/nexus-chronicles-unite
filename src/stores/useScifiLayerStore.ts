@@ -36,7 +36,7 @@ interface ScifiLayerState {
   unlockAllUpgrades: () => void;
 }
 
-const LAYER_ALTITUDE_THRESHOLD = 1000; // Each layer = 1000 altitude units
+const LAYER_ALTITUDE_THRESHOLD = 300; // Each layer = 300 altitude units (reduced from 1000)
 
 const defaultUpgrades = [
   'ionStabilizerCore',

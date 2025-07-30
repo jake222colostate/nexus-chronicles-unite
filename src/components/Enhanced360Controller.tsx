@@ -156,13 +156,23 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       isDragging.current = false;
     };
 
-    // Scroll wheel zoom for sci-fi realm
+    // Enhanced scroll wheel for sci-fi realm with vertical movement
     const handleWheel = (event: WheelEvent) => {
       if (realm === 'scifi') {
         event.preventDefault();
-        const zoomSpeed = 0.01;
-        const zoomDelta = event.deltaY * zoomSpeed;
-        targetRadius.current = Math.max(minZoom, Math.min(maxZoom, targetRadius.current + zoomDelta));
+        
+        // Vertical movement (altitude) with faster scrolling
+        const altitudeSpeed = 0.05; // Increased for faster movement 
+        const altitudeDelta = -event.deltaY * altitudeSpeed; // Negative for intuitive scrolling
+        
+        targetY.current = Math.max(minY, Math.min(maxY, targetY.current + altitudeDelta));
+        
+        // Optional: Also allow zoom with Ctrl/Cmd held
+        if (event.ctrlKey || event.metaKey) {
+          const zoomSpeed = 0.01;
+          const zoomDelta = event.deltaY * zoomSpeed;
+          targetRadius.current = Math.max(minZoom, Math.min(maxZoom, targetRadius.current + zoomDelta));
+        }
       }
     };
 
@@ -189,6 +199,47 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
       canvas.style.touchAction = 'none';
     }
 
+    // Enhanced keyboard controls for SciFi realm
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (realm === 'scifi') {
+        const keySpeed = 3; // Speed for keyboard movement
+        
+        switch (event.key.toLowerCase()) {
+          case 'w':
+          case 'arrowup':
+            event.preventDefault();
+            targetY.current = Math.min(maxY, targetY.current + keySpeed);
+            break;
+          case 's':
+          case 'arrowdown':
+            event.preventDefault();
+            targetY.current = Math.max(minY, targetY.current - keySpeed);
+            break;
+          case 'a':
+          case 'arrowleft':
+            event.preventDefault();
+            targetAngle.current -= 0.05;
+            break;
+          case 'd':
+          case 'arrowright':
+            event.preventDefault();
+            targetAngle.current += 0.05;
+            break;
+          case 'q':
+            event.preventDefault();
+            targetRadius.current = Math.min(maxZoom, targetRadius.current + 1);
+            break;
+          case 'e':
+            event.preventDefault();
+            targetRadius.current = Math.max(minZoom, targetRadius.current - 1);
+            break;
+        }
+      }
+    };
+
+    // Add keyboard event listener
+    window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       if (canvas) {
         canvas.removeEventListener('touchstart', handleTouchStart);
@@ -201,6 +252,9 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         canvas.removeEventListener('wheel', handleWheel);
         canvas.removeEventListener('contextmenu', (e) => e.preventDefault());
       }
+      
+      // Remove keyboard listener
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, [minY, maxY, sensitivity, realm, maxRotation, minZoom, maxZoom]);
 
