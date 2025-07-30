@@ -14,8 +14,8 @@ export const CameraAltitudeTracker: React.FC<CameraAltitudeTrackerProps> = ({
 
   useFrame(() => {
     if (enabled && camera) {
-      // Convert camera Y position to altitude (multiply by 30 for easier layer progression)
-      const altitude = Math.max(0, camera.position.y * 30);
+      // Convert camera Y position to altitude (multiply by 500 for much easier layer progression)
+      const altitude = Math.max(0, camera.position.y * 500);
       onAltitudeChange(altitude);
       
       // Frequent debug logging to verify this is running
