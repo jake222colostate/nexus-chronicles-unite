@@ -77,6 +77,8 @@ export const useScifiLayerStore = create<ScifiLayerState>()(
         const newLayerNum = layerData.id;
         const state = get();
         
+        console.log(`🌌 Altitude: ${newAltitude.toFixed(1)}, Current Layer: ${state.currentLayer}, Target Layer: ${newLayerNum}`);
+        
         set({ altitude: newAltitude });
         
         // Check if we've entered a new layer

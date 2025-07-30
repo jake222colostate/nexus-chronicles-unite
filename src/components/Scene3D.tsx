@@ -113,7 +113,9 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   // Handle camera position updates for altitude tracking
   const handleCameraPositionUpdate = useCallback((position: Vector3) => {
     if (realm === 'scifi') {
-      setPlayerAltitude(Math.max(0, position.y * 10)); // Convert camera Y to altitude
+      const newAltitude = Math.max(0, position.y * 30); // Increased multiplier for easier layer progression
+      setPlayerAltitude(newAltitude);
+      console.log(`📍 Camera Y: ${position.y.toFixed(2)}, Altitude: ${newAltitude.toFixed(1)}`);
     }
   }, [realm]);
 
