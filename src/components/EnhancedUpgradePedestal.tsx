@@ -38,12 +38,12 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     1.5
   );
   
-  // Optimize useFrame - only run for visible and interactive pedestals
+  // Optimize useFrame - remove heavy animations to fix hover lag
   useFrame((state) => {
-    // Only animate glow for unlocked pedestals to reduce load
-    if (glowRef.current && isUnlocked && !isPurchased) {
-      // Gentle pulsing glow only - reduced frequency
-      const pulse = Math.sin(state.clock.elapsedTime * 2) * 0.1 + 0.9;
+    // Only minimal animation for glow effect
+    if (glowRef.current && isUnlocked && !isPurchased && !hovered) {
+      // Very gentle pulsing only when not hovered - much reduced frequency
+      const pulse = Math.sin(state.clock.elapsedTime * 0.5) * 0.05 + 0.95;
       glowRef.current.scale.setScalar(pulse);
     }
   });
@@ -75,7 +75,9 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
 
   const handlePointerOver = (event: any) => {
     event.stopPropagation();
-    setHovered(true);
+    if (isUnlocked) {
+      setHovered(true);
+    }
   };
 
   const handlePointerOut = (event: any) => {

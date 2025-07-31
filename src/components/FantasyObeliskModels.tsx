@@ -85,19 +85,20 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
   const scale = getModelScale(upgradeId);
   const positionOffset = getPositionOffset(upgradeId);
 
-  // Add gentle rotation for some models
+  // Add gentle rotation for some models - optimized to reduce hover lag
   useFrame((state) => {
-    if (meshRef.current && isUnlocked) {
+    if (meshRef.current && isUnlocked && !hovered) {
       const modelIndex = Math.floor(upgradeId / 5) % 5;
-      // Only rotate Lotus and Spiral models (indices 1 and 4)
+      // Only rotate Lotus and Spiral models (indices 1 and 4) when not hovered
       if (modelIndex === 1 || modelIndex === 4) {
-        meshRef.current.rotation.y += 0.005;
+        meshRef.current.rotation.y += 0.003; // Reduced rotation speed
       }
     }
   });
 
   const handleClick = (event: any) => {
     event.stopPropagation();
+    console.log('FantasyObeliskModels: Click detected on upgrade', upgradeId, 'unlocked:', isUnlocked);
     if (isUnlocked) {
       onInteract();
     }

@@ -4,6 +4,7 @@ import { Canvas } from '@react-three/fiber';
 import { useFantasy3DUpgradeWorld } from './hooks/useFantasy3DUpgradeWorld';
 import { Fantasy3DScene } from './Fantasy3DScene';
 import { Fantasy3DUpgradePedestals } from './Fantasy3DUpgradePedestals';
+import { Fantasy3DUpgradeGates } from './Fantasy3DUpgradeGates';
 import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
 import { Fantasy3DInsufficientManaMessage } from './Fantasy3DInsufficientManaMessage';
 import { UpgradeActivationOverlay } from './UpgradeActivationOverlay';
@@ -44,6 +45,8 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
     maxUnlockedUpgrade,
     currentManaRef,
     upgrades,
+    gates,
+    unlockedGates,
     purchasedUpgrades,
     CHUNK_SIZE,
     RENDER_DISTANCE,
@@ -136,6 +139,11 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
               currentManaRef={currentManaRef}
               purchasedUpgrades={purchasedUpgrades}
               onUpgradeClick={handleUpgradeClick}
+            />
+
+            <Fantasy3DUpgradeGates
+              gates={gates}
+              cameraPosition={cameraPosition}
             />
           </Canvas>
         )}
