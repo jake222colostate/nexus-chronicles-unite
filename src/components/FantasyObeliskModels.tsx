@@ -60,10 +60,10 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
     const modelIndex = Math.floor(id / 5) % 5;
     const scales: [number, number, number][] = [
       [5.33, 5.33, 5.33], // LargeObelisk - original scale
-      [3, 3, 3],          // Lotus
-      [4, 4, 4],          // Meltingtower
-      [3.5, 3.5, 3.5],    // Phoenix
-      [3, 3, 3]           // Spiral
+      [4, 4, 4],          // Lotus - increased from 3
+      [8, 8, 8],          // Meltingtower - doubled from 4
+      [4.5, 4.5, 4.5],    // Phoenix - increased from 3.5
+      [6, 6, 6]           // Spiral - doubled from 3
     ];
     return scales[Math.max(0, Math.min(modelIndex, scales.length - 1))];
   };
@@ -73,10 +73,10 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
     const modelIndex = Math.floor(id / 5) % 5;
     const offsets: [number, number, number][] = [
       [0, 5, 0],     // LargeObelisk - lifted position like before
-      [0, 0, 0],     // Lotus - grounded
-      [0, 2, 0],     // Meltingtower - lift slightly
-      [0, 1, 0],     // Phoenix - slight lift
-      [0, 0.5, 0]    // Spiral - minimal lift
+      [0, 2, 0],     // Lotus - raised to touch ground without clipping
+      [0, 4, 0],     // Meltingtower - raised higher due to doubling
+      [0, 2.5, 0],   // Phoenix - raised to touch ground without clipping
+      [0, 3, 0]      // Spiral - raised higher due to doubling
     ];
     return offsets[Math.max(0, Math.min(modelIndex, offsets.length - 1))];
   };
