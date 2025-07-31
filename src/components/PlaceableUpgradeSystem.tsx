@@ -89,31 +89,102 @@ interface PathUpgradeSlotsProps {
 const PathUpgradeSlots: React.FC<PathUpgradeSlotsProps> = ({ onSlotClick, placedUpgrades }) => {
   const slots = [];
   
-  // Create slots along the path (left and right sides)
-  for (let i = 0; i < 8; i++) {
-    const z = (i - 3.5) * 2; // Position along the path
-    
-    // Left side slot
-    slots.push({
-      id: `left_${i}`,
-      position: [-2.5, 0, z] as [number, number, number],
-      side: 'left'
-    });
-    
-    // Right side slot
-    slots.push({
-      id: `right_${i}`,
-      position: [2.5, 0, z] as [number, number, number],
-      side: 'right'
-    });
+  // Create 4x8 grid on each side of the path
+  const gridWidth = 4; // 4 slots wide on each side
+  const gridLength = 8; // 8 slots long
+  const slotSize = 1.5; // Size of each grid slot
+  
+  // Left side grid
+  for (let x = 0; x < gridWidth; x++) {
+    for (let z = 0; z < gridLength; z++) {
+      const worldX = -2 - (x * slotSize) - (slotSize / 2); // Start left of path
+      const worldZ = (z - gridLength / 2 + 0.5) * slotSize;
+      
+      slots.push({
+        id: `left_${x}_${z}`,
+        position: [worldX, 0, worldZ] as [number, number, number],
+        side: 'left',
+        gridX: x,
+        gridZ: z
+      });
+    }
+  }
+  
+  // Right side grid
+  for (let x = 0; x < gridWidth; x++) {
+    for (let z = 0; z < gridLength; z++) {
+      const worldX = 2 + (x * slotSize) + (slotSize / 2); // Start right of path
+      const worldZ = (z - gridLength / 2 + 0.5) * slotSize;
+      
+      slots.push({
+        id: `right_${x}_${z}`,
+        position: [worldX, 0, worldZ] as [number, number, number],
+        side: 'right',
+        gridX: x,
+        gridZ: z
+      });
+    }
   }
 
   return (
     <>
+      {/* Grid outline visualization */}
+      {[-1, 1].map(side => (
+        <group key={side}>
+          {/* Grid background plane */}
+          <mesh 
+            position={[side * (2 + gridWidth * slotSize / 2 + slotSize / 2), 0.01, 0]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[gridWidth * slotSize, gridLength * slotSize]} />
+            <meshStandardMaterial 
+              color="#1a1a1a" 
+              transparent 
+              opacity={0.3}
+            />
+          </mesh>
+          
+          {/* Grid lines */}
+          {Array.from({ length: gridWidth + 1 }).map((_, i) => (
+            <mesh
+              key={`vertical_${i}`}
+              position={[
+                side * (2 + i * slotSize), 
+                0.02, 
+                0
+              ]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[0.05, gridLength * slotSize]} />
+              <meshBasicMaterial color="#444444" />
+            </mesh>
+          ))}
+          
+          {Array.from({ length: gridLength + 1 }).map((_, i) => (
+            <mesh
+              key={`horizontal_${i}`}
+              position={[
+                side * (2 + gridWidth * slotSize / 2 + slotSize / 2), 
+                0.02, 
+                (i - gridLength / 2) * slotSize
+              ]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[gridWidth * slotSize, 0.05]} />
+              <meshBasicMaterial color="#444444" />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      
+      {/* Individual grid slots */}
       {slots.map(slot => {
+        // Don't allow placement on the path (x between -2 and 2)
+        if (Math.abs(slot.position[0]) < 2) return null;
+        
         const placedUpgrade = placedUpgrades.find(u => 
-          Math.abs(u.position[0] - slot.position[0]) < 0.1 && 
-          Math.abs(u.position[2] - slot.position[2]) < 0.1
+          Math.abs(u.position[0] - slot.position[0]) < 0.5 && 
+          Math.abs(u.position[2] - slot.position[2]) < 0.5
         );
         
         if (placedUpgrade) {
@@ -127,23 +198,27 @@ const PathUpgradeSlots: React.FC<PathUpgradeSlotsProps> = ({ onSlotClick, placed
         }
         
         return (
-          <group key={slot.id} position={slot.position}>
-            {/* Empty slot indicator */}
+          <group key={slot.id}>
+            {/* Clickable slot area */}
             <mesh 
-              position={[0, 0.02, 0]}
+              position={[slot.position[0], 0.02, slot.position[2]]}
               onClick={() => onSlotClick(slot.id, slot.position)}
+              rotation={[-Math.PI / 2, 0, 0]}
             >
-              <cylinderGeometry args={[0.4, 0.4, 0.05]} />
+              <planeGeometry args={[slotSize * 0.9, slotSize * 0.9]} />
               <meshStandardMaterial 
                 color="#333333" 
                 transparent 
-                opacity={0.5} 
+                opacity={0.1}
               />
             </mesh>
             
-            {/* Slot outline */}
-            <mesh position={[0, 0.03, 0]}>
-              <ringGeometry args={[0.4, 0.45]} />
+            {/* Slot border highlight on hover */}
+            <mesh 
+              position={[slot.position[0], 0.03, slot.position[2]]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <ringGeometry args={[slotSize * 0.4, slotSize * 0.45]} />
               <meshBasicMaterial color="#666666" side={2} />
             </mesh>
           </group>
@@ -174,10 +249,13 @@ export const PlaceableUpgradeSystem: React.FC<PlaceableUpgradeSystemProps> = ({
     // Check if player can afford the module
     if (gameState.nexusShards < module.cost) return;
     
+    // Prevent placement on the path (x between -2 and 2)
+    if (Math.abs(position[0]) < 2) return;
+    
     // Check if slot is already occupied
     const occupied = placedUpgrades.some(u => 
-      Math.abs(u.position[0] - position[0]) < 0.1 && 
-      Math.abs(u.position[2] - position[2]) < 0.1
+      Math.abs(u.position[0] - position[0]) < 0.5 && 
+      Math.abs(u.position[2] - position[2]) < 0.5
     );
     if (occupied) return;
     

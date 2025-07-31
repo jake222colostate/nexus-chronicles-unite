@@ -307,23 +307,7 @@ export const NexusWorldGrid: React.FC = () => {
           {/* Environment */}
           <Environment />
 
-          {/* Grid Tiles with Crystals */}
-          {gridTiles.map((tile, index) => {
-            const placedModule = placedModules.find(m => 
-              Math.abs(m.position[0] - tile.x) < 0.1 && Math.abs(m.position[2] - tile.z) < 0.1
-            );
-
-            return (
-              <Crystal
-                key={index}
-                position={[tile.x, 0.5, tile.z]}
-                size={placedModule ? 1.2 : 0.8}
-                color={placedModule ? '#fbbf24' : '#60a5fa'}
-                onClick={() => handleTileClick(tile)}
-                isHighlighted={selectedTile?.x === tile.x && selectedTile?.z === tile.z}
-              />
-            );
-          })}
+          {/* No more diamond podiums/crystals - they are removed */}
 
           {/* Vendor Stalls */}
           <VendorStall 
