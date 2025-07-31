@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Html, useGLTF } from '@react-three/drei';
+import { OrbitControls, Html } from '@react-three/drei';
 import { nexusUpgradeModules, NexusUpgradeModule } from '@/data/NexusUpgradeModules';
 import { useGameStateStore } from '@/stores/useGameStateStore';
 import { UpgradeSelectionMenu } from './UpgradeSelectionMenu';
@@ -22,15 +22,113 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
   const [hovered, setHovered] = useState(false);
   const meshRef = useRef<any>();
   
-  // Load the GLB model
-  const { scene } = useGLTF(module.glbModel);
-  
   // Rotate the model slowly
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += 0.01;
     }
   });
+
+  // Create different geometric shapes based on module type
+  const renderGeometry = () => {
+    switch (module.glbModel) {
+      case 'crystal_tower':
+        return (
+          <group>
+            <mesh position={[0, 0.3, 0]}>
+              <cylinderGeometry args={[0.15, 0.25, 0.8]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+            <mesh position={[0, 0.7, 0]}>
+              <coneGeometry args={[0.2, 0.4]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+          </group>
+        );
+      case 'energy_lotus':
+        return (
+          <group>
+            {Array.from({ length: 8 }).map((_, i) => {
+              const angle = (i / 8) * Math.PI * 2;
+              return (
+                <mesh key={i} position={[Math.cos(angle) * 0.3, 0.3, Math.sin(angle) * 0.3]} rotation={[0, angle, Math.PI / 6]}>
+                  <boxGeometry args={[0.1, 0.4, 0.05]} />
+                  <meshStandardMaterial color={module.color} />
+                </mesh>
+              );
+            })}
+            <mesh position={[0, 0.2, 0]}>
+              <sphereGeometry args={[0.15]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+          </group>
+        );
+      case 'flame_phoenix':
+        return (
+          <group>
+            <mesh position={[0, 0.4, 0]}>
+              <sphereGeometry args={[0.2]} />
+              <meshStandardMaterial color={module.color} emissive={module.color} emissiveIntensity={0.3} />
+            </mesh>
+            <mesh position={[0, 0.6, 0]} rotation={[0, 0, Math.PI / 4]}>
+              <coneGeometry args={[0.1, 0.3]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+          </group>
+        );
+      case 'energy_spiral':
+        return (
+          <group>
+            {Array.from({ length: 12 }).map((_, i) => {
+              const angle = (i / 12) * Math.PI * 4;
+              const height = i * 0.05;
+              const radius = 0.2 + i * 0.02;
+              return (
+                <mesh key={i} position={[Math.cos(angle) * radius, height, Math.sin(angle) * radius]}>
+                  <sphereGeometry args={[0.05]} />
+                  <meshStandardMaterial color={module.color} />
+                </mesh>
+              );
+            })}
+          </group>
+        );
+      case 'plasma_reactor':
+        return (
+          <group>
+            <mesh position={[0, 0.3, 0]}>
+              <cylinderGeometry args={[0.2, 0.2, 0.6]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+            <mesh position={[0, 0.7, 0]}>
+              <torusGeometry args={[0.25, 0.05]} />
+              <meshStandardMaterial color={module.color} emissive={module.color} emissiveIntensity={0.2} />
+            </mesh>
+          </group>
+        );
+      case 'nexus_platform':
+        return (
+          <group>
+            <mesh position={[0, 0.1, 0]}>
+              <cylinderGeometry args={[0.3, 0.3, 0.1]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+            {[-0.2, 0, 0.2].map((offset, i) => (
+              <mesh key={i} position={[offset, 0.3, 0]}>
+                <boxGeometry args={[0.1, 0.3, 0.1]} />
+                <meshStandardMaterial color={module.color} />
+              </mesh>
+            ))}
+          </group>
+        );
+      default:
+        return (
+          <mesh position={[0, 0.3, 0]}>
+            <boxGeometry args={[0.4, 0.4, 0.4]} />
+            <meshStandardMaterial color={module.color} />
+          </mesh>
+        );
+    }
+  };
 
   return (
     <group position={position}>
@@ -40,16 +138,15 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
         <meshStandardMaterial color="#444444" />
       </mesh>
       
-      {/* GLB Model */}
-      <primitive 
+      {/* Custom geometry instead of GLB */}
+      <group 
         ref={meshRef}
-        object={scene.clone()} 
-        position={[0, 0.3, 0]}
-        scale={[0.5, 0.5, 0.5]}
         onClick={onClick}
         onPointerEnter={() => setHovered(true)}
         onPointerLeave={() => setHovered(false)}
-      />
+      >
+        {renderGeometry()}
+      </group>
       
       {/* Tooltip when hovered */}
       {hovered && (
