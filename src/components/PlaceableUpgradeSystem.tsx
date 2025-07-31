@@ -20,10 +20,17 @@ interface UpgradeModuleProps {
 
 const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick }) => {
   const [hovered, setHovered] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const meshRef = useRef<any>();
   
-  // Load the GLB model
-  const { scene } = useGLTF(module.glbModel);
+  // Try to load the GLB model with error handling
+  let gltf = null;
+  try {
+    gltf = useGLTF(module.glbModel, true);
+  } catch (error) {
+    console.warn(`Failed to load GLB model: ${module.glbModel}`, error);
+    setLoadError(true);
+  }
   
   // Rotate the model slowly
   useFrame((state) => {
@@ -31,6 +38,50 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
       meshRef.current.rotation.y += 0.01;
     }
   });
+
+  // Fallback geometry for when GLB fails to load
+  const renderFallbackGeometry = () => {
+    switch (module.id) {
+      case 'large_obelisk':
+        return (
+          <group>
+            <mesh position={[0, 0.3, 0]}>
+              <cylinderGeometry args={[0.15, 0.25, 0.8]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+            <mesh position={[0, 0.7, 0]}>
+              <coneGeometry args={[0.2, 0.4]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+          </group>
+        );
+      case 'lotus':
+        return (
+          <group>
+            {Array.from({ length: 8 }).map((_, i) => {
+              const angle = (i / 8) * Math.PI * 2;
+              return (
+                <mesh key={i} position={[Math.cos(angle) * 0.3, 0.3, Math.sin(angle) * 0.3]} rotation={[0, angle, Math.PI / 6]}>
+                  <boxGeometry args={[0.1, 0.4, 0.05]} />
+                  <meshStandardMaterial color={module.color} />
+                </mesh>
+              );
+            })}
+            <mesh position={[0, 0.2, 0]}>
+              <sphereGeometry args={[0.15]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+          </group>
+        );
+      default:
+        return (
+          <mesh position={[0, 0.3, 0]}>
+            <boxGeometry args={[0.4, 0.4, 0.4]} />
+            <meshStandardMaterial color={module.color} />
+          </mesh>
+        );
+    }
+  };
 
   return (
     <group position={position}>
@@ -40,23 +91,23 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
         <meshStandardMaterial color="#444444" />
       </mesh>
       
-      {/* GLB Model - Keep same scale as placeholders */}
-      <Suspense fallback={
-        <mesh position={[0, 0.3, 0]}>
-          <boxGeometry args={[0.4, 0.4, 0.4]} />
-          <meshStandardMaterial color={module.color} />
-        </mesh>
-      }>
-        <primitive 
-          ref={meshRef}
-          object={scene.clone()} 
-          position={[0, 0.3, 0]}
-          scale={[0.5, 0.5, 0.5]} // Keep the same scale as placeholders
-          onClick={onClick}
-          onPointerEnter={() => setHovered(true)}
-          onPointerLeave={() => setHovered(false)}
-        />
-      </Suspense>
+      {/* Model or fallback */}
+      <group 
+        ref={meshRef}
+        onClick={onClick}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+      >
+        {gltf && gltf.scene && !loadError ? (
+          <primitive 
+            object={gltf.scene.clone()} 
+            position={[0, 0.3, 0]}
+            scale={[0.5, 0.5, 0.5]}
+          />
+        ) : (
+          renderFallbackGeometry()
+        )}
+      </group>
       
       {/* Tooltip when hovered */}
       {hovered && (
@@ -64,6 +115,7 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
           <div className="bg-black/80 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap pointer-events-none">
             <div className="font-semibold">{module.name}</div>
             <div className="text-xs text-gray-300">{module.bonus}</div>
+            {loadError && <div className="text-xs text-red-400">Using fallback model</div>}
           </div>
         </Html>
       )}
