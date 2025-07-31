@@ -13,75 +13,75 @@ export interface NexusUpgradeModule {
 
 export const nexusUpgradeModules: NexusUpgradeModule[] = [
   {
-    id: 'crystal_tower',
-    name: 'Crystal Tower',
+    id: 'large_obelisk',
+    name: 'Large Obelisk',
     description: 'Ancient power source',
     cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'fantasy',
     bonus: '+5 mana/sec',
     icon: '🗿',
-    glbModel: 'crystal_tower', // Use simple geometric shape instead
+    glbModel: '/assets/upgrades/LargeObelisk.glb',
     color: '#9f7aea'
   },
   {
-    id: 'energy_lotus',
-    name: 'Energy Lotus',
+    id: 'lotus',
+    name: 'Lotus',
     description: 'Mystical flowering energy',
     cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'fantasy',
     bonus: '+3 mana/sec',
     icon: '🪷',
-    glbModel: 'energy_lotus',
+    glbModel: '/assets/upgrades/Lotus.glb',
     color: '#805ad5'
   },
   {
-    id: 'flame_phoenix',
-    name: 'Flame Phoenix',
+    id: 'phoenix',
+    name: 'Phoenix',
     description: 'Reborn magical creature',
     cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'fantasy',
     bonus: '+8 mana/sec',
     icon: '🔥',
-    glbModel: 'flame_phoenix',
+    glbModel: '/assets/upgrades/Phoenix.glb',
     color: '#6b46c1'
   },
   {
-    id: 'energy_spiral',
-    name: 'Energy Spiral',
+    id: 'spiral',
+    name: 'Spiral',
     description: 'Energy focusing structure',
     cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'scifi',
     bonus: '+6 energy/sec',
     icon: '🌀',
-    glbModel: 'energy_spiral',
+    glbModel: '/assets/upgrades/Spiral.glb',
     color: '#00bcd4'
   },
   {
-    id: 'plasma_reactor',
-    name: 'Plasma Reactor',
+    id: 'melting_tower',
+    name: 'Melting Tower',
     description: 'Advanced energy reactor',
     cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'scifi',
     bonus: '+10 energy/sec',
     icon: '🏗️',
-    glbModel: 'plasma_reactor',
+    glbModel: '/assets/upgrades/Meltingtower.glb',
     color: '#0891b2'
   },
   {
-    id: 'nexus_platform',
-    name: 'Nexus Platform',
+    id: 'podiums',
+    name: 'Podiums',
     description: 'Multi-platform generator',
     cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'scifi',
     bonus: '+4 energy/sec',
     icon: '🏛️',
-    glbModel: 'nexus_platform',
+    glbModel: '/assets/upgrades/Podiums.glb',
     color: '#0e7490'
   }
 ];
