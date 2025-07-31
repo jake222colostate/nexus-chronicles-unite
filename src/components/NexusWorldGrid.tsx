@@ -6,6 +6,7 @@ import { Mesh, Vector3 } from 'three';
 import { useGameStateStore } from '@/stores/useGameStateStore';
 import { NexusVendorShops } from './NexusVendorShops';
 import { NexusInventoryPanel } from './NexusInventoryPanel';
+import { PlaceableUpgradeSystem } from './PlaceableUpgradeSystem';
 
 interface GridTile {
   x: number;
@@ -76,7 +77,7 @@ const Crystal: React.FC<{
 // Vendor Stall Component
 const VendorStall: React.FC<{
   position: [number, number, number];
-  stallType: 'blacksmith' | 'merchant' | 'mystic';
+  stallType: 'blacksmith' | 'merchant' | 'mystic' | 'upgrade_vendor';
   onClick: () => void;
 }> = ({ position, stallType, onClick }) => {
   const getStallColors = () => {
@@ -84,6 +85,7 @@ const VendorStall: React.FC<{
       case 'blacksmith': return { tent: '#8B4513', accent: '#CD853F' };
       case 'merchant': return { tent: '#9333ea', accent: '#a855f7' };
       case 'mystic': return { tent: '#059669', accent: '#10b981' };
+      case 'upgrade_vendor': return { tent: '#0369a1', accent: '#0ea5e9' };
       default: return { tent: '#8B4513', accent: '#CD853F' };
     }
   };
@@ -126,6 +128,7 @@ const VendorStall: React.FC<{
           {stallType === 'blacksmith' && '⚔️ Blacksmith'}
           {stallType === 'merchant' && '💎 Merchant'}
           {stallType === 'mystic' && '🔮 Mystic'}
+          {stallType === 'upgrade_vendor' && '📦 Upgrade Modules'}
         </div>
       </Html>
     </group>
@@ -338,6 +341,14 @@ export const NexusWorldGrid: React.FC = () => {
             stallType="mystic"
             onClick={() => handleVendorClick('mystic')}
           />
+          <VendorStall 
+            position={[0, 0, 10]} 
+            stallType="upgrade_vendor"
+            onClick={() => handleVendorClick('upgrade_vendor')}
+          />
+          
+          {/* Placeable Upgrade System */}
+          <PlaceableUpgradeSystem />
 
           {/* First Person Controls */}
           <PlayerControls />
