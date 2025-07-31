@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Html } from '@react-three/drei';
+import React, { useState, useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Html, useGLTF } from '@react-three/drei';
 import { nexusUpgradeModules, NexusUpgradeModule } from '@/data/NexusUpgradeModules';
 import { useGameStateStore } from '@/stores/useGameStateStore';
+import { UpgradeSelectionMenu } from './UpgradeSelectionMenu';
 
 interface PlacedUpgrade {
   id: string;
@@ -19,50 +20,40 @@ interface UpgradeModuleProps {
 
 const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick }) => {
   const [hovered, setHovered] = useState(false);
+  const meshRef = useRef<any>();
   
-  const getSize = () => {
-    switch (module.size) {
-      case 'small': return [0.4, 0.4, 0.4];
-      case 'medium': return [0.6, 0.6, 0.6];
-      case 'large': return [0.8, 0.8, 0.8];
-      default: return [0.4, 0.4, 0.4];
+  // Load the GLB model
+  const { scene } = useGLTF(module.glbModel);
+  
+  // Rotate the model slowly
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y += 0.01;
     }
-  };
+  });
 
   return (
     <group position={position}>
       {/* Base platform */}
       <mesh position={[0, 0.05, 0]}>
-        <cylinderGeometry args={[0.3, 0.3, 0.1]} />
+        <cylinderGeometry args={[0.4, 0.4, 0.1]} />
         <meshStandardMaterial color="#444444" />
       </mesh>
       
-      {/* Main upgrade module */}
-      <mesh 
+      {/* GLB Model */}
+      <primitive 
+        ref={meshRef}
+        object={scene.clone()} 
         position={[0, 0.3, 0]}
-        scale={getSize() as [number, number, number]}
+        scale={[0.5, 0.5, 0.5]}
         onClick={onClick}
         onPointerEnter={() => setHovered(true)}
         onPointerLeave={() => setHovered(false)}
-      >
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial 
-          color={module.color} 
-          emissive={hovered ? module.color : '#000000'}
-          emissiveIntensity={hovered ? 0.2 : 0}
-        />
-      </mesh>
-      
-      {/* Floating icon */}
-      <Html position={[0, 0.8, 0]} center>
-        <div className="text-2xl pointer-events-none select-none">
-          {module.icon}
-        </div>
-      </Html>
+      />
       
       {/* Tooltip when hovered */}
       {hovered && (
-        <Html position={[0, 1.2, 0]} center>
+        <Html position={[0, 1.5, 0]} center>
           <div className="bg-black/80 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap pointer-events-none">
             <div className="font-semibold">{module.name}</div>
             <div className="text-xs text-gray-300">{module.bonus}</div>
@@ -82,7 +73,7 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
 };
 
 interface PathUpgradeSlotsProps {
-  onSlotClick: (slotId: string, position: [number, number, number]) => void;
+  onSlotClick: (slotId: string, position: [number, number, number], event?: any) => void;
   placedUpgrades: PlacedUpgrade[];
 }
 
@@ -202,7 +193,7 @@ const PathUpgradeSlots: React.FC<PathUpgradeSlotsProps> = ({ onSlotClick, placed
             {/* Clickable slot area */}
             <mesh 
               position={[slot.position[0], 0.02, slot.position[2]]}
-              onClick={() => onSlotClick(slot.id, slot.position)}
+              onClick={(event) => onSlotClick(slot.id, slot.position, event.nativeEvent)}
               rotation={[-Math.PI / 2, 0, 0]}
             >
               <planeGeometry args={[slotSize * 0.9, slotSize * 0.9]} />
@@ -239,16 +230,11 @@ export const PlaceableUpgradeSystem: React.FC<PlaceableUpgradeSystemProps> = ({
 }) => {
   const gameState = useGameStateStore();
   const [placedUpgrades, setPlacedUpgrades] = useState<PlacedUpgrade[]>([]);
+  const [showUpgradeMenu, setShowUpgradeMenu] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<{ id: string; position: [number, number, number] } | null>(null);
+  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
-  const handleSlotClick = (slotId: string, position: [number, number, number]) => {
-    if (!selectedModuleId) return;
-    
-    const module = nexusUpgradeModules.find(m => m.id === selectedModuleId);
-    if (!module) return;
-    
-    // Check if player can afford the module
-    if (gameState.nexusShards < module.cost) return;
-    
+  const handleSlotClick = (slotId: string, position: [number, number, number], event?: any) => {
     // Prevent placement on the path (x between -2 and 2)
     if (Math.abs(position[0]) < 2) return;
     
@@ -259,16 +245,32 @@ export const PlaceableUpgradeSystem: React.FC<PlaceableUpgradeSystemProps> = ({
     );
     if (occupied) return;
     
-    // Place the upgrade
+    // Set menu position and show upgrade selection
+    if (event && event.clientX && event.clientY) {
+      setMenuPosition({ x: event.clientX, y: event.clientY });
+    } else {
+      setMenuPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+    }
+    
+    setSelectedSlot({ id: slotId, position });
+    setShowUpgradeMenu(true);
+  };
+
+  const handleUpgradeSelect = (moduleId: string) => {
+    if (!selectedSlot) return;
+    
+    const module = nexusUpgradeModules.find(m => m.id === moduleId);
+    if (!module) return;
+    
+    // Place the upgrade (free for now)
     const newUpgrade: PlacedUpgrade = {
       id: `upgrade_${Date.now()}`,
-      moduleId: selectedModuleId,
-      position,
+      moduleId,
+      position: selectedSlot.position,
       module
     };
     
     setPlacedUpgrades(prev => [...prev, newUpgrade]);
-    gameState.spendNexusShards(module.cost);
     
     // Apply the module's effects
     if (module.realm === 'fantasy') {
@@ -279,13 +281,23 @@ export const PlaceableUpgradeSystem: React.FC<PlaceableUpgradeSystemProps> = ({
       gameState.setEnergyPerSecond(gameState.energyPerSecond + bonus);
     }
     
-    onModulePlaced?.(selectedModuleId, position);
+    onModulePlaced?.(moduleId, selectedSlot.position);
+    setSelectedSlot(null);
   };
 
   return (
-    <PathUpgradeSlots 
-      onSlotClick={handleSlotClick}
-      placedUpgrades={placedUpgrades}
-    />
+    <>
+      <PathUpgradeSlots 
+        onSlotClick={handleSlotClick}
+        placedUpgrades={placedUpgrades}
+      />
+      
+      <UpgradeSelectionMenu
+        isOpen={showUpgradeMenu}
+        onClose={() => setShowUpgradeMenu(false)}
+        onSelectUpgrade={handleUpgradeSelect}
+        position={menuPosition}
+      />
+    </>
   );
 };

@@ -5,119 +5,83 @@ export interface NexusUpgradeModule {
   cost: number;
   currency: 'mana' | 'energyCredits' | 'nexusShards';
   realm: 'fantasy' | 'scifi';
-  originalUpgradeId: string;
   bonus: string;
   icon: string;
-  size: 'small' | 'medium' | 'large';
+  glbModel: string;
   color: string;
 }
 
 export const nexusUpgradeModules: NexusUpgradeModule[] = [
-  // Fantasy Upgrade Modules
   {
-    id: 'mini_mana_crystal',
-    name: 'Mini Mana Crystal',
-    description: 'Small version of the Mana Crystal upgrade',
-    cost: 15,
+    id: 'large_obelisk',
+    name: 'Large Obelisk',
+    description: 'Ancient power source',
+    cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'fantasy',
-    originalUpgradeId: 'mana_crystal',
-    bonus: '+1 mana/sec',
-    icon: '💎',
-    size: 'small',
+    bonus: '+5 mana/sec',
+    icon: '🗿',
+    glbModel: '/assets/upgrades/LargeObelisk.glb',
     color: '#9f7aea'
   },
   {
-    id: 'mini_arcane_focus',
-    name: 'Mini Arcane Focus',
-    description: 'Compact version of the Arcane Focus',
-    cost: 25,
+    id: 'lotus',
+    name: 'Lotus',
+    description: 'Mystical flowering energy',
+    cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'fantasy',
-    originalUpgradeId: 'arcane_focus',
     bonus: '+3 mana/sec',
-    icon: '🔮',
-    size: 'small',
+    icon: '🪷',
+    glbModel: '/assets/upgrades/Lotus.glb',
     color: '#805ad5'
   },
   {
-    id: 'mini_mystic_fountain',
-    name: 'Mini Mystic Fountain',
-    description: 'Miniature version of the Mystic Fountain',
-    cost: 50,
+    id: 'phoenix',
+    name: 'Phoenix',
+    description: 'Reborn magical creature',
+    cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'fantasy',
-    originalUpgradeId: 'mystic_fountain',
     bonus: '+8 mana/sec',
-    icon: '⛲',
-    size: 'medium',
+    icon: '🔥',
+    glbModel: '/assets/upgrades/Phoenix.glb',
     color: '#6b46c1'
   },
   {
-    id: 'mini_elder_artifact',
-    name: 'Mini Elder Artifact',
-    description: 'Reduced version of the Elder Artifact',
-    cost: 100,
-    currency: 'nexusShards',
-    realm: 'fantasy',
-    originalUpgradeId: 'elder_artifact',
-    bonus: '+25 mana/sec',
-    icon: '🏺',
-    size: 'medium',
-    color: '#553c9a'
-  },
-
-  // Sci-Fi Upgrade Modules
-  {
-    id: 'mini_quantum_boost',
-    name: 'Mini Quantum Boost',
-    description: 'Compact quantum field manipulator',
-    cost: 20,
+    id: 'spiral',
+    name: 'Spiral',
+    description: 'Energy focusing structure',
+    cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'scifi',
-    originalUpgradeId: 'quantum_boost',
-    bonus: '+2 energy/sec',
-    icon: '⚡',
-    size: 'small',
+    bonus: '+6 energy/sec',
+    icon: '🌀',
+    glbModel: '/assets/upgrades/Spiral.glb',
     color: '#00bcd4'
   },
   {
-    id: 'mini_plasma_conduit',
-    name: 'Mini Plasma Conduit',
-    description: 'Small plasma energy channel',
-    cost: 35,
+    id: 'melting_tower',
+    name: 'Melting Tower',
+    description: 'Advanced energy reactor',
+    cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'scifi',
-    originalUpgradeId: 'plasma_conduit',
-    bonus: '+6 energy/sec',
-    icon: '🔌',
-    size: 'small',
+    bonus: '+10 energy/sec',
+    icon: '🏗️',
+    glbModel: '/assets/upgrades/Meltingtower.glb',
     color: '#0891b2'
   },
   {
-    id: 'mini_fusion_core',
-    name: 'Mini Fusion Core',
-    description: 'Miniaturized fusion reactor',
-    cost: 75,
+    id: 'podiums',
+    name: 'Podiums',
+    description: 'Multi-platform generator',
+    cost: 0, // Free for now
     currency: 'nexusShards',
     realm: 'scifi',
-    originalUpgradeId: 'fusion_core',
-    bonus: '+15 energy/sec',
-    icon: '⚛️',
-    size: 'medium',
+    bonus: '+4 energy/sec',
+    icon: '🏛️',
+    glbModel: '/assets/upgrades/Podiums.glb',
     color: '#0e7490'
-  },
-  {
-    id: 'mini_antimatter_engine',
-    name: 'Mini Antimatter Engine',
-    description: 'Compact antimatter power source',
-    cost: 150,
-    currency: 'nexusShards',
-    realm: 'scifi',
-    originalUpgradeId: 'antimatter_engine',
-    bonus: '+50 energy/sec',
-    icon: '🌌',
-    size: 'medium',
-    color: '#155e75'
   }
 ];
