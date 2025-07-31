@@ -38,15 +38,8 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     1.5
   );
   
-  // Optimize useFrame - remove heavy animations to fix hover lag
-  useFrame((state) => {
-    // Only minimal animation for glow effect
-    if (glowRef.current && isUnlocked && !isPurchased && !hovered) {
-      // Very gentle pulsing only when not hovered - much reduced frequency
-      const pulse = Math.sin(state.clock.elapsedTime * 0.5) * 0.05 + 0.95;
-      glowRef.current.scale.setScalar(pulse);
-    }
-  });
+  // Completely remove useFrame to fix hover lag - static glow instead
+  // useFrame removed to prevent lag on hover
 
   const tierColors = ['#a7f3d0', '#7dd3fc', '#818cf8', '#c084fc'];
   const getCrystalColor = () => {
@@ -67,17 +60,13 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   // Enhanced click handler with better event handling
   const handleClick = (event: any) => {
     event.stopPropagation();
-    console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id);
-    if (isUnlocked) {
-      onInteract();
-    }
+    console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id, 'unlocked:', isUnlocked);
+    onInteract(); // Always call onInteract, let parent handle unlock logic
   };
 
   const handlePointerOver = (event: any) => {
     event.stopPropagation();
-    if (isUnlocked) {
-      setHovered(true);
-    }
+    setHovered(true); // Always allow hover, regardless of unlock status
   };
 
   const handlePointerOut = (event: any) => {
@@ -172,7 +161,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         onPointerOut={handlePointerOut}
         visible={false}
       >
-        <sphereGeometry args={[2]} />
+        <sphereGeometry args={[3]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 

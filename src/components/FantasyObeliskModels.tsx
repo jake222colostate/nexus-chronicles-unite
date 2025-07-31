@@ -85,49 +85,49 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
   const scale = getModelScale(upgradeId);
   const positionOffset = getPositionOffset(upgradeId);
 
-  // Add gentle rotation for some models - optimized to reduce hover lag
-  useFrame((state) => {
-    if (meshRef.current && isUnlocked && !hovered) {
-      const modelIndex = Math.floor(upgradeId / 5) % 5;
-      // Only rotate Lotus and Spiral models (indices 1 and 4) when not hovered
-      if (modelIndex === 1 || modelIndex === 4) {
-        meshRef.current.rotation.y += 0.003; // Reduced rotation speed
-      }
-    }
-  });
+  // Remove useFrame rotation to fix hover lag - static models
+  // useFrame removed to prevent lag on hover
 
   const handleClick = (event: any) => {
     event.stopPropagation();
     console.log('FantasyObeliskModels: Click detected on upgrade', upgradeId, 'unlocked:', isUnlocked);
-    if (isUnlocked) {
-      onInteract();
-    }
+    onInteract(); // Always call onInteract, let parent handle unlock logic
   };
 
   try {
     const { scene } = useGLTF(modelPath);
 
     return (
-      <group
-        ref={meshRef}
-        onClick={handleClick}
-        onPointerOver={onPointerOver}
-        onPointerOut={onPointerOut}
-        scale={hovered ? scale.map(s => s * 1.02) as [number, number, number] : scale}
-        position={positionOffset}
-      >
-        <primitive object={scene.clone()} />
+      <group position={positionOffset}>
+        {/* Large invisible clickable area */}
+        <mesh
+          position={[0, 3, 0]}
+          onClick={handleClick}
+          onPointerOver={onPointerOver}
+          onPointerOut={onPointerOut}
+          visible={false}
+        >
+          <sphereGeometry args={[4]} />
+          <meshBasicMaterial transparent opacity={0} />
+        </mesh>
         
-        {/* Add mystical glow effect */}
-        {isUnlocked && (
-          <pointLight
-            position={[0, 5, 0]}
-            color="#9333ea"
-            intensity={2}
-            distance={15}
-            decay={2}
-          />
-        )}
+        <group
+          ref={meshRef}
+          scale={hovered ? scale.map(s => s * 1.02) as [number, number, number] : scale}
+        >
+          <primitive object={scene.clone()} />
+          
+          {/* Add mystical glow effect */}
+          {isUnlocked && (
+            <pointLight
+              position={[0, 5, 0]}
+              color="#9333ea"
+              intensity={2}
+              distance={15}
+              decay={2}
+            />
+          )}
+        </group>
       </group>
     );
   } catch (error) {

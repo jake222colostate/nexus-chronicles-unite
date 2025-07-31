@@ -5,7 +5,7 @@ import { useFantasy3DUpgradeWorld } from './hooks/useFantasy3DUpgradeWorld';
 import { Fantasy3DScene } from './Fantasy3DScene';
 import { Fantasy3DUpgradePedestals } from './Fantasy3DUpgradePedestals';
 import { Fantasy3DUpgradeGates } from './Fantasy3DUpgradeGates';
-import { Fantasy3DUpgradeModal } from './Fantasy3DUpgradeModal';
+import { EnhancedFantasy3DUpgradeModal } from './EnhancedFantasy3DUpgradeModal';
 import { Fantasy3DInsufficientManaMessage } from './Fantasy3DInsufficientManaMessage';
 import { UpgradeActivationOverlay } from './UpgradeActivationOverlay';
 
@@ -157,27 +157,13 @@ export const Fantasy3DUpgradeWorld: React.FC<Fantasy3DUpgradeWorldProps> = ({
         <Fantasy3DInsufficientManaMessage show={showInsufficientMana} />
 
         {selectedUpgrade && (
-          <div 
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setSelectedUpgrade(null);
-              }
-            }}
-          >
-            <div className="w-full max-w-sm">
-              <Fantasy3DUpgradeModal
-                upgradeName={selectedUpgrade.name}
-                onClose={() => setSelectedUpgrade(null)}
-                onPurchase={() => handleUpgradePurchase(selectedUpgrade)}
-                upgradeData={{
-                  cost: selectedUpgrade.cost,
-                  manaPerSecond: selectedUpgrade.manaPerSecond,
-                  purchased: purchasedUpgrades.has(selectedUpgrade.id)
-                }}
-              />
-            </div>
-          </div>
+          <EnhancedFantasy3DUpgradeModal
+            upgrade={selectedUpgrade}
+            currentMana={gameState?.mana || 0}
+            isPurchased={purchasedUpgrades.has(selectedUpgrade.id)}
+            onClose={() => setSelectedUpgrade(null)}
+            onPurchase={() => handleUpgradePurchase(selectedUpgrade)}
+          />
         )}
       </div>
     );
