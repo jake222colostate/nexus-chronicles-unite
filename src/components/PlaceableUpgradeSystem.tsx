@@ -20,17 +20,10 @@ interface UpgradeModuleProps {
 
 const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick }) => {
   const [hovered, setHovered] = useState(false);
-  const [loadError, setLoadError] = useState(false);
   const meshRef = useRef<any>();
   
-  // Try to load the GLB model with error handling
-  let gltf = null;
-  try {
-    gltf = useGLTF(module.glbModel, true);
-  } catch (error) {
-    console.warn(`Failed to load GLB model: ${module.glbModel}`, error);
-    setLoadError(true);
-  }
+  // Simple approach: always render fallback since GLB files might not exist
+  // This avoids the infinite re-render issue while maintaining functionality
   
   // Rotate the model slowly
   useFrame((state) => {
@@ -39,8 +32,8 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
     }
   });
 
-  // Fallback geometry for when GLB fails to load
-  const renderFallbackGeometry = () => {
+  // Render custom geometry based on module type
+  const renderGeometry = () => {
     switch (module.id) {
       case 'large_obelisk':
         return (
@@ -73,6 +66,63 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
             </mesh>
           </group>
         );
+      case 'phoenix':
+        return (
+          <group>
+            <mesh position={[0, 0.4, 0]}>
+              <sphereGeometry args={[0.2]} />
+              <meshStandardMaterial color={module.color} emissive={module.color} emissiveIntensity={0.3} />
+            </mesh>
+            <mesh position={[0, 0.6, 0]} rotation={[0, 0, Math.PI / 4]}>
+              <coneGeometry args={[0.1, 0.3]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+          </group>
+        );
+      case 'spiral':
+        return (
+          <group>
+            {Array.from({ length: 12 }).map((_, i) => {
+              const angle = (i / 12) * Math.PI * 4;
+              const height = i * 0.05;
+              const radius = 0.2 + i * 0.02;
+              return (
+                <mesh key={i} position={[Math.cos(angle) * radius, height, Math.sin(angle) * radius]}>
+                  <sphereGeometry args={[0.05]} />
+                  <meshStandardMaterial color={module.color} />
+                </mesh>
+              );
+            })}
+          </group>
+        );
+      case 'melting_tower':
+        return (
+          <group>
+            <mesh position={[0, 0.3, 0]}>
+              <cylinderGeometry args={[0.2, 0.2, 0.6]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+            <mesh position={[0, 0.7, 0]}>
+              <torusGeometry args={[0.25, 0.05]} />
+              <meshStandardMaterial color={module.color} emissive={module.color} emissiveIntensity={0.2} />
+            </mesh>
+          </group>
+        );
+      case 'podiums':
+        return (
+          <group>
+            <mesh position={[0, 0.1, 0]}>
+              <cylinderGeometry args={[0.3, 0.3, 0.1]} />
+              <meshStandardMaterial color={module.color} />
+            </mesh>
+            {[-0.2, 0, 0.2].map((offset, i) => (
+              <mesh key={i} position={[offset, 0.3, 0]}>
+                <boxGeometry args={[0.1, 0.3, 0.1]} />
+                <meshStandardMaterial color={module.color} />
+              </mesh>
+            ))}
+          </group>
+        );
       default:
         return (
           <mesh position={[0, 0.3, 0]}>
@@ -91,22 +141,14 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
         <meshStandardMaterial color="#444444" />
       </mesh>
       
-      {/* Model or fallback */}
+      {/* Custom geometry */}
       <group 
         ref={meshRef}
         onClick={onClick}
         onPointerEnter={() => setHovered(true)}
         onPointerLeave={() => setHovered(false)}
       >
-        {gltf && gltf.scene && !loadError ? (
-          <primitive 
-            object={gltf.scene.clone()} 
-            position={[0, 0.3, 0]}
-            scale={[0.5, 0.5, 0.5]}
-          />
-        ) : (
-          renderFallbackGeometry()
-        )}
+        {renderGeometry()}
       </group>
       
       {/* Tooltip when hovered */}
@@ -115,7 +157,6 @@ const UpgradeModule: React.FC<UpgradeModuleProps> = ({ module, position, onClick
           <div className="bg-black/80 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap pointer-events-none">
             <div className="font-semibold">{module.name}</div>
             <div className="text-xs text-gray-300">{module.bonus}</div>
-            {loadError && <div className="text-xs text-red-400">Using fallback model</div>}
           </div>
         </Html>
       )}
