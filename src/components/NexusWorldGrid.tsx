@@ -7,6 +7,7 @@ import { useGameStateStore } from '@/stores/useGameStateStore';
 import { NexusVendorShops } from './NexusVendorShops';
 import { NexusInventoryPanel } from './NexusInventoryPanel';
 import { PlaceableUpgradeSystem } from './PlaceableUpgradeSystem';
+import { UpgradeSelectionMenu } from './UpgradeSelectionMenu';
 
 interface GridTile {
   x: number;
@@ -205,6 +206,10 @@ export const NexusWorldGrid: React.FC = () => {
   const [activeVendor, setActiveVendor] = useState<string | null>(null);
   const [showInventory, setShowInventory] = useState(false);
   const [placedModules, setPlacedModules] = useState<PlacedModule[]>([]);
+  const [showUpgradeMenu, setShowUpgradeMenu] = useState(false);
+  const [upgradeMenuPosition, setUpgradeMenuPosition] = useState({ x: 0, y: 0 });
+  const [selectedUpgradeSlot, setSelectedUpgradeSlot] = useState<{ id: string; position: [number, number, number] } | null>(null);
+  const upgradeSystemRef = useRef<any>();
 
   // Create 5x5 grid
   const gridSize = 5;
@@ -233,22 +238,19 @@ export const NexusWorldGrid: React.FC = () => {
     setActiveVendor(vendorType);
   };
 
-  const handleModulePlacement = (moduleId: string) => {
-    if (!selectedTile) return;
-
-    const newModule: PlacedModule = {
-      id: `placed_${Date.now()}`,
-      moduleId,
-      position: [selectedTile.x, 0, selectedTile.z],
-      effectType: 'manaBoost', // This would come from module data
-      value: 10,
-      realmAffected: 'fantasy'
-    };
-
-    setPlacedModules(prev => [...prev, newModule]);
-    setSelectedTile(null);
-    setShowInventory(false);
+  const handleUpgradeMenuShow = (show: boolean, position: { x: number; y: number }, slotData: { id: string; position: [number, number, number] } | null) => {
+    setShowUpgradeMenu(show);
+    setUpgradeMenuPosition(position);
+    setSelectedUpgradeSlot(slotData);
   };
+
+  const handleUpgradeSelect = (moduleId: string) => {
+    if (selectedUpgradeSlot && upgradeSystemRef.current) {
+      upgradeSystemRef.current.placeUpgrade(moduleId, selectedUpgradeSlot);
+    }
+    setShowUpgradeMenu(false);
+  };
+
 
   return (
     <>
@@ -332,7 +334,10 @@ export const NexusWorldGrid: React.FC = () => {
           />
           
           {/* Placeable Upgrade System */}
-          <PlaceableUpgradeSystem />
+          <PlaceableUpgradeSystem 
+            ref={upgradeSystemRef}
+            onShowUpgradeMenu={handleUpgradeMenuShow}
+          />
 
           {/* First Person Controls */}
           <PlayerControls />
@@ -349,8 +354,16 @@ export const NexusWorldGrid: React.FC = () => {
       <NexusInventoryPanel
         isOpen={showInventory}
         onClose={() => setShowInventory(false)}
-        onModuleSelect={handleModulePlacement}
+        onModuleSelect={() => {}} // Empty handler since we don't use this anymore
         gameState={gameState}
+      />
+
+      {/* Upgrade Selection Menu - Outside Canvas */}
+      <UpgradeSelectionMenu
+        isOpen={showUpgradeMenu}
+        onClose={() => setShowUpgradeMenu(false)}
+        onSelectUpgrade={handleUpgradeSelect}
+        position={upgradeMenuPosition}
       />
     </>
   );

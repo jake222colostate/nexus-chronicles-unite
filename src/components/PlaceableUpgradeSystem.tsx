@@ -222,17 +222,15 @@ const PathUpgradeSlots: React.FC<PathUpgradeSlotsProps> = ({ onSlotClick, placed
 interface PlaceableUpgradeSystemProps {
   selectedModuleId?: string;
   onModulePlaced?: (moduleId: string, position: [number, number, number]) => void;
+  onShowUpgradeMenu?: (show: boolean, position: { x: number; y: number }, slotData: { id: string; position: [number, number, number] } | null) => void;
 }
 
-export const PlaceableUpgradeSystem: React.FC<PlaceableUpgradeSystemProps> = ({
-  selectedModuleId,
-  onModulePlaced
-}) => {
+export const PlaceableUpgradeSystem = React.forwardRef<
+  { placeUpgrade: (moduleId: string, slotData: { id: string; position: [number, number, number] }) => void },
+  PlaceableUpgradeSystemProps
+>(({ selectedModuleId, onModulePlaced, onShowUpgradeMenu }, ref) => {
   const gameState = useGameStateStore();
   const [placedUpgrades, setPlacedUpgrades] = useState<PlacedUpgrade[]>([]);
-  const [showUpgradeMenu, setShowUpgradeMenu] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<{ id: string; position: [number, number, number] } | null>(null);
-  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
 
   const handleSlotClick = (slotId: string, position: [number, number, number], event?: any) => {
     // Prevent placement on the path (x between -2 and 2)
@@ -246,19 +244,16 @@ export const PlaceableUpgradeSystem: React.FC<PlaceableUpgradeSystemProps> = ({
     if (occupied) return;
     
     // Set menu position and show upgrade selection
+    let menuPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     if (event && event.clientX && event.clientY) {
-      setMenuPosition({ x: event.clientX, y: event.clientY });
-    } else {
-      setMenuPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      menuPos = { x: event.clientX, y: event.clientY };
     }
     
-    setSelectedSlot({ id: slotId, position });
-    setShowUpgradeMenu(true);
+    onShowUpgradeMenu?.(true, menuPos, { id: slotId, position });
   };
 
-  const handleUpgradeSelect = (moduleId: string) => {
-    if (!selectedSlot) return;
-    
+  // Expose method to place upgrade from external menu
+  const placeUpgrade = (moduleId: string, slotData: { id: string; position: [number, number, number] }) => {
     const module = nexusUpgradeModules.find(m => m.id === moduleId);
     if (!module) return;
     
@@ -266,7 +261,7 @@ export const PlaceableUpgradeSystem: React.FC<PlaceableUpgradeSystemProps> = ({
     const newUpgrade: PlacedUpgrade = {
       id: `upgrade_${Date.now()}`,
       moduleId,
-      position: selectedSlot.position,
+      position: slotData.position,
       module
     };
     
@@ -281,23 +276,18 @@ export const PlaceableUpgradeSystem: React.FC<PlaceableUpgradeSystemProps> = ({
       gameState.setEnergyPerSecond(gameState.energyPerSecond + bonus);
     }
     
-    onModulePlaced?.(moduleId, selectedSlot.position);
-    setSelectedSlot(null);
+    onModulePlaced?.(moduleId, slotData.position);
   };
 
+  // Store reference for external access
+  React.useImperativeHandle(ref, () => ({
+    placeUpgrade
+  }));
+
   return (
-    <>
-      <PathUpgradeSlots 
-        onSlotClick={handleSlotClick}
-        placedUpgrades={placedUpgrades}
-      />
-      
-      <UpgradeSelectionMenu
-        isOpen={showUpgradeMenu}
-        onClose={() => setShowUpgradeMenu(false)}
-        onSelectUpgrade={handleUpgradeSelect}
-        position={menuPosition}
-      />
-    </>
+    <PathUpgradeSlots 
+      onSlotClick={handleSlotClick}
+      placedUpgrades={placedUpgrades}
+    />
   );
-};
+});
