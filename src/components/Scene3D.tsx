@@ -113,9 +113,7 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
   // Handle camera position updates for altitude tracking
   const handleCameraPositionUpdate = useCallback((position: Vector3) => {
     if (realm === 'scifi') {
-      const newAltitude = Math.max(0, position.y * 30); // Increased multiplier for easier layer progression
-      setPlayerAltitude(newAltitude);
-      console.log(`📍 Camera Y: ${position.y.toFixed(2)}, Altitude: ${newAltitude.toFixed(1)}`);
+      setPlayerAltitude(Math.max(0, position.y * 10)); // Convert camera Y to altitude
     }
   }, [realm]);
 
@@ -246,11 +244,6 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
                 onUpgradeClick={onUpgradeClick}
                 checkUpgradeUnlocked={checkUpgradeUnlocked}
               />
-              <FloatingUpgradeSystem
-                energyCredits={gameState.energyCredits || 0}
-                onPurchaseUpgrade={onPurchaseUpgrade || (() => {})}
-                purchasedUpgrades={gameState.purchasedUpgrades || []}
-              />
               <CannonPlatformSystem
                 cannonCount={gameState.cannonCount || 1}
                 targets={enemyPositions}
@@ -274,7 +267,8 @@ export const Scene3D: React.FC<Scene3DProps> = React.memo(({
             <RebuiltFantasyRealm playerPosition={playerPosition} />
           )}
 
-          {/* UpgradeNode3D removed - unused */}
+          {/* Show upgrade nodes in both realms */}
+          {upgradeNodes}
 
           {/* Tap effect */}
           {showTapEffect && onTapEffectComplete && (

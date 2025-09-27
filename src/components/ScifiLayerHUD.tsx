@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useScifiLayerStore } from '@/stores/useScifiLayerStore';
-import { SCIFI_LAYER_THEMES, getNextLayerProgress } from '@/data/ScifiLayerSystem';
+import { SCIFI_LAYERS } from '@/data/SciFiUpgradeSystem';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,14 +36,22 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
   };
 
   const getLayerData = () => {
-    return SCIFI_LAYER_THEMES[currentLayer] || {
+    return SCIFI_LAYERS[currentLayer] || {
       name: `Beyond Layer ${currentLayer}`,
-      visual: { theme: 'unknown', primaryColor: '#dc2626' }
+      visual: { theme: 'unknown', color: '#dc2626' }
     };
   };
 
-  const getNextLayerProgressLocal = () => {
-    return getNextLayerProgress(altitude, currentLayer);
+  const getNextLayerProgress = () => {
+    const nextLayerData = SCIFI_LAYERS[currentLayer + 1];
+    if (!nextLayerData) return 100; // Max layer reached
+    
+    const currentLayerThreshold = SCIFI_LAYERS[currentLayer]?.altitudeThreshold || 0;
+    const nextLayerThreshold = nextLayerData.altitudeThreshold;
+    const progressInLayer = altitude - currentLayerThreshold;
+    const layerHeight = nextLayerThreshold - currentLayerThreshold;
+    
+    return Math.min((progressInLayer / layerHeight) * 100, 100);
   };
 
   const layerData = getLayerData();
@@ -61,9 +69,6 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
                   <div className="text-xs text-cyan-300 font-normal">
                     {layerData.name}
                   </div>
-                  <div className="text-xs text-yellow-300 font-normal">
-                    Altitude: {altitude.toFixed(1)}
-                  </div>
                 </div>
                 <Badge variant="outline" className="text-yellow-400 border-yellow-400">
                   Max: {highestLayer}
@@ -79,11 +84,11 @@ export const ScifiLayerHUD: React.FC<ScifiLayerHUDProps> = ({ showDebug = false 
             <div className="w-full bg-slate-700 rounded-full h-2">
               <div 
                 className="bg-cyan-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${getNextLayerProgressLocal()}%` }}
+                style={{ width: `${getNextLayerProgress()}%` }}
               />
             </div>
             <div className="text-xs text-center text-slate-400">
-              {getNextLayerProgressLocal().toFixed(1)}% to Layer {currentLayer + 1}
+              {getNextLayerProgress().toFixed(1)}% to Layer {currentLayer + 1}
             </div>
           </div>
         </CardContent>

@@ -1,343 +1,278 @@
 import React, { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { useScifiLayerStore } from '@/stores/useScifiLayerStore';
-import { SCIFI_LAYER_THEMES, getLayerByAltitude } from '@/data/ScifiLayerSystem';
+import { SCIFI_LAYERS } from '@/data/SciFiUpgradeSystem';
 import { Vector3 } from 'three';
 
 export const ScifiLayerEnvironments: React.FC = () => {
-  const { currentLayer, altitude } = useScifiLayerStore();
+  const { currentLayer } = useScifiLayerStore();
   const timeRef = useRef(0);
 
-  useFrame((_, delta) => {
-    timeRef.current += delta;
+  // Smooth time progression for animations
+  useFrame((state, delta) => {
+    timeRef.current += delta * 0.3; // Much slower animation speed
   });
 
-  // Generate distinctive layer decorations based on theme
-  const generateLayerDecorations = (layerId: number) => {
-    const layerConfig = SCIFI_LAYER_THEMES[layerId];
-    if (!layerConfig) return [];
+  // Generate layer-specific platform bases with unique characteristics
+  const getLayerBase = (layerNum: number) => {
+    const layerData = SCIFI_LAYERS[layerNum];
+    if (!layerData) return null;
 
-    const decorations: JSX.Element[] = [];
-    const baseAltitude = layerConfig.altitudeThreshold / 10;
-
-    layerConfig.decorations.forEach((decoration, decorationIndex) => {
-      switch (decoration.type) {
-        case 'antennas':
-          // Layer 1: Simple antennas
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            decorations.push(
-              <mesh key={`antenna-${i}`} position={[
-                Math.cos(angle) * decoration.properties.radius,
-                baseAltitude + 1.5,
-                Math.sin(angle) * decoration.properties.radius
-              ]}>
-                <cylinderGeometry args={[0.1, 0.1, decoration.properties.height]} />
-                <meshBasicMaterial color={decoration.properties.color} wireframe={decoration.properties.wireframe} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'debris_chunks':
-          // Layer 2: Floating debris
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            const randomOffset = Math.random() * 0.5;
-            decorations.push(
-              <mesh key={`debris-${i}`} position={[
-                Math.cos(angle) * (decoration.properties.radius + randomOffset),
-                baseAltitude + 0.5 + randomOffset,
-                Math.sin(angle) * (decoration.properties.radius + randomOffset)
-              ]} rotation={[
-                Math.random() * 0.5,
-                angle + timeRef.current * 0.1,
-                Math.random() * 0.3
-              ]}>
-                <boxGeometry args={decoration.properties.size.concat([decoration.properties.size[0]])} />
-                <meshBasicMaterial color={decoration.properties.color} wireframe={decoration.properties.wireframe} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'energy_crystals':
-          // Layer 3: Glowing energy crystals
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            const pulse = Math.sin(timeRef.current * 2 + i) * 0.3 + 0.7;
-            decorations.push(
-              <group key={`crystal-${i}`} position={[
-                Math.cos(angle) * decoration.properties.radius,
-                baseAltitude + decoration.properties.height,
-                Math.sin(angle) * decoration.properties.radius
-              ]}>
-                <mesh scale={[1, pulse, 1]}>
-                  <octahedronGeometry args={[0.8]} />
-                  <meshBasicMaterial color={decoration.properties.color} transparent opacity={0.8} />
-                </mesh>
-                {decoration.properties.glow && (
-                  <pointLight color={decoration.properties.color} intensity={0.5 * pulse} distance={10} />
-                )}
-              </group>
-            );
-          }
-          break;
-
-        case 'gravity_rings':
-          // Layer 4: Tilted gravity rings
-          decoration.properties.radius.forEach((radius: number, ringIndex: number) => {
-            decorations.push(
-              <mesh key={`gravity-ring-${ringIndex}`} position={[0, baseAltitude + 1, 0]} 
-                    rotation={[decoration.properties.tilt * Math.PI / 180, timeRef.current * 0.05 * (ringIndex + 1), 0]}>
-                <torusGeometry args={[radius, decoration.properties.thickness]} />
-                <meshBasicMaterial color={decoration.properties.color} wireframe={decoration.properties.wireframe} />
-              </mesh>
-            );
-          });
-          break;
-
-        case 'event_horizon':
-          // Layer 5: Black hole event horizon
-          decorations.push(
-            <group key="blackhole-core" position={[0, baseAltitude + 1, 0]}>
-              <mesh>
-                <sphereGeometry args={[decoration.properties.radius]} />
-                <meshBasicMaterial color={decoration.properties.color} transparent opacity={0.9} />
-              </mesh>
-              <mesh scale={[1.2, 1.2, 1.2]}>
-                <sphereGeometry args={[decoration.properties.radius]} />
-                <meshBasicMaterial color={decoration.properties.innerGlow} wireframe transparent opacity={0.3} />
-              </mesh>
-            </group>
-          );
-          break;
-
-        case 'matter_streams':
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            const spiralOffset = timeRef.current * 0.3 + i;
-            decorations.push(
-              <mesh key={`matter-stream-${i}`} position={[
-                Math.cos(angle + spiralOffset) * 3,
-                baseAltitude + 1,
-                Math.sin(angle + spiralOffset) * 3
-              ]} rotation={[0, angle + spiralOffset, 0]}>
-                <cylinderGeometry args={[0.1, 0.1, decoration.properties.length]} />
-                <meshBasicMaterial color={decoration.properties.color} transparent opacity={0.7} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'holo_grid':
-          // Layer 6: Holographic grid system
-          const gridSize = decoration.properties.size;
-          const divisions = decoration.properties.divisions;
-          const gridStep = gridSize / divisions;
-          
-          // Grid lines
-          for (let i = 0; i <= divisions; i++) {
-            const offset = (i * gridStep) - (gridSize / 2);
-            // Horizontal lines
-            decorations.push(
-              <mesh key={`grid-h-${i}`} position={[0, baseAltitude, offset]}>
-                <boxGeometry args={[gridSize, 0.05, 0.05]} />
-                <meshBasicMaterial color={decoration.properties.color} transparent opacity={decoration.properties.opacity} />
-              </mesh>
-            );
-            // Vertical lines
-            decorations.push(
-              <mesh key={`grid-v-${i}`} position={[offset, baseAltitude, 0]}>
-                <boxGeometry args={[0.05, 0.05, gridSize]} />
-                <meshBasicMaterial color={decoration.properties.color} transparent opacity={decoration.properties.opacity} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'data_nodes':
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            const pulse = Math.sin(timeRef.current * 1.5 + i) * 0.2 + 0.8;
-            decorations.push(
-              <mesh key={`data-node-${i}`} position={[
-                Math.cos(angle) * decoration.properties.radius,
-                baseAltitude + 0.5,
-                Math.sin(angle) * decoration.properties.radius
-              ]} scale={[pulse, pulse, pulse]}>
-                <sphereGeometry args={[decoration.properties.size]} />
-                <meshBasicMaterial color={decoration.properties.color} transparent opacity={0.8} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'bio_tendrils':
-          // Layer 7: Organic bio-tech tendrils
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            const growth = Math.sin(timeRef.current * 0.5 + i) * 0.3 + 0.7;
-            decorations.push(
-              <mesh key={`tendril-${i}`} position={[
-                Math.cos(angle) * 5,
-                baseAltitude + 1,
-                Math.sin(angle) * 5
-              ]} rotation={[0, angle, Math.sin(timeRef.current + i) * 0.2]} scale={[1, growth, 1]}>
-                <cylinderGeometry args={[decoration.properties.thickness, decoration.properties.thickness * 0.5, decoration.properties.length]} />
-                <meshBasicMaterial color={decoration.properties.color} transparent opacity={0.8} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'bio_nodes':
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            const pulse = Math.sin(timeRef.current * 1.2 + i) * 0.4 + 0.6;
-            decorations.push(
-              <mesh key={`bio-node-${i}`} position={[
-                Math.cos(angle) * decoration.properties.radius,
-                baseAltitude + 1.5,
-                Math.sin(angle) * decoration.properties.radius
-              ]} scale={[pulse, pulse, pulse]}>
-                <dodecahedronGeometry args={[decoration.properties.size]} />
-                <meshBasicMaterial color={decoration.properties.color} transparent opacity={0.9} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'quantum_fragments':
-          // Layer 8: Quantum anomaly fragments
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            const phase = timeRef.current * 0.8 + i;
-            const visibility = Math.sin(phase) * 0.5 + 0.5;
-            decorations.push(
-              <mesh key={`quantum-${i}`} position={[
-                Math.cos(angle + phase * 0.1) * decoration.properties.radius,
-                baseAltitude + 1 + Math.sin(phase) * 0.5,
-                Math.sin(angle + phase * 0.1) * decoration.properties.radius
-              ]} rotation={[phase * 0.2, phase * 0.3, phase * 0.1]}>
-                <octahedronGeometry args={[decoration.properties.size]} />
-                <meshBasicMaterial color={decoration.properties.color} wireframe transparent opacity={visibility} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'plasma_arcs':
-          // Layer 9: Plasma lightning arcs
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            const electrical = Math.sin(timeRef.current * 3 + i) * 0.3 + 0.7;
-            decorations.push(
-              <mesh key={`plasma-${i}`} position={[
-                Math.cos(angle) * 8,
-                baseAltitude + 2,
-                Math.sin(angle) * 8
-              ]} rotation={[0, angle, Math.sin(timeRef.current * 2 + i) * 0.5]} scale={[1, electrical, 1]}>
-                <cylinderGeometry args={[decoration.properties.thickness, decoration.properties.thickness * 0.3, decoration.properties.length]} />
-                <meshBasicMaterial color={decoration.properties.color} transparent opacity={0.9} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'energy_storms':
-          for (let i = 0; i < decoration.count; i++) {
-            const angle = (i / decoration.count) * Math.PI * 2;
-            const chaos = Math.sin(timeRef.current * 2 + i) * 0.5 + 0.5;
-            decorations.push(
-              <mesh key={`storm-${i}`} position={[
-                Math.cos(angle) * 6,
-                baseAltitude + 3,
-                Math.sin(angle) * 6
-              ]} scale={[chaos, chaos, chaos]}>
-                <icosahedronGeometry args={[decoration.properties.radius]} />
-                <meshBasicMaterial color={decoration.properties.color} wireframe transparent opacity={0.6} />
-              </mesh>
-            );
-          }
-          break;
-
-        case 'singularity_core':
-          // Layer 10: Central singularity
-          decorations.push(
-            <group key="singularity" position={[0, baseAltitude + 2, 0]}>
-              <mesh>
-                <sphereGeometry args={[decoration.properties.radius]} />
-                <meshBasicMaterial color={decoration.properties.color} />
-              </mesh>
-            </group>
-          );
-          break;
-
-        case 'distortion_rings':
-          decoration.properties.radius.forEach((radius: number, ringIndex: number) => {
-            const warp = Math.sin(timeRef.current * 0.5 + ringIndex) * 0.3;
-            decorations.push(
-              <mesh key={`distortion-ring-${ringIndex}`} position={[0, baseAltitude + 2, 0]} 
-                    rotation={[warp, timeRef.current * 0.1 * (ringIndex + 1), warp * 0.5]}>
-                <torusGeometry args={[radius, 0.2]} />
-                <meshBasicMaterial color={decoration.properties.color} wireframe transparent opacity={0.7} />
-              </mesh>
-            );
-          });
-          break;
-      }
-    });
-
-    return decorations;
-  };
-
-  // Generate the complete layer environment
-  const renderLayer = (layerId: number) => {
-    const layerConfig = SCIFI_LAYER_THEMES[layerId];
-    if (!layerConfig) return null;
-
-    const baseAltitude = layerConfig.altitudeThreshold / 10;
-    const decorations = generateLayerDecorations(layerId);
-
+    const baseAltitude = layerData.altitudeThreshold / 10;
+    
     return (
-      <group key={`layer-${layerId}`} position={[0, baseAltitude, 0]}>
-        {/* Layer base platform - more visible */}
-        <mesh position={[0, 0, 0]}>
-          <cylinderGeometry args={[12, 12, 1]} />
-          <meshBasicMaterial color={layerConfig.visual.primaryColor} transparent opacity={0.8} />
+      <group key={`base-${layerNum}`} position={[0, baseAltitude - 3, -2]}>
+        {/* Main platform base - same structure as FloatingIsland but layer-themed */}
+        <mesh position={[0, 0, 0]} castShadow receiveShadow>
+          <cylinderGeometry args={[8, 7, 1.5, 8]} />
+          <meshLambertMaterial
+            color={layerData.visual.color}
+            transparent
+            opacity={0.8}
+          />
         </mesh>
-        
-        {/* Layer ring indicator */}
-        <mesh position={[0, 0.5, 0]}>
-          <torusGeometry args={[13, 0.5]} />
-          <meshBasicMaterial color={layerConfig.visual.primaryColor} />
+
+        {/* Decorative rings with layer-specific styling */}
+        <mesh position={[0, 0.8, 0]}>
+          <ringGeometry args={[7.5, 8.5, 16]} />
+          <meshBasicMaterial
+            color={layerData.visual.particleColor}
+            transparent
+            opacity={0.4}
+          />
         </mesh>
-        
-        {/* Layer decorations */}
-        {decorations}
-        
-        {/* Ambient lighting for layer */}
-        <ambientLight intensity={layerConfig.visual.ambientIntensity} color={layerConfig.visual.primaryColor} />
+
+        {/* Glowing core with layer theme */}
+        <mesh position={[0, 0.2, 0]}>
+          <sphereGeometry args={[0.5, 16, 16]} />
+          <meshBasicMaterial
+            color={layerData.visual.particleColor}
+            transparent
+            opacity={0.8}
+          />
+        </mesh>
+
+        {/* Layer-specific base decorations */}
+        {getLayerBaseDecorations(layerNum, baseAltitude)}
       </group>
     );
   };
 
-  // Only render current layer for performance
+  // Add unique decorations to each layer's base
+  const getLayerBaseDecorations = (layerNum: number, baseAltitude: number) => {
+    const decorations = [];
+
+    switch (layerNum) {
+      case 1: // Lower Orbit - Simple antenna array
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`antenna-${i}`} position={[
+              Math.cos(angle) * 6,
+              1.5,
+              Math.sin(angle) * 6
+            ]}>
+              <cylinderGeometry args={[0.1, 0.1, 3]} />
+              <meshBasicMaterial color="#60a5fa" />
+            </mesh>
+          );
+        }
+        break;
+
+      case 2: // Debris Field - Damaged sections
+        for (let i = 0; i < 3; i++) {
+          const angle = (i / 3) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`damage-${i}`} position={[
+              Math.cos(angle) * 7,
+              0.5,
+              Math.sin(angle) * 7
+            ]} rotation={[Math.random() * 0.5, angle, Math.random() * 0.3]}>
+              <boxGeometry args={[0.8, 0.3, 1.2]} />
+              <meshBasicMaterial color="#8b5cf6" wireframe />
+            </mesh>
+          );
+        }
+        break;
+
+      case 3: // Solar Wind Zone - Solar panel array
+        for (let i = 0; i < 6; i++) {
+          const angle = (i / 6) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`solar-${i}`} position={[
+              Math.cos(angle) * 7.5,
+              1,
+              Math.sin(angle) * 7.5
+            ]} rotation={[0, angle, 0]}>
+              <boxGeometry args={[1.5, 0.1, 0.8]} />
+              <meshBasicMaterial color="#fbbf24" transparent opacity={0.7} />
+            </mesh>
+          );
+        }
+        break;
+
+      case 4: // Gravity Warped Zone - Distorted stabilizers
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`stabilizer-${i}`} position={[
+              Math.cos(angle) * 6.5,
+              1.2,
+              Math.sin(angle) * 6.5
+            ]} rotation={[Math.sin(timeRef.current + i) * 0.3, angle, 0]}>
+              <octahedronGeometry args={[0.8]} />
+              <meshBasicMaterial color="#f87171" wireframe />
+            </mesh>
+          );
+        }
+        break;
+
+      case 5: // Cosmic Radiation Belt - Energy collectors
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`collector-${i}`} position={[
+              Math.cos(angle) * 7,
+              1 + Math.sin(timeRef.current + i) * 0.3,
+              Math.sin(angle) * 7
+            ]}>
+              <sphereGeometry args={[0.4]} />
+              <meshBasicMaterial color="#34d399" transparent opacity={0.8} />
+            </mesh>
+          );
+        }
+        break;
+
+      case 6: // Void Nexus - Portal rings
+        decorations.push(
+          <mesh key="portal-ring" position={[0, 2, 0]} rotation={[0, timeRef.current * 0.1, 0]}>
+            <torusGeometry args={[6, 0.3]} />
+            <meshBasicMaterial color="#818cf8" wireframe />
+          </mesh>
+        );
+        break;
+
+      case 7: // Dark Matter Field - Dark energy cores
+        for (let i = 0; i < 3; i++) {
+          const angle = (i / 3) * Math.PI * 2;
+          decorations.push(
+            <mesh key={`dark-core-${i}`} position={[
+              Math.cos(angle) * 5,
+              1.5,
+              Math.sin(angle) * 5
+            ]}>
+              <octahedronGeometry args={[0.6]} />
+              <meshBasicMaterial color="#a16207" transparent opacity={0.9} />
+            </mesh>
+          );
+        }
+        break;
+
+      case 8: // Quantum Anomaly Zone - Quantum field generators
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          const phase = timeRef.current * 0.3 + i;
+          decorations.push(
+            <mesh key={`quantum-${i}`} position={[
+              Math.cos(angle) * 6,
+              1 + Math.sin(phase) * 0.5,
+              Math.sin(angle) * 6
+            ]} rotation={[phase * 0.2, phase * 0.3, phase * 0.1]}>
+              <octahedronGeometry args={[0.5]} />
+              <meshBasicMaterial color="#f472b6" wireframe />
+            </mesh>
+          );
+        }
+        break;
+    }
+
+    return decorations;
+  };
+
+  // Generate simplified environmental elements around the base
+  const getLayerEnvironment = (layerNum: number) => {
+    const layerData = SCIFI_LAYERS[layerNum];
+    if (!layerData) return null;
+
+    const baseAltitude = layerData.altitudeThreshold / 10;
+    const elements = [];
+
+    switch (layerNum) {
+      case 1: // Lower Orbit - Simple atmospheric beacons
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          elements.push(
+            <group key={`beacon-${i}`} position={[
+              Math.cos(angle) * 15, 
+              baseAltitude + 2, 
+              Math.sin(angle) * 15
+            ]}>
+              <mesh>
+                <cylinderGeometry args={[0.5, 0.5, 4]} />
+                <meshBasicMaterial color="#3b82f6" />
+              </mesh>
+              <pointLight color="#60a5fa" intensity={0.3} distance={10} />
+            </group>
+          );
+        }
+        break;
+
+      case 2: // Debris Field - Floating debris
+        for (let i = 0; i < 6; i++) {
+          elements.push(
+            <group key={`debris-${i}`} position={[
+              (Math.random() - 0.5) * 30,
+              baseAltitude + (Math.random() - 0.5) * 5,
+              (Math.random() - 0.5) * 30
+            ]} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
+              <mesh>
+                <boxGeometry args={[1 + Math.random(), 0.5 + Math.random(), 1 + Math.random()]} />
+                <meshBasicMaterial color="#8b5cf6" wireframe />
+              </mesh>
+            </group>
+          );
+        }
+        break;
+
+      case 3: // Solar Wind Zone - Energy streams
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          elements.push(
+            <group key={`stream-${i}`} position={[
+              Math.cos(angle) * 20,
+              baseAltitude + 4,
+              Math.sin(angle) * 20
+            ]}>
+              <mesh>
+                <cylinderGeometry args={[0.2, 0.8, 8]} />
+                <meshBasicMaterial color="#fbbf24" transparent opacity={0.7} />
+              </mesh>
+              <pointLight color="#fbbf24" intensity={0.6} distance={15} />
+            </group>
+          );
+        }
+        break;
+    }
+
+    return (
+      <group key={`layer-${layerNum}`}>
+        {/* Layer base (always present) */}
+        {getLayerBase(layerNum)}
+        
+        {/* Environmental elements */}
+        {elements}
+      </group>
+    );
+  };
+
+  // Only render current layer for better performance
   const layersToRender = useMemo(() => {
     return [currentLayer];
   }, [currentLayer]);
 
   return (
     <group>
-      {layersToRender.map(layerId => renderLayer(layerId))}
-      
-      {/* Global fog effect based on current layer */}
-      <fog attach="fog" args={[
-        SCIFI_LAYER_THEMES[currentLayer]?.visual.fogColor || '#0a0a1a',
-        30,
-        200
-      ]} />
+      {layersToRender.map(layerNum => getLayerEnvironment(layerNum))}
     </group>
   );
 };
