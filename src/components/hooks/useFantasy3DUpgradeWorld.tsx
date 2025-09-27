@@ -30,7 +30,6 @@ export const useFantasy3DUpgradeWorld = ({
   const [showInsufficientMana, setShowInsufficientMana] = useState(false);
   const [maxUnlockedUpgrade, setMaxUnlockedUpgrade] = useState(() => 0); // Start with first upgrade unlocked
   const [purchasedUpgrades, setPurchasedUpgrades] = useState(() => new Set<number>());
-  const [unlockedGates, setUnlockedGates] = useState(() => new Set<number>([0])); // First section is unlocked
   
   // Use refs for values that don't need to trigger re-renders
   const currentManaRef = useRef(gameState?.mana || globalGameState.mana || 100);
@@ -109,10 +108,6 @@ export const useFantasy3DUpgradeWorld = ({
       (index % 2 === 0 ? -0.5 : 0.5) :  // Obelisks moved inward by 1 unit
       (index % 2 === 0 ? -8 : 8); // Podiums moved closer to path (was -12/12)
     
-    // Check if this upgrade's section is unlocked by gates
-    const sectionIndex = Math.floor(index / 5);
-    const isSectionUnlocked = unlockedGates.has(sectionIndex);
-    
     return {
       id: index,
       name: template.name,
@@ -122,7 +117,7 @@ export const useFantasy3DUpgradeWorld = ({
       modelType,
       position: [lane, modelType === 'obelisk' ? 50 : 0.4, -30 - index * UPGRADE_SPACING], // Podiums at y=0.4
       tier: templateIndex,
-      unlocked: isSectionUnlocked && (index === 0 || maxUnlockedUpgrade >= index - 1)
+      unlocked: index === 0 || maxUnlockedUpgrade >= index - 1
     };
   };
 
@@ -147,19 +142,15 @@ export const useFantasy3DUpgradeWorld = ({
     });
   }, [cameraPosition.z]);
 
-  // Update unlock status when new upgrades are purchased or gates are unlocked
+  // Update unlock status when new upgrades are purchased
   useEffect(() => {
     setUpgrades(prev =>
-      prev.map(u => {
-        const sectionIndex = Math.floor(u.id / 5);
-        const isSectionUnlocked = unlockedGates.has(sectionIndex);
-        return {
-          ...u,
-          unlocked: isSectionUnlocked && (u.id === 0 || maxUnlockedUpgrade >= u.id - 1)
-        };
-      })
+      prev.map(u => ({
+        ...u,
+        unlocked: u.id === 0 || maxUnlockedUpgrade >= u.id - 1
+      }))
     );
-  }, [maxUnlockedUpgrade, unlockedGates]);
+  }, [maxUnlockedUpgrade]);
 
   // Update refs when gameState changes
   useEffect(() => {
@@ -193,57 +184,70 @@ export const useFantasy3DUpgradeWorld = ({
   }, [cameraPosition]);
 
   const handleUpgradePurchase = useCallback((upgrade: any) => {
-    // Simple duplicate check
+    // Create unique purchase identifier
+    const purchaseId = `${upgrade.id}-${Date.now()}`;
+    
+    console.log(`Purchase attempt for ${upgrade.name} with ID: ${purchaseId}`);
+    
+    // STRICT: Only allow one purchase at a time globally
+    if (activePurchaseRef.current !== null) {
+      console.log(`Purchase blocked - another purchase active: ${activePurchaseRef.current}`);
+      return;
+    }
+    
+    // Check if already purchased
     if (purchasedUpgrades.has(upgrade.id)) {
+      console.log(`Purchase blocked - upgrade ${upgrade.id} already owned`);
       setSelectedUpgrade(null);
       return;
     }
     
     // Check mana
-    if (globalGameState.mana < upgrade.cost) {
+    if (currentManaRef.current < upgrade.cost) {
+      console.log(`Purchase blocked - insufficient mana: ${currentManaRef.current} < ${upgrade.cost}`);
       setShowInsufficientMana(true);
       setTimeout(() => setShowInsufficientMana(false), 2000);
       return;
     }
     
-    // Purchase upgrade
-    setPurchasedUpgrades(prev => {
-      const next = new Set(prev);
-      next.add(upgrade.id);
-      return next;
-    });
+    // Lock the purchase system
+    activePurchaseRef.current = purchaseId;
+    console.log(`Purchase locked with ID: ${purchaseId}`);
     
-    setMaxUnlockedUpgrade(prev => Math.max(prev, upgrade.id));
-    setSelectedUpgrade(null);
-    
-    // Check if we should unlock the next gate section
-    const currentSectionIndex = Math.floor(upgrade.id / 5);
-    const sectionStart = currentSectionIndex * 5;
-    const sectionEnd = sectionStart + 4;
-    
-    // Count purchased upgrades in current section
-    let sectionPurchases = 0;
-    for (let i = sectionStart; i <= sectionEnd; i++) {
-      if (purchasedUpgrades.has(i) || i === upgrade.id) {
-        sectionPurchases++;
-      }
+    // Clear any existing timeout
+    if (purchaseTimeoutRef.current) {
+      clearTimeout(purchaseTimeoutRef.current);
     }
     
-    // If all 5 upgrades in section are purchased, unlock next gate
-    if (sectionPurchases >= 5) {
-      setUnlockedGates(prev => {
+    try {
+      // Perform the purchase immediately
+      currentManaRef.current -= upgrade.cost;
+      totalManaPerSecondRef.current += upgrade.manaPerSecond;
+      setMaxUnlockedUpgrade(prev => Math.max(prev, upgrade.id));
+      setPurchasedUpgrades(prev => {
         const next = new Set(prev);
-        next.add(currentSectionIndex + 1);
+        next.add(upgrade.id);
         return next;
       });
+      setSelectedUpgrade(null);
+      
+      // Update global game state
+      globalGameState.spendMana(upgrade.cost);
+      globalGameState.setManaPerSecond(totalManaPerSecondRef.current);
+      
+      console.log(`SUCCESS: Purchased ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
+      console.log(`New mana: ${currentManaRef.current}, New mana/sec: ${totalManaPerSecondRef.current}`);
+      
+    } catch (error) {
+      console.error(`Purchase failed for ${upgrade.name}:`, error);
+    } finally {
+      // Release the lock after a delay to prevent rapid clicking
+      purchaseTimeoutRef.current = setTimeout(() => {
+        activePurchaseRef.current = null;
+        console.log(`Purchase lock released for ID: ${purchaseId}`);
+      }, 1000); // 1 second cooldown
     }
-    
-    // Update global game state
-    globalGameState.spendMana(upgrade.cost);
-    globalGameState.setManaPerSecond(globalGameState.manaPerSecond + upgrade.manaPerSecond);
-    
-    console.log(`Purchased ${upgrade.name}! +${upgrade.manaPerSecond} mana/sec`);
-  }, [purchasedUpgrades, globalGameState, unlockedGates]);
+  }, [purchasedUpgrades]);
 
   const handleTierProgression = useCallback(() => {
     console.log("Tier progression triggered!");
@@ -259,32 +263,6 @@ export const useFantasy3DUpgradeWorld = ({
     };
   }, []);
 
-  // Generate gate data
-  const gates = Array.from({ length: Math.ceil(upgrades.length / 5) }, (_, i) => {
-    if (i === 0) return null; // No gate before first section
-    
-    const gatePosition: [number, number, number] = [0, 0, -30 - (i * 5 - 1) * UPGRADE_SPACING - UPGRADE_SPACING / 2];
-    const requiredUpgrades = 5;
-    const sectionStart = (i - 1) * 5;
-    const sectionEnd = sectionStart + 4;
-    let completedUpgrades = 0;
-    
-    for (let j = sectionStart; j <= sectionEnd; j++) {
-      if (purchasedUpgrades.has(j)) {
-        completedUpgrades++;
-      }
-    }
-    
-    return {
-      id: i,
-      position: gatePosition,
-      isUnlocked: unlockedGates.has(i),
-      requiredUpgrades,
-      completedUpgrades,
-      sectionIndex: i
-    };
-  }).filter(Boolean);
-
   return {
     cameraPosition,
     selectedUpgrade,
@@ -292,8 +270,6 @@ export const useFantasy3DUpgradeWorld = ({
     maxUnlockedUpgrade,
     currentManaRef,
     upgrades,
-    gates,
-    unlockedGates,
     CHUNK_SIZE,
     RENDER_DISTANCE,
     UPGRADE_SPACING,

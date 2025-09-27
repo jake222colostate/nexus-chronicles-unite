@@ -38,8 +38,20 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
     1.5
   );
   
-  // Completely remove useFrame to fix hover lag - static glow instead
-  // useFrame removed to prevent lag on hover
+  useFrame((state) => {
+    // Static positioning - no movement animations for podiums
+    if (meshRef.current && modelType !== 'obelisk') {
+      // Keep podiums at their original spawn position without movement
+      meshRef.current.position.y = position[1];
+      meshRef.current.rotation.y = 0; // No rotation
+    }
+    
+    if (glowRef.current && isUnlocked) {
+      // Gentle pulsing glow only
+      const pulse = Math.sin(state.clock.elapsedTime * 3) * 0.1 + 0.9;
+      glowRef.current.scale.setScalar(pulse);
+    }
+  });
 
   const tierColors = ['#a7f3d0', '#7dd3fc', '#818cf8', '#c084fc'];
   const getCrystalColor = () => {
@@ -60,13 +72,15 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
   // Enhanced click handler with better event handling
   const handleClick = (event: any) => {
     event.stopPropagation();
-    console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id, 'unlocked:', isUnlocked);
-    onInteract(); // Always call onInteract, let parent handle unlock logic
+    console.log('EnhancedUpgradePedestal: Clicked on upgrade', upgrade.id);
+    if (isUnlocked) {
+      onInteract();
+    }
   };
 
   const handlePointerOver = (event: any) => {
     event.stopPropagation();
-    setHovered(true); // Always allow hover, regardless of unlock status
+    setHovered(true);
   };
 
   const handlePointerOut = (event: any) => {
@@ -161,7 +175,7 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         onPointerOut={handlePointerOut}
         visible={false}
       >
-        <sphereGeometry args={[3]} />
+        <sphereGeometry args={[2]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
@@ -170,31 +184,64 @@ export const EnhancedUpgradePedestal: React.FC<EnhancedUpgradePedestalProps> = (
         <PedestalModel />
       </Suspense>
       
-      {/* Optimized glow effect - only when unlocked and not purchased */}
-      {isUnlocked && !isPurchased && (
+      {/* Magical glow effect around podium base */}
+      {isUnlocked && (
         <mesh ref={glowRef} position={[0, 0.2, 0]}>
-          <cylinderGeometry args={[1.5, 1.7, 0.3, 16]} />
+          <cylinderGeometry args={[2, 2.2, 0.5, 32]} />
           <meshBasicMaterial
             color={getCrystalColor()}
             transparent
-            opacity={0.15}
+            opacity={0.2}
           />
         </mesh>
       )}
       
-      {/* Simple purchase indicator */}
-      {isPurchased && (
-        <mesh position={[0.8, 2, 0]}>
-          <sphereGeometry args={[0.15]} />
-          <meshBasicMaterial color="#10B981" />
+      {/* Additional magical aura for enhanced visual appeal */}
+      {isUnlocked && canAfford && (
+        <mesh position={[0, 0.1, 0]} rotation={[0, 0, 0]}>
+          <ringGeometry args={[1.8, 2.5, 32]} />
+          <meshBasicMaterial
+            color={isPurchased ? '#10B981' : getCrystalColor()}
+            transparent
+            opacity={0.25}
+            side={2} // Double-sided
+          />
         </mesh>
       )}
       
-      {/* Interaction indicator - simplified */}
+      {/* Upgrade tier indicators */}
+      {isPurchased && tier > 1 && (
+        <>
+          {Array.from({ length: Math.min(tier - 1, 3) }).map((_, i) => (
+            <mesh key={i} position={[Math.cos(i * 2.1) * 1, 2 + i * 0.2, Math.sin(i * 2.1) * 1]}>
+              <sphereGeometry args={[0.1]} />
+              <meshBasicMaterial color="#FFD700" />
+            </mesh>
+          ))}
+        </>
+      )}
+      
+      {/* Particle effects for higher tiers */}
+      {isPurchased && tier >= 3 && (
+        <>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <mesh key={i} position={[
+              Math.cos(i * 1.26) * 2,
+              1.5 + Math.sin(i * 1.26) * 0.5,
+              Math.sin(i * 1.26) * 2
+            ]}>
+              <sphereGeometry args={[0.05]} />
+              <meshBasicMaterial color="#A78BFA" transparent opacity={0.7} />
+            </mesh>
+          ))}
+        </>
+      )}
+      
+      {/* Interaction indicator */}
       {hovered && isUnlocked && (
-        <mesh position={[0, 2.5, 0]}>
-          <sphereGeometry args={[0.1]} />
-          <meshBasicMaterial color="#FFFFFF" />
+        <mesh position={[0, 3, 0]}>
+          <planeGeometry args={[2, 0.5]} />
+          <meshBasicMaterial color="#FFFFFF" transparent opacity={0.8} />
         </mesh>
       )}
     </group>

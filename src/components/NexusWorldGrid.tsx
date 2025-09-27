@@ -6,8 +6,6 @@ import { Mesh, Vector3 } from 'three';
 import { useGameStateStore } from '@/stores/useGameStateStore';
 import { NexusVendorShops } from './NexusVendorShops';
 import { NexusInventoryPanel } from './NexusInventoryPanel';
-import { PlaceableUpgradeSystem } from './PlaceableUpgradeSystem';
-import { UpgradeSelectionMenu } from './UpgradeSelectionMenu';
 
 interface GridTile {
   x: number;
@@ -78,7 +76,7 @@ const Crystal: React.FC<{
 // Vendor Stall Component
 const VendorStall: React.FC<{
   position: [number, number, number];
-  stallType: 'blacksmith' | 'merchant' | 'mystic' | 'upgrade_vendor';
+  stallType: 'blacksmith' | 'merchant' | 'mystic';
   onClick: () => void;
 }> = ({ position, stallType, onClick }) => {
   const getStallColors = () => {
@@ -86,7 +84,6 @@ const VendorStall: React.FC<{
       case 'blacksmith': return { tent: '#8B4513', accent: '#CD853F' };
       case 'merchant': return { tent: '#9333ea', accent: '#a855f7' };
       case 'mystic': return { tent: '#059669', accent: '#10b981' };
-      case 'upgrade_vendor': return { tent: '#0369a1', accent: '#0ea5e9' };
       default: return { tent: '#8B4513', accent: '#CD853F' };
     }
   };
@@ -129,7 +126,6 @@ const VendorStall: React.FC<{
           {stallType === 'blacksmith' && '⚔️ Blacksmith'}
           {stallType === 'merchant' && '💎 Merchant'}
           {stallType === 'mystic' && '🔮 Mystic'}
-          {stallType === 'upgrade_vendor' && '📦 Upgrade Modules'}
         </div>
       </Html>
     </group>
@@ -206,10 +202,6 @@ export const NexusWorldGrid: React.FC = () => {
   const [activeVendor, setActiveVendor] = useState<string | null>(null);
   const [showInventory, setShowInventory] = useState(false);
   const [placedModules, setPlacedModules] = useState<PlacedModule[]>([]);
-  const [showUpgradeMenu, setShowUpgradeMenu] = useState(false);
-  const [upgradeMenuPosition, setUpgradeMenuPosition] = useState({ x: 0, y: 0 });
-  const [selectedUpgradeSlot, setSelectedUpgradeSlot] = useState<{ id: string; position: [number, number, number] } | null>(null);
-  const upgradeSystemRef = useRef<any>();
 
   // Create 5x5 grid
   const gridSize = 5;
@@ -238,19 +230,22 @@ export const NexusWorldGrid: React.FC = () => {
     setActiveVendor(vendorType);
   };
 
-  const handleUpgradeMenuShow = (show: boolean, position: { x: number; y: number }, slotData: { id: string; position: [number, number, number] } | null) => {
-    setShowUpgradeMenu(show);
-    setUpgradeMenuPosition(position);
-    setSelectedUpgradeSlot(slotData);
-  };
+  const handleModulePlacement = (moduleId: string) => {
+    if (!selectedTile) return;
 
-  const handleUpgradeSelect = (moduleId: string) => {
-    if (selectedUpgradeSlot && upgradeSystemRef.current) {
-      upgradeSystemRef.current.placeUpgrade(moduleId, selectedUpgradeSlot);
-    }
-    setShowUpgradeMenu(false);
-  };
+    const newModule: PlacedModule = {
+      id: `placed_${Date.now()}`,
+      moduleId,
+      position: [selectedTile.x, 0, selectedTile.z],
+      effectType: 'manaBoost', // This would come from module data
+      value: 10,
+      realmAffected: 'fantasy'
+    };
 
+    setPlacedModules(prev => [...prev, newModule]);
+    setSelectedTile(null);
+    setShowInventory(false);
+  };
 
   return (
     <>
@@ -309,7 +304,23 @@ export const NexusWorldGrid: React.FC = () => {
           {/* Environment */}
           <Environment />
 
-          {/* No more diamond podiums/crystals - they are removed */}
+          {/* Grid Tiles with Crystals */}
+          {gridTiles.map((tile, index) => {
+            const placedModule = placedModules.find(m => 
+              Math.abs(m.position[0] - tile.x) < 0.1 && Math.abs(m.position[2] - tile.z) < 0.1
+            );
+
+            return (
+              <Crystal
+                key={index}
+                position={[tile.x, 0.5, tile.z]}
+                size={placedModule ? 1.2 : 0.8}
+                color={placedModule ? '#fbbf24' : '#60a5fa'}
+                onClick={() => handleTileClick(tile)}
+                isHighlighted={selectedTile?.x === tile.x && selectedTile?.z === tile.z}
+              />
+            );
+          })}
 
           {/* Vendor Stalls */}
           <VendorStall 
@@ -327,17 +338,6 @@ export const NexusWorldGrid: React.FC = () => {
             stallType="mystic"
             onClick={() => handleVendorClick('mystic')}
           />
-          <VendorStall 
-            position={[0, 0, 10]} 
-            stallType="upgrade_vendor"
-            onClick={() => handleVendorClick('upgrade_vendor')}
-          />
-          
-          {/* Placeable Upgrade System */}
-          <PlaceableUpgradeSystem 
-            ref={upgradeSystemRef}
-            onShowUpgradeMenu={handleUpgradeMenuShow}
-          />
 
           {/* First Person Controls */}
           <PlayerControls />
@@ -354,16 +354,8 @@ export const NexusWorldGrid: React.FC = () => {
       <NexusInventoryPanel
         isOpen={showInventory}
         onClose={() => setShowInventory(false)}
-        onModuleSelect={() => {}} // Empty handler since we don't use this anymore
+        onModuleSelect={handleModulePlacement}
         gameState={gameState}
-      />
-
-      {/* Upgrade Selection Menu - Outside Canvas */}
-      <UpgradeSelectionMenu
-        isOpen={showUpgradeMenu}
-        onClose={() => setShowUpgradeMenu(false)}
-        onSelectUpgrade={handleUpgradeSelect}
-        position={upgradeMenuPosition}
       />
     </>
   );

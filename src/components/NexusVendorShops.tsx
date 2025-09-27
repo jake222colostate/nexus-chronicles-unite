@@ -1,7 +1,6 @@
 import React from 'react';
-import { X, Crown, Zap, Shield, Package } from 'lucide-react';
+import { X, Crown, Zap, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { nexusUpgradeModules, NexusUpgradeModule } from '@/data/NexusUpgradeModules';
 
 interface VendorShopsProps {
   activeVendor: string | null;
@@ -206,17 +205,6 @@ export const NexusVendorShops: React.FC<VendorShopsProps> = ({
     console.log(`Purchased ${item.name}`);
   };
 
-const getUpgradeModuleItems = (): VendorItem[] => {
-    return nexusUpgradeModules.map(module => ({
-      id: module.id,
-      name: module.name,
-      description: module.description + ` - ${module.bonus}`,
-      cost: module.cost,
-      currency: module.currency,
-      category: 'upgrade_module'
-    }));
-  };
-
   const getVendorConfig = () => {
     switch (activeVendor) {
       case 'blacksmith':
@@ -242,14 +230,6 @@ const getUpgradeModuleItems = (): VendorItem[] => {
           color: 'green',
           bgGradient: 'from-green-900/95 to-emerald-800/95',
           borderColor: 'border-green-400/30'
-        };
-      case 'upgrade_vendor':
-        return {
-          title: '📦 Upgrade Modules',
-          items: getUpgradeModuleItems(),
-          color: 'blue',
-          bgGradient: 'from-blue-900/95 to-indigo-800/95',
-          borderColor: 'border-blue-400/30'
         };
       default:
         return {

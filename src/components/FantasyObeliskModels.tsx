@@ -60,10 +60,10 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
     const modelIndex = Math.floor(id / 5) % 5;
     const scales: [number, number, number][] = [
       [5.33, 5.33, 5.33], // LargeObelisk - original scale
-      [4, 4, 4],          // Lotus - increased from 3
-      [8, 8, 8],          // Meltingtower - doubled from 4
-      [4.5, 4.5, 4.5],    // Phoenix - increased from 3.5
-      [6, 6, 6]           // Spiral - doubled from 3
+      [3, 3, 3],          // Lotus
+      [4, 4, 4],          // Meltingtower
+      [3.5, 3.5, 3.5],    // Phoenix
+      [3, 3, 3]           // Spiral
     ];
     return scales[Math.max(0, Math.min(modelIndex, scales.length - 1))];
   };
@@ -73,10 +73,10 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
     const modelIndex = Math.floor(id / 5) % 5;
     const offsets: [number, number, number][] = [
       [0, 5, 0],     // LargeObelisk - lifted position like before
-      [0, 2, 0],     // Lotus - raised to touch ground without clipping
-      [0, 4, 0],     // Meltingtower - raised higher due to doubling
-      [0, 2.5, 0],   // Phoenix - raised to touch ground without clipping
-      [0, 3, 0]      // Spiral - raised higher due to doubling
+      [0, 0, 0],     // Lotus - grounded
+      [0, 2, 0],     // Meltingtower - lift slightly
+      [0, 1, 0],     // Phoenix - slight lift
+      [0, 0.5, 0]    // Spiral - minimal lift
     ];
     return offsets[Math.max(0, Math.min(modelIndex, offsets.length - 1))];
   };
@@ -85,49 +85,48 @@ export const FantasyObeliskModels: React.FC<FantasyObeliskModelsProps> = ({
   const scale = getModelScale(upgradeId);
   const positionOffset = getPositionOffset(upgradeId);
 
-  // Remove useFrame rotation to fix hover lag - static models
-  // useFrame removed to prevent lag on hover
+  // Add gentle rotation for some models
+  useFrame((state) => {
+    if (meshRef.current && isUnlocked) {
+      const modelIndex = Math.floor(upgradeId / 5) % 5;
+      // Only rotate Lotus and Spiral models (indices 1 and 4)
+      if (modelIndex === 1 || modelIndex === 4) {
+        meshRef.current.rotation.y += 0.005;
+      }
+    }
+  });
 
   const handleClick = (event: any) => {
     event.stopPropagation();
-    console.log('FantasyObeliskModels: Click detected on upgrade', upgradeId, 'unlocked:', isUnlocked);
-    onInteract(); // Always call onInteract, let parent handle unlock logic
+    if (isUnlocked) {
+      onInteract();
+    }
   };
 
   try {
     const { scene } = useGLTF(modelPath);
 
     return (
-      <group position={positionOffset}>
-        {/* Large invisible clickable area */}
-        <mesh
-          position={[0, 3, 0]}
-          onClick={handleClick}
-          onPointerOver={onPointerOver}
-          onPointerOut={onPointerOut}
-          visible={false}
-        >
-          <sphereGeometry args={[4]} />
-          <meshBasicMaterial transparent opacity={0} />
-        </mesh>
+      <group
+        ref={meshRef}
+        onClick={handleClick}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        scale={hovered ? scale.map(s => s * 1.02) as [number, number, number] : scale}
+        position={positionOffset}
+      >
+        <primitive object={scene.clone()} />
         
-        <group
-          ref={meshRef}
-          scale={hovered ? scale.map(s => s * 1.02) as [number, number, number] : scale}
-        >
-          <primitive object={scene.clone()} />
-          
-          {/* Add mystical glow effect */}
-          {isUnlocked && (
-            <pointLight
-              position={[0, 5, 0]}
-              color="#9333ea"
-              intensity={2}
-              distance={15}
-              decay={2}
-            />
-          )}
-        </group>
+        {/* Add mystical glow effect */}
+        {isUnlocked && (
+          <pointLight
+            position={[0, 5, 0]}
+            color="#9333ea"
+            intensity={2}
+            distance={15}
+            decay={2}
+          />
+        )}
       </group>
     );
   } catch (error) {

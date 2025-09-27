@@ -34,8 +34,17 @@ export const initializeGLBSystem = async () => {
   console.log('🎮 Initializing GLB Loading System...');
   
   try {
-    // Skip preloading for now to prevent 404 errors
-    console.log('✅ GLB Loading System initialized (preloading disabled)');
+    // Preload critical assets immediately
+    console.log('⚡ Preloading critical assets...');
+    preloadAssets(CRITICAL_ASSETS);
+    
+    // Lazy preload fantasy assets
+    setTimeout(() => {
+      console.log('🧙 Lazy loading fantasy assets...');
+      preloadAssets(FANTASY_ASSETS);
+    }, 2000);
+    
+    console.log('✅ GLB Loading System initialized');
     return true;
   } catch (error) {
     console.error('❌ GLB System initialization failed:', error);
