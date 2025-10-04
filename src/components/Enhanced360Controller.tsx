@@ -276,6 +276,11 @@ export const Enhanced360Controller: React.FC<Enhanced360ControllerProps> = ({
         
         activeCamera.position.set(x, currentY.current, z);
         
+        // Debug logging for camera position
+        if (Math.floor(Date.now() / 100) % 15 === 0) {
+          console.log(`🎥 Camera Position - Y: ${currentY.current.toFixed(2)}, Target Y: ${targetY.current.toFixed(2)}`);
+        }
+        
         // Make camera look at the center point at the same height as camera
         activeCamera.lookAt(centerPoint[0], currentY.current, centerPoint[2]);
       } else {
