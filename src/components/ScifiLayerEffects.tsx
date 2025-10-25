@@ -40,7 +40,7 @@ export const ScifiLayerEffects: React.FC<ScifiLayerEffectsProps> = ({
     // Apply upgrade bonuses
     let speedScale = baseScale.meteorSpeed;
     let lootScale = baseScale.lootDropChance;
-    let difficultyScale = baseScale.difficultyMultiplier;
+    const difficultyScale = baseScale.difficultyMultiplier;
     let stabilityScale = baseScale.platformStability;
 
     // Gravity Anchor Array - Platform stability and slower meteors

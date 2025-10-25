@@ -63,7 +63,7 @@ export const SciFiUpgradeManager: React.FC<SciFiUpgradeManagerProps> = ({
           required: Math.floor((unlockCondition.requirement as number) / 1000),
           label: 'Time in Layer (seconds)'
         };
-      case 'cannon':
+      case 'cannon': {
         const cannons = Object.values(cannonProgress);
         if (unlockCondition.requirement === 'maxUpgrade') {
           const maxTier = Math.max(0, ...cannons.map(c => c.tier));
@@ -86,6 +86,7 @@ export const SciFiUpgradeManager: React.FC<SciFiUpgradeManagerProps> = ({
           required: unlockCondition.requirement as number,
           label: 'Cannons Upgraded'
         };
+      }
       case 'boss':
         return {
           current: defeatedBosses.includes(unlockCondition.requirement as string) ? 1 : 0,

@@ -764,7 +764,7 @@ export const checkUnlockCondition = (
         ? gameState.currentLayer >= unlockCondition.layer && gameState.timeInCurrentLayer >= (unlockCondition.requirement as number)
         : gameState.timeInCurrentLayer >= (unlockCondition.requirement as number);
     
-    case "cannon":
+    case "cannon": {
       const cannons = Object.values(gameState.cannonProgress);
       if (unlockCondition.requirement === "maxUpgrade") {
         return cannons.some(cannon => cannon.tier >= 5);
@@ -773,6 +773,7 @@ export const checkUnlockCondition = (
         return cannons.some(cannon => cannon.abilities.length >= 5);
       }
       return cannons.length >= (unlockCondition.requirement as number);
+    }
     
     case "boss":
       return gameState.defeatedBosses.includes(unlockCondition.requirement as string);
